@@ -1,0 +1,132 @@
+{
+    "id": "xHMMt7r3GW",
+    "title": "LieRE: Generalizing Rotary Position Encodings to Higher Dimensional Inputs",
+    "abstract": "Rotary Position Embeddings (RoPE) have demonstrated efficacy and gained widespread adoption in natural language processing. However, their application to other modalities has been less prevalent. This study introduces Lie group Relative position Encodings (LieRE), which extend beyond RoPE by accommodating n-dimensional inputs. LieRE encodes positions of tokens by replacing the RoPE rotation matrix with a dense, high-dimensional rotation matrix generated via a learned map. We conducted empirical evaluations of LieRE on 2D and 3D image classification tasks, comparing its performance against established baselines including DeiT III, RoPE-Mixed, and Vision-Llama.\nOur findings reveal significant advancements across multiple metrics:\nPerformance: LieRE achieved up to a 6% improvement in classification accuracy.\nTraining Efficiency: A 3.5-fold reduction in training time was observed.\nData Efficiency: LieRE required 30% less training data to achieve comparable results.\nThese substantial improvements suggest that LieRE represents a meaningful advancement in positional encoding techniques for multi-dimensional data. The implementation details and reproducibility materials are openly available.",
+    "keywords": [
+        "Position Encoding",
+        "Attention",
+        "Transformer",
+        "Computer Vision",
+        "Machine Learning"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "LieRE encodes positions of tokens for n-dimensional data by replacing the RoPE rotation matrix with a dense, high-dimensional rotation matrix generated via a learned map.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=xHMMt7r3GW",
+    "pdf_link": "https://openreview.net/pdf?id=xHMMt7r3GW",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors propose a position encoding technique that can be used with attention mechanisms for 2D and 3D data. In contrast to RoPE which learns a block diagonal (2x2 blocks) rotation matrix transformation of key and query matrices from relative position information, LieRE learns a general rotation matrix transformation of key and query matrices from absolute position information. While this introduces additional parameters, the authors mitigate this by sharing parameters across attention heads. The authors show that with the combination of these strategies, LieRE improves predictive performance, training efficiency and data efficiency."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The authors propose a novel position encoding scheme with improved performance over baseline models. The improved performance is in terms of predictive performance, training efficiency, and data efficiency. Moreover the model can be used for 2D and 3D data."
+            },
+            "weaknesses": {
+                "value": "The writing could be improved. The document would benefit from additional proofreading. For example, in several places (Lines 169, 173) the text reads \u2018equation equation\u2019; \u2018figure\u2019 and \u2018table\u2019 should be capitalized (Line 187, 397); and the notation for updated keys and queries is inconsistent (Line 188, 189, 209). The clarity of the document would be improved. For example, it would benefit the reader if the equation for the attention mechanism were provided 3.1; some text describing the algorithm would benefit the reader; it would be nice to show that LieRE-Commute and RoPE-mixed are special cases of LieRE.\n\nThe organization could be improved. Using subsubsections in the related work doesn\u2019t seem necessary, and takes up space that might be used to clarify the method section. Some details of the method are presented for the first time in the Results section (e.g., that the parameters of LieRE and its variants are shared across attention heads). Figures are often far from where they are referenced."
+            },
+            "questions": {
+                "value": "* When the authors say \u2018generator space\u2019 do they mean Lie algebra?\n* In the definition of R_{LieRE} consider using A(x) as the argument to the exponential map\n* (Line 400) Broken figure reference \n* Do the authors have thoughts on why LieRE improves training/data efficiency \n* Should the final statement in eq 2 be exp(V)^-1 exp(U)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a symmetry-aware method for positional encoding (LieRE) that outperforms the state-of-the-art methods (RoPE), by considering subspace rotations of dimension higher than $2$ in the self-attention's dot-product (the orthogonal symmetry group action given by $(R,(q,k))\\mapsto (Rq,Rk)$). Using a Lie group theory the resulting rotation encoding is deduced as $R=\\exp(\\sum_iA_ix_i)$ where $i$ is each domain dimension and $A_i$ is learnable skew-symmetric matrices. Furthermore, shuffling patches causes more accuracy drop in LieRE than RoPE, which verifies that the model relies more on positional encodings by using LieRE. It also outperforms existing methods in terms of training time and dependency on dataset size."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- The positional encoding structure is fundamentally important in Transformer architectures. Improving over the state-of-the-art has a great impact. \n- I find it particularly interesting to treat the spatial and embedding dimensions of the hidden states equally, which I believe results in a unified understanding of the embedding space as a tensor field. Lie group generalizes rotary positional embedding from dimension $2$ to $n$ by regarding RoPE as a commutative special case.\n- I find it interesting that sharing parameters across layers (LieRE-Commute over RoPE-mixed) improve learnable positional encodings."
+            },
+            "weaknesses": {
+                "value": "1. Although the relative gain over existing methods is fair and remarkable, <70% accuracy on CIFAR100 and ImageNet and ~50% on UCF101 is far from optimal. For example, the referred paper (Heo et al. 2024) reports >80% accuracy. It would be more convincing to improve the baseline.\n2. The 3.5x reduction in training time is compared under the wall time of 200 epochs, which means the same performance is obtained at around 57 epochs for LieRE. I wonder how these methods compare in terms of the best test loss, and the converged training loss (which means after 200 epochs). Running longer experiments may also help remedy poor baselines.\n3. I find the compute efficiency less informative than the learning curve. The FLOPs analysis is of practical interest but looks trivial since positional encoding is a lightweight part of the model.\n\nMinor issues: \n- Table 2: I find the word \"stem\" in Table 2 confusing and unnecessary. Clarifying it in the text rather than just in Figure 3a would help.\n- Many \\citet should be \\citep\n- Table 2 line 381: Rope should be {RoPE}. \n- Line 400: Figure ??"
+            },
+            "questions": {
+                "value": "1. I don't understand why commutativeness in the RHS of Equation (2) is not $\\exp(V)^{-1}\\exp(U)$, but $\\exp(U)^{-1}\\exp(V)$. Is it a typo?\n2. Should line 201 \"We present attention with LieRE and LieRE-Commute in Algorithm 1 and 2\" reverse the order? \n3. Would it be better to clarify the relation between \"LieRE-Commute, learnable RoPE and RoPE-mixed\" already here in the method section (now this does not appear until 5.3.3), and remind the reader in the background why the group $SO(d)$ not abelian if $d>2$, preferably with some one-line intuitions?\n4. Do you have more intuition to justify the reason why the stem option outperforms layer or head heterogeneous implementations? For example, does it suffice to think of the $O(n)$ symmetry in the dot product that only needs one representative element in the quotient group, instead of striving to learn it repeatedly in every layer or head subspace?\nBased on this, would you think it is possible to unify the representation by rotationally aligning the subspaces of each layer?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposed an extension to the prior work RoPE attention. The central idea is to extend the 1-d position encoding in RoPE to handle higher-dimension position indices. In RoPE, the feature vectors are rotated before the attention inner products to take into account the distance between two tokens. For each feature vector of d-dimension, d/2 rotations in 2d space were used. The authors argue that using 1 rotation of d-dimension space, taking into account multiple token indices, is better.\n\nLie theory is used to map position indices to \"rotations\", via the exponential map."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The use of Lie groups for position-aware attention is a novel and interesting idea."
+            },
+            "weaknesses": {
+                "value": "- The method is not clearly defined, with proper mathematical description. By code segment in the appendix, is also not explained, particularly not in a way that connects with the main text.\n- It is not intuitive why a single rotation is better than multiple rotations. Actually, multiple rotations of RoPE have the benefit of adaptively capturing different levels of distance effects."
+            },
+            "questions": {
+                "value": "- Please define the A matrix in detail. Clarify the notation n and d in Section 3.2 (use them consistently please).\n- Can you conduct experiments on a data set with varying image sizes and resolutions? In other words, a single dataset with different scales of spatial correlation."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

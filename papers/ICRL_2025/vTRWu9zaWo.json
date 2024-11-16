@@ -1,0 +1,225 @@
+{
+    "id": "vTRWu9zaWo",
+    "title": "Using Stochastic Gradient Descent to Smooth Nonconvex Functions: Analysis of Implicit Graduated Optimization",
+    "abstract": "The graduated optimization approach is a heuristic method for finding global optimal solutions for nonconvex functions by using a function smoothing operation with stochastic noise. We show that stochastic noise in stochastic gradient descent (SGD) has the effect of smoothing the objective function, the degree of which is determined by the learning rate, batch size, and variance of the stochastic gradient. Using this finding, we propose and analyze a new graduated optimization algorithm that varies the degree of smoothing by varying the learning rate and batch size, and provide experimental results on image classification tasks with ResNets that support our theoretical findings. We further show that there is an interesting correlation between the degree of smoothing by SGD's stochastic noise, the well-studied ``sharpness'' indicator, and the generalization performance of the model.",
+    "keywords": [
+        "deep learning theory",
+        "degree of smoothing",
+        "generalizability",
+        "graduated optimization",
+        "SGD",
+        "sharpness",
+        "smoothing property",
+        "stochastic noise"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=vTRWu9zaWo",
+    "pdf_link": "https://openreview.net/pdf?id=vTRWu9zaWo",
+    "comments": [
+        {
+            "comment": {
+                "value": "**Weakness 1:** While the experiments with ResNets on CIFAR100 provide valuable insights, they may not fully generalize to other types of neural networks or more complex datasets.\n\n**Reply to Weakness 1:** This is currently being addressed.\nPlease wait for our rebuttal.\n\n---\n\n**Weakness 2 and Question 2:** A more comprehensive discussion on the practical implementation of the proposed implicit graduated optimization algorithm would further enhance its applicability and understanding. What strategies can practitioners use to effectively set the initial values and decay rates for learning rate and batch size to maximize the advantages of implicit graduated optimization?\n\n**Reply to Weakness 2 and Question 2:** Thanks for your great comment and question! Since we can guarantee that the degree of smoothing of the objective function is determined by $\\delta=\\eta C/\\sqrt{b}$, by introducing graduated optimization, the optimal decay rate of the degree of smoothing immediately leads to the optimal decay and increase rate of the learning rate and batch size.\nFrom Proposition 5.1, the decay rate of the degree of smoothing, $\\gamma$, must satisfy $\\gamma \\in [0.5, 1)$ to guarantee convergence of the graduated optimization algorithm. Thus, we see that, if the learning rate is to be reduced, it must be limited to a maximum of 0.5x in a single decay, and if the batch size is to be increased, it must be limited to a maximum of 4x in a single increase. This may not be a major finding for practitioners, but we emphasize that it is a novel contribution.\n\n---\n\n**Question 1:** How do different optimizer variants (e.g., Adam, RMSprop) impact the smoothing effect observed with SGD?\n\n**Reply to Question 1:** You are right, extending the argument for SGD in Section 3 to Adam and RMSProp is a natural extension: by considering the difference between the search direction of Adam and that of GD in the same way, we can derive the degree of smoothing due to stochastic noise that Adam has. It is expected that the momentum factor $\\beta_1, \\beta_2$, and other hyperparameters will be included, which may provide new insights into Adam's behavior, just as our paper provided new insights into SGD's behavior. Furthermore, it may be possible to construct an implicit graduated optimization algorithm that exploits this property. We believe that these are very important future work derived from our results.\n\n---\n\n**Question 3:** Could this framework be extended to analyze optimization in graph neural networks or manifold learning?\n\n**Reply to Question 3:** Our framework, from smoothing the objective function with stochastic noise to implicit graduated optimization, is useful for analyzing all problem settings that minimize the nonconvex empirical loss function.\nNote, however, that the stochastic noise must follow a light-tailed distribution, such as a normal or uniform distribution.\n\n---\n\n**Question 4:** What computational trade-offs might be associated with implementing the proposed algorithm, such as increased training time or memory usage?\n\n**Reply to Question 4:** As described in Section 5.2, a truly global optimization of a nonconvex function by implicit graduated optimization requires computational resources that can handle up to a full batch. Therefore, it will require more memory than vanilla SGD. However, the increase in memory usage is not a fatal flaw, as our experimental results (Figures 4-6) show that performance can be improved by simply increasing the batch size as much as is feasible for typical computing resources. Training time depends on the batch size, so depending on the initial batch size, it may take longer than vanilla SGD.\nFinally, we would like to add that **our main contribution is to theoretically support the advantages of practical techniques such as the proposed algorithm through a graduated optimization framework.**\n\n---\n\nWe deeply appreciate the careful peer review.\nIf you still have any concerns or comments, by all means reply!\nIf you think it is worthy of acceptance through our rebuttal, please raise your rating score."
+            }
+        },
+        {
+            "comment": {
+                "value": "**Weaknesses 1 and 2:** The reviewer does not think the relationship between $\\eta C/\\sqrt{b}$ and accuracy presented in this paper is very new since it is well-known that large batch sizes and small learning rates degrade test accuracy. While showing this relationship is a good motivation for designing the proposed method, the reviewer does not think that showing this relationship in itself is a major contribution. The reviewer does not understand the difference between the proposed method and existing methods, e.g., [1]. Changing the batch size during training has already been proposed in [1].\n\n**Reply to Weaknesses 1 and 2:** You are right that ''large batch sizes and small learning rates reduce test accuracy'' are well known, but did you know that the quantity $\\eta C/\\sqrt{b}$ contributes to the smoothing of the objective function?  This is a novel result we have uncovered. We admit that our algorithm is very similar to previous work [1] and that there is no novelty there, including numerical experiments. However, **the essence of our paper is smoothing by stochastic noise in SGD**, and the proposed algorithm is secondary. The question of why the methods of previous work [1] works well should not be able to be explained theoretically without an empirical reason: decreasing the learning rate improves performance. Our paper clarifies this theoretically from a completely different perspective from previous study [1]. We provide theoretical (Sections 3 and 5) and experimental (Sections 4 and 5) support for the commonplace technique of decreasing the learning rate and increasing the batch size by implicit graduated optimization. **This corroboration is our main contribution and novelty.**\n\nIn addition, from Proposition 5.1, the decay rate of the degree of smoothing, $\\gamma$, must satisfy $\\gamma \\in [0.5, 1)$ to guarantee convergence of the graduated optimization algorithm. Since we can guarantee that the degree of smoothing of the objective function is determined by $\\delta=\\eta C/\\sqrt{b}$, by introducing graduated optimization, the optimal decay rate of the degree of smoothing immediately leads to the optimal decay and increase rate of the learning rate and batch size. Thus, we see that if the learning rate is to be reduced, it must be limited to a maximum of 0.5x in a single decay, and if the batch size is to be increased, it must be limited to a maximum of 4x in a single increase. This is a useful finding that cannot be obtained from previous studies.\nLet us emphasize again that **our greatest contribution is the connection between smoothing of the function by stochastic noise in SGD and graduated optimization.** This has never been done before and the results obtained are novel.\n\n____\n\n**Weakness 3:** All methods achieved approximately 60\\% in Figure 4. However, by comparing the results reported in the existing papers [1,2], 60\\% appears to be too low. Thus, the reviewer is wondering if the results are reliable.\n\n**Reply to Weakness 3:** Reported in paper [1] is the training of ImageNet with ResNet50 and Inception-ResNet-v2. Our experiments were trained with ResNet34, so the results are not directly comparable. In the paper [2], ResNet18 is used, but the optimizer is SGD with momentum factor and weight decay. Since we use a simple SGD without momentum factor or weight decay to validate the theory, we cannot directly compare the results here either.\nCertainly, our results are not as good as the state-of-the-art in ImageNet classification, but we believe they are sufficient to validate our theory.\n\n----\n\n**Reference**\n\n[1] Samuel et al., Don't Decay the Learning Rate, Increase the Batch Size, In ICLR 2018\n\n[2] He et al., Deep Residual Learning for Image Recognition, In CVPR 2016\n\n---\n\nWe deeply appreciate your careful reading of our paper. We would like to correct the typo appropriately.\nWe specifically refuted the reviewers' concerns about novelty and differentiation from previous studies. We welcome further replies if you still have concerns.\nIf you now have gone through our rebuttal, and you find that our paper is worthy of acceptance, please raise the rating score."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a heuristic approach for solving nonconvex optimization problems by combining a smoothing technique. The authors demonstrate that stochastic gradient noise impacts the smoothing of the objective function, with the extent of this effect determined by three factors: the learning rate, batch size, and the variance of the stochastic gradient. Building on these insights, the authors introduce a new graduated optimization method. Theoretical analysis and numerical results confirm the effectiveness of the proposed method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper offers a novel perspective on the smoothing effect of stochastic gradient descent (SGD) and its implications for optimizing nonconvex functions.\n\nThe connection between smoothing by SGD and generalization performance is a contribution to this field. The correlation between the degree of smoothing, sharpness of the objective function, and generalization performance is convincingly shown, enhancing the credibility of the theoretical insights."
+            },
+            "weaknesses": {
+                "value": "While the experiments with ResNets on CIFAR100 provide valuable insights, they may not fully generalize to other types of neural networks or more complex datasets.\n\nA more comprehensive discussion on the practical implementation of the proposed implicit graduated optimization algorithm would further enhance its applicability and understanding."
+            },
+            "questions": {
+                "value": "How do different optimizer variants (e.g., Adam, RMSprop) impact the smoothing effect observed with SGD?\n\nWhat strategies can practitioners use to effectively set the initial values and decay rates for learning rate and batch size to maximize the advantages of implicit graduated optimization?\n\nCould this framework be extended to analyze optimization in graph neural networks or manifold learning?\n\nWhat computational trade-offs might be associated with implementing the proposed algorithm, such as increased training time or memory usage?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N.A."
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the convergence of stochastic gradient descent (SGD) in the context of nonconvex optimization. The authors aimed to show that the gradients help the objective by smoothing it through the noise injected by sampling functions. The claim that SGD smoothes the objective is shown by assuming that the gradients are distributed according to isotropic Gaussian distribution, which I find to be a trivial result. Moreover, since the work is written from the perspective of giving a new theory for SGD specifically, I find this to be very misleading. The authors also present experiments on CIFAR100 to study the numerical properties related to generalization such as sharpness, which serve as a secondary contribution. Next, the authors propose a new method for $\\sigma$-nice functions that runs gradient descent on a smoothed objective with varying parameters and they explain why the method works. Finally, the authors run several variations of SGD on training ResNet-34 on ImageNet to show that increasing batch size helps SGD converge."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. I think a theory for SGD and an explanation why noise helps to train neural networks is highly desired. It is a great topic and if the results were good, I'd have considered this an important contribution.\n2. The numerical evaluations are reasonable."
+            },
+            "weaknesses": {
+                "value": "1. My main concern about this work is the unrealistic assumption that the noise from sampling gradients follows Gaussian distribution with identity covariance matrix and variance that does not change over the course of training. What's worse, this assumption is not stated as clearly as other assumptions, instead it's introduced in the text and a couple of references are given to experimental papers that justify normality of the gradients. Those papers, however, do not show that gradients have exactly the same distribution throughout training. It's also never discussed in the paper why the assumption should hold or what happens if it doesn't. And what we should expect here, in contrast, is that the noise level changes every iteration and its variance is a random variable that depends on the iterates and previously sampled gradients.\n2. Since the gradient noise is assumed to be exactly gaussian and consntant, the paper fails to deliver what the abstract promises, namely to \"show that stochastic noise in stochastic gradient descent (SGD) has the effect of smoothing the objective function\", because the authors essentially *assume* that the noise smoothes the objective. I usually refrain from calling a result trivial.\n3. Since the results in this work assume Gaussian noise, it means that prior papers on injecting noise inside gradients immediately apply to SGD in this setting. However, there is no comparison to related work on this topic, such as Orvieto et al. \"Anticorrelated Noise Injection for Improved Generalization\" and Vardhan & Stich, (2021). The latter paper is only mentioned in passing as showing that noise helps escape saddle points, but the authors do not explain what novelty their paper has to offer.\n\n## Minor\nThe abstract says that \"The graduated optimization approach is a heuristic method\", which is not true since it has already been studied in the work of Hazan et al. (2016). It's particularly inappropriate since the authors use the same assumption of $f$ being $\\sigma$-nice  \nThe objective function $f$ is not properly introduced before being used in the introduction  \n\"noise smooths\" -> \"noise smoothes\"  \n\"diffusion models (Sohl-Dickstein et al., 2015; Ho et al., 2020; Song et al., 2021a; Rombach et al., 2022), which are currently state-of-the-art generative models, implicitly use the techniques of graduated optimization\". This seems like a very streched example, diffusion models are injecting noise in the image or latent space and for reasons very different from minimizing a nonconvex function. I suggest the authors remove this statement or give a reference where it is shown that there exists a function implicitly minimized by image denoising  \nLemmas 2.1 and 2.2 are introduced with no context, which leads to an unnatural flow when reading the paper. Perhaps the discussion that follows them could be put prior to stating the lemmas.  \nBroken citation: \"Harshvardhan\" should have been \"Harsh Vardhan\"  \nLine 420, \"is nonnegative constant\" -> \"is a nonnegative constant\""
+            },
+            "questions": {
+                "value": "1. In what sense do the authors \"show\" that noise in SGD helps? I see no theory for this, it all seems to follow from assuming Gaussian distribution of gradient noise and prior literature.\n2. Can the assumption on Gaussian noise be removed?\n3. It appears to me that log scale in Figure 2 in x-axis is actually not helpful as most growth seems to happen for larger values on the x-axis, especially in Figure 2 (B). Can you show us the figure with the x-axis not scaled logarithmically?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This article discusses how Stochastic Gradient Descent (SGD), in its essence smoothens nonconvex functions while optimizing them theoretically analysis is provided here to show that the degree of smoothing ($\\delta$) can be calculated using the formula $\\delta= \\eta C/\\sqrt{b}$ where $\\eta$ represents the learning rate and $C$ relates to variance while $b$ signifies the batch size. Additionally, it is theoretically and experimentally demonstrated that this smoothing effect clarifies findings in deep learning such as the reason behind poor generalization often observed with large batch sizes. The paper presents three contributions:\n1. A mathematical model is offered to explain the smoothing effects of descent (SGDs).\n2. There is a link between the level of smoothing and how the model performs overall; the best range for smoothing is between $0.1$ and $1.0$. \n3. Introducing a graduated optimization technique that adjusts the level of smoothing by modifying the learning rate and batch size dynamically throughout the training process."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Introduce an innovative approach by showing that SGD\u2019s inherent stochasticity can smooth nonconvex functions, it allows it to function as an implicit form of graduated optimization. This study leverages SGD\u2019s existing stochasticity for the same purpose.\n2. This paper offers a framework that explains the impact of learning rate adjustment and batch size variability on the level of smoothing in stochastic gradients. Its theoretical analysis is thorough and well supported by proofs. Clearly defined assumptions that provide a strong basis, for their assertions."
+            },
+            "weaknesses": {
+                "value": "1. This work is constrained by the assumption that gradient noise follows a normal distribution, which will be expected for a broader category beyond normal distribution.\n2. Analysis only focused on image classification tasks with CNN-based models.\n3. The proof of convergence only applies to $\\sigma$-nice functions, which is a restricted class of nonconvex functions.\n4. Experiments are insufficient, mainly conducted on CIFAR100 with ResNet architectures, and no experiments on other domains beyond image classification.\n5. Lack of discussion of computational overhead compared to standard SGD.\n6. No discussion of how the method scales to relatively large models or datasets."
+            },
+            "questions": {
+                "value": "Please refer to the weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes the degree of smoothing notion in stochastic gradient descent and studies its relation with sharpness and generalization. From the proposed notion along with empirical studies, the paper observes that controlling the batch size and learning rate affects the degree of smoothness and therefore proposes a graduated optimization algorithm to gradually decrease the degree of smoothing by increasing the batch size and increasing the learning rate."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. It is an interesting observation to view the update of SGD as smoothing.\n2. The proposed degree of smoothing offers another intuitive explanation for decreasing learning rate and increasing batch size along the way of optimization and establishes its connection to graduated optimization."
+            },
+            "weaknesses": {
+                "value": "1. The proposed degree of smoothing is somewhat obvious and simple, falling directly out of the variance/noise assumption of mini-batch SGD. Its correlation with concepts like sharpness is also straightforward because their definitions are somewhat similar already, with sharpness measuring the discrepancy of the function $f$ w.r.t. some $\\delta$ neighborhood while the degree of smoothness the discrepancy of gradient $\\nabla f$ w.r.t. some noisy disturbance $\\omega$.\n2. The numerical result is not quite informative as the effect of decreasing the learning rate or increasing the batch size has been studied and verified in previous optimization and learning theories like mini-batch SGD and sharpness-aware optimization."
+            },
+            "questions": {
+                "value": "Is there any new insight/advantage the degree of smoothing offers other than decreasing the learning rate or increasing the batch size?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors first analyzed the relationship between the batch size, learning rate, and test accuracy, showing that there is a correlation between $\\frac{\\eta C}{\\sqrt{b}}$ and test accuracy.\nThen, using these observations, the authors proposed Implicit Graduated Optimization, which changes the learning rate and batch size during the training.\nThe authors provided the convergence rate of Implicit Graduated Optimization and experimentally examined the effectiveness of their proposed method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The authors analyzed the relationship between test accuracy, learning rate, and batch size.\n\n* Based on this relationship, the authors proposed Implicit Graduated Optimization that adjusts the batch sizes and learning rate during the training."
+            },
+            "weaknesses": {
+                "value": "Overall, the reviewer feels that the proposed method itself is similar to that presented in previous studies, e.g., [1], and the clear advantage of the proposed methods over [1] has not been shown in this paper. \nDesigning the scheduler of batch sizes and learning rates from the perspective of graduated optimization seems to be novel, while the reviewer feels that the relationship between test accuracy and $\\frac{\\eta C}{\\sqrt{b}}$, derived as a conclusion, does not appear to be very novel.\nSee below for a detailed comment.\n\n\n* The reviewer does not think the relationship between $\\frac{\\eta C}{\\sqrt{b}}$ and accuracy presented in this paper is very new since it is well-known that large batch sizes and small learning rates degrade test accuracy. While showing this relationship is a good motivation for designing the proposed method, the reviewer does not think that showing this relationship in itself is a major contribution.\n\n* The reviewer does not understand the difference between the proposed method and existing methods, e.g., [1]. Changing the batch size during training has already been proposed in [1].\n\n* All methods achieved approximately 60% in Figure 4. However, by comparing the results reported in the existing papers [1,2], 60% appears to be too low. Thus, the reviewer is wondering if the results are reliable.\n\n### Typo\n* \".\" is missing in \"Similar early approaches can be found in (Witkin et al., 1987) and (Yuille, 1989)\" in line 67.\n\n## Reference\n\n[1] Samuel et al., Don't Decay the Learning Rate, Increase the Batch Size, In ICLR 2018\n\n[2] He et al., Deep Residual Learning for Image Recognition, In CVPR 2016"
+            },
+            "questions": {
+                "value": "See the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

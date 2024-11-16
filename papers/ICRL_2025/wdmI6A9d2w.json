@@ -1,0 +1,168 @@
+{
+    "id": "wdmI6A9d2w",
+    "title": "Visual Scratchpads: Enabling Global Reasoning in Vision",
+    "abstract": "Modern vision models have achieved remarkable success in benchmarks where a small subset of local features provides critical information about the target. There is now a growing interest in solving tasks that require more global reasoning, where local features offer no significant information. These tasks are reminiscent of the connectivity problems discussed by Minsky and Papert in 1969, which exposed the limitations of the perceptron model and contributed to the first AI winter. In this paper, we revisit such tasks by introducing four global visual benchmarks involving path findings and mazes. \nWe show the following: (1) Although today's large vision models largely surpass the expressivity limitations of the early models, they still struggle with learning efficiency; we introduce the 'globality degree' to understand this; (2) we then demonstrate that the outcome changes and global reasoning becomes feasible with the introduction of a 'visual scratchpad'; similarly to the text scratchpads and chain-of-thoughts used in language models, visual scratchpads help break down global problems into simpler subproblems; (3) we further show that more specific 'inductive scratchpads', which take steps relying on less information, afford better out-of-distribution generalization and succeed for smaller model sizes.",
+    "keywords": [
+        "reasoning",
+        "scratchpad",
+        "vision",
+        "visual reasoning"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "Introducing visual scratchpad for reasoning in the visual domain",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=wdmI6A9d2w",
+    "pdf_link": "https://openreview.net/pdf?id=wdmI6A9d2w",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper deals with visual problems that require global reasoning. The proposed tasks are based on the connectivity problems discussed by Minsky and Papert in 1969. The paper shows that large vision models of today still struggle with learning efficiency when dealing with visual problems that require global reasoning. To deal with this issue the paper introduces a \"visual scratchpad\" based on text scratchpads and chain-of-thoughts used in language models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The paper identifies and address an important problem. The paper introduces the novel Cycles and Strings tasks which turn out to be challenging for current large vision models.\n\n* The paper provides a good theoretical analysis of tasks that require global reasoning through the definition of globality degree.\n\n* The paper includes extensive experiments that show that current large vision models cannot deal with global reasoning problems irrespective of model size (Figure 5)."
+            },
+            "weaknesses": {
+                "value": "* Novelty of Scratch Pads: Visual scratch pads have already been explored in \"Can Visual Scratchpads With Diagrammatic\nAbstractions Augment LLM Reasoning?, Hsu et. al. NeurIPS 2023\".\n\n* Implementation details: Some very important details are not clear -- in L335 \"add a linear layer to the hidden representation of the last transformer layer to predict the scratchpad image\". Use of a simple linear layer would likely severely limit the resolution of the output scratch pad image. It would be useful if the paper discusses the resolution limits (if any) of the visual scratch pad, as this would limit the complexity of the problems that can be tacked by the proposed approach. \n\n* Error propagation: For complex tasks, without a sophisticated visual scratch pad generation mechanism, pixel level errors might have a significant impact on reasoning capabilities.\n\n* Baselines: The paper does not consider state of the art VLMs such as LLaVA or InstructBLIP as baselines. As these models use more sophisticated attention mechanisms, it is possible that the proposed Cycles and Strings tasks can be solved by such models.\n\n* Compute Cost: The use of visual scratch pads would add a significant compute overhead. This should be discussed in more detail."
+            },
+            "questions": {
+                "value": "* The novelty of the proposed approach should be discussed in more detail.\n* The implementation details of the visual scratch pads should be discussed in more details."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors suggest that an important class of reasoning problems rely on breaking down a complex (\"global\") problem into a sequence of simpler steps that are more \"local\". They introduce a measure of \"globality\" based on what proportion of patches are required to solve the task. \n\nThen they show some experiments on 4 visual depictions of problems where BFS is the solution. They train recurrent transformers to solve this problem, and show that using behavior cloning to approximate the BFS step results in better generalization to new sequence lengths. \n\nThey show that in some cases, networks can also learn with less decomposition and chain-of-thought training. Recurrent transformer model trained on all intermediate steps of visual BFS (inductive scratchpad) learns to generalize to samples of different lengths than a model that is trained to go 1\u2192penultimate step, and then penultimate \u2192 ultimate step (single-step scratchpad).\n\nThey show that the single-step model is able to learn some tasks, provided the model is sufficiently \u201clarge\u201d \u2014 vit-S up to VIT-H. In this case the model needs to learn to do O(24) steps, and only models with more layers (VIT-B has 12 and VIT-H has 30) end up learning the solution. While for inductive versions, all versions learn the solution. This is probably related to the idea of \u201ceffective depth\u201d \u2014 e.g. Feedback networks CVPR 17 http://feedbacknet.stanford.edu/."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "### Originality\nThe authors define globality degree in a pretty intuitive way: what proportion of images patches are required to predict the label. They show that for tasks that seem to have a high globality degree (e.g. counting connected components), networks trained with heavy input masking cannot solve the task. \n\n### Significance\nUnclear to me what the significance of globality vs the scratchpad vs making this work for visual settings. It would help if this were connected to vision settings where other papers have studies, rather than a new benchmark of visual representations of BFS\n\n### Clarity\nGenerally the text was written clearly and easy to read. Figures were well presented and grounded in the text.\n\n### Quality\nThe authors clearly invested significant care and effort in preparing the experiments and writing the manuscripts. The figures are quite visually appealing, too."
+            },
+            "weaknesses": {
+                "value": "### Experiments:\nMy main concern is that the experiments don't really support the main story of the paper. They seem related at a glance, but after thinking about it some more I don't think they actually are.\n\nWhat does the globality/locality degree have to do with the experiments? Do transformers learn local steps local steps preferentially to global ones? BFS is local, but they don\u2019t have any experiments or theoretical analysis that it is an important property. Besides, since transformer attention is global anyway, I would expect not. \n\nIn fact, the experiments seem to instead show that when the number of attention layers is fewer than the number of \"reasoning\" steps required for the underlying graph algorithm, the model fails. \n* This would explain why larger models (more layers) can learn to do BFS for fixed-size problems even in the single-step case. Specifically: if the # layers > # steps, the model can learn a solution, which would explain why ViT-S and VIT-B fail (they have 12 layers and there are O(24) reasoning steps required). \n* It would also explain why single-step models don't learn to generalize as well, even for the deeper models: because single-step models have a fixed number of layers/steps thus fixed overall \"effective depth\". While the autoregressive \"inductive scratchpad\" gives the model essentially unlimited depth -- and the problem is learnable as long as each step doesn't require more than, say, 24 attention layers, the model can learn the true solution. And the model is trained to approximate BFS using a hand-designed behavior cloning expert.\n\nBut there is no mention of this (or any other) alternative explanation of the experiments, and it is assumed that the cause is globality of the global task vs locality of the individual steps. But, again, there is no experiment showing that local steps are in fact easier to learn.\n\nThere is also little mention of existing work that connects chain-of-thought reasoning to a smaller sequence of \"local\" steps. There are no external baselines, the evaluation is on a new \"benchmark\" proposed in this paper, and the approach is not evaluated on any existing benchmarks. \n\n\n\nThis brings me to my next major concern: some meaningful connection to existing work is missing.\n\n### References:\nThe lack of connection to existing work makes it a little hard to tell: what is the main point of the paper? Is it globality/locality, the visual implementation of the scratchpad, or the experiments on effective depth. \n1. Connecting CoT to locality: (Why think step by step? Reasoning emerges from the locality of experience. https://arxiv.org/abs/2304.03843. NeurIPS 2023 (oral))\n2. Visual reasoning : (e.g. Visual Programming: Compositional visual reasoning without training (CVPR 2023 Best Paper),\nViperGPT: Visual Inference via Python Execution for Reasoning (ICCV 2023 https://viper.cs.columbia.edu/). These are both quite general -- they don't require hand-designed scratchpad structures for behavior cloning--and they for real-world tasks. There is a lot of work on visual memory/reasoning\n3. The idea of effective depth has been around for a while in vision (e.g. Feedback Networks (CVPR 17) https://arxiv.org/abs/1612.09508)."
+            },
+            "questions": {
+                "value": "I didn't fully understand the connection between the globality degree definition and the masking experiment. \nSince the BFS examples are kind of simple tasks, you could probably estimate the globality degree analytically. How do the experimental results in Fig 3 + 4 match the predicted globality degree"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper argues that most existing vision tasks can be solved by considering only local information in an image. Inspired by this, the paper introduces two kinds of synthetic tasks that require global information: a maze task, where there goal is to find a path through a maze; and a graph connectivity task, where the goal is to determine if a graph is connected or not. The paper also introduces a variant for each of these tasks: a circular maze, and a smoothed depiction of the graph. The paper then demonstrates that the tasks can be solved by training an image generation model on sequences of images that visually represent the incremental generation of a solution (such as the sequence of images showing an incremental breadth-first floodfill for the maze task)."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is quite well-written and easy to follow. It makes the important argument that considerations regarding \"System-2\"-style reasoning should not only apply to purely textual tasks but also to other domains, such as vision. The graph and maze tasks are simple visual tasks for initial investigations in this direction (with some caveats below)."
+            },
+            "weaknesses": {
+                "value": "The proposed method, \"visual scratchpad\", seems to be largely identical to methods like the one proposed in (Yang et al. 2024) or (Bai et al. 2023), applied to a much simpler, synthetic task domain. It seems also related to Procedure Cloning (Yang et al. 2022) and the method described in (Lehnert et al. 2024), although it uses pixels instead of tokens to keep track of previously visited states (then again, that seems to make it a special case of the above-mentioned methods based on video generation). \n\nSince these image-generation methods are able to solve surprisingly difficult tasks just by predicting images, would we not expect them to be able to behavior-clone a floodfill-type solution to maze tasks when training on a large training set? I may be missing something here and will be happy to revise my score if so. \n\nThe introduced datasets are somewhat simplistic and reminiscent of existing (but much more comprehensive) visual reasoning datasets, like (Cherian et al. 2023). \n\nYang et al. 2024: \"Video as the New Language for Real-World Decision Making\"  \n\nBai et al. 2023: \"Sequential Modeling Enables Scalable Learning for Large Vision Models\" \n\nYang et al. 2022: \"Chain of Thought Imitation with Procedure Cloning\"\n\nLehnert et al. 2024 \"Beyond A*: Better Planning with Transformers via Search Dynamics Bootstrapping\"\n\nCherian et al. 2023: \"Are Deep Neural Networks SMARTer than Second Graders\""
+            },
+            "questions": {
+                "value": "One could argue that a natural OOD setting to consider for the tasks (especially the maze task) is variable-size. The authors argue that this would result in \"resolution inconsistencies\". While it would indeed require careful considerations on the vision architecture to make it resolution independent, I believe it could make the tasks much more interesting and bring them in line with the textual arguments the paper makes on global-vs-local tasks and also the existing literature on length generalization, especially in light of the discussion on Globality Degree in the paper. \n\nI find it a bit surprising that pre-training is required (Figure 4). \n\nBesides the two image generation-based models mentioned above, how does the proposed method relate to \"The Predictron: End-To-End Learning and Planning\" (Silver et al. 2017)? \n\nThe term \"Visual Scratchpad\" could be slightly misleading, as it seems to suggest an approach that equips a language model with a modifiable visual buffer to support reasoning. An approach like that (with the same name) is discussed in \"Can Visual Scratchpads With Diagrammatic Abstractions Augment LLM Reasoning?\", Hsu et al. 2023"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose \u201cglobal vision tasks\u201d, which studies problems in which reasoning about the whole image is important. They develop a set of datasets involving binary prediction of graph connectivity, string connectivity, and maze connectivity. The paper introduces a method based on a ViT backbone that uses different types of intermediate supervision in the form of a scratchpad (single-frame scratchpad and recurrent multi-frame scratchpad)."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "I appreciate that the authors tackle a complex challenge of reasoning about graphs, strings, and mazes; I think it is an exciting direction that current VLMs struggle at, which we need a general solution for. I also like that the authors evaluate out-of-distribution generalization capabilities."
+            },
+            "weaknesses": {
+                "value": "1. I have some fundamental disagreements with this categorization of \u201cglobal visual tasks\u201d. How much \u201cglobal\u201d vs \u201clocal\u201d reasoning is required in a task is on a continuous scale. It depends on not only the task, but the specific instantiation of images and query. The authors point out that \u201ca single patch containing cat whiskers significantly increases the likelihood that the model will classify the image as a cat\u201d. It does, but we will need the full image to understand if the whisker belongs on the cat, or if the whisker instead belongs on a walrus, or if the whisker is instead in a photo on the wall where actually, a person is next to. Similarly, for tasks that the paper is exploring, by seeing that the entry/exit has an immediate connecting path instead of ending in a dead end also increases the likelihood that the maze has connectivity between the two points. How does one determine which tasks are \u201cglobal\u201d vs. not? The definition is ambiguous, and seems by the authors\u2019 definition to depend on whether a few patches are informative enough to yield high probability predictions. What is considered high probability? On which model, trained on which tasks? How big and how many are these patches? Unfortunately, this task definition is not clear enough, though I appreciate the authors\u2019 attempt to define a more challenging set of reasoning tasks. \n2. The method proposed improves upon the baseline because it has more supervision. The paper states that having scratchpads improves performance compared to having no scratchpads, but we can not disentangle whether having a scratchpad in the model forward pass is more important, or whether the supervision is important, as each method is given different levels of supervision. The no scratchpad baseline is given only the final binary answer as supervision. The proposed single scratchpad model is given supervision on what the scratchpad should be. The proposed multi-scratchpad model is, I believe, given 50% of perfect frames for reasoning steps. (a) This does not convince me that scratchpads are helpful, but that intermediate supervision is helpful. (b) What happens when these intermediate frames are not available? Can you generalize to other complex reasoning tasks?  \n3. The tasks proposed are all quite similar (binary classification, connectivity tasks in graphs, strings, and mazes). I would like to see performance on other vision challenges, even if it\u2019s on synthetic data as well, like ARC. \n4. No baselines other than the base ViT are explored on this task. I would expect other visual reasoning prior works to be able to be evaluated."
+            },
+            "questions": {
+                "value": "See the above four points. I don\u2019t believe this paper is ready for publication in its current form. Though I think the tasks proposed and the broad idea of visual scratchpads is interesting, I don\u2019t think the tasks are well defined, nor the experiments sound enough at this current stage. I would encourage more experimentation on what it means to endow a model with a scratchpad, as compared to additional supervision."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

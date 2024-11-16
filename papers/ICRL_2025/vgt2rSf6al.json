@@ -1,0 +1,181 @@
+{
+    "id": "vgt2rSf6al",
+    "title": "MindSimulator: Exploring Brain Concept Localization via Synthetic fMRI",
+    "abstract": "Concept-selective regions within the human cerebral cortex exhibit significant activation in response to specific visual stimuli associated with particular concepts. Precisely localizing these regions stands as a crucial long-term goal in neuroscience to grasp essential brain functions and mechanisms. Conventional experiment-driven approaches hinge on manually constructed visual stimulus collections and corresponding brain activity recordings, constraining the support and coverage of concept localization. Additionally, these stimuli often consist of concept objects in unnatural contexts and are potentially biased by subjective preferences, thus prompting concerns about the validity and generalizability of the identified regions. To address these limitations, we propose a data-driven exploration approach. By synthesizing extensive brain activity recordings, we statistically localize various concept-selective regions. Our proposed MindSimulator leverages advanced generative technologies to learn the probability distribution of brain activity conditioned on concept-oriented visual stimuli. This enables the creation of simulated brain recordings that reflect real neural response patterns. Using the synthetic recordings, we successfully localize several well-studied concept-selective regions and validate them against empirical findings, achieving promising prediction accuracy. The feasibility opens avenues for exploring novel concept-selective regions and provides prior hypotheses for future neuroscience research.",
+    "keywords": [
+        "Neuroscience",
+        "fMRI encoding",
+        "Generative model",
+        "fMRI generation",
+        "fMRI functional localizer",
+        "Concept-selective voxel"
+    ],
+    "primary_area": "applications to neuroscience & cognitive science",
+    "TLDR": "",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=vgt2rSf6al",
+    "pdf_link": "https://openreview.net/pdf?id=vgt2rSf6al",
+    "comments": [
+        {
+            "comment": {
+                "value": "I am one of the authors of BrainDiVE.\n\nI wanted to quickly provide my thoughts for `MindSimulator: Exploring Brain Concept Localization via Synthetic fMRI`.\n\nI have carefully read this paper and I will summarize it as follows:\n1. The authors train an fMRI autoencoder with a latent space that is regularized by CLIP\n2. They train an diffusion transformer which synthesizes fMRI responses conditioned on the CLIP image embedding\n3. They take the expectation of the fMRI response by sampling from the diffusion model multiple times, and then taking an average.\n\nPros:\n1. I think the approach overall of a diffusion fMRI encoder is quite novel. Indeed the fMRI response is stochastic, so this design does make sense to me.\n2. Without the use of gradients, computational tests of selectivity can be done much more quickly.\n\nQuestions & weaknesses:\n1. I'm a bit unsure about the proposed evaluation metrics for fMRI encoding performance. Using pearson R or R^2 is standard in fMRI encoder literature. Using a decoder as part of the evaluation process introduces additional complications.\n2. Using `Resting-State Brain Activity fMRI` as the inference initialization is a bit strange, in my view this is not well justified\n3. Using `Correlated Gaussian Noise` as the multi-trial seed is not well justified.\n4. The fMRI beta pre-processing stage is a bit unclear. Do the authors use all three repeats of the same image individually? Or do the authors average the beta values?\n\n\nMinor issues:\n1. Typo in Figure 4 left text? `Trial = 1` seems to be repeated twice\n\nIf I were the reviewer of this paper, I would give this paper a 6 (weak accept) prior to rebuttal."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a new data-driven approach to localize concept-selective regions in the brain by using synthetic brain recordings generated via a probabilistic model, MindSimulator, conditioned on concept-oriented visual stimuli. This approach enhances coverage and reduces bias, achieving high prediction accuracy in localizing known concept regions."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1 - The authors employ a generative fMRI encoding model to synthesize individual fMRI signals corresponding to concept-oriented visual stimuli, addressing the inherent one-to-many correspondence issue between visual stimuli and fMRI recordings.\n\n2 - The paper is well-structured, with a clear formulation of the problem and a thorough description of the proposed model's components and methodology.\n\n3 - The authors provide extensive ablation studies that effectively validate the model architecture's contributions and showcase the performance impact of each component."
+            },
+            "weaknesses": {
+                "value": "1 - Capturing both spatial and temporal dependencies within the autoencoder is essential for producing meaningful representations of brain activity, which is inherently dynamic. The current model appears to underutilize temporal information based on the description in Supplementary Material Section A. To address this limitation, you might consider adding recurrent layers, such as LSTMs or GRUs, or using 3D convolutions in the autoencoder to enhance temporal processing. Additionally, it would be helpful to clarify in the main text or supplementary materials if and how temporal dependencies are integrated in the current approach. This added information would improve understanding of how well the model aligns with the time-varying nature of fMRI data.\n\n2 - It would be helpful if the authors could clarify their voxel selection and masking process, specifically how spatial relationships between neighboring voxels are preserved when creating the autoencoder input. If there is a risk of losing local spatial context, consider alternative approaches, such as using 3D convolutions or patch-based inputs, which may mitigate this issue and maintain spatial continuity within the masked regions.\n\n3 - To improve the evaluation of your results, please include comparisons with specific, relevant works. For example, you may consider applying a connectivity-based parcellation approach (ref are given below) to both the original and synthetic data to examine whether similar visual networks emerge in each case. Including these comparisons would help readers to contextualize the reported metrics and enable a clearer understanding of your model's relative performance and its contributions to the field.\n\n[1] Du, Y., Fu, Z., Sui, J., Gao, S., Xing, Y., Lin, D., ... & Alzheimer's Disease Neuroimaging Initiative. (2020). NeuroMark: An automated and adaptive ICA based pipeline to identify reproducible fMRI markers of brain disorders. NeuroImage: Clinical, 28, 102375.\n\n[2] Vu, T., Laport, F., Yang, H., Calhoun, V. D., & Adal\u0131, T. (2024). Constrained independent vector analysis with reference for multi-subject fMRI analysis. IEEE Transactions on Biomedical Engineering.\n\n4 - To aid in assessing scalability, please provide details on the computational complexity of the model, including training time, memory usage, and the hardware specifications used in your experiments. These details would offer valuable insight into the practical feasibility of implementing your approach in various research or clinical settings."
+            },
+            "questions": {
+                "value": "1 - Given the brain\u2019s dynamic complexity and somewhat chaotic behavior, generative models offer both benefits and limitations in modeling brain function. Could the authors evaluate the similarity in temporal and spatial gradients between the original and synthetic data to better assess these dynamics?\n\n2 - Additionally, it would be valuable if the authors could quantify the similarity in functional connectivity maps between the original and synthetic data at each timepoint as well."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "I think this is too similar to Luo et al 2023: Brain Diffusion for Visual Exploration: Cortical Discovery using Large Scale Generative Models.\nThe additions to the paper I cite here seem to be minimal."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "-"
+            },
+            "weaknesses": {
+                "value": "I think this is too similar to Luo et al 2023: Brain Diffusion for Visual Exploration: Cortical Discovery using Large Scale Generative Models.\nThe additions to the paper I cite here seem to be minimal."
+            },
+            "questions": {
+                "value": "Is this any different from the paper I cite? if yes, please explain"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Research integrity issues (e.g., plagiarism, dual submission)"
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "it seems to be too similar to: Luo et al 2023: Brain Diffusion for Visual Exploration: Cortical Discovery using Large Scale Generative Models."
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new way to implement concept-localization in the brain using a learned generative model which synthesizes fMRI responses. This is derived from the observation that fMRI responses to the same stimuli can be noisy and are better captured by sampling from a random variable instead of a learned (discriminative/static) model. A latent representation is jointly learned via CLIP in which an image embedding is paired with a voxel embedding and then trained according to the SoftCLIP loss.\n\nThe authors show reconstruction is possible via their proposed method to use synthetic fMRI, but the authors fail to show that the brain data could just as easily be ignored. Image encodings are passed into the sampler and decoders are highly able to create very realistic images but it's not clear that the modelling of the resting state inputs and learned fMRI is actually doing anything useful in a clear way as the authors make it seem (with huge swaths of cortex claimed for very restrictive conceptual categories). There are arguments for how discrete these are but once you expand the classes beyond the very limited amount presented, then quantified overlap, it would be clear that many patches are not conceptually distinct. That's my assumption. \n\nThe idea is an interesting one, but the lack of good experimental testing against strong baselines (particularly, testing with shuffled/random fMRI data). The bulk of the promise shown here might actually be just by going between image embeddings (via the voxel encoder as it was jointly trained on image representations and not fMRI data alone)."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper has a pretty good grasp on the recent literature and various approaches that have been experimented on in this area, showing a wide depth of knowledge. The analyses seem detailed and it's clear a lot of work went into some parts of the experimental analysis. There will be a pretty detailed Weaknesses section, but it's easier to point out identified weaknesses than identify lists of things done correctly. I do have a fair few issues with the way the analysis was done, but I think with some tweaks and additional analyses that are robust against better controls, better description, this paper does have potential."
+            },
+            "weaknesses": {
+                "value": "* Captions to figures are mostly vacuous and non-descriptive and need to be expanded to better describe the associated figures\n* Some points are argued but are presented without evidence and for the kind of statements they are, definitely require a solid backing (see Questions section)\n- Citation format is not consistent. Many citations should be in parentheticals but are not (needs to be fixed for camera-ready version)\n- The language is overly flowery in a way that makes the claims nonsensical (e.g. \u201cFortunately, we effectively explore novel concept-selective regions, capably providing explicit hypothesis constraints\u2026\u201d)\n- Language needs to be checked by a person intimately familiar with the conventions of academic written English to correct some unusual and unclear phrasing (in the methods section especially)\n\nThere have been numerous recent works that have highlighted how these types of models can effectively perform the same function when replacing brain data with random noise or brain responses that aren't paired correctly with the same responses. \n\nHuge caveat here that \u201c**if it can be reconstructed, then the fMRI contains the information**\u201d but you can often do reconstruction equally well from random noise, there doesn\u2019t have to be anything real in the fMRI data. Kamitani recently showed this (https://arxiv.org/abs/2405.10078) and this paper also did (https://arxiv.org/abs/2405.06459) with EEG. \n\nThe paper fails to take into account a number of confounds and does not seem to understand just how drastic this aspect of the analysis could be on changing the presented results. You can't present images of food and not take into account that you might be modelling shape (round plates, round food shapes) or lower-level features like colour (food is often colourful). These have been huge issues in the concept localization space using datasets like NSD but I didn't see any citations or awareness of this issue. Also, it's not likely that the concept of \"surfer\" or \"bed\" takes up anywhere near as much cortical territory as some of these plots indicate. There is high-level confounding going on here that undermines the idea of concept localization. This is why the handcrafted stimuli were carefully created in the first place, to avoid this issue. The idea of this paper seems like it goes back in the wrong direction. \n\nThe results in Table 3 during the ablation analysis show often minimal drops when ablating important components of the paradigm, which lead me to believe that confounds and lack of good baselines are hiding shortcut learning and cheats that the model is making use of instead of it being primarily a method centred on good fMRI representations.\n\nIf you have focused on the localizers used in NSD then I think it's important you cite the (ubiquitous) paper that NSD (and many other fMRI datasets) use, namely the fact that these fLoc images come from Stigliani et al. 2015 (https://www.jneurosci.org/content/35/36/12412). \nIt seems quite the oversight to not have cited this given the content of the submission, especially as you're using the images from this paper in the figures of your dataset."
+            },
+            "questions": {
+                "value": "The introduction raises some claims that need supporting evidence. How do you know that the efforts to go into designing common functional localization images are insufficient and poorly generalizable? What promotes this observation? Why should a functional localiser be embedded within a naturalistic scene? Naturalistic stimuli are famously confounded across multiple dimensions and the artificial placement of a core concept in a bare background is a method to remove potential confounds. Yes, it\u2019s undesirable because our vision is based around naturalistic scenes, but the argument for naturalistic images in functional localization is only inviting trouble. We would lose specificity and be more unlikely to be sure that we\u2019re not detecting confounding background information and mistakenly attributing brain activity to core concepts within the images. The arguments as they\u2019re outlined don\u2019t naturally follow on from one another in this exposition of the paper\u2019s contributions.\n\n- Line 157: do you mean for the comma to be a subtraction symbol in the MSE equation?\n- Why do you start the inference sampler with resting state fMRI data? What's the idea here? It's not really explained in Section 3.4.\n- If an amended version is submitted, could you put the ROI boundaries on your flatmaps to better orient the distributions of voxel encodings?\n- In 6.1 what's going on here? Are you using MSCOCO images or images for which there is fMRI data in NSD? It's not clear\n- Also in 6.1, you mention the t-test that is done voxelwise, where are these results? What was the threshold? I don't really understand what you've done or how you have set up your test and there is also no mention of multiple comparisons correction (big red flag for me)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A. Public datasets used."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes \"MindSimulator\", a framework that synthesizes fMRI data based on visual stimuli through an fMRI autoencoder, diffusion estimator, and inference sampler. The authors first assessed the performance of the fMRI autoencoder and diffusion estimator using various metrics, demonstrating their capability to generate high-quality fMRI data. They then used the synthesized fMRI data to explore correlations between manually selected images and brain activity, offering new insights for neuroscience research."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper offers a novel perspective by applying well-established fMRI visual decoding models for fMRI signal synthesis, with thorough validation to demonstrate reliability.\n2. This study introduces a new tool for exploring *concept-selective regions*, significantly enhancing the flexibility of investigating how specific human visual representations of concepts are spatially distributed in the brain."
+            },
+            "weaknesses": {
+                "value": "1. The algorithm for localizing concept-selective regions may lack sufficient validation, as the paper only compares this approach to fLoc, without further support from neuroscience literature. Consideration of alternative methods, like Neurosynth or Text2Brain, could strengthen the results, as these methods allow a broader selection of concepts correlated with brain activity, potentially detecting concepts not covered by fLoc. \n\n2. In the *Evaluation Metrics* section, the method of validating generated fMRI data based on the quality of generated images may not be reliable due to its reliance on a separate trained decoding model. Given the complexity of visual decoding from fMRI, this dependence could reduce the robustness of the evaluation. Exploring alternative evaluation methods, such as comparing generated data with latent representations in the voxel encoder\u2019s latent space, might provide more direct validation."
+            },
+            "questions": {
+                "value": "1. In the *Inference Sampler* section, the mention of \"resting-state brain activity fMRI\" could be misleading, suggesting that the model can generate resting-state fMRI data. However, I could not find evidence of any relevant dataset being used. Could the authors clarify this point?\n2. In the *Out-of-Distribution Generalization* section, CIFAR-10/100 was used, and metrics were calculated based on images decoded from synthesized fMRI data. As noted in the weaknesses, this approach may introduce bias. Why not use an image-fMRI dataset, like THING-fMRI, to compute metrics directly on fMRI data?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,133 @@
+{
+    "id": "ztzZDzgfrh",
+    "title": "ReDeEP: Detecting Hallucination in Retrieval-Augmented Generation via Mechanistic Interpretability",
+    "abstract": "Retrieval-Augmented Generation (RAG) models are designed to incorporate external knowledge, reducing hallucinations caused by insufficient parametric (internal) knowledge. However, even with accurate and relevant retrieved content, RAG models can still produce hallucinations by generating outputs that conflict with the retrieved information. Detecting such hallucinations requires disentangling how Large Language Models (LLMs) balance external and parametric knowledge. Current detection methods often focus on one of these mechanisms or without decoupling their intertwined effects, making accurate detection difficult. In this paper, we investigate the internal mechanisms behind hallucinations in RAG scenarios. We discover hallucinations occur when the **Knowledge FFNs** in LLMs overemphasize parametric knowledge in the residual stream, while **Copying Heads** fail to effectively retain or integrate external knowledge from retrieved content. Based on these findings, we propose **ReDeEP**, a novel method that detects hallucinations by decoupling LLM\u2019s utilization of external context and parametric knowledge. Our experiments show that ReDeEP significantly improves RAG hallucination detection accuracy. Additionally, we introduce AARF, which mitigates hallucinations by modulating the contributions of Knowledge FFNs and Copying Heads.",
+    "keywords": [
+        "Retrieval-Augmented Generation Hallucination",
+        "Hallucination Detection",
+        "Mechanistic Interpretability"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "We propose ReDeEP for detecting hallucinations in RAG models by decoupling external context and parametric knowledge, and AARF to reduce hallucinations by modulating the contributions of Knowledge FFNs and Copying Heads.",
+    "creation_date": "2024-09-24",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ztzZDzgfrh",
+    "pdf_link": "https://openreview.net/pdf?id=ztzZDzgfrh",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a method for detecting hallucinations of Retrieval Augmented Generation (RAG) models in the scenario when retrieved context is accurate and relevant. \n\nThe authors hypothesize that hallucinations are caused by models ignoring the retrieved context and overemphasizing their parametric knowledge. To capture these concepts they introduce two auxilary scores: External Context Score (ECS) that reflects utilization of the retrieved context by the model, and Parametric Knowledge Score (PKS) that reflects utilization of the parametric knowledge. Hallucinations are then predicted by thresholding a hallucination score H which is computed as a weighted sum of ECS and PKS.\n\nIn addition to that, the authors propose a method to reduce hallucinations by suppressing outputs of attention heads that contribute to low ECS and outputs of fully-connected layers that contribute to high PKS."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Authors provide a straightforward method to detect hallucinations in RAGs that does not require model fine-tuning.\n- Empirical results provided by the authors look good."
+            },
+            "weaknesses": {
+                "value": "## Lack of justification for PKS and ECS\n\n### No PKS justification\nAlthough PKS is correlated with a hallucination label (line 319) there is still no guarantee that it is adding parametric knowledge. Since you do not provide any theoretical justification for this score, at least an empirical justification is needed. You can run a simple experiment: use LogitLensed outputs before FFN as final outputs and check whether it removes the parametric knowledge bias using some of the setups for that, for example, the one from [1] (they study it through the prism of the phenomenon you encounter in RQ3 and Appendix E).\n\n### Questionable ECS justification\nContrary to the PKS the authors provided empirical justification for the ECS measuring model reliance on context, however, I find it not very convincing so far.\n\nFirst of all, I do not see how the ratio of attention head attending vs mis-attending justifies ECS. It would make more sense to me if you provided such a ratio for mulitple different values of ECS and observed that the higher the ECS the more often a model attends.\n\nSecondly, I am not sure that ratio of attending is computed correctly. As far as I understood for LLama-7B you take hallucinated response (which means that it contradicts external context) and the most attended span in external context. Then you ask gpt-4o to evaluate whether this span supports existence of a conflict in response or not. If that is the case, I do not understand why this experiment shows whether the model attends (the attention span contains part of the context needed for the correct answer) or mis-attends. If attention span supports the existence of a conflict in response it might still not be relevant for the correct response itself, which means a conflict exists but we can not call it a hallucination according to your definition (hallucination = response is contradicting the context or is not supported by it - line 72).\n\nPlease correct me if I misunderstood the experiment setting, what is meant by attending, or the way attending and mis-attending is computed.\n\n## Too many hyperparameters\nI am afraid that the proposed hallucination detection method is not applicable in practice as it requires a lot of manual hyperparameter tuning. According to the provided values, they all are different per dataset and model (see Appendix I). They include:\n\n- top k % for ECS \n- top k % for PKS\n- tau threshold for H - page 8 bottom\n- alpha and beta for reweighting page 9 top\n- chunk size for the chunked version of REDEEP\n\nI suggest that the authors discuss strategies for automating hyperparameter selection or provide guidelines for choosing these parameters in real-world applications.\n\n## Insufficient experiments\n\n### Hallucination detection experiment\n- For RagTruth dataset there exist baselines provided by the original paper [2] which perform better than all the baselines considered by you, could you please include them? E.g. Baseline LLama2-13B results fine-tuned on RagTruth have 78.7 F1, see Table 5 in [2] vs yours 78.3 in Table 1. I think the comparison makes a lot of sense since you tune many hyperparams using RagTruth validation dataset while you could simply fine-tune that baseline on the same data instead.\n- Same comes for Dolly dataset, please include results for AlignScore and RepC-LE-nn-n2000-e2000 that have 84 and 86 accuracy correspondigly, while the best method provided by you scored 73.73 (LLama2-7B).\n- Please also provide results for the Noisy Context split from Dolly [3] dataset because it better approximates realistic RAG application scenario. \n\n### Causal experiment\n\n- First of all, I don\u2019t see how a higher NLL difference for the experimental group than for the control group shows a causal relation between hallucinations occurrence and copying heads neglecting necessary knowledge, could you please elaborate?\n- The experiment results are very noisy and it is hard to draw any conclusions from them, for example, boxplot of the experimental group is fully contained within the boxplot of the control group in Figure 5 (b). \n- It is not clear how many heads are within experimental and control groups, it can be the case that loss changes are bigger for the experimental group simply because it intervenes in more heads.\n\n### Hallucination generation experiment\n\nPrompt for truthfulness (Appendix L) creates bias, since GPT-4o knows which answer belongs to the baseline and which to AARF. It can influence its answers since usually in scientific papers named methods outperform baselines, which must have been the case on chatgpt training data as well and possibly created such a bias. \n\nInstead, it would be nice to see the results for prompts that contain anonymous names (e.g. model 1 and model 2 instead of baseline and AARF) to avoid the mentioned naming bias and have a randomly shuffled order of AARF and Baseline inputs before showing to GPT-4o to avoid positional bias.\n\n### Lack of sensitivity experiments\nPlease provide sensitivity experiments to the numerous hyperparameters you introduced (see the section \"Too many hyperparameters\" for the hyperparameters)\n\n## Unclear writing\n- While being core concepts of the paper, Copying Heads (set A) Knowledge FFNs (set F) are not formally defined (line 381). I guess set A is built by taking top-k attention heads after sorting them by ECS while set B is built by taking top-k FFNs after sorting them by PKS, but I could not find it in text.\n- Strange ordering equations, for example, Eq. 2 that defines an important part of ECS has an undefined value \u201ca\u201d which is only introduced in Appendix Eq. 8.\n\n## Typos\n455: REDEPE\n\n## References\n\n[1] Kortukov, E., Rubinstein, A., Nguyen, E., & Oh, S.J. (2024). Studying Large Language Model Behaviors Under Context-Memory Conflicts With Real Documents.\n\n[2] Wu, Y., Zhu, J., Xu, S., Shum, K., Niu, C., Zhong, R., Song, J., & Zhang, T. (2023). RAGTruth: A Hallucination Corpus for Developing Trustworthy Retrieval-Augmented Language Models. Annual Meeting of the Association for Computational Linguistics.\n\n[3] Hu, X., Ru, D., Qiu, L., Guo, Q., Zhang, T., Xu, Y., Luo, Y., Liu, P., Zhang, Y., & Zhang, Z. (2024). RefChecker: Reference-based Fine-grained Hallucination Checker and Benchmark for Large Language Models.\u00a0ArXiv, abs/2405.14486."
+            },
+            "questions": {
+                "value": "- Why LLama2-7B (smaller and older version than others) has better results on Dolly in terms of F1 or Accuracy in Table 1?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "I have no ethics concerns."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Retrieval-Augmented Generation (RAG) models are still prone to hallucinations. This paper explores the internal mechanisms behind hallucinations in RAG settings. Building on these insights, the authors propose a hallucination detection method, ReDeEP, and a RAG truthfulness improvement method, AARF."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "Each step is thoughtfully motivated, with both conceptual reasoning and empirical validations in \u00a73. The detection method shows effective results in Table 1, and the RAG truthfulness improves using AARF, as shown in Figure 6."
+            },
+            "weaknesses": {
+                "value": "Figure 3 is problematic. The starting point and flow of the diagram are unclear, with too many arrows, making it hard to identify the main computational paths. An effective graphic would show one main data processing pipeline, which is missing here. Additionally, the quantities computed are not well-defined. Panels (b) and (c) add no extra information and could be removed without loss.\n\nOtherwise, rather minor points:\n- l.281: Please describe the number of hallucinations and non-hallucinations (h = 0 and h = 1) in the evaluation set.\n- Pearson's Correlation in \u00a73: Why measure Pearson\u2019s correlation between ECS and hallucination labels (binary)? It would be more informative to report accuracy at a fixed threshold or detection metrics such as AUROC. Similarly, for PKS and hallucination, detection metrics like AUROC would be preferable.\n- l.465: Could you clarify the criteria for selecting thresholds for accuracy, recall, and F1?\n\nEven more nits:\n- Use full names for FFN, ReDeEP, and AARF, at least in the abstract.\n- In Figure 4(c), clarify what the colour bar values represent.\n- Overall, font sizes in the figures are too small.\n- Structure in \u00a73.2 is difficult to follow. Stick to a standard structure using \\section, \\subsection, \\subsubsection, \\paragraph, etc., rather than introducing new hierarchies (boldface, underline, italics, numbering (1), (2), \u2026)."
+            },
+            "questions": {
+                "value": "The paper offers valuable insights into how RAG-based LLMs produce hallucinated outputs. Building on these findings, it proposes a detection method and mitigation strategy grounded in this understanding. Presentation issues remain, particularly in the main figure explaining the method, yet the contribution is significant."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes ReDeEP - a method to detect hallucinations by LLMs in retrieval augmented generation settings by using mechanistic interpretability. The authors introduce two novel metrics - (1) the External Context Score (ECS) and (2) Parametric Knowledge Score (PKS) to identify when hallucinations happen because of over reliance on internal knowledge or from the underuse of external information. The authors also introduce AARF (Add Attention Reduce FFN), which aims to adjust the weights of the attention heads, and feed forward layers to reduce hallucinations.  Their approach is empirically validated on standard benchmarks, demonstrating superior performance to existing methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The development of the ECS and PKS metrics to understand the contributions external and internal knowledge have on the LLM's generation is a compelling and novel way to understand LLM outputs. \n\n2. They demonstrated great empirical validation by running extensive experiments across two datasets, three LLMs, and many baseline methods. \n\n3. They also introduce a method to curb hallucinations called AARF - which relates back to the introduced metrics nicely."
+            },
+            "weaknesses": {
+                "value": "1. Performing this analysis at the token/chunk level might limit its practicality in real time or large scale settings - it would be nice to have a richer discussion of the trade-offs and real world feasibility. \n\n2. The experiments are extensive - however they are all with the LLama family of models - testing (even a much smaller set) on a different model would be informative. \n\n3. While the performance of AARF seems good (Figure 6) - it would be good to see some example outputs - its unclear how this could effect the model\u2019s output in terms of coherence/writing in general."
+            },
+            "questions": {
+                "value": "1. Could you discuss more the trade-offs of your method? In particular thinking about real time settings? \n\n2. Have you tested your method on non-LLama models? Do you anticipate any challenges for different models? \n\n3. Could you provide some example outputs pre and post using AARF? Or can you speak to the effect AARF has on the coherence of the model\u2019s output after AARF?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

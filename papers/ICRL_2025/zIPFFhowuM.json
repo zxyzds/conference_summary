@@ -1,0 +1,169 @@
+{
+    "id": "zIPFFhowuM",
+    "title": "Proof Search Augmented Language Models",
+    "abstract": "Transformer language models (TLMs) exhibit an impressively general range of capabilities. A growing body of work aims to harness these models for complex reasoning problems expressed in natural language. However, recent theoretical and empirical results have revealed limits to the algorithmic generalization of TLM reasoning. Transformers trained to solve deduction problems from one distribution fail to solve instances of the same problem class drawn from other distributions. We propose to improve the systematic reasoning capabilities of TLMs via a differentiable proof search module, yielding proof-search augmented language models (PSALMs).\nIn a PSALM, a Transformer is responsible for predicting rule and statement representations for a neural theorem prover (NTP). The NTP performs a backward-chaining search over proofs, scoring them based on a soft unification operation. Our principal challenge is to train models to reason without also learning spurious features.\nOur results show that rule-level supervision allows PSALMs to successfully generalize across problem distributions in deduction tasks where vanilla transformers fail to learn systematic behavior. We also find we only need label supervision to adapt PSALMs to more natural text.",
+    "keywords": [
+        "reasoning",
+        "transformers",
+        "neural theorem proving",
+        "neural network architectures",
+        "differentiable algorithms"
+    ],
+    "primary_area": "neurosymbolic & hybrid AI systems (physics-informed, logic & formal reasoning, etc.)",
+    "TLDR": "We add differentiable proof search to transformers to improve generalization across problem distributions",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=zIPFFhowuM",
+    "pdf_link": "https://openreview.net/pdf?id=zIPFFhowuM",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper focuses on multi-step reasoning tasks that require a model to predict whether a statement is true given unification rules and facts in natural language. The authors first define several rule templates that contain different numbers of unification terms, then train a Transformer and cross-attention module to fill the term slots with entities and their features from a sentence. Lastly, the extracted rule is input to a neural theorem prover to obtain the proof and the truth prediction. The author uses three types of supervision: label supervision, proof supervision, and rule supervision. Experiments show training with rule supervision can obtain 96.7% accuracy on the OOD test split."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The proposed method is effective. The experiments show the proposed method trained with rule labels can obtain nearly 100% accuracy on the OOD splits, which largely improves the previous methods."
+            },
+            "weaknesses": {
+                "value": "- The evaluation dataset and the compared method are too simple. Since the paper claims current TLMs have limits in reasoning, it should compare with recent SOTA LLMs and show their incapability in a complicated benchmark.\n\n- The comparison is unfair. The proposed method with proof and label supervision achieves inferior performance to baseline TLM and only obtains nearly 100% accuracy with rule-level supervision. A more appropriate baseline should also have these labels. For example, an LLM trained to generate text in \"fun :- happy kind\" format and predict the label with CoT."
+            },
+            "questions": {
+                "value": "- Is there any harder QA benchmark that involves logic or multi-step reasoning suitable to evaluate the proposed method?\n\n- How do current LLMs w/wo CoT perform in the SimpleLogic dataset?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce Proof Search Augmented Language Models (PSALMs), a differentiable proof search module combined with a transformer. The authors propose an efficient hardware-aware method for proof search (at further depths than prior works) and pruning and performing ablations to identify the strengths of granular rule supervision."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper presents multiple training objectives and studies which impact performance.\n- An efficient and hardware-aware algorithm has been proposed for proof search.\n- The authors show evaluations of the SimpleLogic dataset and generalization capabilities."
+            },
+            "weaknesses": {
+                "value": "- There are limited empirical evaluations other than SimpleLogic.\n- More investigation could be conducted into the scaling of the proof search."
+            },
+            "questions": {
+                "value": "- How does the approach work on tasks other than SimpleLogic?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a PSALM model that combines a transformer-based language model with a proof search system. Compared to the NTP introduced by Rocktaschel & Riedel in 2017, it uses pruning and parallel execution to improve scaling and throughputs. Using a new loss term, the system provides significant improvements over a vanilla model for (limited) out-of-distrbution generalization."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper is well written and the key components are motivated and explained well. The experimental results seem to be systematic and convincing."
+            },
+            "weaknesses": {
+                "value": "The novelty introduced in the paper seems limited. Pruning is well known; while it improves scaling, in the worst case, the complexity remains the same. Also the improvements over the vanilla model do not reflect the improvements over the state of the art transformer models.\n\nThe experimental results are not fully explained. For example, the row of PSALM L_{rule} in Table 1is not explained and no comments are provided in the paper even though it is a key result."
+            },
+            "questions": {
+                "value": "- Could you explain the reasons why loss L_{rule} is minimized much smaller than the other two? It seems to me it shows that many entries in matrix T are zeroes.\n\n- As a follow-up question, since the loss terms can be minimized to a different scale, should different weights improve the performance when combining them such as the results in Tables 1 and 2?\n\n- Section 3.1 states that \"Encoding rules independently prevents the TLM from \u201cshortcutting\u201d the NTP,\" could you provide corresponding empirical evidence and quantify the impact?\n\n- Figure 3 shows the range of proof score is different from the case on the left and the case on the right. Could you explain how the larger range for L_{rule} affect its generalization and separation between positive and negative ones?\n\n- Could you provide the key reasons underlying the big differences between the last two rows of Table 1 in terms of OOD accuracy and OOD soundness?\n\n- I assume the vanilla TLM model is the DeBerta model with 435M parameters. However, there are manyother larger LLMs developed. Could you provide a baseline or baselines using state of the art LLMs?\n\n- Could you explain how the proposed method overcomes the exploding computational cost compared to other methods? As far as I could understand, the pruning and parallelization do not change the nature of exponential growth.\n\n- Could you comment on the complexity of the proposed system with respect to the depth? In addition to depths 5-6, could you provide results for depths 7, 10, and 20?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Summary:\n\nThis paper applies an encoder-only model to represent the rule and statement in the proof. Then, the Neural Theorem Prover (NTP) utilizes the representation to perform a backward-chaning search of proofs and sort them.\n\nContributions:\n\nThis paper proposes a new method to improve the model reasoning abilities by semantics proof search. The experimental results on the SimpleLogic task are nice."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper proposes a new method to improve the model reasoning abilities by semantics proof search. The experimental results on the SimpleLogic task are nice."
+            },
+            "weaknesses": {
+                "value": "1. The experiment section is insufficient. First, only one dataset named SimpleLogic is used in the experiment. Second, the author only uses one model in the experiment. Last but not least, there are some work aimed to improve the proof reasoning abilities. However, I have not seen the gap between those work and the method proposed by the authors.\n\n2. The terminology in this article is not to the standard. For instance, we typically refer \"transformer\" to encoder-decoder architecture models instead of encoder-only models."
+            },
+            "questions": {
+                "value": "1. Why are language models such as Llama not used in the experiments?\n2. If language models are used, do we still need the complex procedure to make it work?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

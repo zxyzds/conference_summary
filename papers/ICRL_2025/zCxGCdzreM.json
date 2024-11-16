@@ -1,0 +1,172 @@
+{
+    "id": "zCxGCdzreM",
+    "title": "Kinetix: Investigating the Training of General Agents through Open-Ended Physics-Based Control Tasks",
+    "abstract": "While large models trained with self-supervised learning on offline datasets have shown remarkable capabilities in text and image domains, achieving the same generalisation for agents that act in sequential decision problems remains an open challenge.\nIn this work, we take a step towards this goal by procedurally generating tens of millions of 2D physics-based tasks and using these to train a general reinforcement learning (RL) agent for physical control.\nTo this end, we introduce Kinetix: an open-ended space of physics-based RL environments that can represent tasks ranging from robotic locomotion and grasping to video games and classic RL environments, all within a unified framework.\nKinetix makes use of our novel hardware-accelerated physics engine Jax2D that allows us to cheaply simulate billions of environment steps during training.\nOur trained agent exhibits strong physical reasoning capabilities, being able to zero-shot solve unseen human-designed environments.  Furthermore, fine-tuning this general agent on tasks of interest shows significantly stronger performance than training an RL agent *tabula rasa*.  This includes solving some environments that standard RL training completely fails at.\nWe believe this demonstrates the feasibility of large scale, mixed-quality pre-training for online RL and we hope that Kinetix will serve as a useful framework to investigate this further.\nWe open-source Jax2D, Kinetix, and our final model weights.",
+    "keywords": [
+        "reinforcement learning",
+        "open-endedness",
+        "unsupervised environment design",
+        "automatic curriculum learning",
+        "benchmark"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "Training with reinforcement learning on a vast open-ended distribution of physics-based tasks leads to an agent that can zero-shot solve human-designed problems.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=zCxGCdzreM",
+    "pdf_link": "https://openreview.net/pdf?id=zCxGCdzreM",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces Kinetix, a new 2D simulated benchmark designed for training generalist agents with capabilities in fine-grained motor control, navigation, planning, and physical reasoning. The benchmark is built on a novel hardware-accelerated physics engine called Jax2D. Kinetix enables the procedural generation of a vast amount of environments using simple shapes, joints, and thrusters, allowing for tasks that include robot locomotion, object manipulation, simple video games, and classic reinforcement learning scenarios. Each environment shares a unified objective: \u201cmake the green shape touch the blue shape without touching the red shape,\u201d enabling zero-shot generalization to new environments within the same distribution. Experimental results show that policies trained across a wide range of environments generalize better to unseen tasks, and fine-tuning these generalist policies on new tasks yields improved performance over training from scratch. This work contributes to the development of generalist RL agents and open-ended physics-based control tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Kinetix provides 66 hand-designed levels while having the option to edit tasks with a graphical editor or to randomly generate more levels with rejection sampling. \n- The unified goal and dynamics within all environments encourage policies to have physical reasoning capabilities instead of merely memorizing the solution for some particular task, which is a valuable objective for researchers to pursue. \n- Kinetix provides a way to generate unlimited environments and tasks with a unified goal, objects, and dynamics, which could be of interest to multiple research communities like generalist RL policy learning, meta-learning, world modeling, spatial understanding and physics reasoning, and so on."
+            },
+            "weaknesses": {
+                "value": "- The paper notes that as the generated environments increase in complexity, they may become unsolvable, which could contribute to the lower performance observed in the Large-level environments. If so, how does this impact the usability and interpretability of the benchmark results? To what extent does this affect the performance results reported in Figure 3?\n- It is unclear whether the proposed benchmark supports visual observations, which are essential for training generalist policies and building agents that can operate in real-world settings.\n- Although Kinetix can generate a vast range of environments, it is unclear how this benchmark would generalize to tasks or environments outside of its defined task distribution."
+            },
+            "questions": {
+                "value": "See Weaknesses section. Additionally,\n- The range of the y axis for the four plots on the right in Figure 5 are missing. Are these also from 0 to 1?\n- How long does training take for training on 1B Kinetix environments? Would be good to see if training on such a large number of environments itself would be a bottleneck for learning generalist agents."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Jax2D physics engine, which is a reimplementation of Box2D but written in Jax, and introduce the Kinetix environment on top of Jax2D. Kinetix allows for procedurally generated open-ended environments with different robot morphologies. Authors create a self-attention-based policy and demonstrate performance zero-shot, with pretraining, and with finetuning on the target environments."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Introduces a physics engine that provides \u201calmost entirely dynamically specified\u201d scenes, where environments with different robot morphologies can be vmap-ed and run in parallel, which is not doable with prior Jax-based sim frameworks like Brax.\n\n2. Paper is clearly written."
+            },
+            "weaknesses": {
+                "value": "1. All environments in benchmark must fall under the goal of making green shape touch blue shape without touching red shape. This seems to mainly constrain the problem to single-step tasks, where the reward of minimizing the distance from green to blue always incentivizes progress. Was this unified goal constraint purposefully imposed by design, or was it a constraint of Jax implementation, where the reward function for all environments must be the same to be parallelizable?\n\n2. Authors emphasized that parallelism and speed were big advantages of Jax2D. Since it is a reimplementation of Box2D, and this is a critical contribution of the paper, what are the performance gain metrics over Box2D?\n\n3. Experiments were on multi-discrete action space with binary rewards. However, it would strengthen the argument of the paper to do experiments on more of the important features of Kinetix, such as pixel-based observations and continuous action space.\n\n4. The state representation of the policy is very specific to the Kinetix environment suite and not very generalizable to other 2D RL problems. For instance, each entity is encoded separately and there is no scene-level encoding that is passed in as observation for the policy. Often, it is essential for a policy to understand the entire scene when predicting an action.\n\n5. There were no supplementary materials submitted, which would have been a good opportunity to show video rollouts of the trained agent in action.\n\n6. Experiments were mainly limited to the improvement of finetuned policies over pretrained and task-specific, trained-from-scratch policies. However, I would have liked to see more experiments that provide additional insights beyond \u201cfinetuning is mostly good\u201d and \u201czero-shot mostly doesn\u2019t work.\u201d For instance, using Kinetix for lifelong learning, transfer learning, and cross-embodiment learning.\n\n7. Abstract sentence seems like an oversell, given the results. \u201cOur trained agent exhibits strong physical reasoning capabilities, being able to zero-shot solve unseen human-designed environments.\u201d Most would also disagree with the 2D learned behaviors as \u201cstrong physical reasoning capabilities.\u201d\n\n8. Minor: I think the wrong citation was provided for MJX in Section 7 (that work seems to be Mujoco).\n\n9. Minor: Experiments would benefit from some comparison to prior approaches/architectures, though this is less important given this is mainly a systems/framework paper."
+            },
+            "questions": {
+                "value": "1. Kinetix enables a wide distribution of morphologies and initial environment scene configurations, but it doesn\u2019t deviate beyond the single unified goal. How can it be expanded to also cover a wide distribution of goals and potentially even task specifications?\n\n2. Does Kinetix support parallel pixel rendering, such as for vectorized image-based experiments?\n\n3. Is SFL only choosing between the S, M, and L levels?\n\n4. Are the inputs into the policy purely one-hots? (One-hot encoding for each of the polygons, thrusters, and shapes.)\n\n5. Is the (x, y) 2D position of each polygon an input into the network? It would seem that positional embeddings not of the ordering of polygons, but their actual spatial positions, would matter a great deal in this problem.\n\n6. In section 4, authors write that Kinetix is a deterministic setting (thus satisfying one of the conditions for using SFL). How is Kinetix deterministic, given that environments are randomized?\n\n7. How many environments were used during training, and how many environments were held-out for zero-shot evaluation?\n\n8. What was the generalist policy in Figure 5 trained on? A distribution of environments over all 4 tasks at their hard level?\n\n9. Say we train an agent only trained on L levels. How does it perform on held-out levels of a different difficulty (M and S)?\n\n10. Heatmaps were an interesting way to convey the agent\u2019s performance. Why not simply graph the agent\u2019s x distance from the goal, with x-axis being the training iterations?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper provides a framework for procedurally generated 2D physics-based tasks to learn an agent for physical control that can effectively transfer to tasks that involve physical control. They provide a hardware-accelerated physics engine that allows for cheap/efficient simulation to generate a mixed-quality pre-training dataset for online RL. The authors additionally provide human interpretable handmade levels in Kinetix to understand the type of tasks and interactions the agent must do. The authors show the efficacy of both zero-shot transfer to new tasks and the agent when fine-tuned on a new task. The authors evaluate their agent on classic RL environments such as Cartpole and video games like Pinball."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Provide a highly efficient 2D rigid-body physics engine, leveraging JAX for scalable computation, with speedups of up to 30x when training an RL agent, allowing for \n- The learnt agent is highly effective at Zero-Shot transfer in the S and M levels that are held out, indicating the efficacy of pre-training on a wide set of procedural generation tasks. Additionally, show faster convergence/higher performance with this initialization\n- Have interpretable/handmade levels to understand the performance on different sizes/difficulties of tasks."
+            },
+            "weaknesses": {
+                "value": "- The JAX2D environment seems to be somewhat limited in its expressivities, modeling only 4 unique entities, which may not transfer to a wide set of domains/tasks outside of the ones studied.  \n- The task/reward function seems to be fixed across all environments to collide the green and blue shaped objects, while avoiding red shapes. Additional reward shaping seems to be needed for effective training, leading to some limited applicability of generating this data at scale for any set of tasks."
+            },
+            "questions": {
+                "value": "- For the environment generator, it is mentioned that there may exist unsolvable levels which automatic curriculum methods can filter out. Could you clarify what was done here?\n- How does the choice of algorithm affect the performance in your benchmark. Do you anticipate releasing a dataset of transitions from Kinetics which can be used for offline 2 online RL?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Kinetix, a 2D physics-based RL environment aimed at enhancing generalization in RL agents. Leveraging the simulation, the agent is pre-trained for billions of steps, enabling zero-shot evaluation on novel tasks. Fine-tuning further improves performance, surpassing traditional RL methods. The approach integrates a transformer architecture with PPO as the core RL algorithm."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- The paper is well-written, organized, and straightforward.\n- Extensive testing across various task complexities validates its robustness in diverse 2D environments.\n- This paper has strong potential to serve as a valuable benchmark for future research."
+            },
+            "weaknesses": {
+                "value": "- **Real World Tasks:** While this paper provides a strong foundation in 2D simulations, expanding its scope to assess the agent\u2019s adaptability to real-world tasks, such as 3D simulations or complex dynamics as seen in [1,2], would enhance its practical relevance. Bridging this gap could amplify the study\u2019s contributions, offering broader insights into real-world generalization and scalability.\n\n- **Filtering out:** The authors mention that trivial and unsolvable levels are filtered out. What quantitative metrics were used to determine this filtering.\n\n- **Generalizability:** The claims of generalizability might be overstated given that the tasks remain in controlled simulations. Could the authors clarify the expected limitations of deploying such an agent in real-world scenarios with unpredictable environmental factors?"
+            },
+            "questions": {
+                "value": "They are mentioned in the Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

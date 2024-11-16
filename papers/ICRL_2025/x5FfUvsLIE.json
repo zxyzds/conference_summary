@@ -1,0 +1,166 @@
+{
+    "id": "x5FfUvsLIE",
+    "title": "Large Language Models based Graph Convolution for Text-Attributed Networks",
+    "abstract": "Text-attributed graph (TAG) tasks involve analyzing both structural information and textual attributes. Existing methods employ text embeddings as node features, and leverage structural information by employing Graph Neural Networks (GNNs) to aggregate features from neighbors. These approaches demand substantial computational resources and rely on two cascaded stages, limiting scalability in large-scale scenarios and making them vulnerable to the influence of irrelevant neighboring nodes. The advancement of language models (LMs) presents new avenues for tackling this task without GNNs, leveraging their ability to process text attributes of both the target node and its important neighbors. Instead of using graph convolution modules, LMs can assign weights to these tokens based on relevance, enabling token-level weighted summarization. However, it is nontrivial to directly employ LMs for TAG tasks because assessing the importance of neighbor nodes involves both semantic and structural considerations. Additionally, the large search space presents efficiency issues for computing importance scores in a scalable manner.\nTo this end, we propose a novel semantic knowledge and Structural Enrichment framework, namely SKETCH, to adapt LMs for TAG tasks by retrieving both structural and text-related content. Specifically, we propose a retrieval model that identifies neighboring nodes exhibiting similarity to the target node across two dimensions: structural similarity and text similarity. To enable efficient retrieval, we introduce a hash-based common neighbor estimation algorithm for structural similarity and a nearest-neighbor recalling algorithm for embedding similarity. These two similarity measures are then aggregated using a weighted rank aggregation mechanism. The text attributes of both the retrieved nodes and the target node provide effective descriptions of the target node and are used as input for the LM predictor. Extensive experiments demonstrate that SKETCH can outperform other baselines on three datasets with fewer resources.",
+    "keywords": [
+        "Text attributed graphs",
+        "Long-context model"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "we propose a novel framework to adapt the long-context model for graph learning by retrieving both structural and text-related content.",
+    "creation_date": "2024-09-24",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=x5FfUvsLIE",
+    "pdf_link": "https://openreview.net/pdf?id=x5FfUvsLIE",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper investigates an interesting problem of leveraging LLM for learning on text-attributed graphs. The authors propose a method called SKETCH which adapts LLM for graphs by retrieving both structural and semantic information. To be specific, the semantic-based retrieval is built upon some off-the-shelf pretrained retrievers, and the similarity score is calculated by the embedding similarity search. On the other hand, the structure-based retrieval is designed to fetch related neighbors from the graph with a novel hash-based Jaccard similarity estimation. The semantic similarity score and structural similarity score are merged to select the final neighbors, which are put into the LLM together with the center node for problem-solving. The authors then conduct experiments on three real-world datasets to demonstrate the effectiveness of their proposed method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This paper is very well-written and easy to follow.\n- The proposed method of conducting LLM-based learning on graphs without a GNN component is novel and makes sense.\n- The proposed hash-based structural similarity calculation is novel to me."
+            },
+            "weaknesses": {
+                "value": "- Some model designs are not well-illustrated. For example, how the sampled neighbors and center text is finally fed into the LLM? What kind of instruction or prompt are you using? Do you train the model or just use do direct prompting?\n\n- Some experiments on larger datasets or other tasks other than node classification can be helpful. The experiments are mainly focused on 10k-size graphs. Can the method be scaled to a large graph with millions of nodes? Node classification might not be enough to demonstrate the strength of the proposed method. It would be interesting to try on some more advanced LLM-based graph reasoning benchmarks [1].\n\n- How many neighbors are finally selected? Is the model performance sensitive to the number of selected neighbors? Is there any scalability issue?\n\n- Typos: (1) \u201cwhere |S| is the size of the text-attributed nodes\u201d should it be |V|? (2) The equation in line 224 needs one further \u201c=\u201d to be complete.\n\n\n\n[1] Jin, B. Graph chain-of-thought: Augmenting large language models by reasoning on graphs. ACL 2024."
+            },
+            "questions": {
+                "value": "See the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The author has introduced a new method that combines a pre-trained language model (PLM) with a graph heuristic (Common Neighbor) for semi-supervised node classification. In this approach, the PLM generates semantic proximity by incorporating a weighted sum of token-level embeddings. This semantic information is then fused with local graph structure, such as the common neighbor heuristic, by weighting the local connections according to their semantic proximity."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Due to the missing semantic information during the message-passing process, the author has proposed a fused framework based on LM and graph heuristics, which is easily scalable.\n2. The author has conducted extensive experiments to demonstrate the performance improvement and computational efficiency."
+            },
+            "weaknesses": {
+                "value": "1. When introducing the background of GCN and RAG, some crucial papers are not cited. For instance, the structure of text-attributed graphs encompasses textual information from various nodes. Inspired by concepts from Retrieval-Augmented Generation (RAG) \\cite{one in NLP}{one in graph}{one in tag}, we propose integrating an additional corpus during the training process.\n   \n2. The paper requires additional revision for better and more fluent logical flow. For example, GNNs primarily depend on node-level aggregation via graph convolutions to compute weighted sums of neighboring features. While effective, this method may overlook the rich semantic nuances in textual data. Incorporating such nuances enables a more granular understanding of the relationships between tokens, leading to improved flexibility and adaptability.\n\n3. The method is not well presented. In the section on aggregated learning of retrieved content, a weighted sum of semantic and structural proximity is introduced, but the difference from graph convolution is not carefully studied or justified.\n\n4. Empirical Demonstration: The results are reported without running on 5-10 random seeds or multiple data splits.\n\n5. It is not clear how to calculate semantic proximity and structural proximity for a node classification task."
+            },
+            "questions": {
+                "value": "1. Is the method reproducible? Please provide your repository if possible. \n2. Is the GCN-generated embedding also leveraged in the method? Has the author carefully considered the differences between the proposed method and GCN, or should these differences be discussed further?\n3. The title is **LARGE LANGUAGE MODELS BASED GRAPH CONVOLUTION FOR TEXT-ATTRIBUTED NETWORKS**. Does this imply that feature aggregation based on a weighting mechanism quantified by semantic and structural proximity is a better way to present it?\n4. \"While effective, this method may miss the rich semantic nuances in textual data.\" This is probably a crucial starting point. Are there any references or experiments to support this claim?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces SKETCH, a novel framework for handling text-attributed graphs (TAGs) based on retrieval-augmented generation, enhancing large language models (LLMs) for TAG-related tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The retrieval-based approach offers a fresh perspective on handling TAGs.\n\n2. The model leverages hash-based similarity estimation to reduce computational costs in multi-hop similarity estimation."
+            },
+            "weaknesses": {
+                "value": "1. Work on graph retrieval-augmented generation, which is closely related to the topic of this paper, is not discussed.\n\n2. Lack of implementation details such as hyparameter searching space, prompts used, etc."
+            },
+            "questions": {
+                "value": "1. The foundational work of Retrieval-Augmented Generation (RAG) [1] is not cited. Given that the primary contribution of this paper lies in graph retrieval-augmented generation, it is crucial for the authors to provide a comprehensive discussion of significant prior works [2-4] in related fields.\n\n2. Only texts in documents (nodes) are used, and connections (graph structure) between texts are not considered in the generation phase. The authors presents several drawbacks in TAG modeling, such as \"the text representations and graph structure are trained independently from their respective aspects, potentially resulting in sub-optimal integration between the two modalities\" and \"the separate processing stages do not take into account the simultaneous optimization of the two data types, resulting in information loss and reduced robustness\". Could the authors clarify how SKETCH addresses these challenges?\n\n3. The paper lacks implementation details and accessible code. How do authors fine-tune LLMs? What is train / val / test split? What is the searching space for each hyperparameter, e.g., $k$-hop? The reproducibility claims in the article are not convincing. The claim that \"the results and related analysis reported in the paper are only a summary of those available in the code\" is ambiguous.\n\n4. What is $G$ in $G = R_{sum} + R_{struct}$?\n\n5. It is fair to use frozen / fine-tuned LLMs as baseline. However, comparing the proposed model with tailored TAG models that do not utilize external knowledge bases may be unfair. Why not include RAG-based approaches for TAGs?\n\n6. What is external knowledge data used for each dataset?\n\n7. What are promps used for proposed model (SKTECH)? Are the prompts employed for the LLM baseline the same as those used for SKETCH?\n\n8. Why SKTECH with Nomic (127M parameters) perform better than SKTECH with Llama3 (8B parameters) on Wikipedia when Nomic has much fewer parameters?\n\n---\n[1] Lewis, Patrick, et al. \"Retrieval-augmented generation for knowledge-intensive nlp tasks.\" Advances in Neural Information Processing Systems 33 (2020): 9459-9474.\n\n[2] He, Xiaoxin, et al. \"G-retriever: Retrieval-augmented generation for textual graph understanding and question answering.\" arXiv preprint arXiv:2402.07630 (2024).\n\n[3] Hu, Yuntong, et al. \"GRAG: Graph Retrieval-Augmented Generation.\" arXiv preprint arXiv:2405.16506 (2024).\n\n[4] Edge, Darren, et al. \"From local to global: A graph rag approach to query-focused summarization.\" arXiv preprint arXiv:2404.16130 (2024)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposed Semantic Knowledge and Structural Enrichment framework (SKETCH) to extract the semantic and structural related information from the graph to help graph understanding and reasoning. The conducted experiments show that SKETCH could enhance the model's performance on three graph datasets."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The proposed method is well motivated and easy to follow\n- SKETCH givens a new perspective to integrate LLMs and the graph task\n- The writing and presentation of this paper is clear"
+            },
+            "weaknesses": {
+                "value": "- The evaluation is only limited to 3 datasets with less than 10 classes. InstcurtGLM [1] was evaluated on Ogn-arxiv, while GraphFormers [2] was evaluated on Product, DBLP and Wiki.\n- The improvement from Llama3-8b+GraphSAGE scenario is marginal.\n- SKETCH requires extensive hyper-parameters tuning compared to existing graph based methods (such as Llama3-8b+GraphSAGE).\n\n[1] Ye, Ruosong, et al. \"Natural language is all a graph needs.\" arXiv preprint arXiv:2308.07134 4.5 (2023): 7.\n\n[2] Yang, Junhan, et al. \"Graphformers: Gnn-nested transformers for representation learning on textual graph.\" Advances in Neural Information Processing Systems 34 (2021): 28798-28810."
+            },
+            "questions": {
+                "value": "- Could you release the train/test/val splits of the three datasets? I haven't found it in Appendix A.1 and main text.\n- Could you provide more explanation on the claim that SKETCH requires fewer computational resources than other baselines?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,212 @@
+{
+    "id": "wXIncJRlK0",
+    "title": "Mirror Descent Actor Critic via Bounded Advantage Learning",
+    "abstract": "Regularization is a core component of recent Reinforcement Learning (RL) algorithms. Mirror Descent Value Iteration (MDVI) uses both Kullback-Leibler divergence and entropy as regularizers in its value and policy updates. Despite its empirical success in discrete action domains and strong theoretical garantees, the performance improvement of a MDVI-based method over the entropy-only-regularized RL is limited in continuous action domains. In this study, we propose Mirror Descent Actor Critic (MDAC) as an actor-critic style instantiation of MDVI for continuous action domains, and show that its empirical performance is significantly boosted by bounding the values of actor's log-density terms in the critic's loss function. Further, we relate MDAC to Advantage Learning by recalling that the actor's log-probability is equal to the regularized advantage function in tabular cases, and theoretically show that the error of optimal policy misspecification is decreased by bounding the advantage terms.",
+    "keywords": [
+        "reinforcement learning",
+        "regularization",
+        "KL divergence",
+        "entropy",
+        "actor critic"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "Bounding the log density terms is beneficial in KL-entropy regularized actor critic.",
+    "creation_date": "2024-09-19",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=wXIncJRlK0",
+    "pdf_link": "https://openreview.net/pdf?id=wXIncJRlK0",
+    "comments": [
+        {
+            "title": {
+                "value": "Additional Reply"
+            },
+            "comment": {
+                "value": "After reviewing our code, we found that all the reported experimental results for MDAC in our manuscript was computed under `log_std_min=-5` as well. We are embarrassed that our policy class `SquashedGaussianPolicy` was not using the externally set value of  `log_std_min`. Please kindly check __L174-L179__ of `mdac_bal/algos/policy.py` of our submitted code.\nConsidering this, we can conclude that, the answer to your question, \"why SAC is not suffering from the same problem of exploding log policies\" compared to MDAC, is the aforementioned \"on-policyness\" of $a'$ in the entropy bonus term. Thank you again for seeking this."
+            }
+        },
+        {
+            "title": {
+                "value": "Thank you for your comment."
+            },
+            "comment": {
+                "value": "Thank you for reviewing our paper. We truly appreciate your comments. Your positive responses to Strengths is very encouraging, and your concerning comments are very constructive. The followings are our responses at this moment. We will update the manuscript accordingly.\n\n### On Weaknesses\n\n1. We would like to argue that our experimental results on Mujoco is not marginal. Figure 7, which is the aggregated result provided for reliable benchmarking, indicates that MDAC requires only half amount of samples to reach reasonable performance compared to SAC. However, as you point out, the experiments in larger domain would strengthen our paper. We would like to perform such experiments in the discussion period, as long as the time and the computational resource constraints allow.\n\n2. We totally agree that our literature discussion is focused on the works relevant to Munchausen RL, and weak in mirror descent based RL methods. We will also conduct additional literature search and update the manuscript to better contextualize our paper.\n\n### Answers to Questions\n\n1. The difference of `clip(x, -1, 1); current` and `clip(x, -1, 1); successor` comes from the source of action samples $a$ and $a'$ for which they are evaluated.\nThe naive Munchausen bonus term is evaluated for the off-policy $(s,a)$ pairs in the replay buffer. On the other hand, the entropy bonus term is evaluated for the successor $(s',a')$ pairs, where $a'$ is sampled from the `current` actor. Thanks to this \"on-policyness\" of $a'$, the explosion of the `successor` entropy bonus term is not as severe as the `current` Munchausen bonus term.\n\n2. Figure 3 shows the quantities for the case __without__ the bounding functions, i.e. $f=g=I$. In this case, there is a negative feedback originated from the TD learning and the actor-critic architecture; (1) the magnitude of log policy terms hinder the critic's loss, (2) the critic's estimate explodes, (3) the inaccurate critic's estimate hinders the policy learning, and (4) the magnitude of the log policy terms get bigger again. On the other hand, if we introduce the bounding functions, the log policy terms much less hinder the critic's estimate. Thus, this negative feedback does not severely happen.\n\n- We also appreciate the minor comments. We will update the manuscript accordingly.\n  - Yes, the definition of $A_k$ is $A_k=\\alpha\\log\\pi_{k+1}$.\n  - L357 would be updated like: $g=I$ always satisfies the sufficient condition of asymptotic convergence (9), but the error of the optimal policy misspecification is less decreased. On the other hand, $g(x)\\equiv 0$ largely decreases the error of the optimal policy misspecification particularly when $\\Psi_k$ is far from optimal, i.e. in the earlier learning stages, though which possibly violate (9) and hinders the asymptotic performance."
+            }
+        },
+        {
+            "title": {
+                "value": "Thank you for your comment."
+            },
+            "comment": {
+                "value": "Thank you for reviewing our paper. We truly appreciate your comments. We understand that your concern is mainly on the clarity of the expositions. The followings are our answers. We will update our manuscript accordingly.\n\n### Section 4.\n- As the reviewer pointed out, and as stated in the beginnig of Section 4, the motivation to introduce BAL is to theoretically understand the effectiveness of the bounding functions $f,g$. Rather than analyzing the specific choice, e.g. $f(x)=g(x)={\\rm tanh}(x)$, we tried to characterized the conditions of $f,g$ that are validated and effective. For this purpose, we found that relating MDAC to Advantage Learning and extending the analyses in the papers [1,2] is helpful. As a result, our analyses not only show the soundness of BAL, but also ensures that Munchausen RL is convergent even when the ad-hoc clipping is employed (by Theorem 2).\n- L224: the definition of (KL-entropy) regularized MDPs is provided at Section 2 (L103 - L109). The initial submission lacks the definition of the soft state value function, $V$, in Section 2; thank you for pointing this out. It is defined as\n$V = \\langle \\pi, Q\\rangle + \\tau \\mathcal{H}(\\pi) - \\lambda D_{\\rm KL}(\\pi\\|\\mu)$ with $\\pi=\\mathcal{G}_\\mu^{\\lambda,\\tau}(Q)$, which is defined in L.106. Please see Appendix A of the paper [3] for derivation.\n- L227:\nWe have $V(s) = (\\mathbb{L}^\\alpha\\Psi)(s) = \\alpha \\log \\left<1, \\exp\\frac{\\Psi(s,a)}{\\alpha}\\right> \\to \\max_{a}Q(s,a)$ as $\\alpha\\to 0$, because $\\Psi_k = Q_k + \\beta\\alpha\\log\\mu \\to Q_k$\nand $(\\mathbb{L}^\\alpha\\Psi)(s) \\to \\max_{a}\\Psi(s,a)$, the latter of which is a property of log-sum-exp function $\\mathbb{L}^\\alpha$ and it holds because the similar arguments as Section 5.2 of [4] applies to $\\mathbb{L}^\\alpha$ as well. We will add a formal proof of this argument in Appendix.\n- L239: Eq.(7) is derived by simply using $\\alpha\\log\\pi_{k+1} = A_k$ for Eq.(6) and excluding the error term $\\epsilon_{k}$.\n- L245: As Eq.(7) suggests, the term $\\beta f (A_k)$ is added to the soft Bellman operator. Since the advantage $A_k = \\Psi_k - V_k$ is  always non-positive from $V_{k}(s) = \\left(\\mathbb{L}^\\alpha\\Psi\\right)(s) \\ge \\max_{a}\\Psi(s,a)$, which is a property of log-sum-exp function $\\mathbb{L}^\\alpha$, the re-parameterized action value $\\Psi_k$ is decreased by the term $\\beta f (A_k)$. Since $\\mathbb{L}^\\alpha$ is a \"soft\" max function, the reduction is smallest at the optimal action $\\arg\\max_{a}\\Psi(s,a)$.\n- L247: Here, the \"successor\" simply means the \"next\" state action pairs after the state transition. Since the both sides of Eq.(7) is a function of a state-action pair $(s,a)$, and the state transition operator $P$ is applied to $g(A_k)$, the decreased entropy bonus is evaluated at the successor/next state $s' \\sim P(\\cdot|s,a)$.\n\n### Section 5.1\n- Thank you for seeking the motivation of the experiment in Section 5.1. Our initial submission is missing this point as well. As discussed in the beginning of P.6 in [3], the larger the value of $\\beta$ is, the slower the initial convergence of MDVI gets, and thus M-VI as well. Since the reduction of the misspecification error by BAL is particularly effective when $\\Psi_k$ is far from the optimal, we can expect that BAL is effective especially in earlier iterations. This claim is indeed supported by the result provided by Figure 4 in Section 5.1.\n\n### Section 5.2\n- In the abstract, we claimed that MDAC's \"empirical performance is significantly boosted by bounding the values of actor's log-density terms in the critic's loss function\". This claim is based on the experimental results provided in Figure 1 and Figure 5, as the reviewer kindly stated that \"I found the performance gap between non-bounded (identity) and bounded (tanh) log-policy to be surprisingly substantial\", as one of the strengths of our paper.\n- We believe that our current experimental results are enough to show the effectiveness of MDAC over the baselines, in terms of the lengths of the experiments. This is because, Figure 7 indicates that MDAC reaches reasonable performance much faster than the baselines, and Figure 9 indicates that MDAC is effective especially in larger state-action domains. We would like to remark that it is common to report the experimental results in which not all the agents have reached to the convergence (for example, please see Figure 5 of TD3 paper [5] and Figure 1 of SAC paper [7]).\n\n[1] Bellemare+, Increasing the action gap: New operators for reinforcement learning, AAAI, 2016.  \n[2] Zhang+, Robust action gap increasing with clipped advantage learning, AAAI, 2022.  \n[3] Vieillard+, Leverage the Average: an Analysis of KL Regularization in Reinforcement Learning, NeurIPS, 2020.  \n[4] Asadi & Littman, An Alternative Softmax Operator for Reinforcement Learning, ICML, 2017.  \n[5] Fujimoto+, Addressing function approximation error in actor- critic methods, ICML, 2018.  \n[6] Haarnoja+, Soft actor-critic algorithms and applications, arXiv, 2018."
+            }
+        },
+        {
+            "title": {
+                "value": "Thank you for your comment."
+            },
+            "comment": {
+                "value": "Thank you for reviewing our paper. We sincerely appreciate your comments.\n\n### On Weaknesses\n\nThank you for pointing out the important issue. Since the reviewer's concern is very important in continuous action settings, we will run additional experiments in this discussion period, and try to reproduce Figure 3 for different values of `log_std_min` to see its impact.\n\nThe followings are our current answers to your concern, that we can address before performing the additional experiments.\n- First, we would like to emphasize that, the bounding is effective even in the model-based tabular setting (Figure 4), where the \"constraining the policy\" does not apply.\n- We remark that, our choice `log_std_min=-20` is not odd. Indeed, OpenAI's SpinningUp implementation chooses `-20` as well [1]. \n- Figure 3 and 8 indicate that, the problem of naive MDAC comes largely from the naive Munchausen bonus term, which is evaluated for the off-policy $(s,a)$ pairs in the replay buffer. On the other hand, the entropy bonus term is evaluated for the successor $(s',a')$ pairs, where $a'$ is sampled from the current actor. Thanks to this \"on-policyness\" of $a'$, the explosion of the entropy bonus term is not as severe as the Munchausen bonus term. We believe that this is why SAC does not suffer from the explosion of log policy as seriously as MDAC.\n- We also would like to clarify that, to acquire the learning results for SAC, we used CleanRL's SAC without modifying; we used `log_std_min=-5`.\n\n\n### Answers to Questions\n1. If we choose $c_f=0$, BAL reduces to an entropy-only-regularized scheme without KL regularization. Since our main interest is in the improvement of both KL-entropy regularized RL, we excluded the choice $c_f=0$. Indeed, our experimental result suggests that MDAC performs better than SAC, an instantiation of entropy-only-regularized scheme.\n2. Thank you for seeking for clarifying this point. Our initial submission lacks to explicitly explain this. Our error terms do not have the approximation/estimation error $\\epsilon_k$, because we simply omitted it in our analysis. To be precise, at L.1005 in Appendix A.4, we used $\n  \\Psi_{K-1}\n  = R + \\beta {f}(A_{K-2}) + \\gamma P \\left<\\pi_{K-1}, \\Psi_{K-2} - {g}(A_{K-2})\\right>\n$\n excluding $\\epsilon_k$.\nIf we include $\\epsilon_k$ to our analysis, the definition of $\\Delta_{k}^{fg}$ will be replaced by\n$\\Delta_{k}^{fg} = \\left<\\pi^\\ast,\n  \\beta \\left(A_{\\tau}^\\ast - {f}(A_{k-1})\\right) - \\gamma P \\left<\n    \\pi_{k}, A_{k-1} - {g}(A_{k-1})\\right> + \\epsilon_k \\right>\n$.\nBy using this expression, we can discuss the effect of $\\epsilon_k$ to BAL as well. However, since our main interest in Section 4 is not in the effect of the approximation/estimation error, but in the effect of the optimal policy misspecification inherent to the soft-gap-increasing nature of M-VI and BAL in model-based tabular setting without any approximation, we omitted $\\epsilon_{k}$. We will update the manuscript to explain this point.\n\n[1] https://github.com/openai/spinningup/blob/038665d62d569055401d91856abb287263096178/spinup/algos/pytorch/sac/core.py#L27"
+            }
+        },
+        {
+            "title": {
+                "value": "Thank you for your comment."
+            },
+            "comment": {
+                "value": "Thank you for reviewing our paper. We sincerely appreciate your comments.\n### On Weaknesses\n\n- On the justification of larger error tolerance (Theorem 3):\n  - Please kindly check again the requirements to $f,g$, non-positivity of $A_{k}$, non-negativity of $P$, and the definition of the error term ${\\Delta^{fg}_{k}}$. The choice $f\\ne I$ and $g\\ne I$, at least $f\\ne I$, indeed decreases the errors and improves the sub-optimality, compared to the case without bounding $f=g= I$. We mentioned the upper bound of the error terms at L345-L350 just to emphasize the possible maximum amount of the error reduction.\n\n- On \"tedious definitions and theorems\":\n  - Could you kindly clarify which definitions and theorems are not helpful for readers to understand the main argument? Our theoretical arguments are provided to characterizes (1) how we should choose the bounding functions $f,g$ and (2) why they are beneficial, both of which are precisely in the scope of our paper. To be precise, Theorem 1, Theorem 2 and Proposition 1 assert that, BAL is asymptotically convergent if the bounding functions $f,g$ are carefully chosen. Theorem 3 claims that the bounding functions are beneficial in terms of the sub-optimality gap.\n\n### Answer to Question\n- Since the magnitude of the TD error in critic's loss function is decreased by the bounding functions, we agree that the variance of the stochastic gradient could be also decreased and it contributes to the faster convergence in approximated settings (the experiments in Section 5.2). However, the reviewer's conjecture does not explain the faster convergence of BAL in the model-based tabular setting (Figure 4 for the experiment in Section 5.1), which is supported by our Theorem 3."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes to clip the logarithmic term in Mirror Descent Actor Critic (MDAC) when improving the Q value. Experiments on classical benchmarks show that the new approach can attain faster convergence compared to baseline methods. To justify the clip operation, The work argues that it can reduce the upper bound of a certain error term appeared in their convergence analysis."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "* After applyinig the bound operation, the algorithm is empirically observed to converge faster and achieve higher scores.\n* The clip operation is easy to implement."
+            },
+            "weaknesses": {
+                "value": "* The justification on larger error tolerance for critic value estimation is not valid. Specifically, the paper argues that the proposed algorithm's error term's **upper bound** (the last term in equation (10)) is lower compared to the baseline algorithm (line 345-350). However, lower upper bound does not indicate that the term is lower. Given that the main motivation for the algorithm is its better error tolerance, a rigorous justification is critical.\n\n* The writing needs to be polished; the paper is full of tedious definitions and theorems that are not helpful for readers to understand the main argument. There are many typos as well."
+            },
+            "questions": {
+                "value": "* My conjecture is that the faster convergence from the clip operation comes from lower variance of the stochastic gradient, which helps stablizing the training?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes mirror descent actor-critic (MDAC), extending the Munchausen RL proposed in the discrete action case to continuous actions. To address the issue of ill-behaved log density when using off-policy data, the paper suggests bounding the added log density term and hopes that the modified term would provide benefits during learning. Empirically, the suggested ad-hoc fix to the ill-behaved log density term is demonstrated to fix the issue and performs better than the baseline without the added term. Theoretically, the paper studies the bounding strategy in the tabular case and shows that the corresponding value iteration algorithm converges while also providing arguments for bounding over not bounding."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The strengths of the paper include its originality, clarity, and significance:\n1. The originality of the paper is one of its strengths. Although the technique of bounding the log density term in the off-policy case is ad-hoc and not entirely novel (as the original Munchausen RL also has a similar variant), the theoretical results are new to my knowledge.\n2. The paper is mostly clear. It has clear writing and is easy to follow. It also covers most of the important related works.\n3. The studied problem, continuous control, is of significance in the RL literature. Mirror-descent-based algorithms are also an important and interesting approach that enjoys theoretical motivations. Thus, the paper might be of interest to many RL researchers."
+            },
+            "weaknesses": {
+                "value": "Despite having many strengths, this paper is weak in the following areas:\n1. The empirical evaluation is limited. The main empirical results only include experiments on six MuJoCo environments and show only marginal improvements over the baseline. There are many other commonly used continuous control benchmarks (e.g., DeepMind Control Suite and Omniverse Isaac Gym environments), including some experiments for these environments that would strengthen the paper, especially if there is a larger improvement to be seen.\n2. This is a minor point, but the paper is also weak in its literature discussion. While there are many approaches based on the idea of mirror-descent, this paper only discusses relevant work that follows Munchausen RL. If it can include some discussion of alternative mirror-descent-based approaches, especially how they differ from the studied approach, it could improve the contextualization of the paper."
+            },
+            "questions": {
+                "value": "Here are some questions that might affect the evaluation:\n1. Why would there be a significant difference between *clip(x, -1, 1); current* and *clip(x, -1, 1); successor* in Figure 8? Shouldn\u2019t it be quite small, given that consecutive transitions should be included in the replay buffer?\n2. Why is the clipping frequency of *clip(x/10, -1, 1)* so low, given that the log density term is shown to be so large in Figure 3?\n\nOther minor comments:\n* There isn\u2019t a definition of $A_k$ in Line 235. Is it $A_k=\\alpha\\log\\pi_{k+1}$?\n* Typo in Line 262: genral -> general\n* It would be better to clarify the tradeoff mentioned in Line 357. The sentences read incomplete to me."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Mirror Descent Actor Critic (MDAC), a novel approach to enhance reinforcement learning in continuous action spaces. By bounding the log-density values in the critic's loss function, MDAC significantly boosts performance over traditional entropy-only methods. The authors show that this approach reduces policy error, connecting MDAC to Advantage Learning and providing theoretical support for improved stability in continuous domains."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**Good motivation**\n- Improvement of the performance of Mirror Descent RL on continuous action tasks.\n\n**Theoretical and Empirical Rigour**\n- The progression from MDVI to MDAC is well-motivated, and the authors thoughtfully discuss the relation to SAC\u2019s temperature tuning. I found the performance gap between non-bounded (identity) and bounded (tanh) log-policy to be surprisingly substantial."
+            },
+            "weaknesses": {
+                "value": "**Section 4**\n- It seems that bounding the log-policy was meant to yield a tighter bound in Theorem 3, connecting it to Advantage Learning (AL). Could you clarify if BAL was introduced specifically for this purpose?\n- L224: I didn\u2019t see definitions for regularized MDP and soft state value function\u2014could you include these?\n- L227: Why does V(s)=max_{\u2061a\u2208A} Q(s,a) hold when \u03b1=0?\n- L239 (Eq. 9): Could you provide the derivation for this Bellman operator?\n- L245: Could you explain how the gap-increasing Bellman operator reduces suboptimal action values?\n- L247: I\u2019m unfamiliar with the literature on successor state functions\u2014could you clarify the meaning of successor state-action pairs here?\n\n**Section 5.1**  \nWhat was the objective of comparing M-VI and BAL here? I\u2019d appreciate more insight into why M-VI performs so much worse in this setup.\n\n**Section 5.2**  \nIn Figure 9, several agents haven\u2019t converged. Could you provide fully converged results? Additionally, the abstract claims \u201csignificant empirical improvement\u201d\u2014could you specify the basis for this assertion?"
+            },
+            "questions": {
+                "value": "See weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "none"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes Mirror Descent Actor-Critic (MDAC), which extends Mirror Descent Value Iteration (MDVI) into continuous action domains. The authors showed that naively implementing MDAC in practice can lead to instability, and found that this is caused by the magnitude of the log policy terms being much larger than the magnitude of the rewards. As a fix, the authors proposed to bound the effect of the log policy terms by transforming them through a bounded function, and showed that this can recover the agent\u2019s performance. The authors then demonstrated that this ad-hoc fix can be seen as an instantiation of advantage learning, Lastly, the authors demonstrated that the proposed approach is competitive with previous methods like SAC and TD3."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper extends MDVI style regularization, which was found to be useful in the discrete action domains, to continuous action domains. This can potentially enable more robust design of algorithms, and is certainly a valuable contribution to the community.\n2. The proposed solution (i.e., bounding the effect of the log policy terms) is backed by both theory and empirical evidence (mujoco experiments). In addition, the theory can also explain certain design decisions made in previous works (e.g., the log policy clipping used by munchausen DQN)."
+            },
+            "weaknesses": {
+                "value": "My main concern is that it is not clear to me whether the proposed fix (bounding the log policy terms through transformations) is more effective than simply constraining the policy (e.g., lower bounding the standard deviation of the Gaussian policy) to avoid this problem in the first place.\n\nSince SAC is a special case of MDAC, I don\u2019t understand why SAC is not suffering from the same problem of exploding log policies. After digging through the code provided by the authors, I think this is partially due to the authors using a much lower bound on the log_std parametrization. For example, in the CleanRL SAC implementation [1], log_std_min is set at -5, while the authors set this parameter at -20. As another example, the official implementation explicitly lower bounds the standard deviation at 1e-5 [2], which is much larger than the value used by the authors. This might explain why, in Figure 3, the log policies are showing extreme values. To test this, I would suggest the authors to reproduce Figure 3 for different values of log_std_min to see its impact.\n\n[1] https://github.com/vwxyzjn/cleanrl/blob/38c313f8326b5049fe941a873e798485bccf18e5/cleanrl/sac_continuous_action.py#L97\n\n[2] https://github.com/rail-berkeley/softlearning/blob/13cf187cc93d90f7c217ea2845067491c3c65464/softlearning/policies/gaussian_policy.py#L276"
+            },
+            "questions": {
+                "value": "1. On line 349, it appears that using functions with smaller $c_f$ can improve convergence speed, then why not simply use $f\\equiv 0$? What would be the trade-off here?\n2. In contrast to previous methods, the sub-optimality of BAL (Equation 10) does not seem to explicitly depend on the value estimation error $\\epsilon_k$. Can the authors elaborate a bit on this?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

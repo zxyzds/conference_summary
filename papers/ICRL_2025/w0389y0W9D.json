@@ -1,0 +1,170 @@
+{
+    "id": "w0389y0W9D",
+    "title": "Flat-LoRA: Low-Rank Adaption over a Flat Loss Landscape",
+    "abstract": "Fine-tuning large-scale pre-trained models is prohibitively expensive in terms of computational and memory costs. Low-Rank Adaptation (LoRA), a popular Parameter-Efficient Fine-Tuning (PEFT) method, provides an efficient way to fine-tune models by optimizing only a low-rank matrix. Despite recent progress made in improving LoRA's performance, the connection between the LoRA optimization space and the original full parameter space is often overlooked. A solution that appears flat in the LoRA space may exist sharp directions in the full parameter space, potentially harming generalization performance. In this paper, we propose Flat-LoRA, an efficient approach that seeks a low-rank adaptation located in a flat region of the full parameter space. Instead of relying on the well-established sharpness-aware minimization approach, which can incur significant computational and memory burdens, we utilize random weight perturbation with a Bayesian expectation loss objective to maintain training efficiency and design a refined perturbation generation strategy for improved performance. Experiments on natural language processing and image classification tasks with various architectures demonstrate the effectiveness of our approach.",
+    "keywords": [
+        "low-rank adaption",
+        "flat minima",
+        "efficient training"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "We propose Flat-LoRA that aims to optimize the sharpness of the loss landscape for low-rank adaptation using efficient random weight perturbation.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=w0389y0W9D",
+    "pdf_link": "https://openreview.net/pdf?id=w0389y0W9D",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces Flat-LoRA, a novel extension to the Low-Rank Adaptation (LoRA) framework, designed to optimize model fine-tuning via discovering solutions within a flatter loss landscape in the full parameter space. Different from traditional LoRA, which may result in sharp solutions that impact generalization negatively, Flat-LoRA incorporates random weight perturbations and a Bayesian expectation loss objective to maintain efficiency. The approach seeks to combine parameter efficiency with enhanced generalization capabilities across both NLP and CV tasks, demonstrating improvements over conventional LoRA in various experimental setups."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The idea of optimizing to reach a flat landscape in the full parameter space while maintaining the advantages of parameter efficiency is innovative and well-justified.\n2. The methodology is generally clearly articulated, and lots of experiments show considerable improvements over existing LoRA-based methods, which validates the efficacy of Flat-LoRA proposed.\n3. The explanation of the Bayesian expectation loss objective function and the perturbation generation strategy is very thorough and definitely contributes to the transparency of the proposed method.\n4. This work is equipped with practical implications, as fine-tuning LLMs efficiently is increasingly important in current ML field."
+            },
+            "weaknesses": {
+                "value": "1. Althougth the paper emphasizes the computational overhead and the minimal memory, the perturbation generation and its integration into the mixed-precision training could be simplified or clarified furthermore.\n2. The method concentrates mostly on linear layers in the transformer-based models. Despite the fact that the authors acknowledge this as a limitation, extending such approach to other parameter categories would make the method more versatile.\n3.: Although the comparisons with approaches such as SAM are very insightful, deeper analysis with more recent variations of sharpness-aware algorithms could strengthen the study and contribution."
+            },
+            "questions": {
+                "value": "Could the perturbation generation strategy be optimized or adapted to incorporate other noise categories (e.g., adversarial perturbations)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Based on the consideration of local optimal values, this paper proposes that the flat optimal value learned by LoRA is not necessarily flat at full rank. Corresponding mathematical explanations are provided. Following this, using the idea of SAM, a method is designed to add full-rank noise perturbations to search for a global optimal solution."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The writing is well done, with motivations and insights clearly explained in an intuitive manner, accompanied by reasonable mathematical assumptions to introduce the design of full-rank noise perturbations.\n2. The design for storing random seeds for memory efficiency and integrating into mixed-precision training is very clever, saving additional overhead."
+            },
+            "weaknesses": {
+                "value": "1. On line 125, the sentence \"the LoRA matrices. better initialization strategy for LoRA parameters.\" should probably use a comma instead of a period.\n2. The work on adding full-rank noise has been done in Noisetune ([https://arxiv.org/abs/2202.12024](https://arxiv.org/abs/2202.12024)) and LORASC ([https://arxiv.org/abs/2407.01491](https://arxiv.org/abs/2407.01491)), especially in LoRASC, where the exact same approach is used, adding a full rank noise to each LoRA optimization process. \n3. Overall, the core technical implementation of this paper is to add random perturbations at each step of LoRA training. While the approach is elegant, it\u2019s not particularly novel, and there doesn\u2019t seem to be very convincing experimental results. The proposed Flat-LoRA series offers limited improvement across various LoRA variants and tasks, with most gains being around a few tenths of a percentage in accuracy (except for significant improvements in gsm8k and Human-Eval). It would be helpful to include tasks like apaca and other SFT tasks. I\u2019m particularly interested in the practical significance of this work\u2014flat local optima should theoretically bring stronger generalization, such as supporting OOD (e.g., Alpaca, instruct-eval, etc.) and robustness (e.g., image-R, image-C) evaluations, proving that a flatter local optimum could enhance out-of-domain generalization. This would be valuable since even sharp in-domain optima can perform well, and this might be why performance improvements are modest."
+            },
+            "questions": {
+                "value": "What do you think is the essential difference or advantage between adding perturbations to weights and adding perturbations to data samples? Is adding perturbations to data samples simpler?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Flat-LORA, which adds noise to the training process: W + AB + \u03b5, where \u03b5 is stored using a seed. The authors attempt to achieve SAM-like effects through this method.\n\nAdvantages:\n1. The paper is written clearly\n2. The core idea seems reasonable\n\nDisadvantages:\n1. The paper lacks mathematical rigor in several places, particularly in equations 8 and 9\n2. Insufficient experimental validation:\n   - Should test on larger models (e.g., LLAMA 13B or 70B)\n   - Should evaluate on SuperGLUE\n3. Lacks necessary ablation studies, particularly regarding \u03c3^2\n\nTechnical Issues:\n1. Equations 8 and 9 have fundamental problems:\n   - var(X) should be a covariance matrix\n   - var(W'_{i,:}X) should be a scalar\n   - These dimensions are inconsistent and cannot be equated\n2. In Equation 7, n should be sqrt(n), as large n values would result in negligibly small epsilon values added to the weight matrix\n\nAdditional Concerns:\n1. No memory usage results are reported\n2. Table 3 lacks full-tuning baseline results\n3. this paper should report results on more diverse datasets\n4. More comprehensive ablation studies on \u03c3^2 are needed"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Advantages:\n\nThe paper is written clearly\nThe core idea seems reasonable"
+            },
+            "weaknesses": {
+                "value": "Disadvantages:\n\nThe paper lacks mathematical rigor in several places, particularly in equations 8 and 9\nInsufficient experimental validation:\nShould test on larger models (e.g., LLAMA 13B or 70B)\nShould evaluate on SuperGLUE\nLacks necessary ablation studies, particularly regarding \u03c3^2\nTechnical Issues:\n\nEquations 8 and 9 have fundamental problems:\nvar(X) should be a covariance matrix\nvar(W'_{i,:}X) should be a scalar\nThese dimensions are inconsistent and cannot be equated\nIn Equation 7, n should be sqrt(n), as large n values would result in negligibly small epsilon values added to the weight matrix\nAdditional Concerns:\n\nNo memory usage results are reported\nTable 3 lacks full-tuning baseline results\nthis paper should report results on more diverse datasets\nMore comprehensive ablation studies on \u03c3^2 are needed"
+            },
+            "questions": {
+                "value": "no"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "no"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper discusses how to improve the generalization of LoRA, with good writing, innovative ideas, and credible experimental performance. However, I think the article overlooks one point: LoRA only fine-tunes a very small number of parameters, which is unlikely to overfit on a specific task and can inherently maintain good generalizability. If I am wrong, please convince me."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper introduces Flat-LoRA, a novel method that improves upon traditional Low-Rank Adaptation (LoRA) techniques by targeting a flat region of the loss landscape. This aims to enhance generalization performance by avoiding sharp minima that can degrade model performance on unseen data.\n\n2. Flat-LoRA addresses the computational and memory cost issues associated with fine-tuning large-scale models. By optimizing only a low-rank matrix and using random weight perturbations, it achieves parameter-efficient fine-tuning without additional memory costs during inference.\n\n3. The paper not only proposes a new technique but also details the underlying mathematical foundations. It discusses the optimization objective, perturbation generation, and integrates a Bayesian expected loss objective to maintain training efficiency."
+            },
+            "weaknesses": {
+                "value": "1. There is no significant improvement, the limited enhancement on the GLUE benchmark does not prove the lack of generalizability of methods like LoRA.  I need to know if your method is effective on more datasets. More datasets and models should be compared. For example: the SuperGLUE benchmark, SQuAD, XSum, CNN/Dailymail, and some LoRA training on Stable Diffusion.\n\n2. There is a lack of extensive comparisons, such as with methods like DyLoRA[1] and AdaLoRA[2]. \n\n3. More relevant articles, such as AWP[3], should be cited, which is an effective method to improve generalization.\n\n[1] Valipour M, Rezagholizadeh M, Kobyzev I, et al. Dylora: Parameter efficient tuning of pre-trained models using dynamic search-free low-rank adaptation[J]. arXiv preprint arXiv:2210.07558, 2022.\n[2] Zhang Q, Chen M, Bukharin A, et al. AdaLoRA: Adaptive budget allocation for parameter-efficient fine-tuning[J]. arXiv preprint arXiv:2303.10512, 2023.\n[3] Wu D, Xia S T, Wang Y. Adversarial weight perturbation helps robust generalization[J]. Advances in neural information processing systems, 2020, 33: 2958-2969."
+            },
+            "questions": {
+                "value": "1. How does it perform on the SuperGLUE benchmark, SQuAD, XSum, and CNN/Dailymail?\n2. How does it perform on Stable Diffusion?\n3. How does it compare between AdaLoRA and DyLoRA?\n4. How is the performance on Llama3 with the alpaca dataset?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

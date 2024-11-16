@@ -1,0 +1,166 @@
+{
+    "id": "yMHe9SRvxk",
+    "title": "Human-Feedback Efficient Reinforcement Learning for Online Diffusion Model Finetuning",
+    "abstract": "Controllable generation through Stable Diffusion (SD) fine-tuning aims to improve fidelity, safety, and alignment with human guidance. Existing reinforcement learning from human feedback methods usually rely on predefined heuristic reward functions or pretrained reward models built on large-scale datasets, limiting their applicability to scenarios where collecting such data is costly or difficult. To effectively and efficiently utilize human feedback, we develop a framework, HERO, which leverages online human feedback collected on the fly during model learning. Specifically, HERO features two key mechanisms: (1) Feedback-Aligned Representation Learning, an online training method that captures human feedback and provides informative learning signals for fine-tuning, and (2) Feedback-Guided Image Generation, which involves generating images from SD's refined initialization samples, enabling faster convergence towards the evaluator's intent. We demonstrate that HERO is 4x more efficient in online feedback for body part anomaly correction compared to the best existing method. Additionally, experiments show that HERO can effectively handle tasks like reasoning, counting, personalization, and reducing NSFW content with only 0.5K online feedback.",
+    "keywords": [
+        "Online RLHF",
+        "Diffusion Model Finetuning"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "Fine-tuning Stable Diffusion with minimal online human feedback, achieving 4x more efficiency in controllable generation compared to previous methods.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=yMHe9SRvxk",
+    "pdf_link": "https://openreview.net/pdf?id=yMHe9SRvxk",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces HERO, a framework for fine-tuning Stable Diffusion (SD) models using online human feedback to improve alignment with human intent. HERO addresses the limitations of traditional methods, which rely on costly predefined rewards or pre-trained models, by leveraging real-time human feedback through two main components: Feedback-Aligned Representation Learning and Feedback-Guided Image Generation. Experiments show that HERO is more efficient than prior methods in tasks such as anomaly correction, reasoning, counting, personalization, and reducing NSFW content, achieving significant improvements with minimal feedback."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The article is well-structured and easy to follow, and the motivation is clear. The approach is simple but effective. \n\n* The proposed method seems to be novel. And the empirical results on several tasks demonstrate the effectiveness of the proposed method."
+            },
+            "weaknesses": {
+                "value": "* Compared to D3PO that does not require specific reward model, the proposed method in this paper clearly make the training process more complex and introduce computational overhead.\n\n* The proposed method uses online human preferences. Does that mean the human annotator need to provide preference to the generated image at each run of the stable diffusion model? If so, it is might be difficult to collect enough data for training the encoder as contrastive learning requires a large amount of data to converge. Additionally, how to measure the performance of the trained encoder $E_\\theta$?\n\n* D3PO seems to be the closest baseline and achieves second-best results in Figure 3. Why the authors not provide results of D3PO in Table 2?"
+            },
+            "questions": {
+                "value": "Please refer to the Weakneses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces HERO, a novel framework designed for fine-tuning diffusion models using human feedback, aimed at improving text-to-image (T2I) generation tasks. HERO uses feedback-aligned representation learning to create a latent representation space guided by human annotations. Human evaluators categorize generated images into \u201cbest,\u201d \u201cgood,\u201d or \u201cbad,\u201d to guide a contrastive learning process that constructs an embedding space. Triplet loss is applied to align embeddings of \u201cbest\u201d and \u201cgood\u201d images while distancing \u201cbad\u201d images, resulting in a reward signal that guides the model toward human preferences. The framework employs DDPO (Diffusion-based Policy Optimization) for updates and uses LoRA for parameter efficient fine-tuning. At inference, images are sampled from a Gaussian mixture model based on the noise latents of \u201cgood\u201d and \u201cbest\u201d images from previous iterations, balancing quality and diversity. Experimental results indicate that HERO achieves high success rates across various T2I tasks, demonstrating both sample efficiency and superior performance compared to other feedback-guided methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- **Originality**: HERO presents a unique extension of binary signal methodologies to continuous reward signals, effectively merging representational learning with reinforcement learning to enhance the alignment of generated images with human feedback.\n- **Clarity**: The paper is well-written, with clearly labeled diagrams and detailed qualitative examples that illustrate the feedback process. The structured presentation of the HERO framework, including its iterative feedback mechanism, allows readers to easily grasp the method's operation. The paper also includes many qualitative examples, showcasing the benefit of the HERO pipeline\n- **Performance**: Results demonstrate that HERO significantly enhances sample efficiency and alignment compared to previous methods, highlighting its practical impact in T2I generation tasks.\n- **Flexibility across tasks:** The results suggest that the pipeline can be widely applied to a wide range of tasks - such as content safety improvement to reasoning-based generation."
+            },
+            "weaknesses": {
+                "value": "1. **Limited Task Diversity and Complexity**:\n    - Evaluation is conducted across only five T2I tasks, which is significantly less than comparable works like D3PO, which evaluated across 300 prompts.\n    - Tasks are primarily simple single-object scenarios and do not encompass multi-object compositions or complex interactions. Expanding to more challenging tasks would improve the robustness of the findings.\n\n2. **Insufficient Diversity and Convergence Analysis**:\n    - The paper lacks a quantitative analysis of the diversity-quality trade-off, particularly missing comparisons between non-fine-tuned and feedback-guided generators.\n    - There are no established metrics for evaluating mode collapse or potential overfitting to ideal seeds, which could limit the practical application of the generator.\n\n3. **Concerns Regarding Human Feedback Methodology**:\n    - Results are reported based on a limited number of human evaluators, with each evaluator responsible for different seeds. This implies a lack of inter-annotator agreements and introduces potential biases from relying on individual evaluators, which could skew the model's alignment and generalization capabilities.\n    - There is also limited information on evaluation reliability measures, such as the criteria used for selection."
+            },
+            "questions": {
+                "value": "Some questions and suggestions for the authors to consider:\n1. Expand evaluation to include more diverse and complex tasks, particularly multi-object scenarios\n2. Will the authors consider performing a thorough analysis of diversity with established metrics to better understand the trade-offs in quality?\n3. Is there a plan to establish structured protocols for feedback collection that involve multiple evaluators to enhance reliability and reduce biases?\n6. Would the authors be able to incorporate an analysis of failure cases along with strategies for mitigation in future work?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces HERO, a new framework for fine-tuning Stable Diffusion models using online human feedback efficiently. HERO integrates two novel components: Feedback-Aligned Representation Learning and Feedback-Guided Image Generation. These components are designed to maximize learning efficiency by converting human judgments into informative training signals, thereby reducing the reliance on large pre-trained models or extensive heuristic datasets. The model demonstrates significant improvements in online learning efficiency, requiring considerably fewer instances of human feedback compared to previous methods, while effectively enhancing image generation aligned with human preferences."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Efficiency in Feedback Use: HERO significantly reduces the need for human feedback instances by using them more effectively compared to previous methods, such as D3PO.\n2. Direct Use of Human Judgments: By converting direct human feedback into learning signals without the need for pre-trained models, HERO simplifies the training process and potentially increases the model's responsiveness to nuanced human evaluations.\n3. Improved Learning from Sparse Data: The methodology allows for effective learning even when limited data is available, which is a critical advantage in scenarios where generating or collecting extensive labeled datasets is impractical or impossible."
+            },
+            "weaknesses": {
+                "value": "1. Algorithmic Complexity: The incorporation of sophisticated mechanisms like contrastive learning and feedback-based sampling may introduce complexity that complicates the model's implementation and optimization, potentially requiring specialized knowledge or resources to manage effectively.\n2. Sensitivity to Feedback Quality: The performance of HERO heavily depends on the relevance and accuracy of the feedback provided. Inconsistent or poor-quality feedback could mislead the learning process, leading to suboptimal or biased model behavior."
+            },
+            "questions": {
+                "value": "1. How can HERO be adapted to remain robust against noisy or contradictory feedback, which is common in real-world scenarios?\n2. Could there be a hybrid approach that integrates automated feedback mechanisms with human judgments to reduce dependency on constant human input while retaining the benefits of nuanced understanding?\n3. How transferable is the HERO framework across different domains or types of generative models? Can the principles applied here be adapted for use in non-visual tasks, such as text generation or music synthesis?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors introduce HERO (Human-feedback Efficient Reinforcement learning for Online diffusion), a novel method for enhancing text-to-image (T2I) models using limited human feedback. The approach leverages human evaluation to refine image quality: in the data collection phase, a human annotator labels a batch of generated images with positive and negative feedback, selecting the single best image among them. HERO employs a triplet loss function to train a visual encoder by mapping embeddings based on these annotations. A reward signal, derived from the cosine similarity between the learned representation of an input image and the selected best image, guides the model optimization and image generation process. The model utilizes Proximal Policy Optimization (PPO) to apply Low-Rank Adaptation (LoRA) to a stable diffusion model. Experimental results demonstrate that HERO outperforms baseline approaches, achieving higher success rates in generating preferred images."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper is a clear and structured presentation, which makes it easy to understand the proposed methodology and its underlying concepts. \nThe experiments cover a diverse set of four T2I tasks and transferability and validate the effectiveness of the proposed method."
+            },
+            "weaknesses": {
+                "value": "1. A primary concern with the paper is that the T2I model's performance is only assessed through task success rates. Important factors such as image diversity and aesthetic quality are not quantitatively evaluated, which are crucial metrics and should be included, as seen in the baseline D3PO [1].\n\n2. Additionally, the proposed method requires extra human labeling to identify the best image in each batch, which introduces additional information. This requirement makes direct comparison with other baselines less equitable, as they may not rely on such intensive human input.\n\nGiven these concerns, I would currently not recommend acceptance of this paper.\n\n**Reference**\n\n[1] Yang, Kai, et al. \"Using human feedback to fine-tune diffusion models without any reward model.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2024."
+            },
+            "questions": {
+                "value": "Listed in the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,199 @@
+{
+    "id": "vue9P1Ypk6",
+    "title": "MAGE: Model-Level Graph Neural Networks Explanations via Motif-based Graph Generation",
+    "abstract": "Graph Neural Networks (GNNs) have shown remarkable success in molecular tasks, yet their interpretability remains challenging. Traditional model-level explanation methods like XGNN and GNNInterpreter often fail to identify valid substructures like rings, leading to questionable interpretability. This limitation stems from XGNN's atom-by-atom approach and GNNInterpreter's reliance on average graph embeddings, which overlook the essential structural elements crucial for molecules. To address these gaps, we introduce an innovative **M**otif-b**A**sed **G**NN **E**xplainer (MAGE) that uses motifs as fundamental units for generating explanations. Our approach begins with extracting potential motifs through a motif decomposition technique. Then, we utilize an attention-based learning method to identify class-specific motifs. Finally, we employ a motif-based graph generator for each class to create molecular graph explanations based on these class-specific motifs. This novel method not only incorporates critical substructures into the explanations but also guarantees their validity, yielding results that are human-understandable. Our proposed method's effectiveness is demonstrated through quantitative and qualitative assessments conducted on six real-world molecular datasets.",
+    "keywords": [
+        "Model-level explanation",
+        "Graph Neural Networks",
+        "Motif"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "We proposed a motif-based model level graph neural networks explainer that generate explanations based on class-specific motifs.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-15",
+    "forum_link": "https://openreview.net/forum?id=vue9P1Ypk6",
+    "pdf_link": "https://openreview.net/pdf?id=vue9P1Ypk6",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Reviewer 9aZJ"
+            },
+            "comment": {
+                "value": "We sincerely thank the reviewer for the thorough and insightful review.\n\nOur responses to all questions are below:\n\nQ1. **Some symbols are confusing, such as $\\mathcal{L}_T$, $\\mathcal{L}_L$. It seems a trivial solution exists that the $G$ is the same as the $T$ from the loss function.**\n\nAnswer: Thank you for your question and for pointing out the potential confusion with the symbols. To enhance clarity, we have updated our notation:\n\n$\\mathcal{L}_{child}$ now represents the loss term associated with predicting whether a node has a child.\n\n$\\mathcal{L}_{label}$ represents the loss associated with predicting the label of the newly added child.\n\nClarification of Symbols:\n\n$G$: Refers to the generated molecular graph.\n\n$\\mathcal{T}$: Represents the predicted motif-node tree, which captures the structural relationships among motifs.\n\nWe hope this clarification of symbols helps, and we appreciate your feedback on enhancing clarity around these terms. We have revised the notation and adding explanatory text to make these distinctions clearer in the paper. (line 311-314, 320-321)\n\nQ2. **The figures are not well expressed. For example, in Figure 3, there are two graph decoders. However, from the paper, I can only find one graph decoder.**\n\nAnswer: Thank you for pointing this out. We apologize for any confusion caused by Figure 3. To clarify, there is indeed only one graph decoder in our model, as stated in the paper. We have revised the description of Figure 3 to more accurately depict the role of the single graph decoder and avoid any misinterpretation.\n\nQ3. **How to a construct graph from subgraphs? Do the subgraphs share some nodes?**\n\nAnswer: Thank you for the question. We use a similar method to the [1], adapting it to decode a valid molecule explanation from a tree structure. This approach ensures chemical feasibility and structural integrity in the final molecular graph. Here\u2019s an overview of the steps:\n\n1. Start with a decoded Tree: The decoding process begins with a decoded tree $\\mathcal{T}$, which represents the hierarchical structure of motifs.\n\n2. Enumerate motif Combinations: For each motif node in the tree and its neighboring motifs, we enumerate different combinations to find feasible arrangements. Certain combinations lead to chemically infeasible molecules, and are discarded from further consideration.\n\n3. Rank and Combine combined subgraphs: At each node, we rank the combined subgraphs based on our target GNN, ensuring that the final graph is following the same distribution of our target class. \n\n4. The final graph is decoded by putting together all the predicted subgraphs.\n\nBy following this structured decoding process, we ensure that the final molecule constructed from the tree is chemically valid and represents the behavior of our target GNN. Thank you for the opportunity to clarify this process. We have added an algorithm to describe this process in Appendix.\n\nQ4. **Minor suggestions**\n\nAnswer: We thank the reviewer for their detailed suggestions. We have addressed all inconsistent notations and corrected typographical errors in the revised paper.\n\n[1]. Jin, Wengong, Regina Barzilay, and Tommi Jaakkola. \"Junction tree variational autoencoder for molecular graph generation.\" International conference on machine learning. PMLR, 2018."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer KGJQ (2)"
+            },
+            "comment": {
+                "value": "Q3. **MAGE\u2019s approach begins by identifying all possible motifs in the dataset, which is a computationally intensive and challenging task, especially for large graphs or datasets due to the combinatorial explosion of possible motifs. However, MAGE does not contribute to addressing this fundamental challenge, as it relies on existing motif extraction methods without proposing any improvements to make motif identification more scalable. Addressing this limitation is more crucial to me, as the scalability of motif extraction represents a significant bottleneck for applying MAGE to larger datasets. Can the authors elaborate on the computational complexity of motif extraction and its impact on scalability to larger datasets?**\n\nAnswer: Thank you for your feedback regarding the scalability of motif extraction. We understand the importance of computational efficiency, especially for large datasets, and have taken measures to mitigate these concerns by selecting methods known for their speed and practicality. In particular, we use a bridge bond cut-off method [5], which is computationally efficient and straightforward to implement. This approach focuses on breaking bridge bonds to decompose molecules into meaningful substructures. The time complexity of used method is $O(V+E)$.\nBelow, we provide a table illustrating the running times for decomposing molecules of different sizes using this method.\n\n|              | Average Number of Nodes | Motif Extraction Time (ms/graph) |\n|--------------|-------------------------|----------------------------------|\n| Mutagenicity | 30.23                   | 0.799                            |\n| PTC_MR       | 14.29                   | 0.428                            |\n| PTC_MM       | 13.97                   | 0.415                            |\n| PTC_FM       | 14.11                   | 0.444                            |\n| AIDS         | 15.69                   | 0.457                            |\n| NCI-H23      | 26.07                   | 0.877                            |\n\nThis table demonstrates that the bridge bond cut-off method achieves decomposition times in the millisecond range. This approach allows us to process large datasets with minimal computational cost. We believe this choice effectively mitigates scalability concerns, ensuring that MAGE can be applied to real-world datasets without significant computational overhead. We have put this section into Appendix of our revised paper.\n\nQ4. **Including a human evaluation would strengthen the claim by demonstrating that experts or users in the field find these explanations interpretable and meaningful. Any human evaluation to provide insights into the practical interpretability and further validate the effectiveness of MAGE in real-world applications?**\n\nAnswer: Thank you for this insightful suggestion. Following previous literature in the field[1, 2, 4], we mainly established quantitative and qualitative comparisons with existing methods to validate MAGE\u2019s interpretability and effectiveness. However, we agree that a human evaluation would be a valuable addition to assess practical interpretability directly with domain experts. We consider this a promising plus to enhance the evaluation of this work further.\n\nQ5. **Would MAGE be adaptable to non-molecular datasets, or are there constraints due to the specific nature of molecular motifs?**\n\nAnswer: Thank you for your question. Our method is adaptable to non-molecular datasets, provided there is a reliable motif extraction method specific to the dataset\u2019s domain. MAGE relies on mutual motif extraction to identify recurring patterns that can be used for model-level explanations. In the molecular domain, well-established motif extraction methods [5, 6, 7] allow us to define and extract meaningful substructures, which form the basis of our explanations.\nFor non-molecular datasets, a similar approach would be possible if there exists or can be developed a mutual motif extraction method tailored to the specific patterns within that dataset.\n\n[5]. Jin, Wengong, Regina Barzilay, and Tommi Jaakkola. \"Hierarchical generation of molecular graphs using structural motifs.\" International conference on machine learning. PMLR, 2020.\n\n[6]. Lewell, Xiao Qing, et al. \"Recap retrosynthetic combinatorial analysis procedure: a powerful new technique for identifying privileged molecular fragments with useful applications in combinatorial chemistry.\" Journal of chemical information and computer sciences 38.3 (1998): 511-522.\n\n[7]. Degen, Jorg, et al. \"On the art of compiling and using'drug-like'chemical fragment spaces.\" ChemMedChem 3.10 (2008): 1503."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer KGJQ (1)"
+            },
+            "comment": {
+                "value": "We sincerely thank the reviewer for the thorough and insightful review.\n\nOur responses to all questions are below:\n\nQ1. **The paper emphasizes the practicality of model-level explanations over instance-level ones, yet in many real-world applications, users often seek to understand individual predictions. Could the authors elaborate on why a model-level approach would be more practical in such contexts and how it aligns with the needs of end-users who focus on instance-level interpretability?**\n\nAnswer: Thank you for this thoughtful question. Model-level explanations offer practical benefits that can address broader concerns that may not be evident from instance-level insights alone. \nAs noted by [1], \"for example-level methods, we may need to explore the explanations for a large number of examples before we can trust the models. However, it is time-consuming and requires extensive expert efforts. For model-level methods, the explanations are more general and high-level, and hence need less human supervision.\"\nSimilarly, [2] emphasize that \"If the ultimate goal is to examine the model\nreliability, one will need to examine many instance-level explanations one by one to draw a rigorous\nconclusion about the model reliability, which is cumbersome and time-consuming. Conversely, the\nmodel-level explanation method can directly explain the high-level decision-making rule inside the\nblackbox (GNN) for a target prediction, which is less time-consuming and more informative regarding\nthe trustworthiness of the GNNs. Besides, it has been shown that any instance-level explanation\nmethod would fail to provide a faithful explanation for a GNN that suffers from the bias attribution\nissue [3], while the model-level explanation methods can not only provide a faithful\nexplanation for this case but also diagnose the bias attribution issue.\"\n[4] also mention that \"Global Explainers, on the other hand,\nare aimed at capturing the behaviour of the model as a whole, abstracting individual noisy local\nexplanations in favor of a single robust overview of the model\".\n\nUltimately, we see model-level and instance-level explanations as complementary. While our focus is on model-level explanations in this work.\n\nQ2. **How does this paper differentiate itself from MotifExplainer (Yu \\& Gao 2022), except for the \"model-level\" vs. \"instance-level\" difference that I am not convinced to believe is significant? ...**\n\nAnswer: Thank you for the insightful question. While both MAGE and MotifExplainer leverage motifs for GNN explanations, they differ significantly in both methodology and conceptual focus.\n\n1. Model-Level vs. Instance-Level Distinction: Model-level and instance-level explanations are fundamentally different, especially in terms of their scope and applicability. Instance-level explanations, as used in MotifExplainer, focus on understanding model predictions for specific examples. This provides insight into individual decisions but may require extensive exploration across many examples to establish trust in the model\u2019s general behavior. In contrast, MAGE\u2019s model-level approach provides a holistic understanding of the model's decision-making patterns across classes. This model-level perspective enables users to quickly identify consistent motifs that influence model behavior, offering a more efficient and scalable solution for applications where interpretability across multiple instances is essential.\n\n2. Methodological Differences in Using Motifs: Beyond the conceptual focus, MAGE and MotifExplainer also employ different methodologies. MAGE uses an attention-based method specifically for class-wise motif identification, enabling the identification of motifs that represent decision patterns across different classes. Additionally, MAGE\u2019s use of a junction tree variational autoencoder (VAE) for generating explanations allows it to produce structurally coherent motifs that capture complex dependencies, leading to more realistic and domain-valid explanations.\n\nBy combining these methodological and conceptual distinctions, MAGE offers strengths in interpretability and applicability for model-level insights.\n\n[1]. Yuan, Hao, et al. \"Xgnn: Towards model-level explanations of graph neural networks.\" Proceedings of the 26th ACM SIGKDD international conference on knowledge discovery \\& data mining. 2020.\n\n[2]. Wang, Xiaoqi, and Han-Wei Shen. \"Gnninterpreter: A probabilistic generative model-level explanation for graph neural networks.\" arXiv preprint arXiv:2209.07924 (2022).\n\n[3]. Faber, Lukas, Amin K. Moghaddam, and Roger Wattenhofer. \"When comparing to ground truth is wrong: On evaluating gnn explanation methods.\" Proceedings of the 27th ACM SIGKDD conference on knowledge discovery \\& data mining. 2021.\n\n[4]. Azzolin, Steve, et al. \"Global explainability of gnns via logic combination of learned concepts.\" arXiv preprint arXiv:2210.07147 (2022)."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer MX2W"
+            },
+            "comment": {
+                "value": "We sincerely thank the reviewer for the thorough and insightful review.\n\nOur responses to all questions are below:\n\nQ1. **Could you share the code to reproduce the experimental results?**\n\nAnswer: We thank the reviewer for pointing out this problem. We have uploaded our code to anonymous link: [https://anonymous.4open.science/r/MAGE-694E/](https://anonymous.4open.science/r/MAGE-694E/)\n\nQ2. **Why does the baseline only include model-level explainers? Could local explainers be adapted to the same metrics? If not, can you explain the reasoning?**\n\nAnswer: We appreciate the reviewer\u2019s suggestion regarding the adaptation of local explainers, particularly inductive ones, to our chosen metric. However, these instance level approaches fundamentally require an instance graph as input and the explainer is to extract most important subgraph as an explanation. This means they focus on explaining specific predictions for individual graphs rather than providing broader, generation-based model-level insights. For example, GEM which is an inductive instance-level explainer ``is to encourage a compact subgraph of the computation graph to have a large causal influence on the outcome of the target GNN\"[1]. In addition, for instance-level explainer, there is no requirement for an explanation to be valid (e.g., a chemically valid molecular graph). To clarify this distinction, we have added a description of the differences between model-level explainers and inductive local explainers in the introduction section. (line 47-50)\n\nQ3. **How does each component of the loss function impact the results?**\n\nAnswer: Thank you for pointing out this question. We conducted an ablation study by evaluating performance when using each loss component independently. Below is the results.\n\n| Loss Function | Label 0             | Label 1             |\n|---------------|---------------------|---------------------|\n| $\\mathcal{L_R}$           | 0.9827 $\\pm$ 0.0580 | 0.9892 $\\pm$ 0.0482 |\n| $\\mathcal{L_P}$           | 0.9881 $\\pm$ 0.0518 | 0.9805 $\\pm$ 0.0589 |\n| $\\mathcal{L_R} + \\mathcal{L_P}$     | 0.9977 $\\pm$ 0.0032 | 0.9941 $\\pm$ 0.0240 |\n\nFrom the table, we observe that using only the reconstruction loss results in high accuracy, though it is slightly lower than configurations that include property alignment. This indicates that, while the model is proficient at preserving input structure, it may lack alignment with target-specific characteristics. The table also shows that using only the property loss results in slightly lower performance than the combined loss. This suggests that, without the reconstruction loss, the model may lose some structural accuracy, leading to a minor decrease in overall performance. We add this part as an ablation study in section 4.4.\n\nQ4. **How were example graphs, such as those in Table 3, selected? Is there any potential selection bias?**\n\nAnswer: Thank you for your question. The example graphs for XGNN, GNNInterpreter, and Ours in Table 3 were selected randomly from the generated samples. To minimize any potential selection bias, we did not apply additional criteria beyond random sampling. Additionally, to further support our findings, we have included more examples in the appendix G, offering a broader representation of the generated outputs.\n\nQ5. **Typos**\n\nAnswer: I have corrected typos in the revised paper.\n\n[1]. Lin, Wanyu, Hao Lan, and Baochun Li. \"Generative causal explanations for graph neural networks.\" International Conference on Machine Learning. PMLR, 2021."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes MAGE, a motif-based explanation method for GNNs in molecular tasks, which identifies significant motifs for each class using an attention-based learning approach. The method creates model-level explanations including critical molecular structures to the predictions. Experimental results show that MAGE provides valid, human-understandable explanations, outperforming SOTA baseline methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1) The paper is well-written, and its structure is easy to follow.\n2) The central idea is clear and effectively delivered.\n3) SOTA methods for model-level explainability are provided and compared in the experiments, enhancing the paper's credibility and impact.\n4) The method generates valid molecules, which is not well-studied and essentially missing in the literature of GNN explainability. So I find this direction of research critical."
+            },
+            "weaknesses": {
+                "value": "1) The code is not shared, which reduces the paper's reliability, especially given the extensive experiments presented.\n2) The paper focuses only on model-level explainability baselines; however, local explainers (especially inductive ones) could potentially be adapted to the authors' chosen metric. Some local explainer baselines can be found in benchmarking study at ICLR 2024 [1].\n3) The loss function comprises two main components, but the effectiveness of each part is not analyzed.\n4) The examples from qualitative study is not well explained and confusing. It is hard to understand how are the examples selected.\n\nSmall: \n- Line 244, typo: Figure 3.3.\n\n[1] Kosan, M., Verma, S., Armgaan, B., Pahwa, K., Singh, A., Medya, S., & Ranu, S. GNNX-BENCH: Unravelling the Utility of Perturbation-based GNN Explainers through In-depth Benchmarking. In The Twelfth International Conference on Learning Representations."
+            },
+            "questions": {
+                "value": "I do not have a major concern about the novelty of the paper. However, I have small but critical concerns about the paper's reproducibility and some experiment results. I'm willing to increase my score once my concerns are cleared.\n\n1) Could you share the code to reproduce the experimental results?\n2) Why does the baseline only include model-level explainers? Could local explainers be adapted to the same metrics? If not, can you explain the reasoning?\n3) How does each component of the loss function impact the results?\n4) How were example graphs, such as those in Table 3, selected? Is there any potential selection bias?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces MAGE, a motif-based approach to explain GNNs, specifically focused on molecular datasets. The approach addresses limitations in previous GNN explanation methods by employing molecular substructures\u2014as foundational motifs in model explanations. MAGE utilizes a combination of motif extraction, attention-based motif learning, and a motif-based graph generation method to yield structurally valid and interpretable explanations at the model level. Experimental results on six molecular datasets show that MAGE achieves high validity and interpretability, outperforming baselines in providing explanations that are more representative."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- This paper is about a highly relevant topic in ML interpretability, particularly in the context of GNNs for molecular data. With the growing importance of explainable AI in sensitive domains, especially AI4Science domains like drug discovery and materials science, providing valid, interpretable explanations is well-aligned with current research trends and practical needs.\n\n- The use of motifs as the basis for explanations addresses the limitations of atom-level generation methods.\n\n- The paper is clear, especially regarding the MAGE\u2019s workflow, from motif extraction to class-wise motif generation."
+            },
+            "weaknesses": {
+                "value": "- The practical contribution of model-level GNN explanation, and its pros and cons compared to relevant works, say Q1 & Q2 below.\n\n- No contribution to the computationally intensive and challenging motif extraction task.\n\n- No human evaluation. Although the paper claims that the generated motifs and explanations are human-understandable, this claim is not supported by any human evaluation."
+            },
+            "questions": {
+                "value": "1.\tThe paper emphasizes the practicality of model-level explanations over instance-level ones, yet in many real-world applications, users often seek to understand individual predictions. Could the authors elaborate on why a model-level approach would be more practical in such contexts and how it aligns with the needs of end-users who focus on instance-level interpretability? \n\n2. How does this paper differentiate itself from MotifExplainer (Yu & Gao 2022), except for the \"model-level\" vs. \"instance-level\" difference that I am not convinced to believe is significant? MotifExplainer also utilizes motifs in GNN explanations. Can the authors clarify any unique aspects of MAGE, such as scope, or improvements in interpretability, validity, or computational efficiency?\n\t\n3. MAGE\u2019s approach begins by identifying all possible motifs in the dataset, which is a computationally intensive and challenging task, especially for large graphs or datasets due to the combinatorial explosion of possible motifs. However, MAGE does not contribute to addressing this fundamental challenge, as it relies on existing motif extraction methods without proposing any improvements to make motif identification more scalable. Addressing this limitation is more crucial to me, as the scalability of motif extraction represents a significant bottleneck for applying MAGE to larger datasets. Can the authors elaborate on the computational complexity of motif extraction and its impact on scalability to larger datasets?\n\n5. Including a human evaluation would strengthen the claim by demonstrating that experts or users in the field find these explanations interpretable and meaningful. Any human evaluation to provide insights into the practical interpretability and further validate the effectiveness of MAGE in real-world applications?\n\n6. Would MAGE be adaptable to non-molecular datasets, or are there constraints due to the specific nature of molecular motifs?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a novel method for generating model-level explanations by decomposing molecules into motifs and employing tree-constrained generators. To address issues of invalidity resulting from disregarding structural information, the method decomposes molecules into motif sets and uses attention-based motif identification to select key motifs for each class. A tree-constrained encoder-decoder generator and a specific loss function are introduced to ensure that the generated molecules conform to the class distribution, enhancing their validity. Experiments on six real-world datasets demonstrate that the proposed method outperforms the baselines in both effectiveness and efficiency. Qualitative results further highlight the importance of incorporating both node features and molecular structures in explanations."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. This work clearly defines the problems faced by current model-level explanation methods and proposes a novel motif-based method to address them. This work conducts extensive experiments and analysis to support the claims, which are very solid and lay a good foundation for future studies in model-level molecular explanation.\n\n2. By treating functional groups as building blocks, this method ensures that the explanations align more closely with scientifically meaningful interpretations. By considering both node features and molecular structures, the paper effectively addresses the limitations of atom-based methods.\n\n3. The paper presents a novel approach that introduces an attention-based learning method to calculate the motif-class relationship. \n\n4. The paper proposes using tree-constrained generators to produce more valid explanations. The carefully and explicitly designed tree decomposition and encoder-decoder structures ensure that the model generates more valid in-class molecules.\n\n5. The evaluation metrics used to assess explanation performance in relation to molecules are better aligned with the chemical domain. The provided explanations are user-friendly and easy to understand.\n\n6. The authors conduct experiments on six real-world datasets, and the results clearly demonstrate that the proposed method outperforms the baselines.\n\n7. Comprehensive experimental settings are provided to ensure the quality and reproducibility of the results, and sufficient visualizations support the findings of the work."
+            },
+            "weaknesses": {
+                "value": "1. There is a typo in lines 95 and 96 : there should be full stops at the end of the sentence. \n\n2. In line 104, \u201cadjacency\u201d should be revised to \u201cadjacency matrix.\u201d\n\n3. In line 168, \u201cthree methods\u201d should be changed to \u201cfour methods.\u201d\n\n4. It would be beneficial to clearly state the limitations of current approaches and provide insights on how to address these limitations to better facilitate the development of this area within the community. \n\n5. Additionally, summarizing and highlighting the main contributions and novelties of the proposed work would enhance clarity.\n\n6. Furthermore, it would improve the presentation to arrange the notation used in the paper more effectively."
+            },
+            "questions": {
+                "value": "1) Why is the bond feature defined as $N \\times D_b$? The number of edges in a graph may not correspond to the number of nodes. How does this definition account for that discrepancy?\n\n2) What distinguishes tree-constrained methods from non-constrained methods in molecular generation?\n\n3) In the definition $T = (A_{\\tau}, X_{\\tau} )$, what does $A_{\\tau}$  and $X_{\\tau}$ represent? Additionally, what does $Z_{\\tau}$ signify? \n\n4) How is  $Z_{\\tau}$ sampled from the graph encoder? What is the process involved?\n\n5) What does  $f^a$ refer to in Section 3.3.5? \n\n6) Why does XGNN experience out-of-memory (OOM) issues? Can the authors provide intuitive explanations based on experimental observations?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces MAGE (Motif-bAsed GNN Explainer), which improves interpretability by using motifs as core units in explanations. MAGE identifies class-specific motifs through decomposition and attention-based learning, creating clearer molecular graph explanations. This approach, validated on six datasets, provides more human-understandable results. However, there are some issues in this article that need clarification."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper introduces a new method, MAGE, to generate motif-based graph explanations.\n2. This paper is well-organized, it is easy to follow the main idea.\n3. This paper conducts lots of experiments to verify the effectiveness of this method."
+            },
+            "weaknesses": {
+                "value": "1. Some symbols are confusing, such as $\\mathcal{L}_T$,$\\mathcal{L}_L$. It seems a trivial solution exists that the $G$ is the same as the $\\mathcal{T}$ from the loss function.\n2. The figures are not well expressed. For example, in Figure 3, there are two graph decoders. However, from the paper, I can only find one graph decoder.\n3. It is confusing how to construct a new graph from different subgraphs. It's better to give the algorithm instructions on how to construct a new graph from subgraphs and how they share nodes.\n\nSome minor suggestions. \n1. Notations are inconsistent.  $\\mathbf{A}$ and $A$ are used interchangablelly. \n2.  It is confusing to use mathbf{} to denote matrix (A) and set (V)\n3.  $N$ is used with different meanings. \"N represents the total number of atoms in the graph\" & \"Given a dataset, denoted as G with N molecules and C classes\"\n4.  Line 271, z_T is not defined.\n5. Format issue, cite should be \\citep{}"
+            },
+            "questions": {
+                "value": "1. How to a construct graph from subgraphs?  Do the subgraphs share some nodes?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

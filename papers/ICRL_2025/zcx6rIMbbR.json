@@ -1,0 +1,205 @@
+{
+    "id": "zcx6rIMbbR",
+    "title": "Efficient Fine-Tuning of Quantized LLMs via Three-Stage Optimization",
+    "abstract": "To address the memory consumption and computational efficiency issues in fine-tuning large language models (LLMs), Parameter-Efficient Fine-Tuning (PEFT) and quantization have emerged. Recent studies have combined the two and have proposed adjusting parameters before fine-tuning to reduce quantization errors, aiming to improve fine-tuning performance. We find that the performance of fine-tuning on the adjusted quantized models is even worse than using the original quantized models directly, as the adjusted model is essentially a completely different model from the original quantized model. Additionally, we have discovered that due to the poor robustness of quantized models, increasing the training difficulty may result in even worse outcomes. To address this, we propose two constraints for fine-tuning quantized models, and based on these, we introduce a general fine-tuning framework called QR-Adaptor. This framework bypasses the network errors introduced by quantization and directly uses actual performance and memory as optimization targets. Through initialization, extrapolation, and interpolation, it quickly solves this gradient-free optimization problem. Experimental results demonstrate that our method yields fine-tuned low-bit quantized models that outperform fine-tuned 16-bit models while maintaining the same memory usage as fine-tuning 4-bit models. For example, in the zero-shot test on MMLU, it improves accuracy by 3.3\\% over both LoftQ and LQ-LoRA.",
+    "keywords": [
+        "Efficient Fine-Tuning",
+        "NLP",
+        "Iterative Optimization",
+        "Layer-wise Quantization and Low-Rank Configuration"
+    ],
+    "primary_area": "transfer learning, meta learning, and lifelong learning",
+    "TLDR": "Method of obtaining a high-performance low-precision model.",
+    "creation_date": "2024-09-14",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=zcx6rIMbbR",
+    "pdf_link": "https://openreview.net/pdf?id=zcx6rIMbbR",
+    "comments": [
+        {
+            "summary": {
+                "value": "Based on the motivation that the performance of fine-tuning on the adjusted quantized models is even worse than using the original quantized models directly, the paper introduced QR-Adaptor that bypasses the network errors introduced by quantization and directly uses actual performance and memory as optimization targets. The experimental results are based on Llama 2 7B and 13B."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper presents the clear motivation that the performance of fine-tuning on the adjusted quantized models is even worse than using the original quantized models directly.\n\n- Low-precision models fine-tuned with QR-Adaptor can surpass the 16-bit fine-tuned models, while maintaining memory usage comparable to that of 4-bit quantized models."
+            },
+            "weaknesses": {
+                "value": "- It would be necessary to conduct experiments for Llama-3 family (e.g., Llama 3 8B), which are known to be harder to quantize.\n\n- The comparison of training time between QR-Adaptor and existing methods would be required because QR-Adaptor seems to take longer than previous methods due to the presence of bayesian optimization.\n\n- It would be more beneficial if prior methods are also done with 6.125-bit for Llama 2 13B and 5.875-bit for Llama 2 7B in Table 1."
+            },
+            "questions": {
+                "value": "NA"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Summary\nThe authors propose a novel method for fine-tuning quantization LLM. The core of this approach is a three-stage optimization process that selects quantization bit-widths and corresponding LoRA ranks for each layer of the model. Initially, the method computes layer-wise importance on a small dataset, which serves as the initial values for bit-widths and ranks. Subsequently, the authors employ their proposed Pareto Ranking Genetic Algorithm (PRGA) optimization method, followed by Bayesian optimization, to identify more optimal solutions. The efficacy of this method is demonstrated through experimental validation on datasets such as MMLU, showcasing its superiority in terms of both memory efficiency and performance metrics."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Strengths:\n1. Overall, the paper is well-organized and easily comprehensible. The motivation is effectively introduced, and the methodology is clearly described.\n2. The method's introduction of gradient-free optimization to the fine-tuning of quantized LLMs is noteworthy and provides valuable insights for future research in this area.\n3. The proposed approach demonstrates superior performance in terms of both memory efficiency and model performance compared to state-of-the-art works in the same domain."
+            },
+            "weaknesses": {
+                "value": "Weaknesses:\n1. The author claims that\"inspired us to develop the Pareto Ranking Genetic Algorithm (PRGA), a novel multi-objective optimization method.\"The proposed Pareto Ranking Genetic Algorithm (PRGA) bears a striking resemblance to the existing Non-dominated Sorting Genetic Algorithm II (NSGA-II), to the extent that they are virtually indistinguishable. However, the authors have failed to acknowledge or cite NSGA-II, instead claiming PRGA as a \"novel multi-objective optimization method\".PRGA and NSGA-II are almost identical, including key elements such as non-dominated sorting, crowding distance calculation, and elitist strategy. \n2. The novelty of this paper appears limited, as it primarily applies existing algorithms, namely NSGA-II and Bayesian Optimization, to the fine-tuning of quantized LLMs. \n3. The authors claim that previous methods relying on gradient norms to quantify layer importance fail to accurately represent a layer's contribution during inference. However, they do not substantiate this claim with ablation studies. \n4. The current ablation experiments are insufficient. Additional studies should be conducted to demonstrate the impact of iterations and population size on the results. \n[1]Deb K, Pratap A, Agarwal S, Meyarivan TAM. A fast and elitist multi-objective genetic algorithm: NSGA-II[J]. IEEE Transactions on Evolutionary Computation,2002, 6(2):182-197."
+            },
+            "questions": {
+                "value": "Question\n1. What are the differences between NSGA-II and PRGA?\n2. Is the proposed method sensitive to the selection of iterations and population size?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a framework called QR-Adaptor that combines parameter-efficient fine-tuning and quantization techniques to improve the performance of LLMs with reduced memory usage. The QR-Adaptor framework includes three stages: initialization based on task information, global exploration using Pareto Ranking Genetic Algorithm (PRGA), and local refinement with Bayesian optimization. Experimental results show that the method outperforms fine-tuned 16-bit models while maintaining the same memory usage as fine-tuning 4-bit models."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1.This article proposes the use of gradient-free optimization methods to optimize the rank selection of layer-wise LoRA and the bit selection of layer-wise Quantization, which is quite novel.\n2.This method could be combined with other quantization methods to potentially achieve better performance.\n3.The results on datasets such as MMLU show that QR-Adaptor has achieved excellent performance in both memory and accuracy.\n4.Ablation studies indicate that the proposed three-stage optimization framework effectively yields superior solutions."
+            },
+            "weaknesses": {
+                "value": "1.The introduced multi-stage optimization process increases the time cost.\n2.The experiments in this article are limited, conducted only on Llama2, and the datasets used are not diverse enough. If considering expanding the experiments, one could refer to the experiments in the LoFTQ paper.\n3.There is a lack of experiments on the impact of PRGA hyperparameters on model performance.\n4.There is a lack of comparative experiments between the PRGA method and other multi-objective optimization methods.\n5.Figure 1 is somewhat difficult to understand and should not be placed on the first page."
+            },
+            "questions": {
+                "value": "In addition to the weaknesses, I have the following questions:\n1.I am curious about the effectiveness of directly applying the approach of this article to LLMs quantization, that is, using gradient-free optimization methods to select the quantization bit numbers for each layer's parameters.\n2.AdaLoRA is not specifically designed for quantized LLMs, and its direct performance may be poor. Therefore, concluding that dynamically adjusting rank is not suitable for fine-tuning quantized LLMs may not be sufficiently justified. Can we test AdaLoRA's performance on fine-tuning quantized LLMs again under the condition of Preserving quantized model parameters before fine-tuning?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses quantized parameter-efficient fine-tuning. It proposes two constraints: initializing LoRA parameters either as zero or using MSE initialization like LoftQ and LQ-LoRA, while fixing all trainable parameters. Additionally, it introduces mixed-precision quantization and mixed-rank LoRA, achieving higher performance with the same training memory footprint as 4-bit models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The framework is practically useful, allowing for higher-performance fine-tuned models with a 4-bit memory footprint.\n2. The paper is well-written and easy to follow."
+            },
+            "weaknesses": {
+                "value": "1. The constraints are derived from limited experiments in Figures 2 and 3. For instance, Figure 2 suggests careful LoRA initialization does not improve performance, yet LoftQ and LQ-LoRA demonstrate its effectiveness. LoRA initialization can mitigate quantization loss, crucial for models with significant quantiztaion loss, such as lower-bit quantizations or more challenging models like llama-3-8B. A deeper analysis with stronger experiments and detailed discussion on LoRA initialization is needed.\n\n2. The paper heavily focuses on the two constraints, which seem more like ablation studies and do not offer new insights or motivation for the final methods. The main contribution is achieving higher performance with the same memory footprint as 4-bit models. The paper should be reorganized to highlight its original contributions.\n\n3. The performance improvements could be attributed to higher-bit models and reduced memory footprint through adaptive LoRA rank reduction. Since small LoRA ranks may not perform well on large datasets, it's important to verify the method's effectiveness on larger datasets."
+            },
+            "questions": {
+                "value": "Why does QR-Adaptor consistently outperform LoRA fine-tuning with 16-bit models? Is the advantage due to adaptive LoRA ranks, considering FP16 models are typically more powerful than quantized models?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "They bypasses the network errors introduced by quantization and directly uses actual performance and memory as optimization targets. Through initialization, extrapolation, and interpolation, they quickly solves the gradient-free bit-width and lora rank optimization problem of fine-tuned low-bit quantized models."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The framework outlined in Figure 1 is resonates. Figures 2 and 3 effectively illustrate the key observations and the rationale behind our approach."
+            },
+            "weaknesses": {
+                "value": "This paper is credible in its approach, but lacks a good logical structure in presenting the corresponding challenges. In the abstract \"We find that the performance of finetuning on the adjusted quantized models is even worse than using the original quantized models directly,  as the adjusted model is essentially a completely different model from the original quantized model. \", the adjusted quantized models is a vague statement, and these unclear statements affect my understanding. Therefore, I expect the authors to reformulate the three challenges of the necessity of init/search r and q layer-wise and adopting a gradient-independent strategy in Introduction."
+            },
+            "questions": {
+                "value": "1. My main concern was the extra time cost, could you provide comparisons with existing methods in terms of time cost? Can the computational cost of each stage be disclosed?\n2. The caption of the subfigure in Figure 7 needs to be supplemented.\n3. Will the bad performance affected by unfixed parameters mentioned in Figure 3 improve with longer fine-tuning epochs? This does not seem to be a very intuitive phenomenon, can the author provide more explanation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

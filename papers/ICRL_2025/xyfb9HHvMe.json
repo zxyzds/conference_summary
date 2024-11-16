@@ -1,0 +1,94 @@
+{
+    "id": "xyfb9HHvMe",
+    "title": "DSPO: Direct Score Preference Optimization for Diffusion Model Alignment",
+    "abstract": "Diffusion-based Text-to-Image (T2I) models have achieved impressive success in generating high-quality images from textual prompts. While large language models (LLMs) effectively leverage Direct Preference Optimization (DPO) for fine-tuning on human preference data without the need for reward models, diffusion models have not been extensively explored in this area. Current preference learning methods applied to T2I diffusion models immediately adapt existing techniques from LLMs. However, this adaptation introduces a mismatch between the pretraining and the fine-tuning objectives specific to T2I diffusion models. This inconsistency can potentially lead to suboptimal performance.  In this work, we  propose Direct Score Preference Optimization (DSPO), a novel algorithm that aligns the pretraining and fine-tuning objectives of diffusion models by leveraging score matching, the same objective used during pretraining. It introduces a new perspective on preference learning for diffusion models. Specifically, DSPO distills the score function of human-preferred image distributions into pretrained diffusion models, fine-tuning the model to generate outputs that align with human preferences. We theoretically show that DSPO shares the same optimization direction as reinforcement learning algorithms in diffusion models under certain conditions. Our experimental results demonstrate that DSPO outperforms preference learning baselines for T2I diffusion models in human preference evaluation tasks and enhances both visual appeal and prompt alignment of generated images.",
+    "keywords": [
+        "Text-to-image generation"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=xyfb9HHvMe",
+    "pdf_link": "https://openreview.net/pdf?id=xyfb9HHvMe",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a new direct score preference optimization method for diffusion model alignment that utilizes a target human-preferred score function, thereby aligning the fine-tuning objective with the pretraining objective."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper takes a different approach to aligning text-to-image diffusion models, motivated by score matching, which sets this method apart from the others.\n- In terms of multiple open-source reward scores, DSPO demonstrates effectiveness in increasing reward values."
+            },
+            "weaknesses": {
+                "value": "- In general, I find that many claims are too vague and ambiguous. When we examine the final loss of Diffusion-DPO and DSPO, how can we definitively say that one aligns with the pretrained loss of Stable Diffusion more clearly than the other? Additionally, why is aligning the diffusion model with direct reward optimization or RL considered suboptimal due to a mismatch in pretraining and fine-tuning objectives? Is there any theoretical justification beyond the win rates?\n- In my opinion, since the method is based on human preference, a human evaluation should be conducted to confirm whether it truly increases the reward aligned with human preference. Relying solely on open-source reward model scores seems unreliable, as these models can carry inherent biases.\n- Furthermore, why does the Diffusion-KTO result differ so significantly from the original paper? I think the authors should provide detailed explanations of their evaluation settings, including the seeds used, the number of images generated per method, and other relevant factors. Without this information, the results may appear unreliable."
+            },
+            "questions": {
+                "value": "- In Figure 2, what baseline models were used to calculate the win rate? Is it the pretrained SD1.5 model?\n- During evaluation, did the authors generate images from multiple fixed seeds and average the results over them, or do the results come from a single specific seed?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces DSPO, presenting a score-matching formulation for fine-tuning pre-trained diffusion models on human preference data. The authors argue that since existing preference alignment fine-tuning methods have a different objective than the pre-training objective, it can lead to sub-optimal results, and they demonstrate this with empirical evidence."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The score-matching formulation for alignment fine-tuning of diffusion models hasn't been explored before, and the paper does a good job of exploring this direction. \n* The connection between the objective covered by the RLHF methods for diffusion models and DSPO."
+            },
+            "weaknesses": {
+                "value": "* The paper misses out on using MaPO [1] as a reasonable baseline even though it considers contemporary works like Diffusion KTO. The reason why I think MaPO is important here to consider is because it has similar motivations and also either performs on par with Diffusion DPO or outperforms it under various settings. \n* Lack of experimental results on models like SDXL makes it unclear as to how scalable DSPO is and if it works for models other than SD v1.5. \n* The ablations lack experiments on some of the design choices the authors make to arrive at the final objective of DSPO. For example, they use the direct score function of the underlying data distribution as opposed to using that of $p_{ref}$, but they don't justify it with sufficient experimental results. \n* Pick-a-Pic v2 contains duplicate prompts. Did the authors perform any de-duplication? If not, I think it might be better to run at least a few experiments with de-duplication to check if this improves the results.\n\n**References**\n\n[1] Margin-aware Preference Optimization for Aligning Diffusion Models without Reference; Hong et al.; 2024."
+            },
+            "questions": {
+                "value": "* Figure 2 could mention the base model on which the respective methods were applied.\n\n* L099 - L101: The authors mention \"... with existing baselines for preference learning in T2I diffusion models.\" However, Figure 2 compares the performance of a single base model on which the respective methods were applied. So, I think it's better to be specific and mention the base model in the statement.\n\n* Equation 12 could benefit from an expansion of the notations used. For example, I don't know where $\\lambda$ is coming from. Furthermore, it'd be beneficial to highlight the score function of the data distribution replacing $p_{ref}$.\n\n* It's not clear how DSPO incorporates $\\mathbf{x}_t^w$. Under Section 4.2, $\\mathbf{x}_t^w$ only appears in Equation 14. \n\n* L091: Typo on \"constraints\". \n\n* SD1.5 is a relatively old model. Since DSPO doesn't consider other recent models like SDXL, SD3, Flux, etc., it's unclear as to how well DSPO generalizes. I can understand that providing further results on SD3 or Flux might be computationally challenging, but I request that the authors at least consider SDXL experiments. Additionally, LoRA fine-tuning (similar to how DPOK [1] does it) when doing DSPO for larger models like SD3 and Flux might help them quickly evaluate its potential better. \n\n* Are there any sample-efficient aspects of DSPO? More specifically, I am interested to see if using the score-matching perspective of alignment fine-tuning like DSPO does can improve alignment with fewer samples than other methods.\n\n* The authors could also consider using human-benchmark arenas such as imgsys [2] for evaluation. \n\n* To assess the practical aspects of DSPO, it would be useful to report the wall-clock time and memory requirements of DSP and compare them against the existing methods. \n\n**References**\n\n[1] DPOK: Reinforcement Learning for Fine-tuning Text-to-Image Diffusion Models; Fan et al.; 2023.\n\n[2] imgsys; fal.ai team."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Privacy, security and safety"
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "It might be better to filter out the Pick-a-Pic dataset to discard the NSFW images."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

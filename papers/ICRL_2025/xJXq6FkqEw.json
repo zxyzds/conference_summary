@@ -1,0 +1,167 @@
+{
+    "id": "xJXq6FkqEw",
+    "title": "Enhancing Uncertainty Estimation and Interpretability with Bayesian Non-negative Decision Layer",
+    "abstract": "Although deep neural networks have demonstrated significant success due to their\npowerful expressiveness, most models struggle to meet practical requirements for\nuncertainty estimation. Concurrently, the entangled nature of deep neural net-\nworks leads to a multifaceted problem, where various localized explanation tech-\nniques reveal that multiple unrelated features influence the decisions, thereby un-\ndermining interpretability. To address these challenges, we develop a Bayesian\nNonnegative Decision Layer (BNDL), which reformulates deep neural networks\nas a conditional Bayesian non-negative factor analysis. By leveraging stochastic\nlatent variables, the BNDL can model complex dependencies and provide robust\nuncertainty estimation. Moreover, the sparsity and non-negativity of the latent\nvariables encourage the model to learn disentangled representations and decision\nlayers, thereby improving interpretability. We also offer theoretical guarantees\nthat BNDL can achieve effective disentangled learning. In addition, we developed\na corresponding variational inference method utilizing a Weibull variational in-\nference network to approximate the posterior distribution of the latent variables.\nOur experimental results demonstrate that with enhanced disentanglement capa-\nbilities, BNDL not only improves the model\u2019s accuracy but also provides reliable\nuncertainty estimation and improved interpretability.",
+    "keywords": [
+        "Factor Analysis",
+        "Uncertainty Estimation",
+        "explainable AI"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=xJXq6FkqEw",
+    "pdf_link": "https://openreview.net/pdf?id=xJXq6FkqEw",
+    "comments": [
+        {
+            "summary": {
+                "value": "The manuscript introduces a Bayesian Nonnegative Decision Layer (BNDL) for deep neural network classifiers, with the intent of reformulating them as a factor analysis. This is shown to enhance the interpretability and uncertainty-estimation capabilities of the networks, at least on the examined datasets."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The idea is rigorous and the implementation introduces a minimal overhead over an existing network."
+            },
+            "weaknesses": {
+                "value": "The presentation should be improved, see questions"
+            },
+            "questions": {
+                "value": "- How do we know the distinction between epistemic and aleatoric uncertainty? The epistemic uncertainty should go to zero for large data limit. Is this the case in the present modeling? \n- In Sec. \"uncertainty evaluation metric\", how are the various n_ac,  n_au, n_ic, n_iu actually computed?\n- Eq. 9: what is the difference between f_NNand f_lambda?\n- in section 3.2, the switch from Gaussian to Gamma distribution is unclear. Is the Gaussian distribution used in this work? It seems not but the sentence \"Both \u03b8 and \u03a6 are sampled from a Gaussian distribution\" points otherwise. \n- in sparsity measurement a threshold of 10^-5 is defined for the weights. Shouldn't this come from the analysis of the distribution of weights, rather than just providing a number?\n-in table 1, it seems the application of BNDL to ResNet introduces a significantly better improvement than when applied to ViT. Can the reason of this be understood? \n\nTypos:\n- row 178, \"uncertainty-refers\" should not have a hyphen\n- 282 Killback\u2013Leibler \n- 345 \"descirbed\"\n- 355 \"we uses\" \n- 371 \"Perforamce\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors focus on improving the interpretability of deterministic neural net, by inserting a probabilistic layer that provides a non-negative factorization for an interpretable classification.\nThey prove (partial) identifiability and evaluate the method on several image classification benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The method is generic enough to be added to an arbitrary deep architecture\n- It performs well under varying experimental settings and architectures and can keep/improve upon its non-interpretable counterpart while greatly improving interpretability  \n\n\nOne caveat that should be noted is that I am not too familiar with the current state of the art in interpretability research. As presented, the results look significant, but they might not be."
+            },
+            "weaknesses": {
+                "value": "- The experiments are limited to a small set of interpretability baselines. \n- Sec 3.1 \"We first adopt a Bayesian perspective to re-examine the DNNs\". This framing is rather crude. The vague fact that one could interpret the input to a softmax as a delta distribution over a latent variable alone is not enough to call something Bayesian. A Bayesian approach requires a well-specified prior combined with a posterior inference. Simply making a model (indirectly) probabilistic is not Bayesian.\n- l218 \"it lacks reparameterization and cannot be optimized\" \nYou can always rely on what is often known as the REINFORCE approach, i.e., $\\nabla_a E_{x\\sim q_a(x)}[f(x)] = E_{x \\sim q_a(x)}[f(x)\\nabla_a \\log q_a(x)]$. However, you usually don't want to do this as it will punish your gradients with a huge variance, which is why your proposal is much more stable and sane. But as long as you have a density you could in theory do it. \n- (12) the left hand side should be p(Y|X), as you marginalize on the rhs over $\\theta$ and $\\Phi$\n- Given the Bayesian framing of the paper a short discussion or mention of what is known as last-layer BNNs is missing. These combine a deterministic network trunk with a Bayesian inference over the last layer of a neural net. See, e.g., the references in Harrison et al. (2024). (This is not necessarily the best reference for this research direction that has been growing recently, but one whose references can serve as guidance for a more generic reference.)  \n- In a similar direction goes the field of evidential deep learning also known as prior networks, where a prior to the last layer is inserted in a different way. See, e.g., Sensoy et al. (2018) for classification or Amini et al. (2020) and Malinin et al. (2020) for regression. Both research directions, i.e., EDL and LL-BNNs have a different aim than the authors' proposal but rely on similar mechanics.\n- Regarding overconfidence in l167, I would have expected a reference to the first main study in that direction by Guo et al. (2017). (At least to my knowledge.)\n- In Thm 1 $e_{(k)}$ is not introduced\n\n_____\n_Amini et al., Deep Evidential Regression (2020)_  \n_Guo et al., On Calibration of Modern Neural Networks (2017)_    \n_Harrison et al., Variational Bayesian Last Layers (2024)_    \n_Malinin et al., Regression prior networks (2020)_    \n_Sensoy et al., Evidential Deep Learning to Quantify Classification Uncertainty (2018)_    \n\n\n\n\n\n### Typos\nThe paper contains a lot of typos and missing articles, which should be fixed in a thorough proofreading round. A subset of these are\n- l81 Furthermore, we provide\n- l105,l107 (and maybe others) the citation style is broken use \\citep and \\citet correctly, please follow the style guide\n- most equations, e.g., (1), (2) lack proper punctuation\n- l206 $\\mathbb{R}_+$\n- l241 \"where $h_j$ is an extracted feature\n- l272 of the log-likelihood\n- l345 are described in\n- l440 misclassification, e.g., in the\n- A lot of references are broken, e.g., Dosovitskiy et al. (2020) is a published paper, so is Kingma & Ba's Adam etc."
+            },
+            "questions": {
+                "value": "- Q1: The authors provide a theoretical complexity analysis. What is the practical runtime increase compared to a simple fully-connected layer?\n- Q2: Can the authors provide greater detail on their relatio nto Wang et al. (2024)? There is a strong relation in the method (NMF) and aim to improve interpretability, yet within this paper it is only ever mentioned in passing without being fully introduced nor compared against. The same holds, e.g., for Duan et al. (2024)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a Bayesian neural network where the final layer is modeled as a non-negative matrix factorization (NMF), i.e. $y \\sim \\Phi\\Theta$, the motivation being that such a model would provide both predictive uncertainty estimates (because we learn a posterior distribution) and interpretability (because we learn a sparse factorization for $y$). Both $\\Phi$ and $\\Theta$ are modeled as Gamma distributions, and approximated variationally using the Weibull distribution. The authors evaluate their model (on accuracy, uncertainty, and sparsity) on CIFAR and ImageNet."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The methodology and description of the model and inference process is soundly written. Modeling as the factorization matrices as Gamma distributions should, in theory, encourage sparsity. The variational inference process that is described makes sense. \n\n2. Section 4 is an interesting addition to the paper, which describes how the factorization matrices are (partially) identifiable under certain assumptions, and how the author's model satisfies such criteria.\n\n3. I appreciate the sanity testing for uncertainty/accuracy correlation in Section 5.1.1."
+            },
+            "weaknesses": {
+                "value": "My main criticisms would relate to the experimental results:\n\n1. It is not clear to me why it is necessary to compare to non-Bayesian/point-estimate models, considering that the goal of the paper is to provide better uncertainty estimates. As such, I am not sure the ViT results are especially meaningful, i.e. it is unclear to me what I should be comparing ViT-BNDL to.\n\n2. From Table 1, the PAvPU numbers for the ResNet model do not seem to be a huge improvement over the competing methods, especially the recent approaches (BM and CARD). \n\n3. Is there a reason why sparsity values are not shown for the competing approaches in Section 5.1.2?\n\n4. It is not clear to me that the interpretability evaluation metric in Section 5.2 is correct or useful. Specifically, why is unsupervised disentanglement important for ImageNet and CIFAR? Disentanglement does not imply interpretability, and disentangled features are not necessarily the correct ones to learn either (e.g. a spurious feature will be disentangled from a salient feature, but it doesn't mean we want to learn the former).\n\n5. Relatedly, why do we not compare to competing approaches in Section 5.2? Would the authors be able to report the metric in Table 2 and the visualizations in Figure 4 for the models that BNDL was compared to earlier?"
+            },
+            "questions": {
+                "value": "The authors should respond to my questions in the Weaknesses section. I have no further questions, although I want to note that there are a fair number of typos in the paper that the authors should clean up.\n\nE.g. I believe the first term inside the integral of Eq (4) should be $p(y|\\Phi, \\Theta)$?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The manuscript suggests using Bayesian non-negative decision layer for improving model's uncertainty evaluation and sparsity (disentanglement), with no (statistically significant) loss of accuracy."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Suggested BDNL seems advantageous for uncertainty evaluation and disentangled representation learning.\n\nThe authors try to perform theoretical analysis of their method.\n\nFor most paragraphs ZeroGPT score was 0%, for some 4% and 8%. Thus rather human-written."
+            },
+            "weaknesses": {
+                "value": "Literature overview: why you do not cite works on DNNs and non-negative factor analysis in the interpretability framework, these are probably the closest works to your manuscript and constitute the core of your work? E.g.:\nhttps://proceedings.neurips.cc/paper_files/paper/2022/hash/e53280d73dd5389e820f4a6250365b0e-Abstract-Conference.html\n\nTheorem 1 is not a theorem (please check any statistical/ML literature, like AoS or NeurIPS for what is a theorem), neither is its \"proof\" is a proof, this is just a discussion. I would suggest you change the presentation.\n\nThe improvement of the performance does not seem to be significant at all, which is Ok, but the PAvPU might still seem questionable. How many receptions have been performed, what are your p-values? How, e.g., these numbers in Table 1 with +/- in front were calculated?\n\nThere are typos in the manuscript (which means it is human-written)."
+            },
+            "questions": {
+                "value": "The results on both uncertainty and disentanglement use one metric only each. Would it be possible include further metrics?\n\nMore verbal details on exactly how all experiments were performed would be appreciated."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

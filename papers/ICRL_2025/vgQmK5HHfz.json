@@ -1,0 +1,241 @@
+{
+    "id": "vgQmK5HHfz",
+    "title": "A Normalizing Flows based Difference-of-Entropies Estimator for Mutual Information",
+    "abstract": "Estimating Mutual Information (MI), a key measure of dependence of random quantities without specific modelling assumptions, is a challenging problem in high dimensions. We propose a novel mutual information estimator based on parametrizing conditional densities using normalizing flows, a deep generative model that has gained popularity in recent years. This estimator leverages a block autoregressive structure to achieve improved bias-variance trade-offs on standard benchmark tasks.",
+    "keywords": [
+        "Normalizing flows",
+        "mutual information",
+        "generative models"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We present a new estimator for mutual information based on an implementation of the difference-of-entropies estimator using normalizing flows.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=vgQmK5HHfz",
+    "pdf_link": "https://openreview.net/pdf?id=vgQmK5HHfz",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper explores block neural autoregressive normalizing flows (B-NAF) for estimating the mutual information (MI) between two continuous random variables, denoted X and Y, from samples. The idea is to decompose MI as the difference between H(X) and H(X|Y), respectively denoting the entropy of X and the conditional entropy of X given Y. The observes that the (conditional) entropy is a direct by-product of density estimation with the KL divergence as $H(X) = \\inf_{q} \\mathbb -{E}_{p(x)}[\\log q(x)] $. By exploiting the autoregressive nature of B-NAF we can jointly estimate H(X) and H(X|Y) with one B-NAF network."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- Using normalizing flows, in particular autoregressive flows, to do MI estimation is a novel idea to the best of my knowledge.\n- Empirical results demonstrate that the proposed method can achieve good results on simple benchmarks."
+            },
+            "weaknesses": {
+                "value": "- Presentation: Overall I do not find the paper very well-written. The problem is not well-motivated and it remains unclear under which setting the proposed approach can be of practical usefulness. Section 2 spans from page 2 to page 6 and does not contain original results in my opinion. In contrast, section 3 is very short and is more difficult to read whereas it is probably the most important part of the paper. Figures are very hard to read with almost 19 coloured lines on each plot -- it is unclear to me what is the value of such plot for the reader and message of the paper. Finally there is no conclusion or discussion of future work, potential impact, weaknesses or whatsoever of the paper. \n- Soundness: Overall I have trouble to really understanding the practical relevance of estimating MI from samples as this ends up being equivalent to density estimation. It is thus very sensitive to the choice of model class and, in my opinion, inspecting MI depends as much on the model class chosen than on the samples. This is particularly true for higher dimensional problem where density estimation becomes intractable without strong modelling assumptions. I agree my statement is strong and there may exist certain usecases where estimating MI with minimal modelling assumptions can be relevant, however the paper fails to motivate such use cases and to demonstrate the value of the proposed approach for such settings. \n- Novelty: Normalizing flows perform density estimation while providing both density evaluation and sample generation. It is also clear and well known that the MI can be estimated by sampling and evaluating p(x, y) (potentially by exploiting Bayes' rule to decompose p(x,y) into factors). Thus I do not find the idea presented in this paper very novel and I can imagine many researcher have already used NF to estimate MI when they felt it was a useful value to look at."
+            },
+            "questions": {
+                "value": "I do not understand why you couldn't simply learn a B-NAF (implicitly decomposing p(x, y) as p(x), p(y|x)) with standard MLE of the joint distribution of x, y. What is the gain of alternating between two optimization problem whereas directly solving density estimation with the right architecture would do the same job. Can you provide some motivation and why don't you compare to that more natural approach?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a training regime for a block neural autoregressive flow (B-NAF) for difference-of-entropies (DoE) estimation of mutual information using a single normalizing flow (as an alternative to the naive implementation with two flows). The paper evaluates the method on several synthetic mutual information estimation tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- Originality: to the best of my knowledge, simultaneous estimation of conditional and unconditional density using a single normalizing flow with application to mutual information estimation has not been explored in literature before.\n- Quality: good narrative flow, generally consistent mathematical notation, clear figures. The paper is self-contained: the authors provide an extensive introduction to normalizing flows and mutual information estimation, including relevant prior work."
+            },
+            "weaknesses": {
+                "value": "- Clarity: the proposed method is not presented with great clarity, and even after multiple reads I am not sure I understand _completely_ what the authors are proposing, and how it is motivated. In particular, it is not clear to me where the Eq. (11) comes from, and what the terms in it are precisely. The paragraph following Eq. (11) seems key to understand the idea, but is extremely dense and hard to parse. Authors repeatedly use the word \"deactivate\" (weights/sub-network), but don't explain precisely what it means. Algorithm 1 does not seem to optimize a part of the flow: $f_1$ (both losses only involve $f_2$). I suggest the authors shorten the Section 2 significantly (by e.g. moving parts to the appendix, or leaning more on prior work), and use the space to expand the Section 3, being more precise and clear when introducing and motivating their method.\n- Significance: the benefit of using a single flow (as proposed, i.e. NDoE, BNAF) instead of two flows (BNAF) is not clear from the results presented. While authors claim that \"proposed model achieved better performance across different dimensionalities and sample sizes\", looking at Figures 2-5 I see, at most, a marginal improvement of NDoE, BNAF over BNAF, and often no improvement at all. The significance would be clearer if authors quantified the (relative/absolute) improvement in text, and provided an argument as to why it's significant (avoiding phrases like \"_slight_ bias\"). Moreover, authors only report results on synthetic data in the main text: if experiments were run on real data, authors should at least summarize the findings in the main text. Finally, in the conclusion authors say that they \"plan to evaluate our method in view of downstream applications that require computation of mutual information\" -- expanding the introduction to include a paragraph on what the most important applications of mutual information estimation are would further showcase significance."
+            },
+            "questions": {
+                "value": "- Where does Eq. (11) come from precisely? Why does it not include the derivative of $f_2$ w.r.t $y$?\n- How do we train $f_1$ using Algorithm 1?\n- What do authors mean when they say \"deactivate the off-diagonal weights\" in Algorithm 1?\n- What can authors say about the computational cost of the method compared to e.g. BNAF, i.e. training separate flows?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper expands on the difference-of-entropies (DoE) mutual information (MI) estimator\nproposed by David McAllester and Karl Stratos in 2018.\nIn contrast to the original work, the authors use normalizing flows to model $p(X)$ and $p(X \\mid Y)$,\nwhich makes the estimator consistent.\nAdditionally, a clever trick is proposed to enable the estimation of $p(X)$ and $p(X \\mid Y)$ via a single model.\nThis is achieved through the usage of the block autoregressive flows.\nThe paper includes comprehensive experimental results that highlight the practical advantages and disadvantages of the approach."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is overall well-written, the motivation behind the DoE estimator and autoregressive models is presented clearly.\n1. The idea of modelling two distributions via one flow model is interesting\n   and is reminiscent to a similar technique successfully used in MINDE [1].\n1. The scale of the final comparison (the number of other NN-based estimators featured) is truly commendable.\n   This allows for a better assessment of the advantages of the proposed approach.\n   The authors also provide a comprehensive analysis of the results.\n1. Overall, the proposed method achieves better results compared to other NN-based approaches."
+            },
+            "weaknesses": {
+                "value": "1. Despite the strength \u21163,\n   the set of benchmarks used to evaluate the estimators is very limited and can be considered outdated.\n   The authors employ some simple tests from (Czy\u017c et al., 2023),\n   but do not consider the distributions which might pose a real challenge to flow-based approaches due to the manifold-like structure:\n   the Swiss Roll embedding and the spiral diffeomorphism.\n   Additionally, in (Butakov et al., 2024) and in [2], several complex and high-dimensional image-like datasets\n   with tractable MI have been proposed.\n   Although the authors conduct a number of tests on the MNIST dataset, checking that selected properties of MI also hold for their estimator,\n   the work would still benefit greatly from image-like tests for which the ground truth value of MI is available.\n1. Although I clearly see that the DoE estimator combined with two expressive enough flow models is consistent,\n   a rigorous proof still has to be provided in order to show that the same holds for using only one model;\n   please, see the questions.\n1. Combining the proposed estimator with a dimensionality reduction technique during the tests with MNIST seems unfair.\n   If the proposed estimator fails to estimate MI between images\n   (which definitely might happen due to certain limitations of the generative models used),\n   this should be clearly represented as a limitation of the method.\n1. The major limitation of the proposed method in its current form is that it is only applicable to continuous distributions,\n   whereas critic-based methods (MINE, InfoNCE, ...) work with any types of distributions out-of-the-box.\n   The authors should address this limitation properly in their manuscript.\n   I also suggest dedicating a separate paragraph to all the limitations of the proposed method.\n\n**Minor:**\n\n1. The novelty of this work is limited due to the main ideas behind the DoE estimator being explored in (McAllester & Stratos, 2018).\n1. The authors do not compare their method to other approaches based on generative models,\n   such as [1] and (Ao & Li, 2022; Duong & Nguyen, 2023; Butakov et al., 2024).\n1. The first plot in Figure 16 features a dashed line, which is misleading.\n   For this particular test, there are no clues which ratio we should expect to see,\n   as the information about $X$ can be distributed non-uniformly among the rows.\n   Moreover, the test itself is ill-posed, as $I(X;X) = I(X;Y) = +\\infty$ in this particular case;\n   I, however, acknowledge that the test is borrowed from the work of Song & Ermon (2020).\n1. Due to the source code being absent from the supplementary materials, the reproducibility can be questioned."
+            },
+            "questions": {
+                "value": "1. As only $p(X)$ and $p(X \\mid Y)$ are modeled,\n   why can not we always use the original values of $y$ to condition the corresponding flows for $x$?\n   Is there any need to assume continuity of $Y$ and apply transformations to $Y$ alongside $X$?\n   If the answer is \"no\", then the method could be generalized to any type of $Y$ (including discrete or mixed distributions),\n   provided that $p(X)$ and $p(X \\mid Y)$ still exist.\n1. What is the difference between \"NDoE, BNAF\" and \"BNAF\"?\n   Do I understand correctly that in \"BNAF\", $H(X)$ and $H(X \\mid Y)$ are approximated via two separate flows?\n1. How were the confidence intervals obtained?\n1. NDoE, Real NVP is mentioned in Figure 5, but absent from the actual plot. Why?\n1. There seem to be some minor issues with notation in Theorem B.1.\n   Firstly, in the statement, $T$ is applied to $(y,x)$, but in the proof, the order is reversed:\n   $U$ is applied to $(x,y)$.\n   Of course, this is still perfectly valid; however, it introduces some unnecessary confusion.\n   Secondly, from the notation $V = (T_1, \\overline{T})$ it is not obvious that\n   $\\overline{T} \\colon \\mathbb{R}^{2n} \\to \\mathbb{R}^n$ (which, I assume, is implied here).\n\n   Additionally, it seems that this theorem can be easily extended to the case of $X$ and $Y$ being of different dimensionalities.\n\n   I kindly ask the authors to address my concerns regarding this theorem.\n1. In Corollary B.2, $q$ is not defined.\n   The role of $f = (f_1, f_2)$ is also not explained properly\n   (as for the current state of the corollary, this can be any block-triangular normalizing flow).\n   Please, clarify.\n   I also suggest addressing the following notation conflict: $g$ in Corollary B.2 and on lines 742--743\n   is not the same as on lines 751-755.\n1. It might be due to the previously mentioned issues,\n   but the following claim lacks rigorous backing:\n   \"Corollary B.2 suggests that given enough expressive power of our neural network architecture,\n   we can (train?) the network to both approximate $H(X \\mid Y)$ and $H(X)$\".\n   As we do not choose $g$ in Corollary B.2, it is not obvious that it is possible to achieve $\\forall x,y \\;\\; g(y, f^x(x)) = f^x(x)$.\n   Please, address my concerns and provide a more formal bridge between Corollary B.2 and the claim in question.\n\n**Additional references:**\n\n[1] Giulio Franzese et al. MINDE: Mutual information neural diffusion estimation. *Proc. of ICLR 2024.*\n\n[2] Lee K., Rhee W. A Benchmark Suite for Evaluating Neural Mutual Information Estimators on Unstructured Datasets. *Proc. of NeurIPS 2024.*"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose using a version of DoE estimators to create an unbiased version of parameterizing normalizing flows to estimate mutual information. They do this by deactivating certain parts of the network to estimate each of the two entropy terms. They demonstrate their method across a variety of synthetic distributions with different transformations."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The current method can be flexibly parameterized any type of normalizing flows with a conditional dependence for MI estimation. Theory wise, everything is quite clear and intuitive."
+            },
+            "weaknesses": {
+                "value": "Currently, the experiments test against a lot of baselines, but don't particularly highlight their main contribution in terms of the addition of the DoE estimator (given that a normalizing flows for MI estimation paper exists). The main comparison experimentally is with standard BNAF, and the results for that aren't fully convincing of the advantages of the method.\nOne simple way to add an additional comparison is to have a standard RealNVP without the NDoE portion, for an apt comparison. Alternatively, adding DoE to some of the other baselines presented (while cutting down on the total number, as the error bars are quite hard to read with that many baselines, many of which do not contribute particularly to the argument) would also be good. Also, you may want to consider presenting some of the baselines in a table instead (perhaps in the appendix).\nThe abstract doesn't seem to contain your main contribution here, which can be quite confusing."
+            },
+            "questions": {
+                "value": "Some of the charts seem to be missing a baseline (e.g. NDoE, RealNVP in Figure 5 and Figure 9), which I presume is due to the line in the text where it is stated that NDoE, Real NVP failed to achieve realistic results in the Sparse Gaussian case. Is this something due to the RealNVP, or did the NDoE part also affect it? Is there some intuition or explanation for why this happened?\nIs there a reason for not including a standard RealNVP approach (without the NDoe) in the baselines?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work presents a novel method for the estimation of mutual information between arbitrary, continuous random variables, extending the range of estimators from the literature. The key idea stems from the seminal work by McAllester & Stratos (2018), in which mutual information is cast as an optimization problem by noting that entropy and conditional entropy can be estimated as infimum of cross-entropies computed with an approximation density.\n\nSuch density, in the presented work, is obtained by the application of normalizing flows, that transform a base normal distribution into an arbitrary distribution, which is used in the optimization problem discussed above. The authors clearly indicate how to use recent advances in the theory and practice of normalizing flow to build an approach that is computationally cheap, by means of an amortization approach. Indeed, they can estimate mutual information, and the elements described above (entropy and conditional entropy) with a single network.\n\nA large number of synthetic experiments complement the presented methodology, illustrating the advantages of the proposed method when compared to a number of alternatives from the literature. Such experiments include cases in which the original Gaussian distributions are transformed by means of non-linear functions. Furthermore, the appendix contains additional experiments including self-consistency tests, as done previously in the literature."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* Section 2.1 is very clear, and contains a good summary of known results from McAllester & Stratos (2018) in sections 5.1 and 5.2, setting the stage for a much advanced parametrization of the two optimization problems of estimating cross entropies to obtain estimates of entropy and conditional entropy, by means of an amortized, flow-based approach. I think this is an original idea which displays good performance in practice.\n\n* Section 2.2 is also very clear and didactical, motivating the need for efficient variants of the base normalizing flow approach, which can be costly from the computational perspective. Ultimately, a block autoregressive formulation is what the authors used for MI estimation. I really like, again, the clear and didactical approach to explain the \u201camortization technique\u201d to activate part of the flow network to obtain estimates of the various quantities required to solve the optimization problem in Equation 3.\n\n* Despite some questions (see below), the experimental section is very thorough (including also the results presented in Appendix C, which complement substantially the standard benchmark results in the main part of the paper)."
+            },
+            "weaknesses": {
+                "value": "* Expression at line 37 is the equivalent of equation 7 in McAllester & Stratos (2018), which is a difference of entropies. The authors anticipate equation 14 in McAllester & Stratos (2018), which instead involves cross-entropies as upper bounds of the entropy and conditional entropy. I think this can be easily clarified in the paper, as the authors correctly characterize their expressions as the infimum of cross entropies that they translate to a variational problem.\n\n* Section 1.1 offers a detailed overview of alternative MI estimators, but misses one important approach that has appeared prior to the last reviewed method from Butakov et al (2024), namely the MINDE estimator proposed in Franzese et al., \u201cMutual information neural diffusion estimator\u201d, ICLR 2024, which also targets arbitrary, high-dimensional continuous distributions, making it a good candidate for comparison in the experimental evaluation.\n\n* Experiments in section 4 rely only on synthetic data, which is a necessity to gain access to ground-truth MI, and to perform a comparative analysis among methods. The authors build upon prior benchmark studies, and propose a series of synthetic random variables sampled from Gaussian distributions with varying dimensionality, and having access to various sample sizes. They also consider one non-linear transformation by applying a cubic function to one of the variables. While in all such cases, the proposed method performs well, I am curious to understand why (also by looking at experiments in Appendix C, including additional transformations) the proposed method struggles with highly non-linear transformations. If on the one hand, the authors claim that the superiority of the proposed method in the Gaussian case might be \u201clikely be due to the fact that the base distribution is itself Gaussian\u201d (line 409), when this is not the case, does it mean that normalizing flows struggle with arbitrary distributions? This should not make sense right? So what is the problem, which is exacerbated by an high MI regime?\n\n* One last question on the experiments is in order. Recent work, such as Kong et al, \u201cInterpretable Diffusion via Information Decomposition\u201d, ICLR 2024, Franzese et al. \u201cMutual information neural diffusion estimator\u201d, ICLR 2024, illustrate some practical applications in which mutual information estimation can be instrumental. Have the authors attempted at estimating MI between complex distributions such as $X \\sim \\text{image data}$ and $Y \\sim \\text{Text embeddings}$? This question is important to fully grasp the potential impact of MI estimators that can be useful in the machine learning community for a variety of purposes."
+            },
+            "questions": {
+                "value": "I do not have more questions than those discussed in the weaknesses. Apart from missing one reference that I saw recently, and some questions on the experiments, this is a nice work, in my opinion."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a new difference of entropies estimator for mutual information (MI). The estimator uses a block autoregressive flow and shows good performance on benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Good summary of exisiting methods\n- Clearly written\n- Promising performance on benchmarks"
+            },
+            "weaknesses": {
+                "value": "- Robustness of results to different hyperparameter settings could be explored in more depth\n- Figures are hard to read and not colorblind friendly\n- Minor: Reference section deserves revision; many inconsistencies"
+            },
+            "questions": {
+                "value": "- How do methods compare when using half or double the parameter count?\n- Have you considered alternative ways of reporting the results? The plots feel very crowded and are hard to discern."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

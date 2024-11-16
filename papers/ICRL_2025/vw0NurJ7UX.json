@@ -1,0 +1,160 @@
+{
+    "id": "vw0NurJ7UX",
+    "title": "PrefixQuant: Static Quantization Beats Dynamic through Prefixed Outliers in LLMs",
+    "abstract": "Quantization is essential for deploying Large Language Models (LLMs) by enhancing memory efficiency and inference speed. Existing methods for activation quantization mainly address channel-wise outliers, often neglecting token-wise outliers, leading to reliance on costly per-token dynamic quantization. To address this, we introduce PrefixQuant, a novel technique that isolates outlier tokens offline without re-training. Specifically, PrefixQuant identifies high-frequency outlier tokens and prefixes them in the KV cache, preventing the generation of outlier tokens during inference and simplifying quantization. To our knowledge, PrefixQuant is the first to enable efficient per-tensor static quantization to outperform expensive per-token dynamic quantization. For instance, in W4A4KV4 (4- bit weight, 4-bit activation, and 4-bit KV cache) Llama-3-8B, PrefixQuant with per-tensor static quantization achieves a 7.43 WikiText2 perplexity and 71.08% average accuracy on 5 common-sense reasoning tasks, outperforming previous per-token dynamic quantization methods like QuaRot with 0.98 perplexity improvement and +5.98 points accuracy. Additionally, the inference speed of W4A4 quantized models using PrefixQuant is 1.60\u00d7 to 2.81\u00d7 faster than FP16 models and exceeds QuaRot models by 1.2\u00d7 to 1.3\u00d7.",
+    "keywords": [
+        "Large language model; Token-wise outliers; Static quantization;"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "The first work to let the accuracy of static activation quantization outperforms dynamic ones in large language models.",
+    "creation_date": "2024-09-19",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=vw0NurJ7UX",
+    "pdf_link": "https://openreview.net/pdf?id=vw0NurJ7UX",
+    "comments": [
+        {
+            "title": {
+                "value": "Still don't understand how this helps during inference, say on low precision hardware."
+            },
+            "comment": {
+                "value": "Very interesting result, but I don't understand how it can help just to insert outliers into the cache. Does this assume that your 4-bit KV cache has a separate scale factor for the prefixed tokens than for the rest of the entries in the cache?  Or are your outlier, prefixed cache entries somehow left in fp16 format?  In the latter case, this is not hardware friendly.  I would very much like to understand how these prepended tokens in the cache can have a dramatic affect on the subsequent responses without studying the code, as this is the key insight to your work, and thus the key idea to clarify to your readers.  Perhaps a bit of pseudocode as to how to implement the cache would help.\n\nI should say that my mental model of KV Cache is that all it does is store, in order, all the tokens generated so far so that it doesn't have to recompute them all when it generates the next token.  In this case, having precomputed certain tokens at the beginning doesn't help when you encounter them again in the middle of the prompt or response, such as '\\n' or <space> tokens which may appear mutiple times within the sequence."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer wZKZ"
+            },
+            "comment": {
+                "value": "Thank you for your comment. To address your concern, we reexplain how prefixquant works, and add the speedup results of 70B models.\n\n\n**Weakness 1 (Question 1):** It is not clear how the proposed method works. Specifically, I don't understand why prefixing certain outlier tokens in the KV cache prevents the generation of new outlier tokens. Is there a skipping mechanism in the autoregressive generation, or is the method intended to make the KV cache more quantization-friendly? I doubt the effectiveness if it's the latter.\n\n**Answer 1:** There seems to be a misunderstanding regarding our paper. In autoregressive inference, prefixing tokens in the input sequence or in the KV cache yields the same results. The advantage of prefixing in the KV cache is that it avoids corresponding computation on linear layers. Our method ensures outliers appear in initial tokens, which we then store in the KV cache to prevent their computation in down_proj layers. As mentioned in line 336, outliers only occupy a few tokens (1-4) per sequence. The positions of these outliers vary with the input sequence (see Figure 4b). By prefixing high-frequency outlier tokens, we confine them to prefixed positions (see Figure 4c). Thus, placing these tokens at the start of the KV cache achieves the desired outcome.\n\n\n\n**Weakness 2 (Question 2):** The performance without fine-tuning is not strong, especially on the 70B models. It would be helpful to add a column in Table 3 indicating whether other methods are fine-tuned, for better clarity.\n\n**Answer 2:** While the PrefixQuant model without fine-tuning is not exceptionally strong, it excels in efficient static quantization. Other methods suffer significant performance degradation under the same settings. For instance, W4A4KV4 Llama-3-8B with QuaRot in static quantization results in perplexity exceeding 100. In Table 3, Atom and DuQuant do not use fine-tuning, whereas QuaRot relies on additional GPTQ, and SpinQuant uses both fine-tuning and GPTQ. We will clarify this in the final version.\n\n\n\n**Weakness 3 (Question 3):** Do the authors have results with 70B models, and do they still observe a speedup? If not, these limitations should be clearly addressed.\n\n**Answer 3:** Table 9 in our paper presents the speedup of linear layers with 70B model shapes (8192x8192 and 8192x28672). Static quantization is faster than dynamic quantization. For end-to-end prefilling speedup, since the 4-bit Llama-3-70B can be loaded on an RTX 3090 GPU, we confirmed effectiveness on A100 GPUs only. As shown below, PrefixQuant achieves a 1.2x speedup over QuaRot.\n\n| Method| Speed|\n| ------------------ | -------------- |\n| FP16| OOM|\n| QuaRot (W4A4) | 1183 ms|\n| PrefixQuant (W4A4) | 993 ms (1.20x) |\n\nWe sincerely appreciate your time and effort in reviewing our paper. Please let us know if you have further inquiries."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer Xnqz"
+            },
+            "comment": {
+                "value": "Thank you for your comment.We reclaim the novelty of our paper, and explain why we need to remove token-wise outliers. \n\n**Weakness 1.1:** The main concern is the novelty of the proposed method. The idea of adding prefix tokens to mitigate outliers has been explored by previous works: QFeP (Yang et al., arXived May 2024) and CushionCache (Son et al., EMNLP 2024).\n\n**Answer 1.1:** Prefixed outlier tokens in KV cache have been explored in works like Massive Attention (Sun et al., COLM 2024) and Attention Sink (Xiao et al., ICLR 2024), alongside QFeP and CushionCache. However, PrefixQuant is the first to provide a system analysis of these outliers. As detailed in Section 4, we address upper outlier tokens in inputs and lower outliers in Q/K/V, which were not covered by previous works. Our method identifies outlier tokens within 10 seconds, compared to ~10 hours for CushionCache on Llama-3-8B. Additionally, PrefixQuant is the first to facilitate static quantization in both KV cache and activation.\n\n\n**Weakness 1.2:** The advantage of less computation time seems not very critical practically (as these are one-time costs) and does not stem from a technically novel component.\n\n**Answer 1.2:** We respectfully disagree. Compression time is crucial when deciding whether to adopt a compression technique. This is why methods like GPTQ and AWQ are popular\u2014they complete compression quickly. Although finding the prefixed token is a one-time cost per model, the numerous models make this efficiency significant.\n\n\n**Weakness 1.3:** The advantage seems to come mainly from using Hadamard rotation, grid search, and block-wise fine-tuning, which are not original contributions. I recommend comparing the prefix optimization method with CushionCache and QFeP, excluding additional components.\n\n**Answer 1.3:** In head-to-head comparisons of prefixed tokens, all three papers\u2014PrefixQuant, CushionCache, and QFeP\u2014resolve token-wise outliers effectively, as shown in there activation distribution visualizations. However, PrefixQuant provides more comprehensive system analysis, covering both the KV cache and input of linear layers, unlike the others that focus solely on linear layers. Additionally, PrefixQuant identifies outliers 3600 times faster on Llama-3-8B (10s vs. ~10h) compared to CushionCache. We included Hadamard rotation in our comparisons because it has become a standard component used by several methods, including QuaRot, DuQuant, SpinQuant, and QoQ.\n\n\n**Weakness 2:** Removing channel-wise outliers should resolve token-wise outliers logically. I request a more concrete justification.\n\n**Answer 2:** Let me define outliers: `Channel-wise outliers` occur at fixed channel indexes, while `token-wise outliers` appear in specific tokens. Figure 1 in our paper illustrates this. As shown in Figure 1(a), outliers greater than 1,000 are present only in specific tokens, termed token-wise outliers. Figure 1(b) shows that after applying channel-wise alleviation methods like Rotation (QuaRot), outliers are redistributed across token channels. QuaRot reduces outliers to nearly 15 but still struggles with non-uniform distribution. Figure 1(c) demonstrates how our PrefixQuant isolates outlier tokens, reducing maximum values to nearly 0.07.\n\n\n**Weakness 3:** The authors could include evaluations on more realistic tasks, such as GSM-8k or MMLU.\n\n**Answer 3:** The table below shows our comparison results on the MMLU dataset, which is sensitive to quantization. QuaRot's performance collapses on MMLU, but PrefixQuant consistently outperforms previous dynamic quantization methods even without fine-tuning.\n\n| Model | Method| Quantization | Precision | MMLU Average Accuracy |\n| ---------- | ------------------ | ------------ | --------- | --------------------- |\n| LLama-3-8B | -| -| FP16 | 62.07 |\n| LLama-3-8B | QuaRot| Dynamic | w4A4KV4 | 34.25 |\n| LLama-3-8B | DuQuant| Dynamic | w4A4KV4 | 50.77 |\n| LLama-3-8B | SpinQuant| Dynamic | w4A4KV4 | 51.93 |\n| LLama-3-8B | PrefixQuant w/o FT | **Static** | W4A4KV4 | **53.02**|\n| LLama-3-8B | PrefixQuant| **Static** | W4A4KV4 | **54.65**|\n| LLama-3-8B | QuaRot| Dynamic | w4A8KV4 | 38.37 |\n| LLama-3-8B | DuQuant| Dynamic | w4A8KV4 | 58.01 |\n| LLama-3-8B | SpinQuant| Dynamic | w4A8KV4 | 58.25 |\n| LLama-3-8B | PrefixQuant w/o FT | **Static** | w4A8KV4 | **58.27**|\n| LLama-3-8B | PrefixQuant| **Static** | w4A8KV4 | **59.20**|\n\n\n**Weakness 4:** The claim that static per-tensor quantization by PrefixQuant outperforms existing dynamic methods does not seem entirely true.\n\n**Answer 4:** We detail comparison results in lines 465-480. We primarily claim that PrefixQuant outperforms existing methods in W4A4KV4 and W4A8KV4 settings. In the W8A8KV8 setting, PrefixQuant achieves comparable performance with existing methods, with its main advantage being efficient per-tensor static quantization.\n\nWe sincerely appreciate the time dedicated to reviewing our paper. If you have further inquiries, please let us know."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to reviewer xJQ6"
+            },
+            "comment": {
+                "value": "Thank you for your comment. To address your concern, we have added performance comparisons in a long-context setting (8192 context length). This demonstrates that per-tensor quantization of PrefixQuant can outperform previous per-token dynamic quantization methods. We also present the MMLU results and speedup with an 8192 long context.\n\n**Weakness 1:** Lack of comparison in a long-context setting\n\n**Answer 1:** The following table shows that PrefixQuant, without fine-tuning, outperforms previous per-token dynamic quantization methods in both 4-bit and 8-bit activations at a context length of 8192 (the maximum length of the original Llama-3-8B). These results demonstrate that PrefixQuant is the first to enable efficient per-tensor static quantization, outperforming the costly per-token dynamic quantization.\n\n| Model      | Method             | Sequence Length | Quantization | Precision | WikiText2 PPL. |\n| ---------- | ------------------ | --------------- | ------------ | --------- | -------------- |\n| LLama-3-8B | -                  | 8192            | -            | FP16      | 5.54           |\n| LLama-3-8B | QuaRot             | 8192            | Dynamic      | W4A8KV4   | 6.79           |\n| LLama-3-8B | PrefixQuant w/o FT | 8192            | **Static**   | W4A8KV4   | **6.21**       |\n| LLama-3-8B | PrefixQuant        | 8192            | **Static**   | W4A8KV4   | **6.04**       |\n| LLama-3-8B | QuaRot             | 8192            | Dynamic      | w4A4KV4   | 8.41           |\n| LLama-3-8B | DuQuant            | 8192            | Dynamic      | w4A4KV4   | 7.27           |\n| LLama-3-8B | PrefixQuant w/o FT | 8192            | **Static**   | w4A4KV4   | **7.13**       |\n| LLama-3-8B | PrefixQuant        | 8192            | **Static**   | w4A4KV4   | **6.82**       |\n\n**Weakness 2:** More experiments are needed to assess the effectiveness on challenging subjects like MMLU.\n\n**Answer 2:** The following table illustrates the comparison results on MMLU datasets, which are more sensitive to quantization. It shows that the performance of QuaRot collapses on the MMLU dataset. However, PrefixQuant consistently outperforms previous dynamic quantization methods, even without fine-tuning.\n\n| Model      | Method             | Quantization | Precision | MMLU Average Accuracy |\n| ---------- | ------------------ | ------------ | --------- | --------------------- |\n| LLama-3-8B | -                  | -            | FP16      | 62.07                 |\n| LLama-3-8B | QuaRot             | Dynamic      | w4A4KV4   | 34.25                 |\n| LLama-3-8B | DuQuant            | Dynamic      | w4A4KV4   | 50.77                 |\n| LLama-3-8B | SpinQuant          | Dynamic      | w4A4KV4   | 51.93                 |\n| LLama-3-8B | PrefixQuant w/o FT | **Static**   | W4A4KV4   | **53.02**             |\n| LLama-3-8B | PrefixQuant        | **Static**   | W4A4KV4   | **54.65**             |\n| LLama-3-8B | QuaRot             | Dynamic      | w4A8KV4   | 38.37                 |\n| LLama-3-8B | DuQuant            | Dynamic      | w4A8KV4   | 58.01                 |\n| LLama-3-8B | SpinQuant          | Dynamic      | w4A8KV4   | 58.25                 |\n| LLama-3-8B | PrefixQuant w/o FT | **Static**   | w4A8KV4   | **58.27**             |\n| LLama-3-8B | PrefixQuant        | **Static**   | w4A8KV4   | **59.20**             |\n\n**Question 3:** It would be better if the authors measured the real time-to-first-token (pre-filling) speed-up with longer context length (e.g., 8192) than 2048.\n\n**Answer 3:** We tested the W4A4 Llama-3-8B pre-filling speedup compared to FP16 with a batch size of 1 and a context length of 8192. As shown in the table below, PrefixQuant achieves a 1.83x speedup on the A100 and a 3.02x speedup on the RTX 3090.\n\n| GPUs      | W4A4 vs. FP16 Speedup Ratio |\n| --------- | --------------------------- |\n| RTX 3090  | 3.02x                       |\n| A100-80GB | 1.83x                       |\n\nWe sincerely appreciate the time and effort you have dedicated to reviewing our paper. Should you have any further inquiries, please let us know."
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors proposed PrefixQuant, which allows for efficient per-tensor static quantization to outperform expensive per-token dynamic quantization. They showed that PrefixQuant with per-tensor static quantization can outperform previous per-token dynamic quantization methods like QuaRot."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- The authors showed the possibility that per-tensor static quantization can outperform per-token dynamic quantization.\n\n- They measured the real time-to-first-token (pre-filling) speed-up."
+            },
+            "weaknesses": {
+                "value": "(1) The authors merely showed the effectiveness of PrefixQuant with per-tensor static quantization only $\\textbf{when the context length is 2048}$ (Table 2, 3, 4, 5, and 6). Since 2048 context length is relatively short, per-tensor static quantization might work. However, when the context length is 8192, for example, the activation size would be 8192 (context length) $\\times$ 4096 (model hidden size) = 33554432. Then, even if using 8-bit per-tensor static activation quantization, 33554432 / 256 (8-bit) = 131072 numbers have to be represented in only a single integer on average, which would naturally incur more severe quantization error than when the context length is 2048. In other words, in the case of per-tensor static activation quantization, as the context length goes longer, the larger numbers have to be represented in only a single integer on average, thus causing per-tensor static quantization to perform worse.\n\nHowever, in the case of per-token dynamic quantization, no matter how long the context length is, just 4096 (model hidden size) / 256 (8-bit) = 16 numbers have to be represented in only a single integer on average. Considering that many long-context LLMs are sought-after these days, it is necessary to compare PrefixQuant with per-tensor static quantization with previous per-token dynamic quantization methods like QuaRot when the context length is 8192 or longer. Without the comparison in a long-context setting, it is not convincing that PrefixQuant is the first to enable efficient per-tensor static quantization to outperform expensive per-token dynamic quantization (mentioned in Abstract).\n\n(2) The paper focuses on perplexity and common sense reasoning tasks as the performance measure. More experiments are required to assess the effectiveness of the proposed method on broader challenging subjects like MMLU."
+            },
+            "questions": {
+                "value": "It would be better if the authors measured the real time-to-first-token (pre-filling) speed-up with longer context length (e.g., 8192) than 2048."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a static activation quantization algorithm for large language models. The idea is to add prefix to the target LLM, which are selected in a way that it mitigates the outliers in other tokens so that the activations become more quantizable. The prefix are selected to be the top-k high-frequency outlier tokens. The method also applies Hadamard rotation and blockwise fine-tuning to further boost the performance. Experimental results suggest that the proposed method outperforms other dynamic quantization methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- I like the fact that the paper reports wall-clock inference speed on various devices (rtx 3090 and a100). This is missing from many quantization works, due to the difficulty of implementing kernels, but is nevertheless much needed.\n\n- The presentation is clear and the visualizations are well-prepared.\n\n- The generative quality of the method has been carefully measured, with many ablation studies."
+            },
+            "weaknesses": {
+                "value": "- The biggest concern is the conceptual and technical novelty of the proposed method. As the authors mention in section 2, the idea of adding prefix tokens to mitigate the outliers has been already explored by two prior works: QFeP (Yang et al., arXived May 2024), and CushionCache (Son et al., EMNLP 2024). In particular, the central claim of this paper, i.e., such prefix makes the static quantization useful, has already been argued by CushionCache. If I understood correctly, it seems like the authors are claiming that there are two differences to these works. (1) PrefixQuant requires less computation than predecessors for optimizing the prefix, and (2) PrefixQuant outperforms these methods. The advantage (1) does not seem to be very critical practically (as these are one-time cost), and does not originate from a particularly technically novel component. The advantage (2) seems to come mainly from additionally considering Hadamard rotation, grid search, and block-wise fine-tuning, which are not original contributions of this paper. In fact, CushionCache already demonstrates that their method can be combined with Hadamard rotation to further boost the performance.\n\n- It seems like the paper is claiming that the prefix plays a complementary role to Hadamard rotation, by arguing that Hadamard rotations are for addressing \"channel-wise outliers\" and the prefix are for addressing \"token-wise outliers.\" However, I find this point very unclear and misleading, because previous empirical observations suggest that for many LLaMA-like models the outliers are localized in terms of both channels and tokens (e.g., Sun et al., COLM 2024). Thus, removing channel-wise outliers should also resolve token-wise outliers, logically. I request for a more concrete justification.\n\n- The authors could have included evaluations on more realistic tasks, such as GSM-8k or MMLU.\n\n- Looking at table 18, the claim that static per-tensor quantization by PrefixQuant outperforms existing dynamic quantization methods does not seem to be 100% true. At W8A8-like quantization on overparameterized models, i.e., with only very small degradation in performance, I still observe that QuaRot consistently outperforms PrefixQuant w/o FT. It seems likely that QuaRot+FT may also outperform PrefixQuant+FT."
+            },
+            "questions": {
+                "value": "- Regarding the first weakness (above), I recommend the authors to compare the quality of their proposed prefix optimization method head-to-head with CushionCache and QFeP, by removing the grid search, Hadamard rotation, and block-wise fine-tuning."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "From a high-level, I understand the idea of the paper is to identify several tokens that have high outlier values from a calibration set, and then prefix these values ahead of the time in the KV cache. The author then used some empirical measure (max over median) to obtain these outlier tokens. At inference time, the outlier tokens are somehow skipped so that there is a less profound outlier effect in the activations, and thus make the whole flow more quantization friendly so that the authors can apply a static quantization in which we do not have to quantize and dequantize at run-time. However, I think some technical detail is either missing or not carefully explained, making it hard to understand how the proposed benefits on quantization is materialized."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper describes a novel method that deals with the known outlier problem for quantization on the token dimension. The proposed method carries simplicity and novelty in its current description, and also has a low-cost when executing it in practise."
+            },
+            "weaknesses": {
+                "value": "1. It is not super clear how the proposed method work, specially, I do not really understand why prefix certain outlier tokens in the KV cache can prevent the generation of new outlier tokens. I actually do not really understand whether there is a skipping mechanism in the autoregressive of generation or the authors suggest this would make the KV cache more quantization friendly. I would doubt the effectiveness of the method if they mean the later.\n2. The performance without fine-tuning is actually not super strong, especially on the 70B models, it is actually maybe better if the author can change Table3 to add a column to indicate whether these other methods are fine-tuned or not so that the readers can understand the results better.\n3. I doubt the run-time numbers in Table 5 continues to show advantages when the models are scaled to 70B. When models are memory-bound, whether it is a dynmaic/static quantization does not matter too much since most of the time are spent on loading the weights from HBM so that the arithmetic units on GPUs are under-utilized anyway. Do authros have results with 70B models, and do they still observe a speedup? If not, it is better to make sure these limitaitons are clearly addressed in the paper."
+            },
+            "questions": {
+                "value": "1. Can you provide clarification on what do you really mean by \"isolate outliers\". Especially how would prefixing them in the KV cache help? In my understanding, the whole KV cache would have to join the decode stage computation, so you inevitably would have these outlier values even if you \"prefix\" them. Also in the autoregressive generation, naturally you will generate these tokens that are outliers too. I might have missed something obvious here, but I would like to have an explantion on this.\n2. Can you indicate whether compared methods involve fine-tuning?\n3. Can you show actual run time with large scale models? If no, what is the limitation of the proposed method?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

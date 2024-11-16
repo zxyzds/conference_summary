@@ -1,0 +1,168 @@
+{
+    "id": "xJc3PazBwS",
+    "title": "Disentangling Textual and Acoustic Features of Neural Speech Representations",
+    "abstract": "Neural speech models build deeply entangled internal representations, which capture a variety of features (e.g., fundamental frequency, loudness, syntactic category, or semantic content of a word) in a distributed encoding. This complexity makes it difficult to track the extent to which such representations rely on textual and acoustic information, or to suppress the encoding of acoustic features that may pose privacy risks (e.g., gender or speaker identity) in critical, real-world applications. In this paper, we build upon the Information Bottleneck principle to propose a disentanglement framework that separates complex speech representations into two distinct components: one encoding content (i.e., what can be transcribed as text) and the other encoding acoustic features relevant to a given downstream task. We apply and evaluate our framework to emotion recognition and speaker identification downstream tasks, quantifying the contribution of textual and acoustic features at each model layer. Additionally, we explore the application of our disentanglement framework as an attribution method to identify the most salient speech frame representations from both the textual and acoustic perspectives.",
+    "keywords": [
+        "Disentangling Representations",
+        "Spoken language Processing",
+        "Speech Emotion Recognition",
+        "Interpretability"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=xJc3PazBwS",
+    "pdf_link": "https://openreview.net/pdf?id=xJc3PazBwS",
+    "comments": [
+        {
+            "summary": {
+                "value": "Many standard speech representations are learned in a self-supervised way (HuBERT, w2v2, etc) and hence are, essentially, entangled blackboxes that have acoustic and textual features mixed in them in an arbitrary way. One can imagine scenarios where this is undesired, and it would be better to have a control over what/how features are encoded. This paper proposes a method building such disentangled representations, using the IB principle. As a running example, the paper opposes information that encodes textual content and acoustic information, encoding emotion or speaker identity. The paper shows that their method successfully disentangles the inputs features (variants of HuBERT, W2V2). The authors conclude with several interpretability studies of the models that use those features."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* I find the \"disentanglement evaluation\" part pretty convincing."
+            },
+            "weaknesses": {
+                "value": "* The proposed method assumes that we have labeled tasks for all potential downstream tasks. So one starts with general-purpose self-supervised representations such as HuBERT -- which are entangled -- and ends up with representations that are (a) disentangled, but (b) are likely only useful for the tasks where we have labels. In this scenario, I am not entirely convinced that one has to use VIB (see the questions below).\n\n* I am not entirely convinced by the motivations of the paper. If one needs to be confident that models do not use non-textual information while taking decisions, they can train models to make those decisions using pure transcripts. This is a simple baseline solution the paper should be having in mind.\n\n* There are some concerns wrt the experimental setup -- see Questions 2, 3, 4."
+            },
+            "questions": {
+                "value": "1. L30 mentions that Whisper has highly entangled representations, in the same list as HuBERT or Wav2Vec2. It is never mentioned/evaluated later; is there any evidence that it is likely to have as entangled representations as SSL models from this list? It is trained purely in a supervised way for text transcription/translation, iirc, hence I would assume it learns purely text-focused features.\n\n2. Do I understand it correctly that non-standard splits of LibriSpeech are used for the purpose of \"ensuring an equal representation of gender and speaker ID\" (S3.3) Is there a strong reason for that in the text transcription tasks? For the sake of comparability with all the existing literature, I would advise using standard some dev/test-{clean,other} splits.\n\n3. Having a single linear probing classifier gets WER of ~50 for W2V2 and HuBERT. Only the pre-finetuned models get reasonable error rates. Is this a good evaluation setup to draw conclusions from?\n\n4. What dataset is used to calculate WER in Table 1? Is this a mix of LibriSpeech and CommonVoice? Those are very different datasets, it would make sense to report them separately.\n\n5. At least a part of motivation of the work is that by using disentangled representations one can be confident that model is using the features it is allowed to. For instance, the model doesn't rely on leaking gender or voice information when making text-based decisions. I generally get the idea, but the transcription vs gender/emotion classification task split is not a particularly convincing combination. If we are worried that the model uses something beyond the text content when making some downstream decisions, we can replace it with an (ASR + text classifier) model. Can we think of a more convincing scenario?\n\n6. Do we actually need VIB? How different it would be if we used the labels to train a combination of ASR, Speaker and Emotion classifiers and used their outputs?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper describes an application of information bottleneck training to isolate aspects of a speech representation.  The description of the approach is quite clear.  The paper includes a variety of analyses of the learned representations that show that disentangling is achieved."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The described approach is sensible and its specifics are clearly described.\n\nThere are a number of interesting analyses based on probing experiments to attempt to identify what information is still available in different layers of the network and assessment of the information related to distinct tasks in different frames of the input audio."
+            },
+            "weaknesses": {
+                "value": "The motivations in the abstract and conclusion are not well connected to the modeling and analysis.  E.g. one motivating application is to minimize the privacy risk from encoder representations.  This hasn't been assessed in the model or paper.\n\nThe disentangling approach is based on supervised tasks.  The contributions necessary for emotion classification or speaker id.  It is unclear how these learned representations would transfer to some new task. Would this approach need to be extended to a \"stage 3 training process?\n\nMultiple training stages incur additional complexity.  It would be interesting to see if these multiple objectives would be included into a single stage training.\n\nThe impact on performance in Table 1 does not deliver a consistent message.  The Transcription show substantial regressions in both of the FT representations.  The improvements to Emotion and Speaker Id are stronger but more consistent on the large sized models while on the Base sizes, there are regressions on the wave2vec variants.  This sensitivity to SSL objective and model size suggests that this approach may not be robust to new tasks or architectures."
+            },
+            "questions": {
+                "value": "Why subsample Librispeech and Common Voice so heavily for the transcription task?  Librispeech contains 960h of transcribed audio, but this approach uses less than 20.\n\nHow important is the ordering of the tasks?  Would the performance be identical if Emotion or Speaker Id were stage 1 and Transcription was stage 2?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper uses the Variational Information Bottleneck framework to separate textual and acoustic features of representations from SSL speech models, such as HuBERT and wav2vec2. This approach involves two stages: first, it isolates textual information by training models to transcribe content with minimized other unrelated information. The second stage targets acoustic features for tasks like emotion and speaker recognition.\nThey validate the proposed method through experiments on ASR, emotion recognition and speaker identification, showing its effectiveness in distinguishing between acoustic and textual attributes. This approach also has potential applications in privacy preservation, where disentangling speaker identity from transcription could help secure ASR systems."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is well-written and is easy to follow.\n2. The proposed approach is easy to use.\n3. Experiments in Section 6 align in part with the findings of previous work on layer-wise speech SSL models[1], reflecting the effectiveness of the proposed method.\n\n\n[1] A. Pasad, B. Shi and K. Livescu, \"Comparative Layer-Wise Analysis of Self-Supervised Speech Models,\"\u00a0ICASSP 2023 - 2023 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP),"
+            },
+            "weaknesses": {
+                "value": "1. There is previous work using the Information Bottleneck for feature disentanglement, such as in [2] and [3]. It would be better to cite these studies and highlight the distinctions between this paper and prior work.\n2. Experiments comparing the proposed method with existing approaches are lacking. As there are lots of works for speech representation disentanglement like AutoVC, SpeechSplit, or FAcodec[4] , it would strengthen the paper to report the performance of at least one existing methods.\n3. In Table 1, VIB loses essential information for textual representation, resulting in a much higher WER compared to Probing for HuBERT-FT and Wav2Vec2-FT. Training on a different dataset with positive outcome might help alleviate this issue.\n\n\n[2] Pan, Z., Niu, L., Zhang, J., & Zhang, L. (2021). \u201cDisentangled Information Bottleneck.\u201d\u00a0*Proceedings of the AAAI Conference on Artificial Intelligence*\n\n[3] Gege Gao, Huaibo Huang, Chaoyou Fu, Zhaoyang Li, Ran He; \u201cInformation Bottleneck Disentanglement for Identity Swapping.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), 2021, pp. 3404-3413\n\n[4] Ju, Zeqian, et al. \"Naturalspeech 3: Zero-shot speech synthesis with factorized codec and diffusion models.\" arXiv preprint arXiv:2403.03100 (2024)."
+            },
+            "questions": {
+                "value": "1. What is the reason for using the mixture of LibriSpeech and Common Voice?\n2. The WER reported in Table 1. seems to be higher than expected. What is the possible reason for that? For LibriSpeech, what subset is used in the experiments? LibriSpeech-clean or LibriSpeech-other?\n3. The Information Bottleneck (IB) method focuses on retaining only information that\u2019s relevant for predicting the target variable, filtering out anything unnecessary. This makes it dataset-dependent. For instance, when I train the stage 2 framework on a dataset for emotion recognition, the disentangled features capture emotional information but lacks speaker-specific information. I wonder if it would be possible to handle both speaker recognition and emotion recognition in stage 2, so that we preserve both emotion-related and speaker-related information. Alternatively, we could consider adding a stage 3 focused on speaker identity, while stage 2 remains dedicated to emotion recognition."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new framework for disentangling speech representations from neural speech models (like Wav2Vec2 and HuBERT) into two distinct components: textual content (what can be transcribed as text) and acoustic features (like emotion or speaker identity). This separation is important because neural speech models typically create deeply entangled internal representations that combine various features, making it difficult to isolate specific information or suppress potentially sensitive acoustic features (such as gender or speaker identity) in real-world applications.\nThe authors present a two-stage training framework based on the Variational Information Bottleneck technique. In the first stage, a decoder is trained to map speech representations to text while minimizing irrelevant information from input, ensuring only features necessary for transcription are preserved. In the second stage, another decoder is trained that has access to the textual representation from previous stage and is trained to predict target labels for downstream task while minimizing information encoding. They evaluated their framework on emotion recognition and speaker identification tasks, demonstrating that the resulting representations were effectively disentangled - the textual representations could predict transcriptions but performed randomly when predicting acoustic features, while acoustic representations showed the opposite pattern.\nThe authors also analyzed how different layers of pre-trained and fine-tuned Wav2Vec2 models contribute to emotion recognition. They found that in models fine-tuned for automatic speech recognition (ASR), the acoustic contribution to emotion recognition decreases in higher layers while the textual contribution increases. Additionally, they showed that their framework can serve as a feature attribution method to identify the most significant frame representations for a given task, distinguishing between textual and acoustic contributions."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The main strengths of the paper are as follows:\n1. The authors provide a clear motivation and explanation for the problem under consideration.\n2. The method is clearly explained, creating no confusion in grasping the idea. \n3. The experiment section is well-written with relevant experiments\n4. The authors answer some key questions related to the work such as extent of disentanglement and its benefits\n5. The last section of the paper talks about prior works which are in the same domain to provide readers an idea about the novelty in this work. \n6. The authors have further cited rsome extremely elevant works."
+            },
+            "weaknesses": {
+                "value": "Here are the main weaknesses:\n1. I struggle to understand the new idea in this work because the VIB technique has existed for a while.\n2. The concept of employing neural networks to learn or estimate bounds on Mutual information has existed for a long time (see \n    a. MINE: Mutual Information Neural Estimation by Mohamed Ishmael Belghazi, Aristide Baratin, Sai Rajeswar, Sherjil Ozair, Yoshua \n        Bengio, Aaron Courville, R Devon Hjelm. \n    b. DEEP VARIATIONAL INFORMATION BOTTLENECK by Alexander A. Alemi, Ian Fischer, Joshua V. Dillon, Kevin Murphy\n    c.  Representation Learning with Contrastive Predictive Coding by Aaron van den Oord, Yazhe Li, Oriol Vinyals\n3. The authors do not provide explanation in Table 1 regarding why WER increase for Fine-tuned models after disentanglement training. \n4. In Figure 2, there seems to be some strange behavior as far as prosody prediction is concerned. Pitch, intensity, rhythm, voice quality, etc have been identified as key contributors to the perception of emotion from speech. It makes little sense as to why the disentangled acoustic representation would remove that information.  \n5. It has been shown before that different layers of Self-supervised models (HuBERT and W2V2) learn different types of representation from speech signal (acoustic, prosody and semantic). Therefore, section 6 reaffirms those prior studies while providing no new information for the infromed readers."
+            },
+            "questions": {
+                "value": "NA"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

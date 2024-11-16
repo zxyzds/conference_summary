@@ -1,0 +1,172 @@
+{
+    "id": "zn0eqMtsrw",
+    "title": "GUD: Generation with Unified Diffusion",
+    "abstract": "Diffusion generative models transform noise into data by inverting a process that progressively adds noise to data samples. Inspired by concepts from the renormalization group in physics, which analyzes systems across different scales, we revisit diffusion models by exploring three key design aspects: 1) the choice of representation in which the diffusion process operates (e.g. pixel-, PCA-, Fourier-, or wavelet-basis), 2) the prior distribution that data is transformed into during diffusion (e.g. Gaussian with covariance $\\Sigma$), and 3) the scheduling of noise levels applied separately to different parts of the data, captured by a component-wise noise schedule. \n Incorporating the flexibility in these choices, we develop a unified framework for diffusion generative models with greatly enhanced design freedom. In particular, we introduce soft-conditioning models that smoothly interpolate between standard diffusion models and autoregressive models (in any basis), conceptually bridging these two approaches. \nOur framework opens up a wide design space which may lead to more efficient training and data generation, and paves the way to novel architectures integrating different generative approaches and generation tasks.",
+    "keywords": [
+        "diffusion models",
+        "renormalization group",
+        "autoregressive models",
+        "wavelet decomposition",
+        "denoising score matching"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We introduce a unified diffusion framework that bridges diffusion and autoregressive models by integrating flexible data representations and component-wise noising schedules.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=zn0eqMtsrw",
+    "pdf_link": "https://openreview.net/pdf?id=zn0eqMtsrw",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors describe diffusion models with a under class of dynamics and marginals than the typical scaled Ornstein Uhlenbeck or Brownian motion reference processes used in the vast majority of diffusion model papers. In particular, the authors consider a linear transformation to perform the diffusion under a change of basis; varying the variance of the prior  Gaussian marginal  to match the data distribution; considering time dependent diffusion scale terms which can lead to auto-regressive-like dynamics."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is well explained. \n\nThe authors bring attention to the flexibility in the diffusion model paradigm, though as discussed below this has been discussed in many prior papers.\n\nThe authors introduce what I believe to be a novel interpretation and use case for time-varying diffusion scale timers, leading to an autoregressive type forward process, applying noise to separate components independently. A similar procedure was used for diffusion in frequency space by applying different diffusion noise scales per frequency level [1] but these were not set to 0 as described here.\n\n\n[1] Blurring diffusion models, Hoogeboom et al 2022"
+            },
+            "weaknesses": {
+                "value": "## Weakness 1\nWhile the authors attempt to unify the design of dynamics for references; two of the three ideas proposed are not novel so it is unclear what the main contributions of the paper are. \n\n1) Using a change of basis\nApplying diffusion in a transformed space / change of basis has been done before. Although [1] focuses on  change of basis to frequency basis, section 4.1 of [1] explicitly explains how any other change of basis can be performed.  I do not see any compelling evidence to suggest one basis over another in this submission.\n\n2) Prior distribution\nDiscussion of variance of prior distribution was first discussed in [3], and referred to as Technique 1. This is still using diagonal covariance. \n\nIt is not clear how scalable learning the covariance matrix for a full high dimensional data distribution would be or if it would even be beneficial.\n\nThe time-dependent diffusion scale term has not been investigated in much detail as far as I am aware and I believe this should be the main focus of the paper or at least more attention.\n\n## Weakness 2\nThe second major weakness is in limited numerical evaluation. The FID scores shown for CIFAR10 are >20; significantly far from standard diffusion model performance of <3. It is not possible to evaluate whether there any benefit to generative modelling for the proposed methods without compelling numerical support.\n\nWhilst I am not particularly interested in SOTA generative models FID <2, for toy datasets like CIFAR10 I would expect at least FID<4 given the abundance of code available for this and the limited novelty for 2/3 methods.\n\n## Weakness 3\nIt is not clear to me the theoretical soundness of using the autoregressive approach for extending existing images i.e. changing dimension from previously trained model. It seems the generative process is no longer related to the time reversal of an SDE given the dimension changes. Can this be formalised?\n\nMinor\n- Blurring diffusion models [2] was a follow up to inverse Heat Dissipation Generative Model [1]. This should be cited and discussed as it was a pioneering paper in this area.\n\n\n[1] GENERATIVE MODELLING WITH INVERSE HEAT DISSIPATION, Rissanen et al 2022\n[2] Blurring diffusion models, Hoogeboom et al 2022\n[3]Improved Techniques for Training Score-Based Generative Models, Song and Ermon, 2020"
+            },
+            "questions": {
+                "value": "See weaknesses.\n\nThe time-dependent diffusion scale term has not been investigated in much detail as far as I am aware and I believe this should be the main focus of the paper or at least more attention. What are the benefits of this compared to cascading diffusion, can cascading be seen as a case of this?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work introduces the Generative Unified Diffusion (GUD) model, a framework that expands the flexibility of diffusion-based generative models by enabling diverse configurations in basis representation, noise scheduling, and prior distributions. Standard diffusion models transform noise into data through a learned reverse process. Here, GUD leverages concepts from physics, specifically renormalization group flows, allowing distinct configurations in the process, such as using Fourier, PCA, or wavelet bases, and implementing component-wise noise schedules to tune noise levels for different data parts.\n\nThe GUD framework unifies diffusion and autoregressive models, bridging differences between simultaneous and sequential generation. It introduces soft-conditioning, where the model can conditionally generate components based on previously generated data, enabling partial dependency across features. The approach supports more efficient training, flexible architectural designs, and tasks requiring conditional generation, inpainting, or sequential extensions.\n\nA key technical innovation is in the model\u2019s flexibility of noise schedules and priors. GUD models allow each component a unique noise schedule, enabling a range of generation hierarchies from purely autoregressive (extreme component-wise scheduling) to standard diffusion. Additionally, a whitening transformation using PCA stabilizes the variance, simplifying the denoising process.\n\nExperiments demonstrate the framework's adaptability across various data representations, including PCA, Fourier, and wavelet bases. By controlling softness and hierarchical order in noise schedules, GUD supports both hierarchical and spatially sequential generation, showing improved performance on benchmark image generation tasks, like CIFAR-10."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The Generative Unified Diffusion (GUD) model provides a novel unification of diffusion and autoregressive generative approaches, allowing a flexible transition between simultaneous and sequential generation processes. This ability to bridge methods expands the framework\u2019s application to a broad spectrum of tasks, from inpainting and sequential data extension to standard generative modeling. By creating a model that can interpolate between different generative styles, GUD allows developers to tailor the generation process to specific needs, enhancing control over the structure and dependencies of generated data.\n\nOne of GUD\u2019s most notable strengths is its capacity for component-wise noise scheduling, which enables a hierarchical and selective approach to noising different parts of the data. This flexibility allows the model to prioritize important features by applying noise schedules tailored to specific components, leading to a more efficient and accurate generative process. Combined with its support for multiple basis representations\u2014such as pixel, PCA, Fourier, and wavelet bases\u2014GUD is adaptable to various data types and structures, making it particularly suitable for applications that benefit from multi-scale or hierarchical data representations.\n\nAdditionally, GUD\u2019s design includes a whitening process, which aligns the data and noise distributions, providing better variance control throughout the generative process. This feature simplifies denoising and increases model stability, potentially reducing training time by minimizing noise-related artifacts. By supporting flexible basis selection, component-wise noise control, and variance alignment, GUD allows for refined generative modeling that can adapt to diverse tasks and applications, offering a powerful tool for high-quality, customizable data generation."
+            },
+            "weaknesses": {
+                "value": "The GUD framework is flexible, and consequently introduces significant computational complexity. Each configuration, such as basis choice (PCA, Fourier, wavelet) and component-wise noise scheduling, requires tuning, making the model resource-intensive. This complexity can hinder scalability, especially in high-dimensional data applications where each choice impacts the computational load.\n\nArchitecturally, GUD\u2019s design adds complexity by requiring modifications like cross-attention mechanisms for conditioning on component-wise noise states. These additions complicate the implementation and increase the risk of instability during training, as standard architectures like U-Nets are not inherently optimized for GUD\u2019s intricate conditioning needs. This limitation might however be not so crucial.\n\nFinally, I think the authors could have expanded the comparison with  related works. As (non exhaustive) examples, non isotropic noise perturbation has been considered in [1] and optimal steady state covariance wrt the data distribution has been investigated [2].\n\n\n[1] Voleti et al, Score-based Denoising Diffusion with Non-Isotropic Gaussian Noise Models, NeurIPS 2022 Workshop on Score-Based Methods.\n\n[2] Das et al, Image generation with shortest path diffusion, ICML 2023"
+            },
+            "questions": {
+                "value": "Could the authors explain how to select in the large design space the various parameters/hyperparameters?\n\nCan the authors briefly position wrt the works like the ones cited in the weaknesses section?\n\nMinor:  Figure 7 is qualitatively difficult to interpret from someone not specialized in the field. I suggest the authors to either add some extra comments or produce a similar image for a dataset which is more understandable for a generic reader."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes Generative Unified Diffusion (GUD), an extension of standard diffusion models based on the Ornstein-Uhlenbeck process. By defining appropriate orthogonal transformations, the authors introduce novel analyses and designs within the GUD framework, including SNR analysis, soft-conditioning, whitening, and orthogonal transformations. The authors conclude with experiments that validate these designs, showcasing GUD's potential in various applications."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper addresses limitations in standard diffusion models by proposing an interesting and innovative Generative Unified Diffusion (GUD) model.\n2. The theoretical foundation of the paper is solid, and the presentation is clear.\n3. The analyses and designs within the GUD framework are novel and potentially valuable across multiple applications."
+            },
+            "weaknesses": {
+                "value": "1. **Limited empirical evaluation:** The experiments primarily serve to validate the proposed designs (pixel/PCA/FFT). While these results offer some insights, the evaluation lacks depth, particularly in quantifying each design\u2019s impact on GUD's performance. More comprehensive quantitative and qualitative results would better demonstrate the effectiveness of each design.\n\n2. **Limited practical application contribution:** Although the paper suggests various potential applications, it appears these may not be fully viable in practice. Providing further insights into real-world application strategies would enhance the paper's practical relevance.\n\n3. **Missing discussion of related work:** One significant application of GUD is the component-wise scheduling for different states used in sequential generation (as outlined in Sec. 5.2). As a comparison, [1,2] also propose distinct schedules for different components. Could the authors discuss these related works or provide a comparative analysis within the GUD framework?\n\n[1] Rolling Diffusion Models, ICML 2024  \n[2] Diffusion Forcing: Next-token Prediction Meets Full-Sequence Diffusion, NeurIPS 2024"
+            },
+            "questions": {
+                "value": "Could the authors summarize the experimental results from Sec. 5.1, particularly regarding how the choice of basis, prior, and noising schedule contributes to performance compared with standard diffusion models?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a unified framework for diffusion generative models, inspired by renormalization concepts from physics, allowing for flexible design choices in representation, prior distribution, and noise scheduling. The framework introduces soft-conditioning models that blend diffusion and autoregressive approaches, potentially enabling more efficient training and versatile generative architectures."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. **Unified Framework**: The authors present a cohesive framework for diffusion generative models, broadening design options.\n\n2. **Structured Components**: The framework is well-organized around the Ornstein-Uhlenbeck process, prior distribution choice, and component-wise noise scheduling, enhancing its theoretical foundation.\n\n3. **Diverse Design Examples**: The paper includes examples of various diffusion designs, demonstrating the framework\u2019s flexibility and applicability."
+            },
+            "weaknesses": {
+                "value": "1. **Limited Experimental Scope**: The experiments are primarily conducted on CIFAR-10, a relatively small dataset. Datasets with larger images would better validate the findings and demonstrate the framework\u2019s effectiveness in diverse settings.\n\n2. **Insufficient Explanation of Unified Diffusion and Autoregressive Generation**: The explanation on how the framework unifies standard diffusion and autoregressive generation lacks clarity. Providing a specific example of the component-wise noise schedule would enhance understanding and illustrate this unification more concretely."
+            },
+            "questions": {
+                "value": "See above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

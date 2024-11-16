@@ -1,0 +1,204 @@
+{
+    "id": "x9rtYetTsA",
+    "title": "Mitigating Spurious Bias with Last-Layer Selective Activation Retraining",
+    "abstract": "Deep neural networks trained with standard empirical risk minimization (ERM) tend to exploit the spurious correlations between non-essential features and classes for predictions. For example, models might identify an object using its frequently co-occurring background, leading to poor performance on data lacking the correlation. Last-layer retraining approaches the problem of over-reliance on spurious correlations by adjusting the weights of the final classification layer. The success of this technique provides an appealing alternative to the problem by focusing on the improper weighting on neuron activations developed during training. However, annotations on spurious correlations are needed to guide the weight adjustment. In this paper, for the first time, we demonstrate that neuron activations, coupled with their final prediction outcomes, provide self-identifying information on whether the neurons represent spurious features. Using this information, we propose last-layer selective activation retraining, which retrains the last classification layer while selectively blocking neurons that are identified as spurious. In this way, we promote the model to discover robust decision rules beyond spurious correlations. Our method works in a classic ERM training setting where no additional annotations beyond class labels are available, making it a practical post-hoc tool for improving a model's robustness to spurious correlations. We demonstrate that our method is effective with different model architectures and can effectively mitigate spurious bias on different data modalities without requiring annotations of spurious correlations in data.",
+    "keywords": [
+        "spurious correlation",
+        "robustness",
+        "classification"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=x9rtYetTsA",
+    "pdf_link": "https://openreview.net/pdf?id=x9rtYetTsA",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper addresses the issue of spurious correlations in deep neural networks trained with empirical risk minimization (ERM). The authors propose an approach called Last-Layer Selective Activation Retraining (LaSAR), which aims to mitigate spurious bias without requiring group labels or external annotations. The method selectively blocks neurons identified as spurious during the retraining of the last classification layer, thus promoting the model to learn robust decision rules. The authors demonstrate that LaSAR is effective across multiple data modalities, such as vision and text, and improves worst-group accuracy in benchmark datasets."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The proposed LaSAR method aims to achieve robust learning without group information by proposing metrics to evaluate whether a neuron is spurious or core related. This approach makes LaSAR a practical and fully unsupervised solution to mitigating spurious bias."
+            },
+            "weaknesses": {
+                "value": "- Limited Theoretical Analysis: While the empirical results are promising, the theoretical foundation for why the proposed spuriousness score works effectively in all cases is very limited. Including more rigorous analysis or theoretical guarantees would strengthen the paper's claims about the effectiveness of LaSAR.\n- Limited Heuristic Exploration: There is limited heuristic exploration of the distribution of the proposed spuriousness score. Figure 4 appears to be cherry-picked, and it would be more persuasive if the authors could provide the distribution of the proposed spuriousness score across neurons in different datasets.\n- Incremental Contribution: The phenomenon that spurious neurons and core neurons can be separated has been demonstrated in prior work [1][2]. Moreover, the proposed spuriousness score is calculated as the median among misclassified samples and the median among correctly classified samples, which appears equivalent to retraining the last layer while up-weighting the incorrect samples. This limits the novelty of the contribution. Furthermore, the neuron masking algorithm assumes that a neuron can represent part of the spurious features, which is a strong assumption that may not always hold true. Additionally, it is unclear why masking the last layer is necessarily better than masking a middle layer.\n- JTT Algorithm Classification: JTT is listed as a semi-supervised algorithm at line 362, but it appears to work without group information. This classification should be corrected.\n\n[1] Last Layer Re-Training is Sufficient for Robustness to Spurious Correlations\n[2] Complexity Matters: Dynamics of Feature Learning in the Presence of Spurious Correlations"
+            },
+            "questions": {
+                "value": "Distribution of Spuriousness Scores: Could the authors show the distribution of the proposed spuriousness scores across neurons in different datasets? This would help validate the claim that the spurious and core neurons can be effectively separated.\n\nDifference from Retraining with Up-Weighting: What is the difference between the proposed algorithm and retraining the last layer while up-weighting the misclassified samples? Clarifying this would help in understanding the distinct contribution of the proposed method."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Last-layer Selective Activation Retraining (LaSAR), which identifies and mitigates spurious bias without requiring external supervision or group labels. The key point lies in observing that neuron activations combined with prediction outcomes can self-identify spurious features, and then using this information to selectively block spurious neurons during last-layer retraining. The method works as a practical post-hoc tool in standard ERM training settings, and requires no additional annotations beyond class labels. Authors compare their method with competitive baselines such as JTT, and DFR and show some improvement in worst group accuracy on a benchmark with 4 datasets."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "Key Strengths:\n\n1. Spurious neuron identification: The proposed LaSAR framework introduces an interesting approach to identify spurious neurons using activation patterns and prediction outcomes, providing a self-guided mechanism for bias detection.\n\n2. Practical Utility: The method works as a post-hoc tool in standard ERM training settings, making it highly practical for real-world applications."
+            },
+            "weaknesses": {
+                "value": "1. The contribution of this paper is severely limited. Indeed, the core intuition that using (i) misclassified examples of validation data, (ii) and retraining all layers or the linear head to reduce reliance on spurious features has been demonstrated previously with methods such as JTT and AFR. How is LaSAR fundamentally different from AFR? \n\n2. Lack of fair comparison. Although JTT and AFR need group information on the validation data only to tune hyper-parameters. They can be tuned using the worst-class accuracy. Authors should therefore compare their method with JTT and AFR when tuned on worst-class accuracy.\n\n3. No theoretical guarantees are provided about the convergence and stability of the selective activation retraining process, even on synthetic data."
+            },
+            "questions": {
+                "value": "1. How does the method ensure that it doesn't accidentally block neurons representing valid but complex feature combinations rather than truly spurious correlations?\n2.  How does the method handle cases where features might be spurious in some contexts but valid in others?\n3. (Also related to 1.) There has been evidence that neurons may learn polysemantic features. What is the impact of LaSAR in case neurons may learn linear combinations of spurious and core features?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors propose a novel method to self-identify spurious features and mitigate the spurious bias by retraining the last classification layer. In general, the idea of using neuron activations before the last classification layer, coupled with their final prediction outcomes, to provide self-identifying information on whether the neurons represent spurious features seems interesting."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors did extensive experiments."
+            },
+            "weaknesses": {
+                "value": "The writing in some places is unclear, in particular, they did not clearly explain the behind reasoning of the proposed method to identify the spurious features. The did not use some theoretical results to support the proposed method."
+            },
+            "questions": {
+                "value": "1, why did you define the spuriousness score as (5)? To help readers understand the behind rationale, I think the authors may need to add more explanation.\n\n2, In line 157, the authors mentioned that WGA is the accuracy on the worst performing data group in the test set $\\mathcal{D}_{test}$. However, they used argmax in the formula of WGA, it seems problematic since argmax will output a group label rather than the value of accuracy and the argmax will output the best performing data group in terms of accuracy rather than the worst performing data group. \n\n3, In Section 3.2, they used a synthetic motivating example. It may be better to use a real motivating example.\n\n4, In line 321, the authors may want to say \"equation (6) and equation (7)\" rather than equation 6 and equation 7.\n\n5, I think the study objective in this paper is quite similar to variable selection in statistics. We can use many penalties such as L1 penalty to remove those spurious features. I do not see the advantages of the proposed method compared with those variable selection methods in statistics. The authors may need to discuss this point."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this work, authors propose a debiasing method that works by retraining only the last layer (classification layer) in order to re-weight different factors in the latent representation. The assumption is that latent factors carry different information (source, spurious, noise) which can be effectively filtered out from the classification layer by reweighting. They test their method on standard debiasing benchmarks such as celeba, waterbirds, multinli and civil comments."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper tackles a very important issue, which is learning unbiased models from biased data. \n- The proposed method does not need any kind of annotation on the bias, and it just leverages the class label (unsupervised debiasing)\n- The reported results show improvement w.r.t other methods"
+            },
+            "weaknesses": {
+                "value": "Here are my main concerns about the work: \n\n- The authors' assumption is that latent representation can be factorized in source, spurious and noise components. This is clearly shown in the toy example; however it is not clear why this should also happen in representations extracted from deep neural networks on complex data. It might not be so simple to factor out single components in the learned representations, as they might be intertwined and correlated. Can you provide some more theoretical backing of this method? \n\n- I think that validation on more difficult datasets such as 9-Class ImageNet / ImageNet-A (https://openreview.net/forum?id=2OqZZAqxnn) should be added to the experimental validation.\n\n- The related work section should be updated a bit with relevant works in the area (e.g. [1-6])\n\n[1] Bahng, Hyojin, et al. \"Learning de-biased representations with biased representations.\" International Conference on Machine Learning. PMLR, 2020.\n\n[2] Tartaglione, Enzo, et al. \"End: Entangling and disentangling deep representations for bias correction.\" Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2021. \n\n[3] Y.-K. Zhang, Q.-W. Wang, D.-C. Zhan, and H.-J. Ye, \u201cLearning debiased representations via conditional attribute interpolation\u201d in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, 2023.\n\n[4] Barbano, Carlo Alberto, et al. \"Unbiased Supervised Contrastive Learning.\" ICLR. 2023.\n\n[5] Zhang, Yi, et al. \"Poisoning for Debiasing: Fair Recognition via Eliminating Bias Uncovered in Data Poisoning.\" ACM Multimedia 2024. 2024.\n\n[6] Wang, Yining, et al. \"Navigate Beyond Shortcuts: Debiased Learning through the Lens of Neural Collapse.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2024."
+            },
+            "questions": {
+                "value": "- Could also provide results in terms of balanced accuracy (other than accuracy and WGA)? \n- I think that retraining on a part of the validation set may lead to \"unfair\" comparison with baseline methods that are not trained also on validation data\n- Reweighting the classification layer essentially does not \"remove\" the bias from the whole model, but it is just a correction. Do you think this might be an issue in certain cases?\n- I do not see a clear difference between core activation maps and spurious activations maps for CelebA in Fig. 4., the spurious heatmaps even seem a bit more focused on the hair (which is the target task). \n- Using your method do you think it would be possible to provide pseudo-labels for the training data in order to use a supervised debiasing method?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a new method for mitigating spurious bias in an unsupervised fashion. \n\nIt tries to detect non-essential features based on the pattern of errors, mask them away, and retrain the last layers. The method is compared against other methods in image and text datasets."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper deals with a relevant problem. It proposes a new method that is, to the best of my knowledge original. And presents an evaluation in relevant benchmarks."
+            },
+            "weaknesses": {
+                "value": "My main concern is that I find the motivation for the method not very strong. I believe the authors don't provide strong evidence for the main assumptions that motivate the methods.\n\nParticularly, core assumptions for the method are that\n1.  some features in the latent embedding that are responsible for encoding the *spurious correlation are confined to single neurons*, and can be masked away. It is a bit unclear to me whether this is true. For instance, maybe some component that is not entirely aligned with any specific neuron could be responsible for encoding this spurious feature.\n2. spurious features can be distinguished from core features by looking at the error density. And while the toy example motivates this, It seems the pattern we see in Fig2(b) for spurious vs core features is very different from what we see in Fig 4.\nOverall, I think these are two very important assumptions of the method that should be more clearly demonstrated"
+            },
+            "questions": {
+                "value": "Some minor concerns.\n- I don't understand, why not provide visualizations using linear dimensionality reduction for the motivating example (section 3.2), since you are using a linear model. Using T-SNE somehow confuses the example\n- How were the baselines implemented? are they openly available (it could make sense to provide the links) or did you re-implemented them\n- How many spurious features were masked away in each of the examples"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}
