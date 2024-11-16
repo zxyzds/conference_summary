@@ -1,0 +1,221 @@
+{
+    "id": "Nlm3Xf0W9S",
+    "title": "A Watermark for Order-Agnostic Language Models",
+    "abstract": "Statistical watermarking techniques are well-established for sequentially decoded language models (LMs). However, these techniques cannot be directly applied to order-agnostic LMs, as the tokens in order-agnostic LMs are not generated sequentially. In this work, we introduce PATTERN-MARK, a pattern-based watermarking framework specifically designed for order-agnostic LMs. We develop a\nMarkov-chain-based watermark generator that produces watermark key sequences with high-frequency key patterns. Correspondingly, we propose a statistical pattern-based detection algorithm that recovers the key sequence during detection and conducts statistical tests based on the count of high-frequency patterns. Our extensive evaluations on order-agnostic LMs, such as ProteinMPNN and CMLM, demonstrate PATTERN-MARK\u2019s enhanced detection efficiency, generation quality, and robustness, positioning it as a superior watermarking technique for order-agnostic LMs.",
+    "keywords": [
+        "language model watermarking; generative model;"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-24",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Nlm3Xf0W9S",
+    "pdf_link": "https://openreview.net/pdf?id=Nlm3Xf0W9S",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Reviewer 4ffB (2/2)"
+            },
+            "comment": {
+                "value": "> Q1 b)  the discussions in Section 3.2, central to the proposed procedure, are vague and require more careful explanations.\n\nWe sincerely apologize for this and will revise it to include more details. If you have any questions about our procedure, we would be more than happy to provide further explanations and address any concerns.\n\n\n> Q2 a): The discussion regarding why distortion-free watermarking schemes cannot be adapted to order-agnostic LMs is misleading. For instance, on page 3, line 196, it states, \u201cA distortion-free watermark requires independent probabilities\u2026\u201d The term \u201cindependent probabilities\u201d is unclear in this context.\n\nA: We are deeply sorry for the confusion. There are generally two levels of distortion-free: 1) token level distortion-free, i.e.,  $P_W(x_n|x_{n}^{oa},k_n)=P_M(x_n|x_{n}^{oa})$ and 2) sentence-level distortion-free, i.e., $P_W(x_{1:n}|x_{1:n}^{oa},k_{1:n})=\\prod_{i=1}^nP_M(x_{i}|x_{i}^{oa})$. The distortion-freeness discussed in our paper is sentence-level distortion-free instead of token-level distortion-free. In order to achieve sentence-level distortion-free, the current distortion-free watermarking schemes require $P_W(x_{1:n}|x_{1:n}^{oa},k_{1:n})=\\prod_{i=1}^nP_W(x_{i}|x_{i}^{oa},k_{i})$, which requires the independence of $P_W(x_{i}|x_{i}^{oa},k_{i})$, $i=1,...,n$. For example, In section 4.2.1 of Hu et al. (2023a)[2], the authors claim \u201cIt is crucial that $E_i$ values are independent to ensure the unbiased nature of the entire sequence, rather than just the single-token generation process.\u201d Here, the independence of $E_i$ is equal to the \u201cindependent probabilities $P_W(x_n|x_{n}^{oa}, k_n)$ for each step $n$\u201d.\n\n> Q2 b): Additionally, the assertion that \u201cThe distortion-free property also requires non-repeating watermark keys during generation\u201d lacks clarity. The authors should be cautious with such an impossibility claim, as it requires a proper justification.\n\nA: As described in the response to Q2 a), the independence of $P_W(x_{i}|x_{i}^{oa},k_{i})$, $i=1,...,n$ are required for sentence-level distortion-freeness. In order to achieve such independence, we need the watermark keys $k_{i}$ to be non-repeating. For example, in section 4.2.2 of Hu et al. (2023a)[2], the authors claim \u201c$E_i$ are independent with each other if only their context codes are different\u201d. Here, the context code refers to the watermark keys. We will add the detailed discussion in our paper to support the claims.\n\n\n> Q3: The Markov structure seems to introduce another factor (in addition to \n), which could cause the distribution of the watermarked language model to differ from that of the original model. I wonder if there is any way to quantify the distortion caused by the Markov model.\n\nA:   Please refer to the response for W3, as the concerns are the same.\n\n> Q4: A potential drawback of the current approach is its time complexity. Could the authors report the computational time compared to other methods?\n\nA:  Please refer to the response for W2, as the concerns are the same.\n\nThank you again for your thoughtful feedback, and we would be happy to discuss further if you have any additional questions or concerns.\n\n\n[1] Zhao, Xuandong, et al. \"Provable robust watermarking for ai-generated text.\" ICLR 2024.   \n[2] Hu, Zhengmian, et al. \"Unbiased watermark for large language models.\" ICLR 2024."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer 4ffB (1/2)"
+            },
+            "comment": {
+                "value": "Thank you for the valuable feedback on our manuscript. We truly appreciate the time and effort that you have invested in evaluating our work. Below, we address each of your concerns:\n\n> W1: The assertion that \"this is the first work to explore watermarking for order-agnostic language models\" is somewhat exaggerated. The same problem can be addressed using existing methods, even though they may not be specifically tailored for order-agnostic settings (e.g., Zhao et al., 2023).\n\nA: We are deeply sorry for the confusion. In this statement, we want to show that we are the first to \u201cstudy the order-agnostic LM watermarking problem\u201d instead of \u201cdesigning the first watermarking approach for order-agnostic LM\u201d. We are also aware that some of the existing watermarking methods (including Zhao et al., 2023) can be adapted to order-agnostic models and we have included them as baselines, however, the experimental evidence shows that those existing approaches do not perform well on order-agnostic LMs.\n\n> W2: Additionally, the proposed method is more computationally intensive compared to the red-green list approach. \n\nA: We show the exact time cost for the protein generation task below.\n\n|                |  Generation  |   Detection   |\n|----------------|:------------:|:-------------:|\n| No Watermark   | 0.69s/sample |      -       |\n| Soft Watermark | 0.79s/sample | 0.058s/sample |\n| Multikey       | 0.74s/sample | 0.046s/sample |\n| Unigram        | 0.73s/sample | 0.024s/sample |\n| Pattern-mark   | 0.74s/sample | 0.021s/sample |\n\nFor the generation phase, experiments were conducted on a single RTX 6000 Ada GPU. The primary computational overhead is due to model inference, while the time required to apply watermarks is minimal. Our proposed method does not incur additional computation compared to other baseline methods.\n\nFor the detection phase, experiments were run on a CPU. We only need to pre-calculate the false positive rates table defined in Algorithm 4 once and store the results for use in Algorithm 3. The pre-calculation is also efficient, taking approximately only 7 seconds.\n\nAs the results indicate, our method does not introduce additional computational complexity in practical applications.\n\n> W3: Furthermore, the Markov structure seems to introduce another factor (in addition to $\\delta$), which could cause the distribution of the watermarked language model to differ from that of the original model.\n\nCould you please clarify which specific factor raised your concern?\n\nIn our experiments, distribution bias is measured by the degradation of BLEU or pLDDT scores. It\u2019s important to note that distribution bias and watermark strength involve a trade-off: stronger watermarking reduces output quality, leading to greater distribution divergence from the original model (i.e., more distribution difference from the original model or higher distribution bias).\n\nAs shown in Figure 3, at the same watermark strength, our method achieves higher BLEU or pLDDT scores, indicating that our approach introduces less distribution bias compared to baseline methods.\n\n> Q1 a) why the Markov model is suitable for order-agnostic language models? Order-agnostic LMs do not generate tokens from left to right, while Markov models create sequences in a left-to-right manner. This presents a discrepancy between the order-agnostic nature of the LMs and the order-dependent nature of Markov models. \n\nIn sequentially decoded LMs, the watermark key depends on preceding tokens, which are typically unavailable in order-agnostic models. To address this, we use a Markov model to generate watermark keys. The Markov chain, therefore, functions solely as a watermark key generator, which is independent of the order-agnostic nature of the language models. We also discuss the intuition of using the Markov chain in Lines 45-49 of our work.\n\nTo elaborate further, during watermark detection, the only input available is the generated sequence, and one important challenge is that we cannot access the generation order at this stage. However, we still need to capture the pseudo-randomness of the watermark (e.g., the seed for the random number generator).\n\nSome methods, like Unigram and Multikey, rely on globally consistent information (e.g., fixed green list tokens). Our experiments show that these methods suffer from low output quality or insufficient watermark strength.\n\nAnother approach commonly used is injecting this information into the context. For instance, in Soft watermarking, the seed is derived from the history n-gram (the last n tokens). However, for order-agnostic language models, the last n tokens may not have been generated yet, as the generation order is unknown. To address this issue, our method generates a key sequence using the Markov chain in a left-to-right manner and uses these keys to inject information into the corresponding tokens. This creates correlations between neighboring tokens, which can then be utilized to detect our watermark."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer cxkP"
+            },
+            "comment": {
+                "value": "Thank you for acknowledging the novelty and effectiveness of our proposed methods. We greatly appreciate your valuable feedback. Below, we address your concerns:\n\n> W: I think the protein generation task is not suitable for experiments, as it may not be able to identify important unknown protein architectures.\n\nA: Our task is to detect whether a protein was generated by our watermarked model. All proteins generated by our model will be watermarked, though the true positive rate may not reach 100%. \n\nFor proteins that are not generated by our watermarked model, for instance, some unknown proteins as you mentioned, we provide a provable theoretical false positive rate under the null hypothesis as described in Algorithm 3 and Algorithm 4. Thus we believe the protein generation task is well-suited for our experiment.\n\n\n> Q: For the translation task, how can we identify whether a given text is generated by order-agnostic LMs or sequential LMs? This is critical for accurate detection.\n\nA: We do not need to identify this. In current watermarking architectures, a service provider publishes their model and then detects whether a given output was generated by the specific released model. Therefore, our task is simply to verify whether the given text was generated by our watermarked, order-agnostic language model.\n\n\nThank you again and if you have any further concerns, we are happy to discuss them with you."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer gkea (2/2)"
+            },
+            "comment": {
+                "value": "> W3: The paper does not provide detailed explanations on how to obtain the set of target patterns. The target patterns should accurately reflect the characteristics of the specific key sequence.\n\nA: The key patterns we used in our experiments are $T = $ {$k_1k_2k_1\\ldots, k_2k_1k_2\\ldots$}, where $k_1$ and $k_2$ appear alternately. It is clear that, given $a_{1,1}< a_{1,2}$, $ k_1$ and $k_2$ are more likely to occur alternatively.\n\nThe length of the patterns, denoted as $m$ is a hyperparameter. We discuss the selection of $m$ in Section 4.5 (Lines 459-469), where we explain that a larger $m$ improves detection efficiency but also increases sensitivity to errors during key sequence recovery.\n\n\n> W4: The comparative experiments in the experimental part of the paper are insufficient. This paper only compares the methods of two papers.\n\nA: We apologize for the limited number of baselines. However, as we are the first method specifically designed for order-agnostic language models, to the best of our knowledge, these are currently the only methods that can be effectively transferred and applied to such models. We would be happy to compare the performance of other watermarking schemes on order-agnostic language models if you could kindly suggest any for us.\n     \n   \n   \nThank you again and we would be more than happy to discuss any further questions or concerns you may have.\n\n\n[1] Kirchenbauer, John, et al. \"A watermark for large language models.\" ICML 2023. Outstanding Paper Award.  \n[2] Kirchenbauer, John, et al. \"On the reliability of watermarks for large language models.\" ICLR 2024.  \n[3] Zhao, Xuandong, et al. \"Provable robust watermarking for ai-generated text.\" ICLR 2024.   \n[4] https://huggingface.co/docs/transformers/en/generation_strategies#watermarking.   \n[5] Piet, Julien, et al. \"Mark my words: Analyzing and evaluating language model watermarks.\" arXiv preprint arXiv:2312.00273 (2023)."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer gkea (1/2)"
+            },
+            "comment": {
+                "value": "Thank you for your time and valuable suggestions and we are grateful for your constructive feedback. Below, we provide a detailed response to address your concerns.\n\n\n> W1 a): The paper does not detail how the vocabulary set is divided. Splitting the vocabulary will inevitably affect the original probability distribution, resulting in a decrease in output quality.\n\nA: We randomly split the vocabulary, acknowledging that this approach inevitably affects the original probability distribution. However, this method is commonly used in many prevailing techniques [1,2,3] and is also the default setting in various real-world applications, such as the watermarking implementations in Hugging Face [4].\n\nWhile this probability distribution bias does result in a decrease in output quality, we emphasize that there is an inherent trade-off between watermarking strength and output quality. To achieve a stronger and more robust watermark, some sacrifice in output quality is unavoidable for order-agnostic models. As demonstrated in Figure 3, our method delivers the highest-quality outputs at the same watermarking strength compared to all baseline methods.\n\n> W1 b) In addition, improper vocabulary segmentation may lead to grammatical errors in the generated sentences, such as incorrectly connecting the verb after the preposition. Is the part of speech considered when dividing the vocabulary?\n\nThe random segmentation does not lead to significant issues like grammatical errors, as we only linearly increase the probability of certain sub-vocabulary (multiplied by $e^{\\delta}$), as described in Equation (1). Severe problems, such as grammatical errors, remain rare, as the probability change is minimal (e.g., from 1e-5 to 2e-5), and the output quality does not degrade significantly, which is also verified in previous works [1,5].\n\n> W2: The probability outputs of language models often exhibit high probabilities for certain tokens while other tokens have much smaller probabilities, sometimes approaching zero. Although the factor used in Equation (1) aims to increase the probabilities of tokens in the sub-vocabulary, this amplification factor does not seem sufficient to bridge the gap between low-probability and high-probability tokens. In other words, if the vocabulary segmentation is not reasonable, it may not effectively enhance the sampling probability for specific sub-vocabularies. Particularly, when there are many sub-vocabularies, they may consist entirely of low-probability tokens. Was the original probability output considered when segmenting the vocabulary?\n\nA:  We use random splitting and Equation (1), which are common techniques employed by many previous studies [1,2,3,5].\n\nWhen generating a specific token, there are instances where the sub-vocabulary may consist entirely of low-probability tokens, leading to the potential for an incorrect key to be recovered in Algorithm 2. However, we do not require all keys to be correctly recovered, as our detection algorithm is designed to be robust to such errors.\n\n\nAdditionally, when generating multiple sentences, random splitting typically results in nearly equal probabilities for tokens to fall into different splits (around 0.5) across the vocabulary. To support this claim, we collect outputs from the non-watermarked model on the machine translation task and generate results using our split as well as five additional random splits. The results are shown below.\n\n|               | $P(x \\in V_1)$ | $P(x \\in V_2)$ |\n|---------------|:--------------:|:--------------:|\n| our split     |     48.13%     |     51.87%     |\n| random split1 |     48.58%     |     51.42%     |\n| random split2 |     47.51%     |     52.49%     |\n| random split3 |     49.34%     |     50.66%     |\n| random split4 |     49.95%     |     50.05%     |\n| random split5 |     49.59%     |     50.41%     |"
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer h65u (2/2)"
+            },
+            "comment": {
+                "value": "> Q3: Could the authors clarify the mathematical meaning of ( e^\\delta ) in Equation (1)?\n\nA:  We follow the probability promotion strategy in Kirchenbauer et al. (2023) [1], which splits the token list into a red and a green list, then increases the logits of the green tokens by $\\delta$. In order to transfer the token logits to the probability vector, the softmax function $\\frac{e^{logits_k}}{\\sum e^{logits_i}}$ is applied to the LM logits. As we increase the logits of green tokens by $\\delta$, the green token probabilities will be $\\frac{e^{logits_k+\\delta}}{\\sum_{red} e^{logits_i}+\\sum_{green} e^{logits_i+\\delta}}=\\frac{e^{\\delta}e^{logits_k}}{\\sum_{red} e^{logits_i}+\\sum_{green} e^{\\delta}e^{logits_i}}$. That\u2019s the mathematical meaning of $e^{\\delta}$ in Equation (1).\n\n\n> Q4: The method is described as Markov-chain-based due to its key sequence generation process; however, the paper\u2019s use of an alternating key sequence (e.g., a fixed pattern like ( k_1, k_2, k_1, k_2 )) does not appear to leverage the stochastic properties of Markov chains. This seems potentially misleading, as the approach is more akin to an alternated 0/1 key sequence than a Markov-chain-based generation.\n\nA: Our framework employs a Markov chain, with the transition matrix serving as a hyperparameter. Adjusting the transition matrix allows us to balance output diversity, robustness against potential attacks, and watermark strength. When using a smaller $a_{1,1}$, watermark strength is enhanced, as it differs more from the null hypothesis and is more likely to form the desired key pattern for detection. However, this may also reduce output diversity and robustness against potential identification or removal attacks.\n\nIn our experiments, we show that using $a_{1,1}=0$, i.e., alternating the key sequence does not reduce the output quality too much (shown in Figure 5), and defense against identification or removal attacks is not our main concern, thus we choose $a_{1,1}=0$.\n\nIn tasks where diversity is a priority or defense capability is essential, a non-zero $a_{1,1}$ can be selected.\n\n\n> Q5: The proposed method employs fixed vocabulary splitting, which resembles the Unigram approach and may be easier to detect. What justification do the authors provide for the detectability and resilience of the proposed watermark against adversarial attempts to identify or remove it?\n\nA: First of all, defense against watermark identifying and removing attacks remains a relatively unexplored area and is not the primary focus of this paper. Moreover, we do not observe any obvious vulnerabilities or straightforward methods to identify or remove our proposed watermark.\n\nAdditionally, we argue that our approach is more robust against such attacks compared to baseline methods. The baseline Unigram watermarking relies on a fixed green list, leading to a clear bias toward green list tokens and creating vulnerabilities. The Soft watermarking method directly uses a previous token to seed the random number generator, which makes the pattern $p(x_1|x_2)$ potentially inferable through a large number of queries.\n\nInstead, our method only introduces a dependency between underlying keys using a Markov chain, adding complexity to the task of reconstructing the indirect correlation between neighboring tokens. Furthermore, we can increase the values of $a_{1,1}$ and $a_{2,2}$ to introduce more stochasticity into the Markov chain, strengthening our defense capabilities. Additionally, we can design more complex Markov chains to further reduce potential vulnerabilities. \n\n\n\nThank you again for your thoughtful and constructive feedback. Please let us know if anything needs further clarification and we are more than happy to make additional improvements.\n\n[1] Kirchenbauer, John, et al. \"A watermark for large language models.\" ICML 2023."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer h65u (1/2)"
+            },
+            "comment": {
+                "value": "Thank you for your valuable feedback and insightful comments. We greatly appreciate the time and effort that went into reviewing our manuscript.  Below, we address each of your comments in detail.\n\n> W1: The reliance on an alternating key sequence pattern introduces a potential vulnerability, as it may be more easily detected and disrupted by adversaries. Should the specific pattern structure (e.g., alternating keys) be identified, adversaries could develop targeted strategies to either erase or replicate the watermark. Incorporating more complex or adaptive key sequence strategies could enhance the method's robustness against such targeted disruptions.\n\nA: Our primary goal is to design a watermarking scheme that is both strong and minimizes distribution bias, while defense against specific attacks is not our main focus. Identifying effective watermarking schemes remains challenging in this field, and we did not find a straightforward way to attack our method to reveal any potential vulnerabilities. \n\nMore importantly, we argue that our approach is more robust against such attacks compared to baseline methods. The baseline Unigram watermarking relies on a fixed green list, leading to a clear bias toward green list tokens and creating vulnerabilities. The Soft watermarking method directly uses a previous token to seed the random number generator, which makes the pattern $p(x_1|x_2)$ potentially inferable through a large number of queries. Instead, our method only introduces a dependency between underlying keys using a Markov chain, adding complexity to the task of reconstructing the indirect correlation between neighboring tokens. Furthermore, we can increase the values of $a_{1,1}$ and $a_{2,2}$ to introduce more stochasticity into the Markov chain, strengthening our defense capabilities. We can also design more complex Markov chains to further reduce potential vulnerabilities. \n\n\n> W2: The paper lacks a thorough discussion on why the proposed method, which utilizes alternating vocabulary splitting based on key sequences, outperforms global vocabulary splitting (e.g., the Unigram method) for watermarking order-agnostic LMs. Given that Unigram serves as a strong baseline, a detailed comparative analysis is needed to explain why the proposed approach achieves superior detection accuracy, robustness, and output quality despite both methods being context-independent.\n\nA:  Unigram uses a fixed red-green list to split the vocabulary and only increase the probability of green tokens, which means the output distribution is consistently biased toward the green tokens, i.e.,$ P(x_i \\in green\\ tokens) > P(x_i \\in red\\ token)$, which ultimately reduces output quality.\n\nIn contrast, our Markov-based method sets $Q_1=Q_2=0.5$, $a_{1,1}=a_{2,2}$, $a_{1,2}=a_{2,1}$, ensuring that $P(x_i \\in V_1)=P(x_i \\in V_2), \\forall i$, indicating a more balanced token distribution. Additionally, our approach uses alternating keys, which contribute to a more diverse output (as shown in Table 7) and, consequently, higher output quality.\n\nIn terms of detection accuracy, Unigram can be viewed as a special case of our proposed Pattern-mark, where $Q_1=1$, $a_{1,1}=1$, and the target pattern is $\\{k_1\\}$, with the length $m$ is only 1. As shown in Figure 4, setting the pattern length to only 1 results in the loss of important information, leading to reduced detection accuracy.\n\nFor robustness against paraphrase attacks, as our method has a stronger detection ability, it can still maintain relatively high robustness accuracy compared to the Unigram baseline.\n\n> Q1: The authors should provide a detailed justification for why using an alternated vocabulary splitting strategy (the proposed method) offers advantages over a global vocabulary splitting approach (e.g., Unigram) in terms of output quality and watermark robustness in order-agnostic LMs, given that both methods are context-independent?\n\nA:  Please refer to the response for W2, as the concerns are the same.\n\n> Q2: In Table 4, what does the term \"attack strength $\\epsilon$\" represent in the context of the ChatGPT paraphrasing attack? Additionally, how is this attack strength controlled or quantified during the experiments?\n\nA: We are deeply sorry for the confusion. In our experiments, given the length of an output is $l$, we randomly select a subsequence whose length is $\\epsilon l$ and use ChatGPT to paraphrase it."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a watermarking method tailored for order-agnostic language models (LMs), which generate content in a non-sequential manner. The approach utilizes a Markov-chain-based key sequence to embed identifiable patterns within the generated content, enabling effective watermarking. Additionally, a statistical, pattern-based detection algorithm is employed for watermark verification. The authors also introduce a dynamic programming algorithm that optimizes the detection process by reducing its time complexity, enhancing the method's practical efficiency."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. The paper effectively addresses the challenge of watermarking order-agnostic language models (LMs) by introducing a Markov-chain-based key sequence approach that overcomes the limitations inherent in traditional sequential watermarking methods.\n2. The inclusion of a dynamic programming algorithm to optimize the detection process by significantly reduces the time complexity, thereby improving the practical feasibility of the proposed approach.\n3. The proposed method enhanced detection accuracy and robustness, as well as the LMs output quality, in comparison to baseline methods."
+            },
+            "weaknesses": {
+                "value": "1. The reliance on an alternating key sequence pattern introduces a potential vulnerability, as it may be more easily detected and disrupted by adversaries. Should the specific pattern structure (e.g., alternating keys) be identified, adversaries could develop targeted strategies to either erase or replicate the watermark. Incorporating more complex or adaptive key sequence strategies could enhance the method's robustness against such targeted disruptions.\n2. The paper lacks a thorough discussion on why the proposed method, which utilizes alternating vocabulary splitting based on key sequences, outperforms global vocabulary splitting (e.g., the Unigram method) for watermarking order-agnostic LMs. Given that Unigram serves as a strong baseline, a detailed comparative analysis is needed to explain why the proposed approach achieves superior detection accuracy, robustness, and output quality despite both methods being context-independent."
+            },
+            "questions": {
+                "value": "1. The authors should provide a detailed justification for why using an alternated vocabulary splitting strategy (the proposed method) offers advantages over a global vocabulary splitting approach (e.g., Unigram) in terms of output quality and watermark robustness in order-agnostic LMs, given that both methods are context-independent?\n2. In Table 4, what does the term \"attack strength \u03b5\" represent in the context of the ChatGPT paraphrasing attack? Additionally, how is this attack strength controlled or quantified during the experiments?\n3. Could the authors clarify the mathematical meaning of \\( e^\\delta \\) in Equation (1)? \n4. The method is described as Markov-chain-based due to its key sequence generation process; however, the paper\u2019s use of an alternating key sequence (e.g., a fixed pattern like \\( k_1, k_2, k_1, k_2 \\)) does not appear to leverage the stochastic properties of Markov chains. This seems potentially misleading, as the approach is more akin to an alternated 0/1 key sequence than a Markov-chain-based generation. \n5. The proposed method employs fixed vocabulary splitting, which resembles the Unigram approach and may be easier to detect. What justification do the authors provide for the detectability and resilience of the proposed watermark against adversarial attempts to identify or remove it?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a watermarking scheme for order-agnostic language models based on the proposed pattern-mark and hypothesis test. The method generates key sequences through a Markov-chain-based key generator, improves the probability of sampling from the sub-vocabulary corresponding to each key, and detects key sequences of specific patterns to calculate the false positive rate using hypothesis test. Compared with other watermarking methods, the method proposed in this paper shows superiority in protein generation and machine translation."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1.\tThis paper is well-organized and well-written.\n2.\tThe discussion part of the paper provides a good explanation of the motivation for the method."
+            },
+            "weaknesses": {
+                "value": "1.\tThe paper does not detail how the vocabulary set is divided. Splitting the vocabulary will inevitably affect the original probability distribution, resulting in a decrease in output quality. In addition, improper vocabulary segmentation may lead to grammatical errors in the generated sentences, such as incorrectly connecting the verb after the preposition. Is the part of speech considered when dividing the vocabulary?\n2.\tThe probability outputs of language models often exhibit high probabilities for certain tokens while other tokens have much smaller probabilities, sometimes approaching zero. Although the factor used in Equation (1) aims to increase the probabilities of tokens in the sub-vocabulary, this amplification factor does not seem sufficient to bridge the gap between low-probability and high-probability tokens. In other words, if the vocabulary segmentation is not reasonable, it may not effectively enhance the sampling probability for specific sub-vocabularies. Particularly, when there are many sub-vocabularies, they may consist entirely of low-probability tokens. Was the original probability output considered when segmenting the vocabulary?\n3.\tThe paper does not provide detailed explanations on how to obtain the set of target patterns. The target patterns should accurately reflect the characteristics of the specific key sequence.\n4.\tThe comparative experiments in the experimental part of the paper are insufficient. This paper only compares the methods of two papers."
+            },
+            "questions": {
+                "value": "NA"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes PATTERN-MARK, a watermarking method to label the output of order-agnostic language models (LMs). The authors developed a Markov-chain-based watermark generator to produce watermark key sequences, then assigned the keys one by one to the generated tokens to adjust their sampling probabilities. During detection, they first recover the key sequence from the suspected text and verify the watermark through hypothesis testing."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "+\uff09 This paper is well-written and presents its ideas clearly.\n\n+\uff09This paper focuses on watermarking order-agnostic LMs, which, to the best of my knowledge, has not been considered in the existing literature.\n\n+) This paper proposes an effective strategy to watermark order-agnostic LMs by embedding watermarks within the relationships between adjacent words."
+            },
+            "weaknesses": {
+                "value": "-\uff09I think the protein generation task is not suitable for experiments, as it may not be able to identify important unknown protein architectures."
+            },
+            "questions": {
+                "value": "For the translation task, how can we identify whether a given text is generated by order-agnostic LMs or sequential LMs? This is critical for accurate detection."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a method for generating and detecting watermarks in ordered-agnostic language models (LMs). At a high level, the method is an extension of the red-green list approach in which the vocabulary is divided into two sets: the \"green\" list and the \"red\" list. The detector counts the number of tokens in the green list as a statistic for detection. The current method takes a more sophisticated approach to generating patterns in the key sequence by utilizing a Markov model during the text generation process. Detection is based on the number of patterns that appear in the key sequence, which are reconstructed from the text and the vocabulary partitions. The authors demonstrate that this method is more effective in terms of detectability and text quality than other existing watermarking schemes."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper presents a thorough investigation of watermarking for order-agnostic language models, a topic that appears to be less explored in the existing literature. The proposed method introduces several new ideas, including using Markov models to generate more complex patterns, setting it apart from previous approaches. The new approach shows promising performance when compared to existing methods. Additionally, the authors have explored the impact of various parameters on the method's effectiveness."
+            },
+            "weaknesses": {
+                "value": "The assertion that \"this is the first work to explore watermarking for order-agnostic language models\" is somewhat exaggerated. The same problem can be addressed using existing methods, even though they may not be specifically tailored for order-agnostic settings (e.g., Zhao et al., 2023). \n\nAdditionally, the proposed method is more computationally intensive compared to the red-green list approach. Furthermore, the Markov structure seems to introduce another factor (in addition to $\\delta$), which could cause the distribution of the watermarked language model to differ from that of the original model."
+            },
+            "questions": {
+                "value": "1. My main question is why the Markov model is suitable for order-agnostic language models (LMs). Order-agnostic LMs do not generate tokens from left to right, while Markov models create sequences in a left-to-right manner. This presents a discrepancy between the order-agnostic nature of the LMs and the order-dependent nature of Markov models. It is unclear why Markov models would be particularly appropriate for order-agnostic LMs. Additionally, the discussions in Section 3.2, central to the proposed procedure, are vague and require more careful explanations. \n\n2. The discussion regarding why distortion-free watermarking schemes cannot be adapted to order-agnostic LMs is misleading. For instance, on page 3, line 196, it states, \u201cA distortion-free watermark requires independent probabilities\u2026\u201d The term \u201cindependent probabilities\u201d is unclear in this context. Distortion-free refers to $P_W(x_n|\\mathbf{x}_n^{oa},k_n) = P_M(x_n|\\mathbf{x}_n^{oa},k_n)$. Additionally, the assertion that \u201cThe distortion-free property also requires non-repeating watermark keys during generation\u201d lacks clarity. The authors should be cautious with such an impossibility claim, as it requires a proper justification.\n\n3. The Markov structure seems to introduce another factor (in addition to $\\delta$), which could cause the distribution of the watermarked language model to differ from that of the original model. I wonder if there is any way to quantify the distortion caused by the Markov model.\n\n4. A potential drawback of the current approach is its time complexity. Could the authors report the computational time compared to other methods?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

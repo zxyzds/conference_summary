@@ -1,0 +1,171 @@
+{
+    "id": "lFijzkTUNB",
+    "title": "A Bounding Box is Worth One Token: Interleaving Layout and Text in a Large Language Model for Document Understanding",
+    "abstract": "Recently, many studies have demonstrated that exclusively incorporating OCR-derived text and spatial layouts with large language models (LLMs) can be highly effective for document understanding tasks. However, existing methods that integrate spatial layouts with text have limitations, such as producing overly long text sequences or failing to fully leverage the autoregressive traits of LLMs. In this work, we introduce Interleaving Layout and Text in a Large Language Model (LayTextLLM)} for document understanding. In particular, LayTextLLM projects each bounding box to a single embedding and interleaves it with text, efficiently avoiding long sequence issues while leveraging autoregressive traits of LLMs. LayTextLLM not only streamlines the interaction of layout and textual data but also shows enhanced performance in Key Information Extraction (KIE) and Visual Question Answering (VQA). Comprehensive benchmark evaluations reveal significant improvements, with a 27.2% increase on KIE tasks and 12.0% on VQA tasks compared to previous state-of-the-art document understanding MLLMs, as well as a 15.1% improvement over other SOTA OCR-based LLMs on KIE tasks.",
+    "keywords": [
+        "LLM",
+        "DocAI",
+        "Visually Rich Document Understanding",
+        "KIE"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=lFijzkTUNB",
+    "pdf_link": "https://openreview.net/pdf?id=lFijzkTUNB",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents LayTexLLM, which interleaves layout and text in an LLM for document understanding. There are two key ideas:\n- Spatial layout projector (SLP), which project the coordinate of each bbox (_i.e._, [x_min, y_min, x_max, y_max]) derived by an off-the-shelf OCR module into a $d$-dimensional embedding, so that the layout information can be input to the LLM and learned together with other text tokens via next token prediction (layout-aware).\n- Shuffled-OCR supervised fine-tuning (SSFT), which randomly shuffles the order of OCR-derived text in a certain proportion of examples to mitigate the bias that OCR engines typically output text bboxes in a way of top-to-bottom and left-to-right. \nExperiments on DocVQA, InfoVQA, and KIE tasks show that LayTextLLM outperforms or achieves comparable performance to baselines, while experiencing a significant performance drop on the ChartQA dataset."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- LayTextLLM demonstrate that mapping the coordinates to a single bbox embedding can achieve delightful performance on document understanding while mitigating long sequence issues.\n- Table 1 and Table show that LayTextLLM demonstrate performance improvement over several baseline methods on DocVQA, InfoVQA, and KIE tasks."
+            },
+            "weaknesses": {
+                "value": "1. The performance of the model heavily relies on the quality of the OCR engine, which poses a risk of significant performance drop, especially for handwritten documents or low-resource languages where OCR performance can be subpar. Moreover, incorporating an OCR module can negatively impact inference latency, making real-time or high-throughput applications challenging.\n\n2. As indicated in Table 3, LayTextLLM_zero and even LayTextLLM_all demonstrate inferior performance on Document-Oriented VQA compared to LayoutLLM (Luo et al., 2024). Additionally, Table 8 reveals that LayTextLLM shows a substantial drop in performance on the ChartQA dataset. Specifically, OCR-free methods generally achieve scores between 50-59.9, whereas the best performance achieved by LayTextLLM_all is only 35.4.\n\n3. The ablation study requires a clearer description of the variants involved. The first line in Table 4 lacks clarity\u2014does it refer to a setting that uses naive coordinate-based pretraining (e.g., normalized [x1, y1, x2, y2]) with the proposed SSFT strategy? If not, it would be beneficial to include such a variant to demonstrate the effectiveness of the Spatial Layout Projector."
+            },
+            "questions": {
+                "value": "(a) Are the reported numbers for LayoutLLM_CoT in Table 3 inaccurate? The current numbers seem to correspond to Vicuna 1.5 7B. Would it be more appropriate to report the results based on Llama2-7B for a fairer comparison?\n\n(b) Why does LayTextLLM show significantly inferior performance on the ChartQA dataset, even compared to OCR-free methods?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper use one token (generated by a small NNs called SLP) to replace the four coordinate representation of location for normal document understanding tasks. With such compression, the model can accept more tokens and longer context than a vanilla llm. The method show better results than some document understanding MLLMs."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- The empriical performance shows a imporlvement on downstream document understanding tasks"
+            },
+            "weaknesses": {
+                "value": "Overall, the paper propose an emprical trick to compress four localization tokens into one token, however, the contribution is thin. \n\n- The one-token representation demonstrates effective text localization. To strengthen the paper's contribution, it would be beneficial if this capability could be generalized beyond document understanding to other spatial understanding tasks to suit in ICLR. Otherwise, the paper is more suitable to conference focusing on doucment understanding -- e.g. ICDAR.\n\n-  The rationale for retaining explicit coordinates is to predict bounding boxes for unlabelled texts, which also a important sub-task of document undrstanding. The application of the Spatial Layout Projector (SLP) on these coordinates seems to restrict the model\u2019s extensibility. I would suggest the author also explore the perfomance of training an inverse SLP to convert the single-token representation back to coordinates."
+            },
+            "questions": {
+                "value": "See weakness.\n\nMoreover, I'd like to reuqest for a fair comparison to baseline. Most vision LLMs listed in the paper are not the SOTA. For example, InternVL is not a very good model for OCR, while internvl2 is super strong. Moreover, Cambrian-1 is also a better baseline."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Traditional methods for document understanding usually rely on the text extracted by OCR and spatial layout information, but they have limitations when dealing with long text sequences. This paper proposes a method named LayTextLLM, which reduces the sequence length problem by mapping each bounding box to a single embedding and interleaving it with the text, while taking advantage of the autoregressive characteristics of LLM. Two training tasks are proposed: layout-aware next token prediction and supervised fine-tuning of shuffled OCR, to enhance the generality of the model. In Key Information Extraction (KIE) and Visual Question Answering (VQA) tasks, LayTextLLM significantly outperforms the existing state-of-the-art methods. In the zero-shot scenario, the performance of the KIE task is improved by 27.0% and that of the VQA task is improved by 19.8%."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper proposes the adoption of a unified embedding method in LLM for the first time, interleaving the spatial layout with the text data.\n2. By reducing the sequence length and making full use of the autoregressive characteristics, the performance of document understanding is significantly improved.\n3. Comprehensive experimental results and ablation studies are provided, demonstrating the effectiveness of the proposed method."
+            },
+            "weaknesses": {
+                "value": "Compared with the existing VLM papers, the paradigm is actually quite similar. Although it is not highly innovative, it offers a new perspective for handling OCR document understanding problems in this field. Another point is that perhaps the number of baselines for comparison seems a bit small. I wonder if there are more and newer works related to Text + Coordinates for comparison.\nAdditionally, there is a slight error in the bolded text in Table 1."
+            },
+            "questions": {
+                "value": "refer to weakness"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduce Interleaving Layout and Text in a Large Language Model (LayTextLLM) for document understanding, which projects each bounding box to a single embedding and interleaves it with text, efficiently avoiding long sequence issues while leveraging autoregressive traits of LLMs. They also propose a tailored pre-training task\u2014Layout-aware Next Token Prediction\u2014a completely self-supervised task that enhances the alignment between layout and textual . LayTextLLM significantly improves performance on downstream document-related VQA and KIE tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.This work is the first work to employ a unified embedding approach that interleaves spatial layouts directly with textual data within a LLM.\n2.They propose two tailored training tasks: (1) Layout-aware Next Token Prediction  and (2) Shuffled-OCR Supervised Fine-tuning task to better elicit the model generalizability in downstream tasks.\n3.Experimental results sounds good."
+            },
+            "weaknesses": {
+                "value": "1.The methods adopt a P-LoRA structure, which is introduced by existing work InternLM-XCompoer2, limiting the novelty of this work\u2018s.\n2.The analysis of the impact of SLP training on the effectiveness of the model remains incomplete."
+            },
+            "questions": {
+                "value": "1.The different training tasks such as Layout-aware Next Token Prediction mentioned\uff0chow many tokens of training data were used respectively?\n2.Why does the chosen lora structure work as expected? Do other loras have the same effect, and how are ablation trials conducted?\n3.Is there any analysis examining the impact on the llama models' ability to understand language after incorporating spatial information?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "na"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

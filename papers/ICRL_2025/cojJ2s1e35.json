@@ -1,0 +1,184 @@
+{
+    "id": "cojJ2s1e35",
+    "title": "Inter-Environmental World Modeling for Continuous and Compositional Dynamics",
+    "abstract": "Recent advancements in generative models have showcased their effectiveness across various domains such as language, chemistry, and genomics. However, these models often rely on discrete action representations or language-based interactions, limiting their ability to generalize across different environments without explicit labels. In this paper, we introduce the Object-Centric Algebraic Mental Model (OCAM), an unsupervised framework that learns a continuous latent action representation by combining object-centric representations with Lie group theory. OCAM treats actions as continuous operators acting linearly on a partitioned latent vector space corresponding to different objects and basic action axes. This approach allows OCAM to generalize beyond the environments it was trained on, enabling the simulation of new environments and efficient solving of inverse dynamics problems. We demonstrate that OCAM can learn interactive generative models from unlabeled video data, interpolate between frames, extrapolate long-term dynamics, and quickly adapt to new environments with minimal or no action labels. Experiments on benchmark datasets like PHYRE and ProcGen validate the effectiveness of OCAM in advancing the capabilities of scalable artificial general intelligence.",
+    "keywords": [
+        "world model",
+        "state space model",
+        "object centric learning",
+        "symmetry"
+    ],
+    "primary_area": "learning on time series and dynamical systems",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=cojJ2s1e35",
+    "pdf_link": "https://openreview.net/pdf?id=cojJ2s1e35",
+    "comments": [
+        {
+            "title": {
+                "value": "Thank you for the feedbacks (Part II )"
+            },
+            "comment": {
+                "value": "## Action space $\\mathcal{A}$ \nThis section is meant to serve as our response to Q2 (Underdefined Action Space). To resolve the confusion, we elaborate our the defintiion and the role of $A$ in WLA with more formality.\n\nWe intentionally left the action space $\\mathcal{A}$ as abstract as possible, because it is meant to represent the set of \"controller inputs\" of an unknown interface.  At the minimum, let us assume that $\\mathcal{A}$ is a topological space. $\\mathcal{A}$ may depend on $\\mathcal{E}$, so that we shall more precisely write $A_E$ (please forgive us in writing this as $A_E$ in this response, because there is a problem with Markdown.)\nWith this in mind, let us elaborate on where $A_{E}$ stands in the WLA framework.\n\nLet $I=[0,T]$ be the time span and $C(I, A_E ) \\subset \\lbrace a |   I \\to A_E \\rbrace $ be the space of the control sequences. In an application, we are literally expecting each element of $C(I, A_E )$ to be the sequence of inputs from the controller interface. \nWe assume that there exists a controller interface map\n$Ctrl_E :   C(I, A_E) \\times  C(I, \\mathcal{X}) \\times I \\to  T_{id}G$\nwhere $T_{id}G$ is the tangent space of $G$ at $id$, or the Lie Algebra of $G$. Because $Ctrl_E$ is \"a controller\" whose effect depends only on the past,  we assume that $Ctrl_E(a, x, t)$ depends only on $a[0, t) = \\lbrace a(s) |  s \\in [0, t) \\rbrace$. Therefore let us  write  $Ctrl_E(a, x, t) :=  Ctrl_E(a[0, s), x[0, s))$. \n\nIt is for brevity we wrote $Ctrl_E : A_E \\times \\mathcal{X} \\to T_E$ in the manuscript to convey the idea that the controller input is mapped to transitions, but we are sorry if this caused confusion.  In the revised Appendix section, we will add more formal explanations as we presented here. \n\nIn the training of  $Ctrl_E$,  we are assuming a \"labeled\" sequential dataset of small size\n$D_{label} = \\lbrace (a_i, x^i)  \\rbrace_i \\subset C(I, A_E \\times \\mathcal{X}) $\nsuch that, with $(\\Phi, \\Psi)$ and $M$ in place, \n\n$$x^i(t) = \\Psi \\left( M \\left( \\exp \\left(  \\int_0^t Ctrl_E(a_i[0, s), x^i[0, s) ) ds  \\right) \\right) \\Phi (x^i(0)) \\right). $$\nThe purpose of Controller Interface Problem is to learn $Ctrl_E$ from $D_{label}$, as described in the manuscript.\nNote that, in this expression, we intend\n$\\exp \\left(  \\int_t^{t+\\delta} Ctrl_E(a_i[0, s) , x^i[0,s)) ds  \\right)$  to represent $g^i_{t, \\delta}$ in the first part of our response, so that \n$g^i_{t, \\delta}$ depends on $ \\lbrace Ctrl_E(a_i[0, s), x^i[0,s) | s \\in [t, t+\\delta) \\rbrace.  $"
+            }
+        },
+        {
+            "title": {
+                "value": "Thank you for the Feedbacks (Part I)"
+            },
+            "comment": {
+                "value": "We are sorry that we forwent the details of the mathematical setups.  Our formal mathematical settings are mostly built on the theory of NFT (Koyama et al., 2024), except that we use continuous and nonstationary time series for training the model.  We provide more details in our response below.   In the revision, we will prepare an Appendix section with more rigorous notations and mathematical setups. \n\nPlease see the Part III for the summary of our responses.  \n\n\n## Regarding the assumption underlying WLA \nThis section is meant to serve as our response to Q1 (Ambiguity in Transition Operator  $g_{t, \\delta}$) and Q3 (Non-Compositional Transition Operators). To resolve the confusion, we will elaborate the assumption underlying WLA below with more formality.\n\n\nLet $D = \\lbrace x^i: [0, T] \\to \\mathcal{X} \\rbrace_i$ be the video dataset to be used to train the encoder $\\Phi$ and the decoder $\\Psi$ in our WLA framework, where $i$ is the sample index.  This dataset contains the videos sampled from multiple environments so $\\mathcal{X}$ is a superset of observation space of all environments. \nThe underlying assumption of WLA is that,  for every $i$, $t >0$ and $\\delta>0$,  the transition $x^i(t) \\to x^i(t+\\delta)$ is *realized* by *some* common group action $G \\times \\mathcal{X} \\to \\mathcal{X}$ of a *some*  Lie Group $G$.  \nTo be more precise, our standing assumption is as follows: \n\n>**Assumption:** For our dataset $D= \\lbrace x^i: [0, T] \\to \\mathcal{X} \\rbrace_i$ \n>consisting of movie samples from multiple environments, there exists some Lie group $G$ that acts on $\\mathcal{X}$ through a group >action $\\alpha : G \\times \\mathcal{X} \\to \\mathcal{X}$ \n>such that,  for every $x^i$, $t >0$ and $\\delta$ there is some $g^i_{t , \\delta} \\in G$ such that $\\alpha ( g^i_{t , \\delta}, x^i(t) )  = >x^i(t+\\delta)$.  \n\nFor brevity, we notationally identified $g$ with the map $\\alpha_g: x \\mapsto \\alpha(g, x)$ ( that is, $g^i_{t , \\delta}:  \\mathcal{X} \\to \\mathcal{X}$  with  $g^i_{t , \\delta}(x^i(t)) = x^i(t+\\delta)$. ) We are sorry that the confusion might have been incurred by our typo of \"$\\to$\" in place of \"$\\mapsto$\".  We shall more correctly write $g^i_{t , \\delta}: \\mathcal{X} \\to \\mathcal{X}$.  We will fix this typo in the revision. \nWith this assumption, we are therefore assuming that the family of transitions $T_\\mathcal{E}$ can be identified with a subset of $G$ for every $\\mathcal{E}$.  \n\nWe introduce this assumption of the Lie group structure as our inductive bias because our desiderata of compositionality and continuity matches (almost exactly, except for the invertibility) with the definition of Lie group as a topological set with smooth manifold structure and rules of compositions.  Note that, by leaving the group action and the details of $G$ unknown, we leave much freedom in our construction of the world model.\nWe do note however that we assume $G$ to be abelian in order to make the latent transitions computationally simple.\n\n\nAccording to the theory and results presented in NFT, when there is some group $G$ acting on $\\mathcal{X}$ with a set of reasonable regularity conditions,  there exists an autoencoder $(\\Phi, \\Psi)$ with latent vector space $V$ and a homomorphic map $M: G \\to Aut_{\\mathcal{R}}(V)$ such that $\\Phi ( M(g) \\Psi (x)) =  g(x)$.   Mitchel et al. (2024) and Miyato et al. (2023) had experimentally shown that such  $(\\Phi, \\Psi)$ and $M$ can be learned from a time series dataset, and our work scales their philosophy to the nonstationary, continuous dynamical system on large observation space.\nIn our manuscript, this $M: G \\to Aut_{\\mathcal{R}}(V)$  derived from $\\Phi$ and $\\Psi$ \nis written as $F_{\\Phi, \\Psi}:   G \\to Aut_{\\mathcal{R}}(V)$. \nAs for the expression around eq (3) in concern, the continuity part of our statement more precisely reads as follows:\n\n>**Continuity:** \n>When each continuous transition $x^i(t) \\to x^i(t + \\delta)$ is realized by a group element $g^i_{t , \\delta}$ so that \n>$\\Phi ( M(g_{t, \\delta}) \\Psi (x^i(t))) =  x^i(t + \\delta)$, then $\\lim_{\\delta \\to 0} M(g_{t, \\delta}) = \\lim_{\\delta \\to 0} F_{\\Phi, \\Psi}(g_{t, \\delta})  \\to I$.  \n\nIn the revision we will strike out ambiguous expression like \"when the set of transitions form a Lie group\". \nWe chose the modeling of the transitions like (Koyama et al, Miyato et al and Mitchel et al) because (1) if $\\Phi$ and $\\Psi$ are continuous and invertible, the compositionality and continuity of $M$ directly lift to the those of $G$'s action on $\\mathcal{X}$, and because (2) $M(g)$ for each $g$ can be represented by sparse (block diagonal) matrix that is computation-friendly (assuming that finite-dimensional representation space with sufficiently large dimension can reproduce the observations).    That is, we use $F_{\\Phi, \\Psi}$ as the environment-agnostic encryptor of the underlying transition operators."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a method akin to state-space models for simulating environments by applying Neural Fourier Transform. It uses Lie group theory to obtain a continuous representation of the environment dynamics."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is clearly structured and well written\n- The use of the Lie group theory and NFT to model the dynamics of interactive environments seems to be both novel and interesting\n- The method is well motivated and theoretically grounded\n- Good reproducibility (code provided)"
+            },
+            "weaknesses": {
+                "value": "- No runtime analysis\n- No discussion of hyperparameter selection\n- No significance tests\n- No error bars\n- No scaling laws\n- No quantitative results on Phyre\n\nUnfortunately, the empirical evaluation does not meet scientific standards and, therefore, I do not deem the paper ready for publication yet. Once these problems are solved, I think this paper will constitute a nice contribution to the field."
+            },
+            "questions": {
+                "value": "- In Eq. (1), does the function Ctrl return an observation or a transition operator?\n- In Eq. (3), shouldn't one take the limit of delta to 0 instead of t to infinity?\n- Are there any limitations arising from the restriction of transitions to Lie groups?\n- Since the latent space is divided into different slots for different objects and the slots forward dynamics are independent of each other, how can the model represent interactions between objects? \n- It seems that the size of the latent space is a crucial hyperparameter; how was it determined (both N and J)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a method for enforcing a Lie group structure on the latent space of a multi-environment world model.  This structure imposes compositionality and continuity in the latent space, and allows the dynamics in the latent space to be linear.  The latent space is further structured by imposing object-specific dynamics (through the use of slot attention and assignment of \"close\" slots in nearby time steps).  This method allows to learn a common dynamic model from a sequence of observations sampled from a set of environments, and the paper shows that this model can generate observations that better reconstruct the ground truth observation compared to a strong baseline."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper presents an interesting idea, and a clever method for exploiting similarities between several environments at once.\n- Learning reliable world models from observation trajectories without paired actions would be a dramatic step forward, and this paper presents a novel angle on that problem.\n- Evaluation shows improvements over a strong baseline."
+            },
+            "weaknesses": {
+                "value": "- In places the presentation can be a bit unclear.  This is mostly in the description of the method.  I would have benefitted from a diagram of the steps required to train WLA and then use that to solve the CIP.  The current Figure 1 may not be necessary; the inter-environment aspect of WLA is probably the most straightforward step in the process.  \n- Although not direct alternatives to the latent space presented here, there is some previous work in structured latent spaces that it may be interesting to compare against in the related work section.  eg.\n    - Embed to Control: A Locally Linear Latent Dynamics Model for Control from Raw Images.  Manuel Watter, Jost Tobias Springenberg, Joschka Boedecker, Martin Riedmiller\n    - Object Files and Schemata: Factorizing Declarative and Procedural Knowledge in Dynamical Systems.  Anirudh Goyal, Alex Lamb, Phanideep Gampa, Philippe Beaudoin, Sergey Levine, Charles Blundell, Yoshua Bengio, Michael Mozer\n- Not a weakness, but Line 111 contains a reference to OCCAM, which I presume is a previous name for WLA?"
+            },
+            "questions": {
+                "value": "- How are the parameters $N$ and $J$ chosen?  Do they need to scale with the complexity of the environment?  If so, how do we expect computation costs to scale? \n- Line 192 suggests an assumption about infinitesimal changes to observations between timesteps.  This assumption seems very strong, how would the method handle larger changes?\n- How similar do the environments need to be for the inter-environment simulator to model them jointly?  For example, could you mix the Phyre and ProcGen environments?\n- Does it matter how the dataset is sampled from each environment?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors present World modeling through Lie Action (WLA), a generative state-space-modeling framework that can be trained in an unsupervised fashion on interactive environments, and that allows controllable generation of future frames of a given environment. One main goal of this framework is learning continuous and compositional action representations, similar to what humans are able to do. It is a step towards an interactive world model that generalizes across environments, given these environments have a common basic rules of composition and continuity.\nThe paper presents a model built using this framework that is benchmarked on two datasets (ProcGen and Phyre). In general, the model can be trained using no or only few action labels, making it more versatile and faster to adapt to new settings with different action labels."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is clearly structured, and the individual components of the model with accompanying formulas, as well as the setting is well introduced. The authors carefully set the scope of the work and how it compares to similar approaches.\n2. Benchmarks with different test settings (e.g. different FPS compared to train) shows the robustness of the model on this benchmark and the ability to infer continuous dynamics.\n3. Given a main focus of the framework is the Lie group theory, I appreciate the ablation study that reveals the relevance of it (Rotation) to the predictive performance of the model"
+            },
+            "weaknesses": {
+                "value": "My main concern is the limited amount of comparability to previous works and approaches. The model is only benchmarked on two datasets, and one is mainly used as a (successful) sanity check. The second dataset (with 16 quite diverse environments) is benchmarked against only one other model, though using several metrics. Even if it is a \u2018first of its kind\u2019 framework as stated by the authors, more benchmarks to confirm its proper function would increase trust in the method/framework. It can be acknowledged though that the number of available datasets/benchmarks for this specific scope is low, as also stated in a recent survey [1].\nOther things that are not clear to me at the moment are in the question section.\n\n\n[1] McCarthy, Robert, et al. \"Towards Generalist Robot Learning from Internet Video: A Survey.\" arXiv preprint arXiv:2404.19664 (2024)."
+            },
+            "questions": {
+                "value": "1. Was the encoder and decoder trained from scratch?\n2. Did you do multiple runs with different random initializations, or are the results from just one experimental run?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces World Modeling through Lie Action (WLA), a generative framework that learns continuous, compositional actions for controlling agents across diverse environments using Lie group theory. Claimed contributions include:\n\nUnified Simulator: A shared, environment-agnostic simulator leverages continuous actions, unlike models with discrete, environment-specific setups.\nController Interface Problem (CIP): WLA solves CIP with adaptable controllers, even under minimal labeling.\nObject-centric Modeling: Slot-based object-centric modeling supports interactions across multiple objects and actions.\nPerformance: WLA seems to outperform on benchmarks (Phyre and ProcGen), proving its generalizability and adaptability.\nThis approach enhances state-space modeling with flexible, multi-environment simulations"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The originality seems novel. The universal interface for control is an important problem to study. The emprical evidence seems to be strong, it can outperform the baseline significantly. I think there could be some contributions in the paper, but the presentation needs to be improved a lot."
+            },
+            "weaknesses": {
+                "value": "The paper\u2019s ambitious framework for inter-environmental modeling has notable weaknesses, especially in mathematical clarity and formulation, which hinder its accessibility and rigor.\n Key Issues:\n1. **Ambiguity in Transition Operator (\\( g_{t, \\delta} \\))**: \\( g_{t, \\delta} \\) maps specific observations \\( x(t) \\) to \\( x(t+\\delta) \\), making it appear as a trivial one point to one point mapping. This definition does not capture the desired dynamic evolution. It does not make any sense in the form written in the paper. The paper acknowledges that \\( g_{t, \\delta} \\) depends on individual trajectories but simplifies it as a generic operator, risking confusion. This omission detracts from the model\u2019s mathematical precision, especially for multi-environment dynamics.\n\n3. **Underdefined Action Space \\( A \\)**: The action space \\( A \\) and action \\( a(t, \\delta) \\) lack clarity on whether actions are fixed or variable over intervals. This ambiguity in structure reduces the framework's comprehensibility in continuous control scenarios.\n\n4. **Non-Compositional Transition Operators**: Due to the triviality of \\( g_{t, \\delta} \\), composing transitions over time is not feasible, so why does it form a Lie group? The paper introduces Lie groups without a clear justification for their relevance to the specific environments. Additional reasoning would strengthen its argument for using Lie groups to model compositional and continuous dynamics.\n\nTo improve clarity, the paper would benefit from revisiting the definitions and dependencies in its transition operators, better defining the action space, and providing justification for its mathematical choices. More precise formulation and notation would significantly enhance its accessibility and application."
+            },
+            "questions": {
+                "value": "Revise the math definitions and formulations significantly and I will reconsider my score.\n\nSee weakness for all the math confusions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

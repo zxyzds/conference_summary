@@ -1,0 +1,169 @@
+{
+    "id": "umggmAFhRD",
+    "title": "Towards shutdownable agents via stochastic choice",
+    "abstract": "Some worry that advanced artificial agents may resist being shut down. The Incomplete Preferences Proposal (IPP) is an idea for ensuring that doesn\u2019t happen. A key part of the IPP is using a novel \u2018 Discounted REward for Same-Length Trajectories (DREST)\u2019 reward function to train agents to (1) pursue goals effectively conditional on each trajectory-length (be \u2018USEFUL\u2019), and (2) choose stochastically between different trajectory-lengths (be \u2018NEUTRAL\u2019 about trajectory-lengths). In this paper, we propose evaluation metrics for USEFULNESS and NEUTRALITY. We use a DREST reward function to train simple agents to navigate gridworlds, and we find that these agents learn to be USEFUL and NEUTRAL. Our results thus suggest that DREST reward functions could also train advanced agents to be USEFUL and NEUTRAL, and thereby make these advanced agents useful and shutdownable.",
+    "keywords": [
+        "the alignment problem",
+        "the shutdown problem",
+        "corrigibility",
+        "reinforcement learning",
+        "stochastic policy"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "To test a proposed solution to the shutdown problem, we train agents to choose stochastically between different trajectory-lengths.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=umggmAFhRD",
+    "pdf_link": "https://openreview.net/pdf?id=umggmAFhRD",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper focuses on the shutdown problem in AI safety: that advanced AIs might take actions that impede humans from shutting them down. It proposes a method for training agents to be indifferent between trajectories of different lengths, which the authors suggest could prevent those agents from manipulating shutdown procedures. The paper tests this method in several gridworlds."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The paper is well-written and clearly explains its ideas and its relationship to previous literature on the shutdown problem."
+            },
+            "weaknesses": {
+                "value": "A key assumption of the paper seems to be that any mechanism by which an agent might change the length of its trajectory is illegitimate. However, in general, I don't see a strong justification for this. An agent might, for instance, need to choose between solving a problem quickly or slowly, given that it will be (legitimately) shut down by a human after finding a solution either way. The concept of neutrality suggests that the agent should be penalized for making that decision.\n\nThis seems counterintuitive. But even assuming that we accept that, the definition of NEUTRALITY doesn't actually require agents to avoid *changing* the distribution over possible trajectory lengths. If the default distribution of trajectory lengths is skewed (e.g. because humans tend to press the shutdown button at specific times) then maximizing NEUTRALITY will require changing that default distribution.\n\nFinally, even assuming that the distribution of trajectory lengths maximizes NEUTRALITY, an agent would still have an incentive to manipulate *which* trajectories are shut down earlier or later\u2014specifically by ensuring that low-reward trajectories are shut down earlier, and high-reward trajectories are shut down later.\n\nThese are fairly philosophical considerations so I am open to the possibility that I am misunderstanding something and will need to revisit the paper with the authors' replies in mind to better understand it. However, if they are in fact correct, then the concept of NEUTRALITY does not in fact address the core concerns behind the shutdown problem."
+            },
+            "questions": {
+                "value": "Could you please explain whether the concerns discussed above seem correct to you; or if not, why not."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce two metrics of an agents behaviour: USEFULNESS and NEUTRALITY. These metrics aim to reflect the fact, that agents, that maximise both USEFULNESS and NEUTRALITY, are neutral about when they would get shut down. To maximise these quantities, the authors propose a set of environment designs, that allow to train policies in a standard RL loop, that automatically maximise USEFULNESS and NEUTRALITY."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is well written, and the problem is well motivated.\n- The background is well explained.\n- Environments and RL method are well chosen for the purpose. \n- Well designed experiments."
+            },
+            "weaknesses": {
+                "value": "1. Though your method seems to work, and seems to have strong theoretical foundations, tuning rewards in between episodes may make the problem harder to learn. Moreover, this adds an additional (probably sensible) parameter to tune. Is there a reason, that conceptually simpler ideas, like maximising a weighted sum of NEUTRALITY and USEFULNESS directly, or standard RL tasks with regularisation on the entropy regularisation (entropy of the induced distribution of trajectory lengths by the policy), are not discussed? \n2. If the environment would allow multiple trajectories with the same length and the same (maximal) reward, a policy maximising your definition of USEFULNESS would no longer assure that (1) of POST is satisfied (This could be an issue if choosing $\\gamma = 1/\\sqrt{2}$ in the example environment)."
+            },
+            "questions": {
+                "value": "1. Theorem 5.1 does hold for any meta-episode $E$. Wouldn't it simplify your method if one would fix this, and only use them weight your rewards? Unless I understand the Algorithm part (L. 308 ff) wrong. (See also next question)\n2. I have the following issue, that you could maybe resolve: If Theorem 5.1 holds for any E, then it surely holds for $E = \\\\{e_1\\\\}$ consisting of a single trajectory. And say we stay in your example environment, where $e_1$ is a trajectory of length four. Then the return of any trajectory of length four will in the interval $[0,\\lambda]$, as ${N_{e_1}(L=4)}=1$. Similarly, the return for each trajectory of length eight, will be in the interval $[0,1]$, as ${N_{e_1}(L=8)}=0$. In both cases the maximum returns are achievable. Hence, using this reward, a standard RL procedure would obtain a policy that always uses trajectories of length eight, as $\\lambda < 1$. This policy would maximise USEFULNESS, but certainly not NEUTRALITY. This, however, is a contradiction to your Theorem. Did I understand your method wrong? (I have slightly simplified the example, technically N does count the visits prior to an episode, but we could construct the same argument with $E=\\\\{\\tau,\\tau\\\\}$ for a fixed trajectory of length four, with the cumulated return over both mini-episodes lying within $[0,1+\\lambda]$ and $[0,2]$ respectively).\n3. How does the Update-to-Data ratio, i.e. the choice of the size of E with fixed number of time steps influence the performance?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper tackles the shutdown problem through the use of Incomplete Preferences Proposal (IPP). It introduces a training regimen (DREST rewards) that discounts agents' rewards based on the frequency of selected trajectory lengths across meta-episodes, thus encouraging varied trajectory lengths. The USEFULNESS and NEUTRALITY metrics are defined and evaluated, with agents trained to maximise them to implement IPP effectively."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The approach is novel and original. It is also easy to follow. The results look positive and easy to track for simple tasks like the gridworld. There are no exaggerations and most limitations about the work have been stated."
+            },
+            "weaknesses": {
+                "value": "Authors have indicated some limitations of the approach which are reserved as future work. However, while still using the simple gridworld, it is unclear 1) how the stochasticity of the environment would impact the metrics and/or DREST agent, and 2) how low success rates of the task completion would impact the metrics and/or DREST agent. Nothing has been mentioned about how IPP can be applied beyond policy gradient methods (e.g. value-based methods). Also, due to the vast differences between simple and advanced agents, it is not convincing that the approach will function well with latter agents until experiments are done (as noted by authors). This paper is a good starting point, however more remains to be done before I am convinced of its applicability."
+            },
+            "questions": {
+                "value": "Given the simple gridworld, \n1) How does the stochasticity of the environment impact the metrics and/or DREST agent?\n2) How does low success rates of task completion (due to task complexity) impact the metrics and/or DREST agent?\n3) How can IPP be extended beyond policy gradient methods?\n4) How does IPP compare to the other 6 proposed solutions in related work?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors consider the scenario where an agent has some control on how long its trajectory will be, but it can learn to have no preference between trajectories of different lengths, while preferring higher reward trajectories that do have the same length (POST).\nThey propose a method to do so named DREST, and show it works on a grid-world environment with an episode elongating button."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. I found the paper to be well written and organized. \n\n2. The experiments exhibit well the main point of the proposed solution."
+            },
+            "weaknesses": {
+                "value": "1. In my opinion the paper is in a very small niche making it less significant for most of the community. The motivation revolves agents that avoid being shutdown, something which is currently quite far from most applications and a non-issue in most real-world agents. In this specific area - the authors tackle a specific setting where the agents have a specific button that affects the length of the episode. This is not very general and I'm not sure if their solution extends to multiple buttons and actions that affect the length in varying ways. For example - a shut-down action as part of the action space, or a state which marks the end of the trajectory. \n\n2. Following 1, I think the case of an existing absorbing state is much more common and managing POST for an environment with one is harder and more interesting problem that has usages outside the question of avoiding shutdown. The theoretical and empirical results would have been better in my opinion had they suited this case or extended to it.\n\n3. The proposed solution seems a bit problematic since even though it is driving towards neutrality, it doesn't seem to guarantee it in general (despite what stated by Theorem 5, see questions). Also, its categorical form seems limited to a relatively small options for lengths (the authors test for two)."
+            },
+            "questions": {
+                "value": "1. If I understand correctly, the proof relies on the following claim taken from the paper:\n\n\"\"\"\n\nAnd the maximum preliminary return is the same across trajectory-lengths,\nbecause preliminary return is the total (\u03b3-discounted) value of coins collected divided by\nthe maximum total (\u03b3-discounted) value of coins collected conditional on the agent\u2019s chosen trajectory-length.\n\n\"\"\"\n\nDoes this mean you assume the maximum average coin reward is going to be identical regardless of the trajectory length?\n\nIf the answer it yes, this greatly degenerates the cases where the Theorem in the paper is correct and when you're going to get POST. It's also not very realistic. \n\nIf the answer is no, then I don't see how the proposed method will obtain POST for example when one length always gets zero coins and the other always gets all coins."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

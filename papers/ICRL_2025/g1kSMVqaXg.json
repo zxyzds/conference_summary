@@ -1,0 +1,232 @@
+{
+    "id": "g1kSMVqaXg",
+    "title": "Dynamic Influence Tracker: Estimating Sample Influence in SGD-Trained Models across Arbitrary Time Windows",
+    "abstract": "Understanding how training samples affect models improves model interpretability, optimization strategies, and anomaly detection. However, existing methods for estimating sample influence provide only static assessments, rely on restrictive assumptions, and require high computational costs. \n\tWe propose Dynamic Influence Tracker (DIT), a novel method to estimate time-varying sample influence in models trained with Stochastic Gradient Descent (SGD). DIT enables fine-grained analysis of sample influence within arbitrary time windows during training through a two-phase algorithm. The training phase efficiently captures and stores necessary information about the SGD trajectory, while the inference phase computes the influence of samples on the model within a specified time window. We provide a theoretical error bound for our estimator without assuming convexity, showing its reliability across various learning scenarios. Our experimental results reveal the evolution of sample influence throughout the training process, enhancing understanding of learning dynamics. We show DIT's effectiveness in improving model performance through anomalous sample detection and its potential for advancing curriculum learning.",
+    "keywords": [
+        "Explainability; data influence"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=g1kSMVqaXg",
+    "pdf_link": "https://openreview.net/pdf?id=g1kSMVqaXg",
+    "comments": [
+        {
+            "title": {
+                "value": "DIT is a general framework being extended to other optimizers. By using just **single-epoch** analysis, DIT achieved better accuracy than baselines (8.25 vs IF's 2.94 in Table 4) with lower computational costs, making it practical for large-scale models."
+            },
+            "comment": {
+                "value": "## Response to Concern 1 about SGD-trained Model:\n\nWe appreciate this thoughtful comment and would like to clarify three important points:\n\n1. **Significant advancement over existing methods**: Existing influence estimation methods are limited to a certain model (such as KNN [1]), or a model that can achieve global optimality, or has convex loss [2].  In contrast, DIT enables influence estimation for any model trained with SGD, regardless of type, convexity, or optimality. This represents a great theoretical and practical advancement in understanding how individual samples affect model training.\n\n2. **Foundation of optimizers**: SGD is the fundamental building block of modern optimization algorithms. We present our method using SGD for clarity and accessibility. Understanding influence dynamics in SGD provides crucial insights that generalize to more complex optimizers.\n\n3. **Extension to other optimizers**: DIT can be adapted to optimizers like Adam by slightly modifying parameter change tracking to account for momentum and adaptive rates, adjusting the Hessian approximation, and using the same influence computation framework. The core principles of DIT remain valid. We are actively working on explicit extensions to commonly used optimizers, with promising preliminary results. \n\n[1] R. Jia et al., \u201cEfficient task-specific data valuation for nearest neighbor algorithms,\u201d Proceedings of the VLDB Endowment, vol. 12, no. 11, pp. 1610\u20131623, 2018.\n\n[2] P. W. Koh and P. Liang, \u201cUnderstanding black-box predictions via influence functions,\u201d in ICML, 2017, pp. 1885\u20131894\n\n\n## Response to Concern 2 Hyperparameter Sensitivity: \n\nThe paper actually addresses hyperparameter sensitivity in several ways, though we could make this more explicit:\n\n1. Learning Rate \\& Batch Size Consideration:\nFrom Section 3's theoretical analysis, DIT incorporates learning rate $\\eta_t$, and batch size $|S_{t}|$ in formulations:\n$Z_t = I - \\eta_{t} H^{[t]}$, $ \\mathbf{\\tilde{1}}\\_j^{[t]} = \\mathbf{1}\\_{j \\in S_{t}}\\frac{\\eta_{t}}{|S_{t}|} g(z_j; \\theta^{[t]})$, and \n\n$$\n\\Delta \\theta_{-j}^{[t_1,t_2]} \\approx  \\left(\\prod_{k=t_1}^{t_2-1} Z_k - I\\right)\\left(\\sum_{t=0}^{t_1-1} \\left(\\prod_{k=t+1}^{t_1-1} Z_k\\right) \\mathbf{\\tilde{1}}\\_j^{[t]}\\right) \\nonumber + \\sum_{t=t_1}^{t_2-1} \\left(\\prod_{k=t+1}^{t_2-1} Z_k\\right) \\mathbf{\\tilde{1}}\\_j^{[t]}.\n$$\n \n2. Experimental validation: The paper demonstrates robustness across different settings through testing on multiple datasets (Adult, 20Newsgroups, MNIST, EMNIST), model architectures (LR, DNN, CNN), and different noise levels (5%, 10%, 15%, 20%). The standard deviations reported in Tables 2 and 5 demonstrate stability across different initializations and configurations (16 runs with different random seeds). \n\n## Response to Concern 3 about Assumptions (A1-A7):\n\nWhile the theoretical assumptions may appear strong, they serve as sufficient conditions for analysis, **not necessary** for practical effectiveness. Our assumptions are actually milder than previous work, as we only require Lipschitz continuity rather than the convexity assumed in influence functions.\n\nMoreover, our comprehensive empirical results directly address this concern. As shown in Table 2, on MNIST with DNNs, DIT achieves 0.90\u00b10.07 Pearson correlation with ground truth, far exceeding IF's 0.25\u00b10.28, despite potential violations of Hessian assumptions in deep networks.  DIT achieves reliable estimation even with approximate satisfaction of theoretical conditions, showing DIT's robust practical effectiveness beyond theoretical constraints.\n\n## Response to Concern 4 about Scalability:\n\nThank you for raising this important concern about scalability. Training large-scale models is computationally intensive, and measuring sample influence poses additional challenges. For a middle-sized model on MNIST, each full training run takes **several hours**. With MNIST's training set size of 50,000 samples, the traditional Leave-One-Out (LOO) method requires 50,000 full training runs, amounting to **years of computation time**. Influence Functions (IF) require expensive Hessian matrix inversions. Our method avoids both the extensive retraining and the expensive Hessian matrix inversions while maintaining high accuracy in estimation. \n\nMore importantly, the storage and computation costs are **optional**.  DIT achieves superior performance using only **single-epoch** analysis. As shown in Table 4, analyzing just the **first epoch** allows DIT to achieve 2.8x better accuracy than IF for DNNs (8.25 vs 2.94) and 1.5x better accuracy for CNNs (8.75 vs 5.88). This single-epoch strategy drastically reduces both storage and computation time requirements while outperforming existing methods.\n\n** Table 4: Number of correctly identified flipped samples (5% noise) ** \n| Model | IF | **First Epoch** | \n|-------|-----------------|-----------------| \n| DNN | 2.94 \u00b1 2.01 | **8.25 \u00b1 2.33** | \n| CNN | 5.88 \u00b1 2.26 | **8.75 \u00b1 2.11** |"
+            }
+        },
+        {
+            "title": {
+                "value": "Storing all intermediate models is optional. DIT achieves much better (3$\\times$) accuracy with one epoch computation and storage."
+            },
+            "comment": {
+                "value": "## Response to Questions about storage costs.\n\nStoring all intermediate models is optional. Table 4 shows full storage is not necessary for achieving superior performance. In detecting flipped labels task in Sec. 5.5, using only the first epoch, DIT significantly outperforms existing methods: achieving 2.8x better accuracy than IF for DNNs (8.25 vs 2.94) and 1.5x better accuracy for CNNs (8.75 vs 5.88). Users can choose between full or single-epoch analysis while DIT consistently outperforms existing methods.\n\n** Table 4: Number of correctly identified flipped samples **\n| Flipped | Model | IF              | Full DIT        | LOO             | First Epoch      | Mid Epoch       | Last Epoch      |\n|---------|-------|-----------------|-----------------|-----------------|------------------|-----------------|-----------------|\n| 5%      | DNN   | **2.94 \u00b1 2.01** | 9.06 \u00b1 1.85     | 8.81 \u00b1 1.98     | **8.25 \u00b1 2.33**  | 8.88 \u00b1 2.09     | 9.38 \u00b1 1.98     |\n| 5%      | CNN   | **5.88 \u00b1 2.26** | 10.50 \u00b1 1.32    | 10.44 \u00b1 1.32    | **8.75 \u00b1 2.11**  | 10.69 \u00b1 1.16    | 11.06 \u00b1 1.32    |\n| 10%     | DNN   | **7.50 \u00b1 3.34** | 20.75 \u00b1 3.01    | 19.94 \u00b1 3.77    | **20.31 \u00b1 2.78** | 20.50 \u00b1 3.22    | 21.31 \u00b1 3.77    |\n| 10%     | CNN   | **15.00 \u00b1 2.83**| 21.81 \u00b1 3.11    | 21.75 \u00b1 3.11    | **18.44 \u00b1 4.37** | 22.19 \u00b1 2.81    | 23.56 \u00b1 3.11    |\n\n## Response to Comment 1: \"The theoretical bound in Equation (18).\"\n\nWe appreciate this insightful observation, and we would like to provide important clarifications.\n\n1.\tDIT is specifically designed for analyzing **arbitrary time windows** $[t_1, t_2]$. We guarantee a much tighter upper error bound with small $t_1, t_2$. Table 4 shows that even using the first epoch, DIT achieves remarkable performance (>2x better than IF) in detecting flipped labels. \n\n2. The exponential bound represents a worst-case mathematical guarantee, while actual performance is much better. Empirical results show DIT maintains high accuracy (>0.90 correlation with LOO) across different models and datasets, even over full training intervals of 20+ epochs.  \n\n3. Existing methods like influence functions provide **no guarantees** for non-convex settings. Our bound, despite its exponential growth in the worst case, represents an advancement over existing methods.\n\n \n## Response to Comment 2: \"The empirical evaluations primarily use simple models.\"\nIt was deliberate for several reasons:\n\n1. **Limited by Baseline Methods**. To validate DIT, we must compare with existing methods like Influence Functions (IF) and Leave-One-Out (LOO), which are prohibitively expensive for larger models:\n   - LOO requires O(N) complete model retraining cycles. With N=50,000 (MNIST size) and hours per training cycle, this would **take years** of computation!\n   - IF requires computing the inverse Hessian matrix (O(p\u00b2) complexity) and was only tested on simple models (SVM and LR) due to computational constraints.\n   To our knowledge, no existing work can accurately quantify sample impact (how would the model\u2019s predictions change if we did not have this sample) on larger models.\n\n2.\tOur results show DIT's advantages increase with model complexity (LR < DNN < CNN), suggesting even stronger benefits in more complex settings.\n\n3.\tDIT is model agnostic with no architectural assumptions, provides error bounds without convexity requirements. We welcome future work on larger architectures through our open-source implementation.\n  \n## Response to Comment 3 about the empirical results.\n\nThank you for your comments. Let me clarify three key points:\n\n1. The improvements from DIT are significant, especially in complex models using the last epoch of DIT in Section 5.5:\n   - For DNNs with 5% flipped labels: DIT (9.38) achieves 3.2x better accuracy than IF (2.94).\n   - For CNNs with 5% flipped labels: DIT (11.06) achieves 1.9x better accuracy than IF (5.88).\n\n2. Section 5.4's correlation analysis demonstrates a unique capability of DIT: tracking how sample importance evolves during training. This is not a comparison with baselines because existing methods cannot perform this temporal analysis at all. They only provide static, end-of-training measurements.\n\n3. Storage concerns are addressed by our results showing that DIT can achieve superior performance using only first-epoch data (Table 4). Users can choose between comprehensive temporal analysis or efficient single-epoch analysis while still outperforming existing methods.\n\n## Response to Comment 4 about storage.\nWhile we can store all intermediate models, our experiments show this is not necessary. Using only first-epoch data, DIT still significantly outperforms IF: achieving 2.8x improvement for DNNs (8.25 vs 2.94) and 1.5x improvement for CNNs (8.75 vs 5.88). This demonstrates that full storage is optional and not required. DIT also offers computational advantages by avoiding both the O(N) complete model retraining required by LOO and the expensive Hessian matrix inversion needed by IF."
+            }
+        },
+        {
+            "title": {
+                "value": "Our response includes 1) step-by-step derivation to address the questioned equations, 2)  clarification of DIT contributions."
+            },
+            "comment": {
+                "value": "## Concern 1:\n\n** We sincerely appreciate the careful review. Below is a step-by-step derivation to address your concerns.**\nWe start from Eq.(10), which establishes the relationship (denoted as Eq.(10-1)):\n$$\n\\theta_{-j}^{[t+1]} - \\theta^{[t+1]} = (\\theta_{-j}^{[t]} - \\theta^{[t]}) - \\frac{\\eta_t}{|S_t|} (\\sum_{i \\in S_t\\setminus\\{j\\}} g(z_i; \\theta_{-j}^{[t]}) - \\sum_{i \\in S_t} g(z_i; \\theta^{[t]}))\n$$\n\n$$\n= (\\theta_{-j}^{[t]} - \\theta^{[t]}) - \\frac{\\eta_t}{|S_t|} (\\sum_{i \\in S_t\\setminus\\{j\\}} g(z_i; \\theta_{-j}^{[t]}) -\\sum_{i \\in S_t\\setminus\\{j\\}}g(z_i; \\theta^{[t]})-\\mathbf{1}_{j \\in S_t}g(z_i; \\theta^{[t]}))\n$$\n\n$$\n= (\\theta_{-j}^{[t]} - \\theta^{[t]}) - \\frac{\\eta_t}{|S_t|} (\\sum_{i \\in S_t\\setminus\\{j\\}} g(z_i; \\theta_{-j}^{[t]}) -\\sum_{i \\in S_t\\setminus\\{j\\}}g(z_i; \\theta^{[t]}))+\\frac{\\eta_t}{|S_t|}\\mathbf{1}_{j \\in S_t}g(z_i; \\theta^{[t]})\n$$\n\n$$\n= (\\theta_{-j}^{[t]} - \\theta^{[t]}) - \\frac{\\eta_t}{|S_t|} \\sum_{i \\in S_t\\setminus\\{j\\}} (g(z_i; \\theta_{-j}^{[t]}) -g(z_i; \\theta^{[t]}))+\\frac{\\eta_t}{|S_t|}\\mathbf{1}_{j \\in S_t}g(z_i; \\theta^{[t]}),\n$$   \n\nwhere $\\mathbf{1}_{j \\in S_t}$ is an indicator function that equals 1 if $j \\in S_t$, otherwise 0.\n       \nUsing Eq. (11), we have (denoted as Eq.(11-1)):\n\n$$\n\\sum_{i \\in S_t\\setminus\\{j\\}}( g(z_i; \\theta_{-j}^{[t]}) - g(z_i; \\theta^{[t]}) )\\approx \\sum_{i \\in S_t\\setminus\\{j\\}} \\nabla_\\theta g(z_i; \\theta^{[t]})^T (\\theta_{-j}^{[t]} - \\theta^{[t]}),\n$$\n\nFollowing Eq. (12) and Assumption (A4), we have (denoted as Eq.(12-1)):\n\n$$\n\\sum_{i\\in S_t\\backslash\\{j\\}} \\nabla_\\theta g(z_i; \\theta^{[t]})^T(\\theta_{-j}^{[t]} - \\theta^{[t]})=|S_t| H_{-j}^{[t]}(\\theta_{-j}^{[t]} - \\theta^{[t]})\\approx |S_t|  H^{[t]}(\\theta_{-j}^{[t]} - \\theta^{[t]}).\n$$\n\nCombining Eq.(11-1) and Eq.(12-1), we have (denoted as Eq.(11-2)):\n\n$$\n\\sum_{i \\in S_t\\setminus\\{j\\}}( g(z_i; \\theta_{-j}^{[t]}) - g(z_i; \\theta^{[t]}) )\\approx |S_t|  H^{[t]}(\\theta_{-j}^{[t]} - \\theta^{[t]}).\n$$\n\nApplying Eq.(11-2) to Eq.(10-1), we have the final result (denoted as Eq.(10-2)):\n\n$$\n\\theta_{-j}^{[t+1]} - \\theta^{[t+1]}= (\\theta_{-j}^{[t]} - \\theta^{[t]}) - \\frac{\\eta_t}{|S_t|} \\sum_{i \\in S_t\\setminus\\{j\\}} (g(z_i; \\theta_{-j}^{[t]}) -g(z_i; \\theta^{[t]}))+\\frac{\\eta_t}{|S_t|}\\mathbf{1}_{j \\in S_t}g(z_i; \\theta^{[t]}) \n$$\n\n$$\n\\approx (\\theta_{-j}^{[t]} - \\theta^{[t]}) - \\frac{\\eta_t}{|S_t|} (|S_t|  H^{[t]}(\\theta_{-j}^{[t]} - \\theta^{[t]}) )+\\frac{\\eta_t}{|S_t|}\\mathbf{1}_{j \\in S_t}g(z_i; \\theta^{[t]})\\\n$$\n\n$$\n= (\\theta_{-j}^{[t]} - \\theta^{[t]}) - \\eta_t H^{[t]}(\\theta_{-j}^{[t]} - \\theta^{[t]}) +\\frac{\\eta_t}{|S_t|}\\mathbf{1}_{j \\in S_t}g(z_i; \\theta^{[t]})\n$$\n\n$$\n= (I- \\eta_t H^{[t]})(\\theta_{-j}^{[t]} - \\theta^{[t]}) +\\frac{\\eta_t}{|S_t|}\\mathbf{1}_{j \\in S_t}g(z_i; \\theta^{[t]}).\n$$\n**This derivation confirms the correctness of Eq. (14), including the last term. We will add this clarification to the appendix.**\n\n\n\n## Concern 2:\n\n**Thank you for the thoughtful examination. We appreciate the opportunity to clarify and highlight our contributions.**\n\n### 1) Clarification of Influence Function Limitations\nAs stated in our Introduction (lines 038-049), influence functions have three shortcomings:\n- **First**, they can only estimate a sample's overall influence on the final model, rather than its influence at different stages of training, which DIT can do.\n- **Second**, influence functions rely on optimal model parameters $ \\theta^* $, assuming model optimality and convexity. \n- **Third**, high computational cost.\n\n### 2) Response to Convexity Assumption\nThe definition of influence function requires model optimality and convexity assumptions, according to \"A. Deriving the Influence Function\" by [Koh and Liang (2017)] (https://arxiv.org/pdf/1703.04730). They state:\n\n\"We further assume that $ R $ is **twice-differentiable and strongly convex** in $ \\theta $\"\n\n\"Since $ \\hat{\\theta}_{\\epsilon,z} $ is a minimizer\u201d\n\n\u201cSince $ \\hat{\\theta} $ minimizes $ R $, we have **$ \\nabla R(\\hat{\\theta}) = 0 $**.\u201d\n\nPapers [1], [3] still rely on these assumptions. Otherwise, influence functions cannot be established. For example, [3] requires:\n$$\n\\theta^* := \\arg \\min_{\\theta \\in \\Theta} [F(\\theta) := \\mathbb{E}_{Z \\sim P}[\\ell(Z,\\theta)]]\n$$\n\"$\\ell$ is a loss function that is **closed, convex, and thrice continuously differentiable** in the second argument. We assume this argmin is unique.\"\n\n### 3) Response to Computational Efficiency\nDIT can efficiently estimate the sample influence within any single epoch, requiring far less computational costs than traditional influence functions and their extension [1-3].\nTable 4 shows that DIT at the First, Mid, and Last Epochs, consistently outperforms traditional methods in accuracy, particularly in DNN and CNN. This highlights DIT's ability to achieve efficiency with high performance.\nIn contrast, the reliance on top-p eigenvalues in Arnoldi iterations[1], can lead to significant inaccuracies."
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce the Dynamic Influence Tracker (DIT), a novel approach for estimating the influence of individual training samples within specific time windows in models trained via stochastic gradient descent (SGD). Unlike traditional methods, which provide static influence estimates, DIT dynamically tracks how the influence of each sample varies throughout training. The method comprises a two-phase algorithm: a training phase that stores information about the SGD process and an inference phase that computes the influence within a specified window. Experimental results across various datasets and models demonstrate DIT\u2019s advantages in both accuracy and robustness over existing methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. DIT addresses limitations in current methods by providing dynamic estimates, which allow for a more nuanced understanding of sample influence as training progresses. The authors also provide theoretical guarantees for the error bounds, ensuring the model is reliable, even in non-convex landscapes.\n\n2. The experiments cover diverse datasets and various model architectures. The results demonstrate the advantages of DIT over existing methods in terms of accuracy and robustness.\n\n3. DIT reduces computational overhead by using Hessian-vector approximations instead of directly computing or storing the Hessian, making it feasible for large-scale models and datasets."
+            },
+            "weaknesses": {
+                "value": "1. It seems that the proposed method can only deal with models trained with SGD. Considering that many models are trained with more complex optimization methods such as Adam, the application of the proposed method seems somewhat limited.\n\n2. It\u2019s unclear whether the DIT is sensitive to hyperparameters, especially the learning rate and batch size, which can vary widely in real-world settings. Further analysis of these factors would strengthen the applicability of the method.\n\n3. The error bound analysis relies on many assumptions (A1-A7) that look strong and may not hold in practice, such as the behavior of Hessians in deep networks. \n\n4. It seems that the space and time complexity of the proposed method could still be challenging for very large-scale datasets and deep models."
+            },
+            "questions": {
+                "value": "See Weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Understanding sample influence is an important task that has multiple different use tasks. However, existing estimators only provide a single static assessment. The authors propose a novel way that can dynamically and efficiently estimate sample influence across different stages. They provide theoretical bounds and the empirical evaluation shows a much stronger performance than the baseline."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. The paper addresses an important problem. While providing a static assessment of sample influence is already useful, providing dynamic assessment potentially enables many interesting usages such as pinpointing why the model performance degrades or certain unwanted behavior appears after a certain training period.\n\n2. The empirical performance is strong. The correlation with the ground truth is often pretty high (> 0.9), which is much higher than the influence function baseline."
+            },
+            "weaknesses": {
+                "value": "1. It is unclear whether the error bound is meaningful as it grows exponentially. If the exponential growth is inevitable for the non-convex case, then it seems better to show a stronger bound for the convex case instead."
+            },
+            "questions": {
+                "value": "1. While the authors already show the Kendall\u2019s Tau correlations across training stages, it would be of the interest of the readers to see the correlation with respect to each of the evolution patterns: Stable Influencer, Early Influencers, Late Bloomers, and HighlyFluctuating. Since stable influencers are the majority, one can have high correlation by only predicting stable influencers accurately, while it might not correctly identify the Early Influencers and the Late Bloomers, which in some use cases is more of the interest.\n2. Can the authors clarify under which condition they think the error bound could be meaningful? Also, it might be useful if the authors can show the error bound for the convex case if it can be much better than the non-convex case. Additionally, bounding this term seems a bit weird as it can be influenced by reparametrization (scaling the data by c in LR seems to result in a 1/c scaling in the parameter and the error bound)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces the Dynamic Influence Tracker (DIT), a novel approach to estimate the dynamic influence of individual training samples in models trained with SGD. Unlike traditional influence methods that provide only static influence estimates, DIT tracks influence over arbitrary time windows during training. DIT operates through a two-phase algorithm: the training phase, which captures and stores relevant information about the model\u2019s parameter trajectory, and the inference phase, which uses this information to estimate sample influence within specific time frames. The authors derive a theoretical error bound for their estimator, demonstrating its applicability in non-convex settings, and present extensive empirical evaluations that highlight how sample influence evolves during training. The experiments show that DIT outperforms existing methods in accuracy."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The example provided in Section 5.2 illustrates that sample influence changes dynamically over the course of training, effectively supporting the motivation for DIT."
+            },
+            "weaknesses": {
+                "value": "1.\tThe theoretical bound in Equation (18) grows exponentially with t making it vacuous for long training intervals.\n\n2.\tThe empirical evaluations primarily use simple models, like two-layer CNNs, and small datasets, such as MNIST, which limits the demonstration of DIT's scalability and applicability to more complex scenarios.\n\n3.\tThe empirical results do not clearly show the practical utility of a dynamic influence function. In Section 5.5, the improvement from using DIT is marginal, and the correlations in Section 5.4 lack comparison with baseline methods. Although Figure 2 shows that DIT outperforms Influence Functions (IF) when using the full-time window, DIT\u2019s approach comes with a high storage requirement, which could limit its scalability.\n\n4.\tThe proposed algorithm relies on a Taylor approximation, requiring storage of all intermediate models during SGD, which results in a trade-off between time and memory complexity that could be problematic for large-scale models."
+            },
+            "questions": {
+                "value": "Could the authors present a compelling application for the proposed DIT approach that justifies the substantial storage required for retaining all intermediate models and SGD batches throughout training?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Dear Authors, thanks for submitting to ICLR.\n\nIn this paper, the author introduce a novel method for monitoring learning dynamics, termed DIT, which is designed for application across arbitrary neural networks trained with stochastic gradient descent (SGD). Unlike traditional influence functions and their extensions, DIT is not restricted to convex scenarios, demonstrating enhanced effectiveness in common non-convex cases. Additionally, DIT is computationally efficient, avoiding large matrix multiplications and thus enabling its application to complex models. Importantly, the implementation of DIT integrates seamlessly with standard SGD without requiring any modifications, making it readily applicable to a broad range of existing models through standard training routines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Compared with conventional methods like influence function and its extension, the DIT can monitor the influence of whole training process, instead of solely showing the influence on final loss.\n2. On the computational side, this method avoids large matrix multiplications, making it highly efficient. This efficiency is particularly critical for complex models where computational overhead is a key concern. In cases where computation is less of an issue, a leave-one-out test could be performed, but for large-scale or resource-intensive models, the lightweight nature of this approach makes it especially advantageous.\n3. Overall, DIT outperform IF in terms of accruacy, showing very significant correlation with LOO test.\n4. The paper is well-structured and presented in a clear, logical manner, with broadly sound reasoning throughout."
+            },
+            "weaknesses": {
+                "value": "1. The evaluation is not comprehensive enough. So far only simple model like CNN and DNN are included. This limits understanding of DIT's performance on more advanced tasks. For instance, it remains unclear if DIT can be effectively applied to fine-tuning large language models (LLMs).\n2. Need more detailed result about the computation overhead. So far the experiment is done on a 8 GPU server, and the LOO can be used for these tasks (CNN, DNN, LR etc.). Quantify the computing overhead will help the users to implement DIT properly.\n3. In the abstract, the author mentions curriculum learning (CL); however, the paper lacks a direct use case demonstrating how DIT contributes to CL. I see the results in Table 2, but how it will guide a CL process is unclear.\n(Please see more detailed suggestions in Questions )"
+            },
+            "questions": {
+                "value": "There are few detailed questions I would like to get more clarity.\n\n1. For equation (1), line 080, page 2, is it  a critical condition to the DIT? For instance, if I use certain realy stopping method and the equation (1) is not minimized, would DIT still work? Suggestion: add a test for DIT when the model is fully converged.\n2. Will this method helps the fine tunning of large pretrained models like LLM? Specifically, how does DIT handle new training samples for a pre-trained model, and does it require retraining the entire model from scratch? Suggestion: at least a clarification about the limitation would be helpful after the evluation, section 5. If the model is too large, maybe investigate a pretrained module inside would be good enough.\n3. Please quatify the cumputation efficicency gain of DIT. The result includes but not limited to: computation time compared with LOO, memory consumption. This will highlight the efficiency gain of DIT. This content can appear in section 5.\n4. Please add a use case for curriculum learning (CL) in section 5.5, as it is mentioned in the abstract. It's currently unclear how DIT manages dynamic training data, a common feature in CL setups. It is also not clear the correlation showed in Table 2 is sufficient without looking into a real CL task.\n5. Given its potential as a highly useful tool, will DIT be made open-source upon acceptance?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No such concern"
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a method, called Dynamic Influence Tracker (DIT), to estimate sample influence during the training process of SGD. The authors provide an error bound for their estimator and show DIT's effectiveness in various examples including anomalous sample detection and curriculum learning."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors proposed a method to track the sample influence during a training process. This approach allows us to discover samples that are important in the early stage of training but become dispensable in the end, whereas existing approaches focus on assessing the sample influence for the optimizer. They justified their approach from both theoretical and empirical perspectives."
+            },
+            "weaknesses": {
+                "value": "I have two major concerns regarding this paper.\n\n1. In the last term of Eq. (14) and subsequent definition of $\\tilde{\\mathbf{1}_j^{[t]}}$, the $\\theta^{[t]}$ inside the function $g$ should be $\\theta_{-j}^{[t]}$. This is not just a typo since it also exists in the proofs (e.g., the last term of Eq. (57)) and Alg. 2. Hence, the whole method requires significant revision.\n\n2. The paper didn't discuss the literature properly which put their claimed contributions in question.\n    1. On the computational aspect, the main criticism the authors hold on the influence function is the computation of inverse Hessian, and they propose to project the influence function onto a query function. However, on the one hand, there have been methods designed to reduce this computational complexity such as Arnoldi iteration [1]; on the other hand, the idea of projection has already appeared in the Maximum Influence Subset framework [2].\n    2. The definition of influence function does not require convexity. Convexity is only assumed when analyzing its statistical properties (see [3] for an example). Even though convexity is not assumed in the proofs, boundedness of gradient and hessian are assumed instead, which are very strong. In [3], only tail assumptions are made, so it is unclear whether the authors' argument requires less stringent assumptions.\n\n[1] A. Schioppa, et. al. Scaling up influence functions. AAAI, 2022.\n[2] T. Broderick, R. Giordano, and R. Meager. An Automatic Finite-Sample Robustness Metric: When Can Dropping a Little Data Make a Big Difference. Arxiv, 2020.\n[3] J. Fisher et. al. Influence Diagnostics under Self-concordance. AISTATS, 2023."
+            },
+            "questions": {
+                "value": "See the comments in the previous section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

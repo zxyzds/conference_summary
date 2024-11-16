@@ -1,0 +1,205 @@
+{
+    "id": "dTGH9vUVdf",
+    "title": "FreeVS: Generative View Synthesis on Free Driving Trajectory",
+    "abstract": "Existing reconstruction-based novel view synthesis methods for driving scenes focus on synthesizing camera views along the recorded trajectory of the ego vehicle. \nTheir image rendering performance will severely degrade on viewpoints falling out of the recorded trajectory, where camera rays are untrained.\nWe propose FreeVS, a novel fully generative approach that can synthesize camera views on free new trajectories in real driving scenes. \nTo control the generation results to be 3D consistent with the real scenes and accurate in viewpoint pose, we propose the pseudo-image representation of view priors to control the generation process.\nViewpoint translation simulation is applied on pseudo-images to simulate camera movement in each direction.\nOnce trained, FreeVS can be applied to any validation sequences without reconstruction process and synthesis views on novel trajectories.\nMoreover, we propose two new challenging benchmarks tailored to driving scenes, which are novel camera synthesis and novel trajectory synthesis, emphasizing the freedom of viewpoints.\nGiven that no ground truth images are available on novel trajectories, we also propose to evaluate the consistency of images synthesized on novel trajectories with 3D perception models.\nExperiments on the Waymo Open Dataset show that FreeVS has a strong image synthesis performance on both the recorded trajectories and novel trajectories. \nThe code will be released.",
+    "keywords": [
+        "Novel View Synthesis",
+        "Driving Scene",
+        "Free Trajectory",
+        "Image Generation"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "We propose FreeVS, a novel fully generative approach that can synthesize camera views on free new trajectories in real driving scenes.",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=dTGH9vUVdf",
+    "pdf_link": "https://openreview.net/pdf?id=dTGH9vUVdf",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors present FreeVS -- a Video Stable Diffusion-based generative view synthesis method for driving scenes that can synthesize high-quality camera views both on and beyond recorded trajectories. \n\nThe key innovation is using pseudo-images created by projecting colored point clouds as a unified representation for view priors. As opposed to recent contenders that rely on gaussian splatting or nerfs to represent the scene, the authors train a diffusion model on colored LiDAR point clouds.\n\nThe authors introduce two new benchmarks to evaluate the generated images that are far from the original poses. The method outperforms previous approaches for both traditional and newly proposed benchmarks on the Waymo dataset."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "### Novelty\nClever use of pseudo-images obtained through colored point cloud projection as a unified representation for all view priors, simplifying the learning objective for the generative model.\n### Evaluation\nIntroduces two new challenging benchmarks - novel camera synthesis and novel trajectory synthesis.\n\n### Efficiency\nThe authors claim it takes less computational resources at inference time compared to splatting-based models.\n\n### Performance\nBetter performance versus contenting methods, especially on poses far away from the original camera poses."
+            },
+            "weaknesses": {
+                "value": "### Novelty\nEngineering work -- it boils down to an addon for Video Stable Diffusion that has colored LiDAR point features concatenated.\n\n\n### Different type of artfacts\nThe method trades the gaussian and nerf artifacts with the diffusion ones. While there is no denying that FreeVS works better than the previous attempts from novel views, for single front view, splatting still yields significantly better results (Table 3, front view).\n\n### Evaluation\nA single dataset is benchmarked (Waymo Open Dataset).\n\n### Paper quality\nSome tables missing numbers -- Table 3, reconstruction time."
+            },
+            "questions": {
+                "value": "1. Why is there no ablation study for **no priors**? This should be as close as possible to the vanilla Video Stable Diffusion.\n2. Have you experimented with LiDAR noise / pseudo lidar from MDE methods or maybe a mesh-based method? Otherwise this pipeline is bound to an expensive data acquisition pipeline.\n3. Training/inference times are unclear. How can it be that your method is faster than splatting-based methods at 0.9 FPS? The training time should also be discussed but it's not.\n4. Could moving objects benefit from a special treatment? I.e, tracking/ inpainting. It doesn't look like the method handles well uncertain areas."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper approaches the task of novel view synthesis of outside-trajectory viewpoints on driving videos. It does so by training a conditional video diffusion model on outside-trajectory views created through projection of existing 3D point clouds. It evaluates generated images outside trajectories using off-the-shelf models. Compared to baselines StreetGaussian, EmerNeRF and 3D-GS, it shows superior results on novel camera synthesis, multi-view novel frame synthesis, and outstanding results on novel trajectory synthesis. Qualitative video results show a significant improvement over baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Impressive results on a challenging task\n- Results are clearly better than baselines in novel camera synthesis, multi-view novel frame synthesis, and significantly better in novel trajectory synthesis (FID drops by towards 75%)\n- Qualitative comparisons clearly back these results\n- Video results show impressive generation well outside input trajectory, while other methods have severe artifacts / fail entirely\n\nCreative use of 3D and off-the-shelf models to enable a non-conventional setup\n- Novel View Synthesis is so often limited to input trajectories. In the case of cars, this makes the task fairly straightforward and limited due to constraints on using positions connected to the car.\n- Instead, this work approaches prediction several meters away from car trajectories. It does so by utilizing colored LiDAR across multiple views to create point clouds it can project into pseudo-images. This is a nontrivial trick to implement effectively. This work shows it can be useful for training a generative model!\n- Evaluation is also tricky in the pseudo-image setting, but FID and 3D Detection mAP are suitable metrics; while of course qualitative results are most important."
+            },
+            "weaknesses": {
+                "value": "Could use clearer argument for method leading to performance gain\n- Numbers in the ablations table do not match that in comparisons to baselines. Why not?\n- Ablations show little impact on performance. When the FID of this method is less than a third of that of baselines, surely more than 10% of performance can be explained by choices. For example, how does training data impact performance? What about pretraining or architecture? If these are important, it feels the architecture should be described in more detail. \n- I infer a lot of the performance is coming from training data, yet the main paper has little information about this. How big is the train set in terms of sequences, if they are chosen from WOD? \n- The alternative explanation I fear is most of the performance is coming from Stable Video Diffusion. It should be very clear how strong this baseline is without the proposed contributions"
+            },
+            "questions": {
+                "value": "See Weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work focus on novel view synthesis on extrpolated view (i.e. rendered views are far away from source training views).\nThe authors propose to use reprojected colored lidar points as condition, using a freezed diffusion decoder to achieve high quality synthesized images.\nExperiments are conducted on Waymo, demonstrating way better results over other 3d-optimization based approaches (emernerf, streetgaussian)"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Much better (more robust) results over 3D-optimization based approaches (EmerNerf, streetgaussian) on far-away novel veiws, because they typically have overfitting issues.\n2. A combination of 3D informtion and 2D diffusion  model that provides both controllability and decent rendering results."
+            },
+            "weaknesses": {
+                "value": "1. The rendering speed is very slow,  while 3DGS which can render at real time (50+fps), this hinder the downstream applications that requires realtime efficiency.\n2. Inconsistency results because of using large decoder\n3. Worse performance compared to 3D-optimization approaches if the novel view are close to source views;"
+            },
+            "questions": {
+                "value": "This idea is quite similar to Free View Synthesis which both project source views into target view, you may consider add it as a baseline, at least cite it.\n\n@article{riegler2020free,\n  title     = {Free View Synthesis},\n  author    = {Gernot Riegler and V. Koltun},\n  journal   = {European Conference on Computer Vision},\n  year      = {2020},\n  doi       = {10.1007/978-3-030-58529-7_37},\n  bibSource = {Semantic Scholar https://www.semanticscholar.org/paper/49fae04a4e9383080788759f63dba75c86bd21b0}\n}\n\n\nYou may also want to cite magicDrive and MagicDrive3D, as both work on generative driving scenes."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces FreeVS, an approach to view synthesis for driving scenes that overcomes limitations of existing methods, which primarily focus on synthesizing camera views along pre-recorded vehicle trajectories. Traditional methods tend to degrade in performance when synthesizing viewpoints deviate from the recorded trajectory, as these viewpoints lack of groundtruth data. \n\nTo ensure that the generated images remain consistent with the 3D structure of the scene and accurate in terms of viewpoint pose, the authors introduce a pseudo-image representation of view priors based on LiDAR. This representation controls the generation process and allows for the simulation of viewpoint transformations, enabling the model to mimic camera movement in different directions.\n\nThe authors proposed two benchmarks for evaluating novel camera synthesis and novel trajectory synthesis. The proposed method is evaluated on Waymo Open Dataset."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is well motivated, shows great potential for the real-application of autonomous driving simulation.\n- Proposed a \"psuedo LiDAR controlnet\" for SVD, which is easy yet effective.\n- The experimental results and demo video demonstrate the effectiveness of the proposed method."
+            },
+            "weaknesses": {
+                "value": "- The evaluation is not very comprehensive. The baseline methods are not *specifically* designed for the similar purpose of the paper. 3D-GS is the basic method, EmerNeRF and StreetGaussian are more for the dynamic NeRF/3DGS. There are works that use virtual warping for improving the novel view quality such as [1] [2], that might be better for the baselines.\n- The benchmark of novel trajectory synthesis looks interesting to me, however, the authors only show the FID results, while FID is well-known for its instability and unreliability by changing the resolutions, etc. This reminds me of the existing novel trajectory synthesis benchmark [3], the authors should test their methods on such a dataset and demonstrate the *absolute* performance gain using the metrics of PSNR, SSIM, etc.\n- I would like to further know the zero-shot generalization of the trained SVD, since the Waymo Open dataset is quite clean for its camera/LiDAR extrinsic calibration, and the number of LiDAR beams is relatively high, it is interesting to show the results of genelizating it to other scenes or datasets, and how the SVD benefits the downstream 3DGS reconstruction.\n- What are the results of applying the proposed methods on dynamic scenes?\n\n[1] UC-NeRF: Neural Radiance Field for Under-Calibrated Multi-view Cameras in Autonomous Driving, ICLR 2024.\n\n[2] HO-Gaussian: Hybrid Optimization of 3D Gaussian Splatting for Urban Scenes, ECCV 2024.\n\n[3] XLD: A Cross-Lane Dataset for Benchmarking Novel Driving View Synthesis, arxiv, 2024."
+            },
+            "questions": {
+                "value": "See above. I personally like the idea of the paper, but I still have many concerns and would provide a final rating based on the authors' responses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the free-view synthesis problem by training a diffusion model conditioned on synthetic images through point cloud projection. During training, it project colored LiDAR points from nearby views into the reference view as a condition image, and finetune a diffusion model so that it can generate the reference view. During inference, condition image can be synthesized for a novel view, which is taken by the diffusion model to generate a realistic image of that view."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is easy to read and the idea is clear.\n\nThe method is solid and reasonable, potentially showing good generalizability without training very big models (e.g. video foundation model). Conditioning on pseudo-images can help improve 3D consistency."
+            },
+            "weaknesses": {
+                "value": "1. the proposed method seems too normal, and I read tons of paper doing similar things -- fine-tune the result based on a synthesized image. The authors also mentioned several such works in the related work. The only difference seems to be that they deal with objects while the authors deal with the driving scene.\n\n2. it seems that the paper did not seriously consider temporal information. There is no way to ensure temporal consistency. Also, it seems that moving objects can cause inconsistency and troubles during pseudo image synthesis while the authors only have one sentence discussing how to address it. I believe it can cause a lot of troubles.\n\n3. There is no discussion about the requirement of the pseudo images. For examples, if the novel view is far from captured views, it surely can cause problems."
+            },
+            "questions": {
+                "value": "See weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

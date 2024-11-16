@@ -1,0 +1,206 @@
+{
+    "id": "Ty7xx0pn0a",
+    "title": "DEQ-MPC : Deep Equilibrium Model Predictive Control",
+    "abstract": "Incorporating task-specific priors within a policy or network architecture is crucial for enhancing safety and improving representation and generalization in robotic control problems. Differentiable Model Predictive Control (MPC) layers have proven effective for embedding these priors, such as constraints and cost functions, directly within the architecture, enabling end-to-end training. However, current methods often treat the solver and the neural network as separate, independent entities, leading to suboptimal integration. In this work, we propose a novel approach that co-develops the solver and architecture unifying the optimization solver and network inference problems. Specifically, we formulate this as a joint fixed-point problem over the coupled network outputs and necessary conditions of the optimization problem. We solve this problem in an iterative manner where we alternate between network forward passes and optimization iterations. Through extensive ablations in various robotic control tasks, we demonstrate that our approach results in richer representations and more stable training, while naturally accommodating warm starting, a key requirement for MPC.",
+    "keywords": [
+        "MPC",
+        "Model Predictive Control",
+        "Optimization",
+        "Differentiable Optimization",
+        "Control"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "Integrating differentiable MPC layers within NNets by posing it as a joint equilibrium finding problem over the network outputs and solver iterates, resulting in improved representation, gradients and warm-starting for robotic control tasks.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Ty7xx0pn0a",
+    "pdf_link": "https://openreview.net/pdf?id=Ty7xx0pn0a",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces DEQ-MPC, a framework that alternates optimizing the network and differentiable MPC layers like a deep equilibrium model. By jointly optimizing network and MPC solver states as a fixed-point problem, DEQ-MPC achieves smoother gradients, better warm-starting, and improved performance. The results are demonstrated in imitation learning on several classical robotic control tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The authors propose coupled dynamics and MPC layer updates instead of decoupled updates in Diff-MPC, which offers better empirical performance, smoother gradients and leverages warm-starting. The combination of DEQ and Diff-MPC is novel.\n2. The authors conduct diverse ablation studies to prove the effectiveness of the design choices.\n3. The paper writing is clear and intuitive to read."
+            },
+            "weaknesses": {
+                "value": "1. The technical methodology is incremental and not very inspiring. Though it provides improved performance compared to Diff-MPC, it complicates the approach by scheduling the alternating optimization and more hyperparameters.\n2. The experimental validations are done with a single random seed, which has the risk of overfitting. I suggest the authors try generating different versions of the dataset with different seeds or at least try different random partitions of the dataset. Then, report the performance with mean and variance.\n3. No theoretical insights into why the proposed approach works better."
+            },
+            "questions": {
+                "value": "1. What are the convergence criteria used for computing validation errors of all methods?\n2. What\u2019s the runtime of the method compared to Diff-MPC?\n3. How can this approach be practically more useful for RL or high-dimensional tasks?\n4. Fig 1 does not look intuitive - what do the drones and bounded curves mean?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Incorporating task-specific priors like auxiliary constraints in policy training for robotic control can improve safety, flexibility, and generalization. Differentiable Model Predictive Control layers allow such constraints to be embedded directly in neural networks, enabling end-to-end training while retaining interpretability. However, standard differentiable MPC treats solvers as black-box layers, leading to potential instability and inefficiencies. To address this, the paper introduces Deep Equilibrium Model Predictive Control (DEQ-MPC)  to unify the optimization solver and network. The enables a joint inference-optimization approach that improves gradient flow, warm-starting, and stability in complex tasks. DEQ-MPC performs well in warm-starting scenarios. It has reduced iteration needs and this is useful for real-world deployment. The paper introduces two variants: DEQ-MPC-NN, and DEQ-MPC-DEQ. These variants highlight the trade-offs between performance and stability. The authors suggest that DEQ-MPC could be expanded to reinforcement learning and broader constrained optimization problems in the future."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The network and optimization solver unification enhances gradient flow and produces more stable and efficient training dynamics compared to traditional methods.\n\nDEQ-MPC allows for seamless integration of constraints. This in turn gives better safety and reliability, which are important for safety-critical applications such as the robot applications.\n\nDEQ-MPC reduces computation through efficient warm-starting"
+            },
+            "weaknesses": {
+                "value": "The joint inference-optimization structure is more complex to implement  and deploy.\n\nCurrent evaluations focus on toy examples like pendulum, cart pole, and trajectory tracking, so DEQ-MPC\u2019s effectiveness is not clear. We do not need machine learning for pendulum and cart pole.  As such, the paper results are preliminary."
+            },
+            "questions": {
+                "value": "The evaluation of the method is weak. Pendulum and cart pole are useful for debugging a method but not for arguing its effectiveness. Can you evaluate your method on more compelling cases? Unless we see some significant results for more realistic problems this solution remains a theoretical contribution.\n\nCan you comment on the complexity of the solution -- performance, energy requirements, and implementation requirements.\n\nCan you explain more clearly and comprehensively how you wire this architecture?\n\nCan you summarize the properties of this approach? How large are the models? How do you train them? What is the cost of training? What is the cost of inference?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper considers differentiable model predictive controllers with parameters that depend on the output of a neural network. Standard practice is to run the network once and then solve the MPC optimization problem. However, the authors argue that this may yield optimization problems which are challenging to solve, potentially leading to unstable training dynamics. Instead, they propose to condition the neural network on the solver state and alternate between running the network and solving the optimization problem. They also explore making the network a deep equilibrium model, which is an implicit layer that converges to a fixed point. Therefore, both network inference and the optimzation solver become iterative algorithms, which can alternate until convergence. The authors evaluate their proposed approach, DEQ-MPC, on a number of simulated dynamical systems engaged in a waypoint tracking task, in which the waypoints are the output of the neural network. They compare to Diff-MPC, which uses the exact same solver as their method, except they only run the neural network once prior to solving the MPC optimization problem. Their evaluations show that DEQ-MPC outperforms Diff-MPC on all benchmark systems. Moreover, through extensive evaluations, they find that the deep equilibrium model generally outperforms using a standard neural network. They also explore benefits of DEQ-MPC in terms of generalization, network capacity, sensitivity to constraints, validation loss curve monotonicity, sensitivity to cost function parameters, and warm-starting."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Improving the performance of structured policy classes, such as differentiable MPC, is an important and timely problem.\n- The paper is well organized and overall clearly written. It does a good job explaining the novelty and results and provides enough information to support its claims.\n- The results are promising and indicate that DEQ-MPC can outperform more standard implementations of differentiable MPC by alternating between network inference and the optimization solver. Although the tasks considered are all trajectory tracking, they provide extensive evaluation of their method compared to baselines and tease apart what aspects are most important."
+            },
+            "weaknesses": {
+                "value": "- It would be great if Table 1 included end-to-end neural network results as well. This is an important comparison point that is discussed a bit in the ablations. But the paper would benefit from highlighting this more centrally.\n- There is a lot of discussion about gradient smoothness and alignment with the global or desired update direction. However, the analysis really only looks on loss curves. Given that this is discussed so heavily in the argument for the method, it would be great to see how well the IFT gradients align with the true gradients that would be computed via backpropagation. If not that, at least look at the smoothness of gradients across epochs during training.\n- A minor point, but I don't feel that Figure 1 conveys enough information about the approach. It would be nice if the DEQ-MPC layer part highlighted that the network inference could also be iterative, rather than just conditioned on solver state.\n- The evaluations only really consider one task, which is waypoint tracking. Although this is evaluated across many different systems, it would really strengthen the paper to consider other flavors of tasks as well. Or maybe even inferring dynamics parameters too, rather than just terms in the cost function.\n- The evaluations also only consider fairly short-horizon tasks (T=5). It would be great to see how results scale with longer horizons. And same goes for evaluating the warm-starting ability of DEQ-MPC. There are very few warm-starting steps during training and evaluation.\n- There are some details that appear to be missing (unless I missed them), such as the number of fixed point iterations for the DEQ used within DEQ-MPC.\n- DEQ-MPC appears to also use intermediate losses that compute gradients through multiple iterates, rather than just the final solution. It is unclear if diff-MPC is also trained this way. If not, it would be an important ablation to see if it would help improve diff-MPC's performance."
+            },
+            "questions": {
+                "value": "- Are all cost function and dynamics model parameters manually set or also learned end-to-end? If manually set, how would this approach extend to the scenario where we want to learn dynamics, cost, or both jointly in an end-to-end fashion?\n- How many iterations are used running each DEQ model, or are they run until a fixed-point is reached?\n- Does the Diff-MPC baseline use the augmented Lagrangian method or is it iLQR like in the original paper? Does the network it use also contain the temporal convolutions?\n- Would Diff-MPC perform better if its gradients were computed using multiple intermediate iterates, like in the proposed DEQ-MPC approach? This was one aspect of the ablation that appeared to be missing.\n- Are the IFT gradients only valid at a fixed point? If so, using them to compute gradients on intermediate solutions that have not converged may give incorrect, although still useful, gradients. How do the gradients computed through the IFT compare to the exact gradients computed via autodiff?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a novel deep learning method integrating dynamics learning and model predictive control (MPC). Optimization is performed in two stages: update weights then solve MPC repeat. This yields several advantages once the model is trained. Examples of these are smoother gradients during training and for MPC. The model can be warm-started much more readily than alternative methods and constraints can be strictly adhered to also. The authors demonstrate the effectiveness of their methods using five examples and compare their algorithms to alternative Diff-MPC methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The strengths of this paper are numerous. The algorithmic setup is original and an interesting idea. The contributions are compelling.\n\nThe authors show that this method outperforms alternative Diff-MPC methods in the environment setups. The algorithm is well-ablated and compelling enough with minor changes to justify the authors\u2019 claims. The paper is well-presented and easy to follow. Though I do not know the Diff-MPC literature well, this paper appears significant enough for publication."
+            },
+            "weaknesses": {
+                "value": "Despite the numerous strengths, there are a few weaknesses. However, these are readily addressable.\n\nThe majority of the weaknesses revolve around the reporting of the results. There are no standard deviation error bars on the reported numbers or figures (Fig. 2 to 7) or Table 1. Stating the number of experiments completed and adding standard deviation as a plus/minus spread of error in Table 1 would strengthen the paper. Comparing the statistical significance of the reported rewards in Table 1 would improve the paper also. For example, it would be interesting to know if there was any statistical difference in performance between DEQ-MPC-NN and DEQ-MPC-DEQ in the Quad-Pole scenario. A Mann-Whitney U-test could work here. I leave it up to the authors to choose how they evaluate their statistics. Similarly, figures Fig. 2 to 7 do not show the standard deviations of the validation error or the normalised returns  across multiple training runs. This would strengthen the comparison."
+            },
+            "questions": {
+                "value": "As seen in the weaknesses section, the reporting of results is a limitation of the paper. However, this is easily remedied. Please follow my recommendations in the weaknesses section. Please justify the statistical comparisons you use. Other than this, the paper is well-written, original, and of significance."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces an approach to integrating MPC with deep learning by combining optimization solvers and network inference in a unified fixed-point framework. The proposed DEQ-MPC iteratively alternates between deep equilibrium models neural network predictions and MPC optimizations using the ADMM method until a stable equilibrium is reached."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The paper's strength is its approach of updating the neural network and MPC simultaneously using ADMM, allowing adaptive, joint optimization that improves stability, gradient alignment, and efficiency."
+            },
+            "weaknesses": {
+                "value": "The paper presents an interesting approach; however, there are some areas for potential improvement. First, it lacks a novel theoretical contribution and does not provide formal proofs to support its framework. Additionally, there is minimal analysis of computational expense, which would strengthen the understanding of its practical feasibility. The presentation could also benefit from greater clarity, as certain aspects, such as the representation of parameter theta, are not entirely clear, which may make the paper challenging to follow. While the paper mentions task-specific priors, concrete examples or integration of these are not demonstrated, which could further enhance the practical relevance of the approach."
+            },
+            "questions": {
+                "value": "1. Could the authors elaborate on any theoretical foundations or formal proofs that validate the convergence of the proposed framework? \n2. What is the computational overhead of DEQ-MPC compared to traditional differentiable MPC? Have there been any benchmarks or evaluations on computational efficiency, especially in real-time applications?\n3. The paper mentions the use of parameter theta, but its role and significance are unclear. Could the authors clarify what theta represents?\n4. Although the paper claims to incorporate task-specific priors, there are no explicit examples. Could the authors provide examples of how task-specific priors are integrated into DEQ-MPC, and the impact these have on task performance?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

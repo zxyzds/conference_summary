@@ -1,0 +1,175 @@
+{
+    "id": "RYrJqz44p4",
+    "title": "Unleashing the Power of Task-Specific Directions in Parameter Efficient Fine-tuning",
+    "abstract": "Large language models demonstrate impressive performance on downstream tasks, yet requiring extensive resource consumption when fully fine-tuning all parameters. To mitigate this, Parameter Efficient Fine-Tuning (PEFT) strategies, such as LoRA, have been developed. \nIn this paper, we delve into the concept of task-specific directions (TSDs)\u2014critical for transitioning large models from pretrained states to task-specific enhancements in PEFT. We propose a framework to clearly define these directions and explore their properties, and practical utilization challenges. We then introduce a novel approach, LoRA-Dash, which aims to maximize the impact of TSDs during the fine-tuning process, thereby enhancing model performance on targeted tasks. Extensive experiments have conclusively demonstrated the effectiveness of LoRA-Dash, and in-depth analyses further reveal the underlying mechanisms of LoRA-Dash.",
+    "keywords": [
+        "parameter efficient fine-tuning",
+        "low-rank adaptation",
+        "task-specific directions"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "It provides a clear definition of task-specific directions and propose a method unleashing the power of these directions.",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=RYrJqz44p4",
+    "pdf_link": "https://openreview.net/pdf?id=RYrJqz44p4",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Reviewer KtSW"
+            },
+            "comment": {
+                "value": "Dear Reviewer KtSW:\n\nWe would like to first extend our sincere gratitude for your time and effort in evaluating our manuscript. Your thorough evaluation and insightful comments are greatly appreciated. We will address your questions point by point and hope to resolve your concerns effectively.\n\n\n### **Weakness 1, Generalization Capability**\n\nWe appreciate your perspective that fine-tuned models should also retain generalization capabilities. However, we would like to point out that in the context of PEFT, the primary objective is to efficiently adapt a model to a specific downstream task. Under this setup, the focus is solely on achieving strong performance on the downstream task, without prioritizing whether the model retains its generalization capability beyond that task.\n\nAs for the idea of \u201cexploring strategies that enable a model, even after fine-tuning, to retain the flexibility to handle a range of general tasks,\u201d we believe this is not closely aligned with the core focus of PEFT research. Instead, it is more related to incremental learning, which aims to enable a model to learn new tasks or knowledge without forgetting previously acquired knowledge. These are two distinct research areas with different objectives and methodologies.\n\n\n\n### **Weakness 2, More Perspective**\n\nWe  agree with your suggestion that using more models would indeed enhance the generality of our observations. We will conduct corresponding experiments on additional models and provide you with feedback as soon as possible.\n\n\n\n### **Weakness 3, Figure Refine**\n\nThank you for your suggestion. We will add results from full fine-tuning in Figures 4 and 8.\n\n\n\n### **Question 1, Applicable to Multimodal Models.**\n\nLoRA-Dash is indeed capable of fine-tuning multimodal models. In fact, it can leverage the information from TSD to better achieve multimodal alignment. We are currently working on related tasks and progressing in this direction.\n\n\n\n### **Question 2, Performance Decline**\n\nIt is not surprising that PEFT methods, such as LoRA-Dash, exhibit performance degradation as the parameter budget (which can be evaluated by rank) increases. In fact, this phenomenon is quite common. While an increase in the number of parameters enhances the expressiveness of the method, it also introduces training instability, which can potentially lead to performance drops. Additionally, [1] theoretically demonstrates that the larger the parameter count in PEFT fine-tuning, the more the model\u2019s stability and generalization ability tend to decline.\n\n[1] 2023, AAAI, On the Effectiveness of Parameter-Efficient Fine-Tuning\n\n\n\n### **Question 3, Memory Requirements for SVD**\n\nThis is an excellent and practical question. We propose two strategies to address this issue:\n\n1. Two-Stage Strategy: Perform SVD decomposition on the pre-trained weights before the training starts and save the results. During the training process, these precomputed results can be directly utilized, eliminating the need for on-the-fly decomposition.\n\n2. On-the-Fly Decomposition: Perform the SVD decomposition on the CPU during the training process. This approach offloads the computational burden from the GPU, ensuring the primary training workflow remains efficient.\n\nBoth strategies provide practical solutions depending on resource availability and training requirements.\n\nAdditionally, many existing works also utilize SVD decomposition on pre-trained weights [2-4], and the aforementioned strategies are equally applicable to these methods.\n\n[2] 2024, NIPS, Spectral Adapter: Fine-Tuning in Spectral Space\n\n[3] 2024, NIPS, PiSSA: Principal Singular Values and Singular Vectors Adaptation of Large Language Models\n\n[4] 2023, ICCV, SVDiff: Compact Parameter Space for Diffusion Fine-Tuning\n\nWe sincerely hope that we can address your concerns."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a parameter-efficient fine-tuning (PEFT) approach, LoRA-Dash, that explicitly exploits task-specific directions to improve parameter-efficiency. The proposed method consists of two phases: in the pre-launch phase, LoRA fine-tuning is performed for a certain number of steps to identify task-specific directions, which are estimated as the core directions of the pre-trained matrix most amplified by the LoRA update matrix. In the dash phase, changes in these directions are explicitly parameterized alongside the LoRA matrices to further enhance task alignment. The authors empirically demonstrate that LoRA-Dash outperforms standard LoRA and recent PEFT methods across a range of tasks and base models and show the robustness of the estimated task-specific directions."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "A substantive assessment of the strengths of the paper, touching on each of the following dimensions: originality, quality, clarity, and significance. We encourage reviewers to be broad in their definitions of originality and significance. For example, originality may arise from a new definition or problem formulation, creative combinations of existing ideas, application to a new domain, or removing limitations from prior results. You can incorporate Markdown and Latex into your review. See https://openreview.net/faq.\n1. This paper introduces a novel framework for identifying task-specific directions in pre-trained models by projecting various task-related matrices onto the subspace of the original weight matrix, providing a consistent basis for analyzing task-specific adaptations.\n2. The proposed method effectively leverages task-specific directions, achieving significant improvements over LoRA with minimal computational overhead, demonstrating its practical advantage as a PEFT method.\n3. Empirical evaluations show that the task-specific directions derived from this approach align with those amplified by full fine-tuning, indicating that the method successfully identifies important directions for task adaptation."
+            },
+            "weaknesses": {
+                "value": "A substantive assessment of the weaknesses of the paper. Focus on constructive and actionable insights on how the work could improve towards its stated goals. Be specific, avoid generic remarks. For example, if you believe the contribution lacks novelty, provide references and an explanation as evidence; if you believe experiments are insufficient, explain why and exactly what is missing, etc.\n1. [Reliance on Preliminary Experiments for Hyperparameter Selection]\nThe proposed method relies on preliminary experiments to set key hyperparameters, such as the length of pre-launch phase and the number of dash directions. Although the chosen hyperparameters work well on the evaluated benchmarks, there is no guarantee that these settings generalize to other tasks and models. Moreover, the authors do not provide a systematic or principled approach for selecting these hyperparameters in varying scenarios.\n2. [Lack of Objective Evaluation for Diffusion Models]\nThe evaluation of diffusion models relies solely on subjective assessments, which introduces potential biases and limits reproducibility. Incorporating quantitative metrics for diffusion model performance would strengthen the evaluation and provide a more comprehensive view of the model\u2019s effectiveness."
+            },
+            "questions": {
+                "value": "1. In Figure 5, the performance on OBQA with TSD in the left-most subplot does not match with Length of Pre-launch Phase set to 100 in the middle subplot. Why is this the case since both settings should correspond to the setting used in the main experiment?\n2. For subject-driven generation tasks, how do the task-specific directions correspond to the objects or features in the image?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper critiques LoRA's prior TSD exploration and provides a precise TSD definition to better understand their role in fine-tuning large language models. The authors introduce LoRA-Dash, which fully exploits TSDs potential, and demonstrate its significant advantages over conventional methods through extensive experimentation. The findings validate LoRA-Dash's effectiveness and highlight the importance of TSDs in parameter-efficient fine-tuning, aiming to inspire further advancements in natural language processing and beyond."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The authors observe that TSD can be predicted from delta W in LoRA-based fine-tuning, offering a new perspective on task-specific directions.\n2. This paper provides a precise definition of task-specific directions and explores their application in LoRA-based parameter-efficient fine-tuning.\n3. The authors propose the LoRA Dash algorithm, which proactively utilizes these influences to enhance the model fine-tuning process."
+            },
+            "weaknesses": {
+                "value": "See detailed questions."
+            },
+            "questions": {
+                "value": "Thanks for submitting to ICLR'25, I really enjoy reading your paper. I think your paper focuses on a hot and important topic. However, I have several further questions:\n\n1. The paper lacks evaluation of the algorithm's overhead on end-to-end fine-tuning time. Can LoRA-Dash accelerate the fine-tuning phase as suggested by its name?\n2. The benefits of the LoRA-Dash algorithm are unclear. Although it outperforms the vanilla LoRA approach when r is small, its improvement over the best fine-tuned LoRA model is minimal. Please clarify the real benefits of the LoRA-Dash algorithm.\n3. Can you provide insights on applying TSD observations to other parameter-efficient fine-tuning methods, such as adapter/P-tuning? Are these methods suitable for this approach?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the resource-intensive issue of fully fine-tuning large language models. It focuses on task-specific directions (TSDs) in parameter-efficient fine-tuning (PEFT). LoRA is examined, and its lack of a clear TSD definition is noted. A framework is then introduced to define TSDs based on the relationship between pre-trained weights and optimal weights for specific tasks. The properties of TSDs are explored, and challenges in using them are identified. Despite the unknowns in practical fine-tuning, it's found that LoRA's \u2206W can capture TSD information. The novel LoRA-Dash method is proposed, comprising pre-launch and dash phases. Experiments show that LoRA-Dash outperforms LoRA, is robust to parameter budgets, and excels in various tasks. It also enhances other PEFT methods and provides valuable insights for optimizing model fine-tuning."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- A task-aware approach for identifying critical gradient directions is proposed.\n\n- An effective task-specific fine-tuning scheme Lora-Dash has been introduced.\n\n- Theoretical analysis and extensive experiments have been conducted, providing comprehensive validation of the effectiveness of the proposed algorithm."
+            },
+            "weaknesses": {
+                "value": "- More justification is expected. For example, does fine-tuning a general-purpose model for a specific task risk compromising its generalization capability? It is essential to explore strategies that enable a model, even after fine-tuning, to retain the flexibility to handle a range of general tasks. Striking a balance between task-specific adaptation and broad applicability remains a key challenge in fine-tuning.\n\n- The experiments can use more perspectives. For example, the observations in Figure 1 are based solely on commonsense reasoning tasks in the LLama model. Further comparisons with other relevant methods (such as Lora-ga\uff0cdora) and other models (such as Qwen, Mistral) should be included for a more comprehensive analysis. \n\n- In the visualization part, as shown in Figure 4 and Figure 8, a comparison with the results from full fine-tuning should also be provided."
+            },
+            "questions": {
+                "value": "Mostly the above comments. Also some minors:\n\n- Is Lora-Dash applicable to multimodal models, such as LLaVA?\n\n- Why does the performance of LoRA-Dash decline when the rank increases beyond a certain point?\n\n- How can we address the issue of excessive memory requirements for SVD in the application of this method?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "To enhance the prevalent parameter efficient fine-tuning (PEFT) strategies (e.g., LoRA) for large language models (LLMs), this paper delves into the concept of task-specific directions (TSDs) which are crucial for the adaptation of pre-trained LLMs to downstream tasks. Based on the proposed mathematical description of TSDs, a simple and effective scheme is designed to approximately identify TSDs from the parameter difference matrix obtained through LoRA. The model parameters derived from LoRA are then aligned with the estimated TSDs to enhance LoRA's performance. The results of extensive experiments confirm the validity of the mathematical description and the effectiveness of the proposed PEFT framework across diverse learning settings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. This paper is well organized and easy to follow.\n2. In contrast to the conceptual discussion of task-specific directions (TSDs) in existing parameter-efficient fine-tuning methods, this paper offers a deeper understanding by providing a mathematical description of TSDs, which is crucial for enhancing the performance of these parameter-efficient fine-tuning methods.  \n3. Te proposed TSDs identification and utilization method are simple and effective.\n4. Experimental results across diverse settings validate the significance of task-specific directions in fine-tuning large language models (LLMs), and demonstrate the effectiveness of the proposed LoRA-Dash compared to the prevalent LoRA algorithm."
+            },
+            "weaknesses": {
+                "value": "1. As a formal definition, the description of task-specific directions (i.e., \u201cdirections whose coordinate values exhibit significantly higher change rates $\\delta$ through alteration\u201d in Definition 4) is somewhat vague. The term \u201csignificantly higher change rate\u201d would benefit from a more precise definition, such as being specified with reference to a particular threshold.\n2. More discussions about how to select the value of hyper-parameter $s$ should be included, as the choice of $s$ directly determines the exact task-specific directions.\n3. The statement in Proposition 1 is supported solely by observations from experiments and is not accompanied by rigorous proof.\n4. The evaluation results of Fully FT method regarding LLaMA2-7B and LLaMA3-7B models are missed in Table 1.\n5. To thoroughly evaluate and compare the effects of task-specific directions and other core directions, it is recommended to include the vanilla LoRA as a baseline method in Figure 5a.\n6. The primary contribution of this paper is the proposal of a simple and effective improvement scheme for the LoRA algorithm and its variants. Although this contribution is commendable for acceptance, its impact on the broader research community is still limited, which hinders me from assigning a higher rating."
+            },
+            "questions": {
+                "value": "Please refer to weaknesses 1-5 listed in the section above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

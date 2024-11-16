@@ -1,0 +1,317 @@
+{
+    "id": "DWa1bATAot",
+    "title": "Exploiting Topology of Protein Language Model Attention Maps for Token Classification",
+    "abstract": "In this paper, we introduce a method to extract topological features from transformer-based protein language models. Our method leverages the persistent homology of attention maps to generate features for token (per amino-acid) classification tasks and demonstrate its relevance in a biological context. We implement our method on transformer-based protein language models using the family of ESM-2 models. Specifically, we demonstrate that minimum spanning trees, derived from attention matrices, encode structurally significant information about proteins. In our experiments, we combine these topological features with standard embeddings from ESM-2. Our method outperforms traditional approaches and other transformer-based methods with a similar number of parameters in several binding site identification tasks and achieves state-of-the-art performance in conservation prediction tasks. Our results highlight the potential of this hybrid approach in advancing the understanding and prediction of protein functions.",
+    "keywords": [
+        "protein language models",
+        "protein property prediction",
+        "topological data analysis",
+        "attention maps",
+        "transformers"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "We propose to use Topological Data Analysis of attention maps in a protein language model for amino-acid classification",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=DWa1bATAot",
+    "pdf_link": "https://openreview.net/pdf?id=DWa1bATAot",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents an interesting approach to extract topological features from protein language models. More specifically, they compute the minimum spanning tree (MST) from the attention weights of ESM2. To evaluate their method, they train a PyBoost classifier that takes the processed MST features as input and predict conservation and binding residues. They also ensemble their model with ESM to achieve stronger performance."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors provide an interesting take on the attention weights. By thinking about it as a fully connected graph, the authors present an interesting analysis using minimum spanning trees."
+            },
+            "weaknesses": {
+                "value": "Evaluation is limited to binding and conservation.\n\nThe proposed models, RES-MST (ESM2-650M all) and RES-MST (ESM2-650M avg), perform comparably with ESM2 across the benchmarks. Specifically, ESM achieves stronger performance in 5 of the 12 benchmarks."
+            },
+            "questions": {
+                "value": "This paper reports an interesting idea on how to convert attention matrices into topological features. The authors provide analysis and visualizations of the minimum spanning tree on different proteins. They look quite interesting. However, it remains unclear to me what the utility of such an approach is.\n\nSince the topological features are extracted solely from ESM2, ESM2 already contains topological features, albeit in a rich latent representation. The similar performance of the proposed approach and ESM2 seems to suggest that one can implicitly decode these topological features from ESM2. Thus, what is the significance of this approach? Is there anything besides being \u201cthe first time that topological data analysis has been applied to classification on a per-token basis\u201d? What are some cases in which the proposed topological features capture information that is not easily accessible from ESM2 embeddings alone? In other words, what are some potential advantages of topological approach over the ESM embedding?\n\nTo be clear, the tasks of residue conservation and binding are motivated in the introduction. However, the motivation for topological data analysis is not clear, as ESM seems to perform fine."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose to conduct topological analysis on the attention maps produced by protein language models. The analysis shows a relationship between attention strength and physical contact in 3D structures. The authors then propose to use this extracted tree information to augment protein language models in various tasks."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The manuscript is well-written. I specifically like the illustration in figure 4 and figure 5.\n2. The idea is novel and the analysis is convincing. While it is widely accepted that protein language models can directly and indirectly encode structure information, the effort to directly convert this information into an explicit tree is novel, as far as I know."
+            },
+            "weaknesses": {
+                "value": "1. The major flaw of this paper is about its experimental results. The table 1 shows minimal improvement over original esm-2. Could authors give a brief explanation? Also, the error reported in these tables is astonishingly low. How are these numbers produced? I think such low variance can only be obtained by training linear modules."
+            },
+            "questions": {
+                "value": "1. Figure 6-9 should be renamed to one figure with sub figures.\n2. The line space of contributions listed in introduction might need adjustment.\n3. The \"all\" and \"avg\" in table1-4 are not explained in tables' captions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors apply techniques from topological analysis on graphs to the attention maps of protein language models, (particularly ESM-2)\n\nThey generate features that can be appended to the ESM-2 embeddings and then used to help in tasks that make classifications / predictions at the amino acid level.\n\nThe authors describe how to generate barcode of different persistent homology features by varying a threshold for edge weights, filtering the edges in the graph and recording when various topological features come and go as the threshold is raised. There are simple edge features (H_0), and cyclical features (H_1), and presumably higher level feature s that can be extracted from the barcode.\n\nNext, the authors state that the topological features for H_0 are equivalent to features derived from the Minimum Spanning Tree (MST). \n\nThe experiments show that concatenating these features to the pLM embeddings can improve performance on downstream tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The discussion about barcodes and topological features is nice.\nThe motivation seems clear; An output feature that says 'dense clique around here' or 'cycles present' will be useful for some tasks.\n\nThe method is non-parametric which is good, the MST does not need a threshold, and there is no need to fine tune ESM-2.\n\nNew features are generated from the attention maps of the transformer network. \nSince the transformer was trained on language model tasks, the embedding features at the output do not necessarily encode the graph structure contained in the attention maps, only the information necessary for the output token, so it makes sense to try and include more of the information held in the network of attention weights remaining in the transformer.\n\nThe new features do improve the results on downstream tasks."
+            },
+            "weaknesses": {
+                "value": "The main results only use H_0 features, which can be derived from an MST.\nThe method for H0 boils down to generating the MST and taking basic statistics over the edges to the neighbors for each node.  There is no description about why these statistics are equivalent to H_0 except [212]: \"Each interval in a barcode corresponds to an edge in MST\". Perhaps a more thorough description in the appendix could be provided?\n\nWhen some edge weights are the same, MST can give different resulting graphs, since the order of edges is ambiguous. \nAnd since small changes in attention weights could cause radically different MST doesn't this make the resulting features very noisy? In your experience, how widely spread are transformer attention weights? And how is your method robust to this?\n\nFor results using both H_0 and H_1 , one has to look to the appendix for the RES-LT results. While they are not better than MST the main body would be clearer if they were included - there is discussion in section 2 about persistent homology and Betti numbers for H_k, and there is talk of cycles and topological features, but cycles only appear in H_1 and only H_0 is used in all the results (in the main text).\n\nRES-MST takes some statistics over edges are taken per node in the MST. [194] In the description for the features derived from the MST (for each node - min,max,sum,mean weights and count incident edges). \nHere it is also mentioned that: \"We add: self-attention + sum abs values in ith row jth col.\".\nThere should be an ablation study for the effect these (non-MST) features have.\nHow much performance do the MST features add over these extra features?\n\nTypos::\n\n*** 159: is\n*** a: 201 - LxH should be resulting in L accroding to 187\n*** 450 -(2020) - paper title missing."
+            },
+            "questions": {
+                "value": "What is actual size of resulting feature vector (to be added to ESM-2 Embedding) - 8? or 8 x L (when all heads in layer are averaged).\n\nPerhaps this model has advantages over ESM-2 embeddings because it uses features from other layers in the pLM.\nThe pretraining task for the pLM is for token reconstruction, which might throw away information about connectivity in the last layer.\nWhat about simply taking ESM-2 features from other the layers (eg. middle + last layers) and concatenating them?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper performs a topological data analysis (TDA) of the attention maps produced by \nESM2 protein language models. Inspired by TDA of natural language model attention maps \nand TDA of protein structures, this work leverages the apparent relationship between \nattention and 3D structure in ESM models. The authors demonstrate that some topological \nfeatures are correlated with structural features of proteins and show that adding \ntopological features improves per-residue performance on a variety of downstream tasks. \nI would recommend to accept this paper. It is difficult to understand the precise \ncontribution of the TDA methods, but the approach is interesting, and the experiments are \nthorough."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "\u2022 The method is an interesting way to probe what ESM models are attending to and \nhow this relates to its knowledge of 3D structure. \n\u2022 The figures (both diagrams and renderings) are very clear and helpful. \n\u2022 The analysis of the relationship between TDA features and 3D structure sheds some \nlight on the utility of the method. \n\u2022 The results show a consistent benefit from the method and generally provide a fair \ncomparison to other state of the art sequence methods."
+            },
+            "weaknesses": {
+                "value": "The analysis of the TDA in section 3.3 feels somewhat incomplete. Is this just based \non the one example from figure 5? Can some of these descriptions such as \n\u201cchaotic\u201d vs \u201cstar\u201d or \u201clinear\u201d be quantified? What is the significance of each of \nthese stages? \n\u2022 (small) Figure 7 would be clearer if the ymin was set to 0 \n\u2022 LMetalSite, another (strong) sequence-based method from Yuan et al (2024) is \nmissing from the metal-binding table. Also, it may be appropriate to include \nESMFold-derived structural methods, since this is another sequence \n\u201cpreprocessing\u201d step. \n\u2022 The provided source code is incomplete. There was substantial use of a package \ncalled bio_tda which was not provided."
+            },
+            "questions": {
+                "value": "\u2022 Figures 6-9 are interesting, but it is not immediately clear what the takeaway is. It \nseems to me that figure 6, 8, and 9 can be explained by: \u201cESM2 attends more to \nlinear positional encoding in the early and late layers\u201d. \n\u2022 What are the specific features included in the RES-MST (*) methods? The \nperformance of these methods is suspiciously good for just the features listed in \nsection 3.1 - in particular, the models don\u2019t seem to need residue types? \n\u2022 How expensive is the MST preprocessing compared to structure prediction with \nESMFold or AlphaFold2?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigates the topological features of protein language model attention maps using the lens of persistent homology. The study computes minimum spanning trees (MSTs) from these attention maps to derive per-residue features. The incorporation of topological features enhances the performance of PLMs in prediction tasks such as residue conservation prediction and binding site prediction. Furthermore, the study analyzes variations in the topological features of the MSTs derived from attention maps across different layers of the language model."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The analysis of attention maps using persistent homology offers a commendable theoretical perspective.\n- The relationship between protein attention maps, residue conservation, and amino acid distances has been analyzed extensively."
+            },
+            "weaknesses": {
+                "value": "- While the paper suggests that the MST method could enhance model performance by extracting topological information from attention maps, it lacks empirical evidence to substantiate this claim. Drawing on prior experience, the potential for performance enhancement with attention map integration appears plausible.\n- The benchmarks assessed are less widely used (especially for the conservation prediction task), which challenges the demonstration of the new method's practical applicability.\n- The baseline comparisons for the binding experiment are limited in diversity and omit the latest methods (e.g., [1,2]), thereby reducing the persuasiveness of the findings.\n- There are many typos in the manuscript. e.g., wrong citation format (e.g., \"Several unique properties of proteins can be derived from their 3D structure Wang et al. (2022a); Zhang et al. (2022); Kucera et al. (2024); Sun et al. (2024).\" -- the references should be included in a parentheses.) and repetitive figures (e.g., Figure 4 and Figure 10).\n\n[1] Qianmu Yuan, Chong Tian, and Yuedong Yang. Genome-scale annotation of protein binding sites via language model and geometric deep learning. eLife, 13:RP93695, 2024.\n\n[2] Pengpai Li and Zhi-Ping Liu. Geobind: segmentation of nucleic acid binding interface on protein surface with geometric deep learning. Nucleic Acids Research, 51(10):e60\u2013e60, 2023."
+            },
+            "questions": {
+                "value": "- What's the empirical advantage of the MST-based method in comparison to other deep learning-based methods for topological feature extraction in downstream tasks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work introduces a method to extract topological features from protein language model attention maps for improved per-amino-acid classification tasks. The authors present RES-MST, which uses minimum spanning trees derived from attention matrices to capture structurally significant protein information. By combining these topological features with standard embeddings from the PLMs, the method outperforms existing sequence-based approaches on binding site identification and conservation prediction tasks."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Novel application of topological data analysis to protein language models: This work bridges two important areas (TDA and protein LMs) in an innovative way, potentially opening up new avenues for analyzing and improving protein language models."
+            },
+            "weaknesses": {
+                "value": "-\tLimited theoretical foundation: The paper lacks a robust theoretical explanation for why this topological approach should outperform alternative methods that leverage attention maps. A stronger motivation for the use of topological data analysis in this context would strengthen the paper's argument.\n-\tInsufficient ablation studies: The paper would benefit from more comprehensive ablation studies to elucidate the contribution of different components of the method, such as various types of topological features and the impact of different layers.\n-\tUnclear methodology description: The explanation of the method in Section 3.1 lacks clarity. Specifically: a) The exact features extracted from the MST for each amino acid are not clearly defined. b) The features extracted directly from the attention map are ambiguously described. c) The process of combining the MST-derived and attention map-derived features is not explained. d) The final prediction process using this non-parametric method is not adequately detailed.\n-\tAmbiguous interpretation of results: The interpretation of Figures 6, 8, and 9 in relation to the described patterns (chaotic, star, linear) in Section 3.3 is not sufficiently clear, making it difficult to follow the authors' reasoning.\n-\tChoice of evaluation metric for conservation prediction: The authors' decision to treat the conservation prediction task as a classification problem, rather than using regression metrics like Pearson correlation or Spearman's rank correlation, is not well justified.\n-\tLimited comparison with relevant baselines: The paper lacks comparison with other approaches that use both protein sequence embeddings and their attention maps. This makes it unclear whether the performance improvement stems from the proposed Topological Data Analysis approach or simply from leveraging attention patterns. Additional baselines utilizing both embeddings and attention maps with different methods such as (Rao et al, 2020) is necessary to substantiate the effectiveness of the proposed method."
+            },
+            "questions": {
+                "value": "- Can you provide more theoretical justification or intuition for why this topological approach should work better than alternative methods that leverage attention maps? How does it capture information that other approaches might miss?\n- Could you clarify the feature extraction process in more detail? Specifically: a) What exact features are extracted from the MST for each amino acid? b) What features are extracted directly from the attention map? c) How are these two sets of features combined? d) How is the final prediction made using this non-parametric method?\n- The paper describes patterns in the MSTs as \"chaotic,\" \"star,\" and \"linear\" across different layers. Could you provide a more detailed explanation of how Figures 6, 8, and 9 support these characterizations?\n- How does your method compare to other approaches that use both protein sequence embeddings and attention maps? Can you provide additional baselines or comparisons to isolate the contribution of the topological data analysis approach versus simply leveraging attention patterns?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose RES-MST, a method that leverages attention maps from protein language models to generate minimum spanning trees (MSTs) and extract various features for per-residue conservation and binding predictions. By evaluating their approach on datasets such as ConSurf10k for conservation and diverse binding site prediction benchmarks, they demonstrate that RES-MST outperforms baseline models, achieving superior accuracy and AUC scores."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper introduces a non-parametric framework aimed at transforming attention matrices from transformer models into topological features that are customized for token-wise classification. The results presented in the paper demonstrate impressive performance in per-residue conservation and binding predictions. The competitive accuracy and AUC values highlight the effectiveness of the proposed method, particularly in leveraging attention maps from pLMs for generating MSTs."
+            },
+            "weaknesses": {
+                "value": "Methodology:\n- Suitability of attention maps for topology: Attention maps represent learned relationships between sequence tokens (amino acids) based on the model's training objective, which is primarily language-based. These relationships are not necessarily grounded in spatial or physical proximity, which are crucial for understanding protein structure and function. Attention matrices are often dense and noisy, with attention spread across many tokens, which might make topological methods like persistent homology less informative or even misleading when applied naively. The paper would need to convincingly demonstrate that the topology derived from attention maps has a meaningful connection to physical or functional protein properties.\n- While the authors analyze MST structures across layers, they don\u2019t provide a clear theoretical or empirical justification for why these specific patterns (chaotic, star, linear) are meaningful in terms of protein functionality or how these differences are expected to relate to biological significance.\n- The transformation of attention scores into a quasi-distances matrix is a key step, but the reasoning behind this particular transformation is under-explained. Why the maximum of the bidirectional attention scores is chosen, or how this approach compares with others, isn\u2019t detailed.\n- The choice to focus on topological features derived from MSTs lacks sufficient motivation regarding why these features, specifically from MSTs rather than other graph representations.\n- The authors do not specify the model used for downstream tasks, nor do they clarify the form and structure of the input to this model. While they detail the process of extracting topological features from attention maps and MSTs, they omit critical information on how these features are subsequently utilized in downstream tasks. Without specifying the model type or its architecture, it\u2019s challenging to assess how effectively the extracted features are integrated or if they are even suited to the task's requirements.\n\nWriting:\n- There is no explanation for the choice of the name 'RES-MST.'\n- The citation format used in the paper does not adhere to standard conventions. For example, in line 172, the citation 'ESM-2 Lin et al. (2022)' should be formatted as 'ESM-2 (Lin et al., 2022)'. I recommend reviewing and revising the citation style throughout the manuscript.\n- There is no interpretation provided for Figures 6, 7, 8, and 9.\n- Line 136: there is an incorrect use of the open quotation mark.\n- Line 147: \"the vertices set\" is not grammatically correct. \n- Line 150: \"The natural issue is a necessity to pick some \u03b1.\" is not grammatically correct.  A grammatically correct version would be: \"A natural issue is the necessity of choosing a value for \u03b1.\"\n- In the tables, some numbers are in different fonts."
+            },
+            "questions": {
+                "value": "- There is no explanation for the choice of the name 'RES-MST.' What does 'RES' stand for in 'RES-MST'?\n- Could the authors elaborate on the theoretical or empirical rationale behind analyzing MST structures in terms of chaotic, star, and linear patterns? How do these specific patterns relate to protein functionality and biological significance?\n- In the paper paper, the author discuss the extraction of topological features from attention maps, but do not specify the model used for downstream tasks. Could you provide more detail about the model type and architecture?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a method that applies the topological information embedded in the attention maps of protein language models (PLMs) to downstream tasks. Specifically, the paper treats the information in the attention maps as a fully connected undirected graph, where each node represents an amino acid. It then extracts a minimum spanning tree (MST) from this graph and further derives effective topological information from the MST to be used in downstream property prediction tasks. In summary, this work represents an effective attempt to mine structure-related topological information from the attention layers in PLMs, offering a new perspective for further analysis and understanding of PLM behavior."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The research question addressed in this paper is both interesting and significant. Understanding and interpreting the behavior and knowledge learned by PLMs is an essential research direction.\n2. The idea of treating the attention map as a fully connected graph and modeling structure-related knowledge by capturing its topological information is innovative and worth investigating."
+            },
+            "weaknesses": {
+                "value": "1. The paper lacks a more comprehensive discussion of approaches for utilizing the graph topological information in the attention map. While the MST approach is one option, the authors need to provide stronger motivation for choosing this method to capture topological information. For example, why was the MST method chosen? What are its advantages? These questions require further clarification. On this basis, the paper should also offer more comparative and reference experiments, such as evaluating the impact of using different methods to model topological information on performance. The MST inherently tends to capture high-weight edges between each node and its neighbors, akin to capturing information about nodes strongly associated with each node. But what if alternative modeling methods with similar properties were used? For example, one could identify the top k nearest nodes for each node by distance and index, then construct features for downstream tasks. How would this approach differ? I believe this discussion is essential.\n\n2. The paper\u2019s organization needs improvement. The second section introduces substantial background knowledge on topological information, yet this part has little relevance to the content in the following third section. Even if removed, this background section would not impact the understanding of the paper's main content. Furthermore, while defining RES-LT in the appendix, this paper references topological background knowledge from the second section; however, as RES-LT is only used in the appendix, the background knowledge could be moved there as well. In other words, I find the paper's structure to be flawed, with insufficient logical cohesion between different parts.\n\n3. More details regarding the experiments should be provided. For instance, what is the difference between RES-MST (ESM-2 650M all) + ESM-2 (650M) and the RES-MST (ESM-2 650M all) model? I couldn\u2019t find any explanation of this in the paper.\n\n4. The chosen downstream tasks primarily focus on per-residue scale tasks. However, it would be valuable to discuss structure-related tasks on a larger scale (e.g., protein function annotation), as this could reveal whether this MST-based topological modeling approach can capture more global protein property information.\n\n5. A more detailed comparison of the method\u2019s runtime is needed. Compared to traditional full-parameter fine-tuning approaches, your method requires first calculating the MST, then extracting features and training a Pyboost classifier, which incurs significant time costs and may reduce algorithmic efficiency. Therefore, a discussion of the time costs of this approach compared to traditional full-parameter fine-tuning is necessary. However, in Appendix A.5, you did not provide runtime comparisons with baseline models."
+            },
+            "questions": {
+                "value": "Please refer to the weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

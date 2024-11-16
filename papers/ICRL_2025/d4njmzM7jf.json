@@ -1,0 +1,212 @@
+{
+    "id": "d4njmzM7jf",
+    "title": "Denoising with a Joint-Embedding Predictive Architecture",
+    "abstract": "Joint-embedding predictive architectures (JEPAs) have shown substantial promise in self-supervised representation learning, yet their application in generative modeling remains underexplored. Conversely, diffusion models have demonstrated significant efficacy in modeling arbitrary probability distributions. In this paper, we introduce Denoising with a Joint-Embedding Predictive Architecture (D-JEPA), pioneering the integration of JEPA within generative modeling. By recognizing JEPA as a form of masked image modeling, we reinterpret it as a generalized next-token prediction strategy, facilitating data generation in an auto-regressive manner. Furthermore, we incorporate diffusion loss to model the per-token probability distribution, enabling data generation in a continuous space. We also adapt flow matching loss as an alternative to diffusion loss, thereby enhancing the flexibility of D-JEPA. Empirically, with increased GFLOPs, D-JEPA consistently achieves lower FID scores with fewer training epochs, indicating its good scalability. Our base, large, and huge models outperform all previous generative models across all scales on class-conditional ImageNet benchmarks. Beyond image generation, D-JEPA is well-suited for other continuous data modeling, including video and audio.",
+    "keywords": [
+        "AIGC",
+        "JEPA",
+        "Diffusion Model",
+        "Flow Matching",
+        "Image Synthetic"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "In this paper, we introduce Denoising with a Joint-Embedding Predictive Architecture (D-JEPA), pioneering the application of JEPA in generative modeling.",
+    "creation_date": "2024-09-14",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=d4njmzM7jf",
+    "pdf_link": "https://openreview.net/pdf?id=d4njmzM7jf",
+    "comments": [
+        {
+            "title": {
+                "value": "Conclusion"
+            },
+            "comment": {
+                "value": "## Conclusion\n\nWe sincerely appreciate the valuable comments from the reviewers. After the paper concludes the double-blind review process, we will open-source all the code and models for D-JEPA, including the code for audio, video, and multimodal generation as mentioned in Appendix G."
+            }
+        },
+        {
+            "title": {
+                "value": "More Experiments on T2I"
+            },
+            "comment": {
+                "value": "## More Experiments on T2I\n\nRecently, we have extended the T2I experiments in section G.2. We built a 2.6B text-to-image model based on D-JEPA, and on the GenEval metrics, we have surpassed the results of the highly representative diffusion model, SD3.0 (4B version) (0.65 vs. 0.64). The detailed metrics are listed in the table below:\n\n|        | #Params | Overall | Single Obj | Two Obj | Counting | Colors | Position | Color Attr |\n|:------:|:-------:|:-------:|:----------:|:-------:|:--------:|:------:|:--------:|:----------:|\n| SD3.0  |  2.0B   |  0.62   |    0.98    |  0.74   |   0.63   |  0.67  |   0.34   |    0.36    |\n| D-JEPA |  2.6B   |  0.65   |    0.98    |  0.80   |   0.59   |  0.87  |   0.22   |    0.47    |\n| SD3.0  |  4.0B   |  0.64   |    0.96    |  0.80   |   0.65   |  0.73  |   0.33   |    0.37    |\n\nIt is noteworthy that this is the first work to surpass diffusion models in the T2I task using a next-token prediction-based architecture. This achievement lays a solid foundation for the future design of unified multimodal model architectures."
+            }
+        },
+        {
+            "title": {
+                "value": "Comprehensive Comparisons with Recent Methodologies"
+            },
+            "comment": {
+                "value": "## Comprehensive Comparisons with Recent Methodologies\n\nWe have noticed that several highly relevant works have been published on ArXiv after the ICLR submission deadline. According to the guidelines, we are not required to compare with these works, but to fully demonstrate the superiority of the D-JEPA architecture, we have conducted a comprehensive comparison here.\n\nThe core idea of D-JEPA is to bring the advantages of representation learning into generative tasks, rather than pursuing a unified model for both representation learning and generative tasks, which Reviewer dQp1 has misunderstood. Based on this premise, REPA has made similar discoveries. REPA effectively shortened the training time of DiT by adding additional feature learning tasks. D-JEPA, on the other hand, is a novel architecture that, apart from being used for image generation, has more crucial potential roles. Firstly, it is capable of generating across various continuous modalities (something both MAR and REPA cannot achieve), including audio and video. Secondly, D-JEPA employs a Next-token-prediction approach, laying the groundwork for constructing unified multimodal large models in the future. These two key differences are at the heart of the D-JEPA work. For a better comparison with REPA, we present the results in the table below:\n\n|                 | #Params | #Iters |  FID  |\n| :-------------: | :-----: | :----: | :---: |\n| SiT-XL/2 + REPA |  675M   |  400K  |  7.9  |\n| SiT-XL/2 + REPA |  675M   |   1M   |  6.4  |\n| SiT-XL/2 + REPA |  675M   |   4M   |  5.9  |\n|    D-JEPA-L     |  687M   |  300K  | 2.32  |\n\nAs seen in the table above, D-JEPA-L, with a comparable parameter size, achieves results far superior to REPA with 4M iterations using only 300K iterations. This clearly demonstrates the superiority of the D-JEPA-L architecture.\n\nREPA: Representation Alignment for Generation: Training Diffusion Transformers Is Easier Than You Think, [https://arxiv.org/abs/2410.06940](https://arxiv.org/abs/2410.06940)"
+            }
+        },
+        {
+            "title": {
+                "value": "Regarding Model Scale and Experimental Results"
+            },
+            "comment": {
+                "value": "## Regarding Model Scale and Experimental Results\n\nBoth Reviewer gTwo and Reviewer dQp1 have expressed concerns about the fairness of the experimental comparisons in Tab.1. They noted that D-JEPA-H has more parameters compared to MAR-H (1.4B vs. 943M). Consequently, although D-JEPA-H achieved superior results with just 320 epochs of training compared to MAR-H\u2019s 800 epochs (FID 2.04 vs. 2.35), they question the fairness of this comparison.\n\nFirstly, let us clarify the principle behind the D-JEPA model configurations at different scales. To fairly complete the representation learning experiments in Appendix E, we chose to base our work on the existing ViT-B/L/H frameworks. As shown in Table 7, existing tasks focusing solely on representation learning have been based on the standard ViT B/L/H. Thus, our D-JEPA B/L/H models respectively adopt the corresponding ViT B/L/H as the backbone, resulting in parameter sizes of 212M, 687M, and 1.4B. For the MAR series models, MAR-B also uses the ViT-B structure, but MAR-L/H do not follow the standard ViT-L/H, which restricts our ability to maintain parameter consistency.\n\nSecondly, concerning the experiments in Table 1, it should be noted that our D-JEPA-L model already outperforms all previous works (including MAR-H) with 480 epochs of training and 687M parameters. This adequately illustrates the superiority of the D-JEPA architecture, even without considering the results of D-JEPA-H. Nevertheless, we trained the D-JEPA-H model to further demonstrate the scaling laws of the D-JEPA architecture, and unsurprisingly, it achieved even better results. Detailed analysis on this part is provided in lines 375 to 409 of the paper. Below is an excerpt from Tab 1, offering a more intuitive comparison:\n\n|          | #Params | #Epochs |  FID  |  IS   | Pre.  | Rec.  |\n| :------: | :-----: | :-----: | :---: | :---: | :---: | :---: |\n|  MAR-L   |  479M   |   800   | 2.60  | 221.4 | 0.79  | 0.60  |\n| D-JEPA-L |  687M   |   480   | 2.32  | 233.5 | 0.79  | 0.62  |\n|  MAR-H   |  943M   |   800   | 2.35  | 227.8 | 0.79  | 0.62  |\n| D-JEPA-H |  1.4B   |   320   | 2.04  | 239.3 | 0.79  | 0.62  |"
+            }
+        },
+        {
+            "title": {
+                "value": "Preface"
+            },
+            "comment": {
+                "value": "# Preface\n\nWe would like to extend our heartfelt thanks to each reviewer for their valuable comments. Before we proceed with a detailed, point-by-point response, I hope that the reviewers and the Area Chair could spare a moment to browse through this blog content. It primarily addresses potential misunderstandings regarding our paper and provides comprehensive comparisons with recent methodologies (those published on ArXiv after the ICLR submission deadline)."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper extends the JEPA framework\u2014a masked-image-based self-supervised representation learning model\u2014to image generation by incorporating an additional MLP head that operates on image patches. This design unifies representation learning and image generation within a single framework, demonstrating improved image generation quality over recent state-of-the-art methods in specific model configurations."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "(1) This paper introduces a straightforward and effective approach to enhance generation quality by bridging representation learning and image generation.\n(2) In the appendix, the authors offer an in-depth analysis of the model design, including additional insights on representation learning as well as applications in video and audio generation, showcasing the versatility of the proposed methods across multiple tasks.\n(3) The presentation is clear, and the ideas are easy to understand."
+            },
+            "weaknesses": {
+                "value": "(1) The performance is comparable to similar approaches like MAR, which does not use the JEPA loss. In Table 1, the proposed method requires more training epochs (1400 vs. 800 for D-JEPA-B VS ) to achieve similar results to MAR-B. While D-JEPA-L/H outperforms MAR-L/H, it also involves more parameters. Similar trends are observed in Table 2.\n(2) There is no comparison to baseline methods, such as the effect of removing the JEPA loss.\n(3) How does the model perform in unconditional generation tasks or on more complex datasets, such as COCO?"
+            },
+            "questions": {
+                "value": "My main concerns with this paper relate to its performance compared to the similar approach, MAR. The absence of ablation studies on model components and evaluation on other datasets makes it challenging to assess the impact of each design choice."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The proposed D-JEPA is the combination of Joint-embedding Predictive Architecture (I-JEPA) with MAR's dfiffusion parts, ie, leveraging a feautre from JEPA as the condition of diffusion parts.  Good generative performance is achieved by the proposed model.\nAnd authors provide the exps over multi-modalities."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Suffieicnt experiments, including generative reuslts on Imagenet-256, sufficient abaltion studies and the exps about representation learning.\n\n2. Authors present the effectiveness of D-JEPA  over multi-modalities including videos, images and audio.\n\n3. Authors provide a theretical support about the proposed models.\n\n4. Beyond the generative results, authors provides the empirical study about the linear performance of the proposed D-JEPA with the pixel/latent-level inputs."
+            },
+            "weaknesses": {
+                "value": "1. The organization and the structure of the current version should be improved. The writing of chapter 3 is very confusing for me. And some important results and discussions should be re-located in the main paper not the appendix.\n\n2. The novelity is limited:\n It seems that this work just replace the MAGE parts of MAR. The simple combination of I-JEPA and MAR's dfiffusion parts. It doesn't solve the core issue between the gap of representation learning and generative modeling.\nSuch an archecture cannot bring huge improvement on representation learning with latent-level input (Results in AppendixE over  down-stream tasks are good, just for pixel-level inputs), and the corresponding performance are very poor.\nCould you please provide the similar settings for MAR? Use both the pixel-level and latent-level inputs to check the representation performance? I think your design with JEPA cannot solve the inherent limitation (latent input -> bad representation results) of such an TOKEN learning + diffusion framework.\n\n3. The core of I-JEPA is the small-block-wise masks to perform the feature-level augmentation to achieve the better linear performance without the help of data-level augmentation. But in your work, the random mask strategy with high ratio is applied. Could you please provide some empirical evidence and intuitions about such a design\uff1f\n\n\n4. Line 200\uff1a \u201cIt is important to note that training in latent space is not a necessity for D-JEPA; it can be trained in raw space and still achieve excellent results.\u201d WHERE is the corresponding generative results\uff1f I haven't found it.\n\n5. It is unfair to compare Huge scale models in Table1 and 2. The parameters of the proposed D-JEPA is not aligned with MAR-H. \n\n6. How about the D-JEPA-H linear and finetuning performance in Table 7/8.\n\n7. Please provide the exps on Imagenet-512x512 to compare with  SOTAs in a more comoutation situation."
+            },
+            "questions": {
+                "value": "Listed in Weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The author describes a JEPA based architecture which combines a prediction loss and a diffusion loss.\n* The prediction loss learns to predict the representation of the mask tokens\n* The diffusion loss learns to predict the raw pixels (or the latent representation of the patch in case of VAE)\n\nThe architecture itself is based on a three ViTs:\n* The context encoder takes the unmasked tokens and outputs Y\n* The feature predictor takes Y, pad it, and learns to reconstruct the full representation Z\n* The target encoder takes all tokens (no masking) and produces the target representation Z'\n* The prediction loss is a smooth l1 loss between Z and Z'\n* The diffusion loss takes Z as input and tries to predict the pixels / latents\n* The target encoder is itself an EMA of the context encoder\n\nThe paper explores this architecture and shows that:\n1) The diffusion loss prevents the collapse of traditional JEPA architectures\n2) This architecture is scalable, as the results improves with increased compute budget\n3) At inference, instead of predicting all unmasked tokens, we can predict a subset of them, as do MaskGIT, to provide better results\n4) They reach SOTA performance on class conditional generation on ImageNet 256x256, equating the results of MAR with CFG"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* Interesting combination of JEPA representation learning with generative AI, showing that representation learning can help generative AI\n* Strong SOTA results on ImageNet 256x256, better or equal than MAR\n* When applied for representation learning, the context encoder achieves good results on ImageNet classification\n* Experiments showing generalization to text conditioned image generation (and not just class conditioned)\n* Experiments showing that it works with audio as well, class conditioned video generation, and CFG"
+            },
+            "weaknesses": {
+                "value": "* It would be interesting to have generation results at higher resolution than 256x256 px to see if inference speed suffers when bi-directional attention meets lots of tokens"
+            },
+            "questions": {
+                "value": "n/a"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper, D-JEPA, explores a novel approach by merging joint-embedding predictive architectures with generative modeling. It applies masked image modeling as a generalized next-token prediction strategy for autoregressive data generation. D-JEPA employs a combination of diffusion losses and MAE loss to model token distributions effectively. It aims to enhancing generative tasks across various domains like images, videos, and audio. Extensive experiments demonstrate the model's scalability and effectiveness, claiming state-of-the-art performance on ImageNet class-conditional benchmarks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The ideas tha integrating joint-embedding predictive architectures(e.g. MAE and MIM) with diffusion-based generative modeling makes sense. \n\nThe experiments in the paper are robust, covering a wide range of applications, which showcases the versatility of the D-JEPA model. This extensive experimental validation strengthens the paper's claims about the model's effectiveness across different types of generative tasks."
+            },
+            "weaknesses": {
+                "value": "However, the paper presents a significant methodological oversight\u2014it appears as a mere combination of existing MAE (Masked Autoencoder) and MAR (Masked Autoregressive Model) methods without a critical analysis or ablation study showing how the MAE branch impacts the AR branch. Specifically, the absence of experiments where the MAE branch is removed casts doubt on the incremental benefit of this integration.\n\nThe representation learning capability of D-JEPA is also questionable. According to Table 7, the best ImageNet accuracy is obtained when the model is trained on pixel-level data, while the generative experiments focus on a D-JEPA trained on VAE latent space. This discrepancy points to a lack of a truly unified model approach, as the performance seems to depend heavily on the training specifics rather than the model architecture itself."
+            },
+            "questions": {
+                "value": "1. Could the authors provide an ablation study that isolates the MAE branch to elucidate its specific impact on the AR branch's performance?\n\n2. How does the model's performance on representation learning tasks vary between training in pixel space and latent space, and what does this indicate about the model's ability to serve as a unified architecture?\n\n3. It\u2019s interesting to see from Tables 1 and 2 that D-JEPA has more parameters than MAR. I\u2019m curious\u2014shouldn\u2019t these models have similar architectures? Can the authors explain why D-JEPA is larger? What additional components does D-JEPA include that MAR doesn't?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

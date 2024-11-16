@@ -1,0 +1,168 @@
+{
+    "id": "mDvL3wcmms",
+    "title": "Classification-denoising networks",
+    "abstract": "Image classification and denoising suffer from complementary issues of lack of robustness or partially ignoring conditioning information. We argue that they can be alleviated by unifying both tasks through a model of the joint probability of (noisy) images and class labels. Classification is performed with a forward pass followed by conditioning. Using the Tweedie-Miyasawa formula, we evaluate the denoising function with the score, which can be computed by marginalization and back-propagation. The training objective is then a combination of cross-entropy loss and denoising score matching loss integrated over noise levels. Numerical experiments on CIFAR-10 and ImageNet show competitive classification and denoising performance compared to reference deep convolutional classifiers/denoisers, and significantly improves efficiency compared to previous joint approaches. Our model shows an increased robustness to adversarial perturbations compared to a standard discriminative classifier, and allows for a novel interpretation of adversarial gradients as a difference of denoisers.",
+    "keywords": [
+        "image classification",
+        "denoising",
+        "diffusion models",
+        "energy-based models"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "We propose a joint energy-based approach which unifies image classification and denoising.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=mDvL3wcmms",
+    "pdf_link": "https://openreview.net/pdf?id=mDvL3wcmms",
+    "comments": [
+        {
+            "summary": {
+                "value": "This work proposes a joint framework for classifying and denoising and also proposes a new network called GradResNet. This single network was trained for both denoising and classification tasks, yielding comparable results to the prior works such as ResNet, DnCNN and so on."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- The attempt to jointly classify and denoise looks interesting. One network can be effectively used for both classification and denoising."
+            },
+            "weaknesses": {
+                "value": "- It is less convincing why one needs to combine the tasks of classification and denoising into a single network. Moreover, it is unclear what are the novel contributions of this work over prior works such as JEM.\n- The evaluation look simplified by using too small networks for the problem like ImageNet classification, by denoising too small images with simple synthetic noises, and by  using too limited benchmarks.\n- Diffusion models were mentioned in this work, but there is no experimental results about them."
+            },
+            "questions": {
+                "value": "- Please see the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper propose a novel architecture that perform joint denoising and classification. It relies on tools from diffusion models such that the gradient of the denoiser is used to preform classification. The proposed algorithm and architecture are interesting and the mathematical formulation is sound. The authors perform experiments comparing to existing classifiers and denoisers showing on par performance. \nYet, the authors ignore a large body of works that already use diffusion models to perform classification and bear great similarities to the proposed work. I will detail this below."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The authors propose a nice joint formulation for denoising and classification. The mathematical derivation is clear and the formulation is sound. If there were not many prior works that did very similar things I would have recommended accepting the paper. But a proper work should compare to prior works..."
+            },
+            "weaknesses": {
+                "value": "The paper elegantly (or may be not) ignores all the prior works that use diffusion models to perform classification. In fact, they cite one work (your diffusion model is secretly one shot classifier) but don't compare to it. Indeed, the work they already cite, deals less with robustness but there are many other works that perform joint classification and denoising and study robustness. For example:\n(CERTIFIED!!) ADVERSARIAL ROBUSTNESS FOR FREE!, ICLR 2023\nRobust Classification via a Single Diffusion Model, ICML 2024\nDiffusion Models are Certifiably Robust Classifiers, NeurIPS 2024\n\nMentioning these works, explaining the difference and comparing to them (!!!) is a must. Right now this is the main problem with the paper and by ignoring the existing prior art it is a clear reject."
+            },
+            "questions": {
+                "value": "Why did you ignore existing works?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper integrates image denoising and image classification tasks, enabling the model to achieve enhanced robustness through joint learning. The architecture is based on ResNet-18, with modifications to improve performance by directly modeling the denoiser as the gradient of the neural network. The training objective combines cross-entropy loss with denoising score matching loss. Experimental results demonstrate that this approach outperforms previous jointly learned models and exhibits strong resilience to adversarial noise, along with a thorough analysis of its connection to score-based models."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "+ Research on the joint learning of denoising and classification is limited; this paper highlights the potential of such integrated approaches.\n\n+ The numerical results for classification surpass those of previous joint methods.\n\n+ The relationship between the proposed method and the adversarial noise and energy-based models is analyzed in depth and discussed in detail."
+            },
+            "weaknesses": {
+                "value": "- While this paper demonstrates superior performance in joint methods compared to others, it does not show significant advantages in standalone classification or denoising tasks. The denoising task under Gaussian noise can be viewed as a sampling process within a score-based diffusion model that uses Gaussian noise as a prior. In other words, the method presented in this paper sacrifices generative capabilities but learns a fixed noise-level denoiser in favor of enhanced classification performance. As a result, it outperforms JEM in classification but lacks the sampling ability of diffusion models and exhibits weaker resistance to adversarial noise compared to JEM."
+            },
+            "questions": {
+                "value": "- Regarding the SVD decomposition of the Jacobian matrix, as described in line 427, it seems that any bias-free denoiser satisfies the condition \\( D = \\nabla_Y D Y \\). Therefore, as long as a denoiser is effective and bias-free, the Jacobian will be decomposed to image feature information. I'm not sure what the significance of this experiment is, especially since Mohan et al. (2020) have already validated this.\n\n-As mentioned in line 506, it seems that Guo et al. (2023) have already conducted a very similar study.\n\n\n[1] Sreyas Mohan, Zahra Kadkhodaie, Eero P Simoncelli, and Carlos Fernandez-Granda. Robust and interpretable blind image denoising via bias-free convolutional neural networks. In International Conferenece on Learning Representations (ICLR), Addis Ababa, Ethiopia, April 2020.\n\n[2] Qiushan Guo, Chuofan Ma, Yi Jiang, Zehuan Yuan, Yizhou Yu, and Ping Luo. Egc: Image generation and classification via a diffusion energy-based model. In Proceedings of the IEEE/CVF International Conference on Computer Vision, pp. 22952\u201322962, 2023."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper unifies the tasks of image classification and denoising through a joint probabilistic model of (noisy) images and class labels to address complementary issues, such as insufficient robustness and partial neglect of conditional information in each task. The paper first introduces a framework that uses a single network to parameterize the joint distribution \\( p(y, c) \\) for performing classification, class-conditional, and unconditional denoising. Then, an architecture is proposed to parameterize the joint log-probability density of images and labels."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The derived discrepancy in the denoiser complements the previously connections between adversarial robustness and denoising.\n2. The proposed architecture combines inductive biases suitable for both denoising and classification."
+            },
+            "weaknesses": {
+                "value": "1. In joint training, the performance of both classification and denoising is inferior to existing standalone classification or denoising methods. \n2. Although joint training improves classification performance compared to separate training, the improvement is very limited and still falls short of ResNet18\u2019s classification performance. \n3. The authors claim that the proposed method can be applied to out-of-distribution detection, but no experiments were conducted to verify the effectiveness of the method in this regard."
+            },
+            "questions": {
+                "value": "See Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,130 @@
+{
+    "id": "2fojNANZSv",
+    "title": "Mixture of In-Context Prompters for Tabular PFNs",
+    "abstract": "Recent benchmarks find In-Context Learning (ICL) outperforms both deep learning and tree-based algorithms on small tabular datasets. However, on larger datasets, ICL for tabular learning suffers in both efficiency and effectiveness. In terms of efficiency, transformers incur linear space and quadratic time complexity w.r.t. context size. In terms of effectiveness, contexts at inference encounter distribution shift compared to contexts from pretraining. We propose MixturePFN, which extends Sparse Mixture of Experts to the state-of-the-art ICL for tabular learning model. Specifically, MixturePFN finetunes a specialized ICL expert on each cluster of tabular data and routes new test samples to appropriate experts at inference. MixturePFN supports constant-size contexts by splitting large training datasets into more manageable clusters. MixturePFN addresses distribution shift by finetuning an expert on each training dataset cluster via bootstrapping. Extensive experimental results shows MixturePFN outperforms 19 baselines both in mean rank and as the Condorcet winner across 36 diverse tabular datasets under both accuracy and F1 score with statistical significance.",
+    "keywords": [
+        "Prior-Fitted Networks",
+        "Tabular Learning",
+        "Sparse Mixture of Experts."
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "We propose a mixture of prompters technique for tabular in-context learning.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=2fojNANZSv",
+    "pdf_link": "https://openreview.net/pdf?id=2fojNANZSv",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes a mixture of experts approach for in-context learning on tabular data. Each expert in the mixture is a K-means cluster and the model routes the input instance to the closest cluster. This addresses the problem of context size in large datasets and provides a better selection of prompt instance than random sampling. To adapt the model to this type of routing authors also propose fine tuning by selecting a cluster of each training instance and maximizing the likelihood."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The paper is well written and proposes a justified solution to address the context length issue for in-context learning models such as TabPFN. Authors conduct extensive experiments on many real world dataset to demonstrate the effectiveness of the proposed approach and compare with leading tree-based and deep learning tabular methods."
+            },
+            "weaknesses": {
+                "value": "There is a very related previous work \"Retrieval & Fine-Tuning for In-Context Tabular Models\" by Thomas et al, which proposes both nearest neighbor retrieval to improve the prompt and fine tuning with this approach to adapt the model to the target distribution. I think the authors have to compare with this work and highlight what is novel in MixturePFN."
+            },
+            "questions": {
+                "value": "I could not find an ablation study on the number of clusters K vs model performance, have you done these experiments?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes the MixturePFN framework, which extends TabPFN for large tabular datasets by addressing the performance and scalability limitations of the number of table rows. The authors propose:\n1. Mixture of In-Context Prompters (MICP), which optimizes inference by using a sparse mixture of experts to route test samples to specific \"prompters\" that create context-specific prompts to separate large training datasets into manageable clusters. \n2. Context-Aware Finetuning (CAPFN), which addresses distributional shift issues by specializing each prompter on its assigned\ncontext via parameter efficient finetuning."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The MICP strategy effectively reduces memory usage, allowing the model to handle larger datasets compared to existing TabPFN\n- CAPFN bootstrapping and finetuning approach appears to be an effective way to mitigate distribution shift ICL for tabular data\n- Extensive benchmarks against 19 strong baselines show good performance in both mean rank and Condorcet ranking across diverse datasets"
+            },
+            "weaknesses": {
+                "value": "- While MIXTUREPFN improves dataset scalability, it still struggles with feature-rich datasets, potentially limiting its applicability in domains with high-dimensional data, such as patient healthcare data. I realize the authors leave this to future work, but this is an area where simple XGBoost performs quite well, and I would be curious about their thoughts on tackling this issue.\n\n- MICP's reliance on K-Means clustering to segment data into meaningful clusters as the quality of clusters can vary significantly based on dataset properties / distance metric chosen. Poor clustering could lead to suboptimal routing and ineffective prompts for certain test samples. I'd be curious to see some ablations in this area.\n\n- The CAPFN bootstrapping method might introduce biases or overfitting if the sampled subsets are not representative of the entire dataset. Bootstrapping from small clusters may fail to capture enough diversity, especially in cases with imbalanced classes or rare features. I'd be also curious to see how this method works with highly imbalanced labels e.g. 1\\% positive."
+            },
+            "questions": {
+                "value": "See weaknesses.\n\nCan categorical features simply be encoded as ordinal features? Is that not implying false relationships between unordered elements?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors propose MixturePFN, an extension of Sparse Mixture of Experts to TabPFN to alleviate the context size limitations of the existing TabPFN. On the TabZilla benchmark, MixturePFN outperforms state-of-the-art tabular prediction models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The idea of Mixture of Experts blending into TabPFN seems novel.\n\n2. The effectiveness of MixturePFN is well evaluated in well-established benchmarks against a variety of baseline methods.\n\n3. Writing is easy to follow."
+            },
+            "weaknesses": {
+                "value": "1. The biggest weakness I think is that the paper is missing a comparison with LoCalPFN [1]. Since LoCalPFN also tries to make TabPFN effective even on datasets with many-shots, I think it should be mentioned in the paper.\n\n----\n[1] Thomas et al., Retrieval & Fine-Tuning for In-Context Tabular Models, NeurIPS 2024"
+            },
+            "questions": {
+                "value": "1. Can you provide a comparison with LoCalPFN [1]? If not possible, I think the comparison should be done using k neighbor samples rather than random sampling, at least for TabPFN*.\n\n2. I see that the authors say in the limitations section that they didn't do it on a dataset with a million samples, but I'm somewhat curious about the effectiveness of MixturePFN on a dataset with a million samples, since the paper is aimed at the scale-up aspect.\n\n3. I'm also curious about the effectiveness of MixturePFN on datasets with hundreds or thousands of features, which is very practical in the real world.\n\n----\n[1] Thomas et al., Retrieval & Fine-Tuning for In-Context Tabular Models, NeurIPS 2024"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,143 @@
+{
+    "id": "4oQHCmnM8R",
+    "title": "A Theory of Multi-Agent Generative Flow Networks",
+    "abstract": "Generative flow networks utilize a flow-matching loss to learn a stochastic policy for generating objects from a sequence of actions, such that the probability of generating a pattern can be proportional to the corresponding given reward. However, a theoretical framework for multi-agent generative flow networks (MA-GFlowNets) has not yet been proposed. In this paper, we propose the theory framework of MA-GFlowNets, which can be applied to multiple agents to generate objects collaboratively through a series of joint actions. We further propose four algorithms: a centralized flow network for centralized training of MA-GFlowNets, an independent flow network for decentralized execution, a joint flow network for achieving centralized training with decentralized execution, and its updated conditional version. Joint Flow training is based on a local-global principle allowing to train a collection of (local) GFN as a unique (global) GFN. This principle provides a loss of reasonable complexity and allows to leverage usual results on GFN to provide theoretical guarantees that the independent policies generate samples with probability proportional to the reward function. Experimental results demonstrate the superiority of the proposed framework compared to reinforcement learning and MCMC-based methods.",
+    "keywords": [
+        "Generative Model"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=4oQHCmnM8R",
+    "pdf_link": "https://openreview.net/pdf?id=4oQHCmnM8R",
+    "comments": [
+        {
+            "comment": {
+                "value": "1.\n2. GFN in the multiagent setting may be realized easily in two contexts: \n  (a) if the reward is local, then the independent agent has their own independent policy given by a GFN.\n  (b) if the reward is global with small communication costs (small observation encoding) and tractable global transitions. \n  Centralized algorithm is the formalization of (b) while independent is the formalizaiton of (a) in our framework. We argue in the paper that the condition for a reasonable centralized algorithm is restrictive and that, in general, the reward is global: the Starcraft 3m task is an example where each marine has its own policy, but the reward depends on the state of all three marines at the end of the sequence.\nThe goal of the JFN is to train local agents with independent GFN policies to fit a global reward.\n\n3. The key property of the JFN is the decomposition of the action flow of an abstract global GFN as a product of local action flows. Such a property does allow detailed balance or Trajectory balance objectives. DB and FM loss are very closely related and mostly differ by the implementation choice of the backward policy (FM implements the backward policy by finding parents and computing the forward edge flow for each transition to the current state while DB implements an extra model, the backward policy, either fixed or trainable). Unfortunately, Brunswic et al [1] do not provide stable TB loss suitable for the non-acylic case such as the Starcraft 3m task."
+            }
+        },
+        {
+            "comment": {
+                "value": "To begin with, we thank you for the time you took to write this detailed review. \n\n1.\n\n2. Regarding cycles, we leverage non-acyclic losses defined by Brunswic et al [1]. This prior work provides theoretical account of the acyclic limitation of GFN and how to bypass it via so-called stable losses. \n\n3.\n\n4.\n\n[1] Leo Maxime Brunswic, Yinchuan Li, Yushun Xu, Shangling Jui, Lizhuang Ma. A Theory of Non-Acyclic Generative Flow Networks. AAAI 2024"
+            }
+        },
+        {
+            "comment": {
+                "value": "To begin with, we thank you for the time you took to write this detailed review. \n\n1. 2. and 3. are actually related to the same misunderstanding. The action space is a fiber bundler over the state space it the space of couples (position,action). Why is that? The actions available to an agent may depend on the state it is in (say the agent is on the edge of a grid, the move beyond the grid limit is not possible).  Therefore, to each state $s$ correspond available actions $a$ and $S^{-1}(a)$ the set of such actions. $S$ is simply the projection from $(s,a)$ to $s$.\nThe formalism introduced aims at being general but in practice (and in the whole work), we assume that observations contain the whole information, we may thus identify $\\mathcal S$ to $\\prod_{i\\in I} \\mathcal O^{(i)}$.  \nThe transition map $T$ takes an element of the Action fiber bundle, ie a couple $(s,a)$. It thus depends on both state and action. \nFinally, the equation $\\prod_{i\\in I} p^{(i)} \\circ S \\circ \\pi = Id$   means that starting from observation $(o^{(i)})_{i\\in I}$ one may apply the combined policy $\\pi$ to get an action (more precisely a couple state-action), then forget the action to get a state (via the state map $S$) and then recover the observations via the observation projections. This composition should yield the same observation as those we began with.  Despite being obvious in practice, it is a necessary mathematical assumption. \n\n4. Indeed, our target consists in sampling states proportionally to the reward the same way a usual GFN would and the same way the centralized MA-GFN does. \n\n5. 6. Indeed, the local rewards are untractable, that's actually a key difficulty of localizing GFNs.  They are only used abstractly and in the independent MA-GFN algorithm. And yes, even though GFN could \"in principle\" work with stochastic reward (say by targeting the expectancy of the reward instead of the random value), and even though MSE-based FM-loss are minimized on this target, to my knowledge attempts were not successful.  The point of our work is to go beyond that by training the collective of MA-GFN on the deterministic reward by enforcing a FM-property of an abstract global GFN."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the theory of multi-agent generative flow networks for co-operative tasks. The paper proposes four learning patterns: the Centralized Flow Network (CFN), Independent Flow Network (IFN), Joint Flow Network (JFN), and Conditioned Joint Flow Network (CJFN) algorithms. The paper also does experiments on the toy hyper-grid environment and one StarCraft game."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Originality: The paper is one of the first to study the extension of Gflownets to multi-agent settings. \nQuality\uff1aThe paper proposes four types generative algorithms, and discuss the difference of these algorithms in terms of the training complexity and the performance. \nSignificance: Experiments validates the proposed method outperforms MAPPO, MCMC in terms of modes found and L1 error."
+            },
+            "weaknesses": {
+                "value": "1.For the clarity, I would suggest that the authors choose the original Gflownet formulations. The FM formulations in this paper and the original FM paper are quite different, which is quite hard to follow the main idea of this paper.\n2.What's the main challenge that extend the Gflownet to multi-agent settings? For now, there seems no technical difficulty for multi-agent Gflownets. \n3.The paper only studies the flow matching objective? does the proposed method applies to other Gflownet learning objectives, such as the detailed balance and the trajectory balance loss?\n4.For the experiments, which algorithm is the best?  In the common sense, CFN achieves the best performance.  Also, the L1 error of all algorithms are quite high, i.e., these algorithms can not sample the reward distribution in practice. Why does the paper only present the result of JFN on the StarCraft 3m map?"
+            },
+            "questions": {
+                "value": "See the weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a theoretical framework focused on adapting GFlowNets to multi-agent setting, building on the previously proposed theory of non-acyclic GFlowNets. Several training algorithms are proposed that can work in centralized and decentralized settings, and experimental evaluation is provided on both synthetic and real-world tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This work is one of the first to consider a novel setting of multi-agent GFlowNets, providing extensive theoretical framework and results. \n\nIt is known that RL algorithms can be applied to GFlowNet training [1], and this work is among the few [2] that explore the other direction \u2014 applying GFlowNets in RL tasks.\n\nReferences:\n\n[1] Daniil Tiapkin, Nikita Morozov, Alexey Naumov, Dmitry Vetrov. Generative Flow Networks as Entropy-Regularized RL. AISTATS 2024\n\n[2] Leo Maxime Brunswic, Yinchuan Li, Yushun Xu, Shangling Jui, Lizhuang Ma. A Theory of Non-Acyclic Generative Flow Networks. AAAI 2024"
+            },
+            "weaknesses": {
+                "value": "I have two major concerns about this works.\n\nMy first major concern is the clarity of the text. For the most part I did not understand the methodological and theoretical results of this paper. The main thing hindering readability is a combination of very heavy mathematical notation with a lack of consistency, clarity and correct order of definitions. Here are some examples:\n\n1) I did not understand what is state map $S$ (line 80) and what is its purpose. It is introduced in Section 2 but never used in the main text of the paper.\n\n2) Why does transition kernel (line 80) only depend on the action, not on state-action pairs? In standard RL and multi-agent RL formulations it depends on both.\n\n3) Can you please explain the equation $\\prod_{i \\in I} p^{(i)} \\circ S \\circ \\pi=\\mathrm{Id}$ (line 94)?\n\n4) The task that multi-agent GFlowNets try to solve is never formally defined. After reading Section 2 one can guess that it is sampling global states with probabilities proportional to the global reward, but the task has to be explicitly stated nevertheless.\n\n5) Local rewards $R^{(i)}$ appear in Section 2 (line 148), but their definition and connection to global reward is given only in the next section.\n\n6) Their definition given in Section 3 is $R^{(i)}\\left(o_t^{(i)}\\right):=\\mathbb{E}\\left(R\\left(s_t\\right) \\mid o_t^{(i)}\\right)$ (line 189), and they're said to be utilized in the local training loss. From what I understand, this expectation is intractable in the general case, so I do not understand how are they defined in practice. Authors mention that it is possible to use stochastic rewards instead, but as far as I am aware, GFlowNet theory introduced in previous works, upon which this paper builds, does not support stochastic rewards.\n\n7) On line 241, authors mention: \"At this stage, the relations between the global/joint/local flow-matching constraints are unclear, and furthermore, the induced policy of the local GFlowNets still depends on the yet undefined local rewards.\" In my humble opinion, if any novel definition/theorem/algorithm depends on some object, the object has to be previously introduced and properly defined in all cases.\n\nI believe that this paper could greatly benefit from using simplified notation in the main text (while the full set of definitions can be introduced and used in appendix), as well as major revision of Sections 2 and 3 to ensure that the problem itself and all objects we work with are properly defined and explained to the reader in proper order. \n\nMy second concern is related to the presentation of experimental results. The abstract states: \"Experimental results demonstrate the superiority of the proposed framework compared to reinforcement learning and MCMC-based methods.\" Conclusion also has a similar statement (line 470). While on toy synthetic hypergrid environment the proposed methods do show significant improvement over baselines, the results on a more interesting StarCraft task do not support this claim. The proposed JFN algorithm falls behind 3 out of 4 baselines and performs similarly to the remaining one (which is Independent Q-Learning, one of the simplest existing algorithms in multi-agent RL). I understand that the main contributions of this paper are theoretical and methodological, but neverhtless I suggest correcting the statements to faithfully reflect the presented results. I also understand that such metric as win rate may not favor GFlowNets compared to RL approaches, but then I would also suggest presenting some other quantitative metric to demonstrate the utility of the proposed approach in this task, e.g. some measure of diversity."
+            },
+            "questions": {
+                "value": "0) See Weaknesses.\n\n1) Can you please give more detail on how the proposed framework and algorithms differ from the ones presented in [3]?\n\nReferences:\n\n[3] Shuang Luo, Yinchuan Li, Shunyu Liu, Xu Zhang, Yunfeng Shao, Chao Wu. Multi-Agent Continuous Control with Generative Flow Networks. Neural Networks, Volume 174, 2024"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a theoretical framework for multi-agent generative flow networks (MA-GFlowNets) and presents four algorithms: Centralized Flow Network (CFN), Independent Flow Network (IFN), Joint Flow Network (JFN), and Conditioned Joint Flow Network (CJFN). The authors introduce a local-global principle based on the principles in MARL that allows training individual GFNs as a unified global GFN. The authors evaluate their approach on Grid and SMAC tasks by comparing with MARL and MCMC approaches."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is easy to understand (although some important details are missing as discussed in the next part), and the paper studies an important problem in extending GFlowNets to handle multi-agent tasks."
+            },
+            "weaknesses": {
+                "value": "1. The paper's novelty claim is questionable. The authors state \"However, based on current theoretical results, GFlowNets cannot support multi-agent systems\" while ignoring relevant prior work, particularly Li et al. (2023) which already explored multi-agent GFlowNets.\n2. The experimental evaluation has several limitations:\n- Only uses the simplest 3m StarCraft II environment, and there is little performance improvement.\n- Results in Figure 3 show very high L1 errors, which suggests poor learning. Doesn't demonstrate clear advantages over single-agent GFlowNets approaches.\n- Little performance improvements over baselines\n2. The paper doesn't adequately address the cyclic environment problem. GFlowNets traditionally work best in acyclic environments, but the paper doesn't explain how they handle cycles in StarCraft II scenarios.\n3. The motivation for using MA-GFN in the chosen tasks is not well justified. Many of the presented problems could potentially be solved more effectively with single-agent GFlowNets approaches."
+            },
+            "questions": {
+                "value": "1. How does the proposed approach differ from Li et al. (2023)'s work on multi-agent GFlowNets? Please clarify the novel contributions relative to this prior work.\n2. How does the proposed method handle cyclic state transitions in StarCraft II environments, given that GFlowNets traditionally assume acyclic state spaces?\n3. The L1 errors shown in Figure 3 are quite high. Could the authors explain why this occurs and how it affects the practical utility of the method? What specific advantages does the MA-GFN approach offer over single-agent GFN solutions for the presented Grid tasks? Could the authors provide experimental comparisons?\n4. Why is it evaluated only on the simplest 3m StarCraft II scenario? Have the authors tested your approach on more complex multi-agent scenarios?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

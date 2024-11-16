@@ -1,0 +1,177 @@
+{
+    "id": "LlE61BEYpB",
+    "title": "FLARE: Fine-tuned Long-context Acceleration with ReLU-enhanced FIRE",
+    "abstract": "Deploying transformer models on battery-constrained edge devices is challenging, which becomes particularly problematic for handling long-context LLM applications. The limited computational resources of edge devices, especially those using specialized custom accelerators, often make it infeasible to utilize latency-optimization techniques for Softmax, such as FlashAttention, leading to significant performance bottlenecks. Due to limited memory bandwidth, reduced parallelism, and hardware constraints, edge devices struggle to efficiently implement these techniques, which are designed to hide the computational delays associated with Softmax. As a result, the Softmax operation becomes a critical bottleneck for many edge accelerator implementations involving long contexts. Moreover, techniques aimed at improving model efficiency often require pre-training models from scratch to fully utilize these optimizations or else lead to accuracy losses when substituting more hardware-efficient approximations. In this paper, we explore direct fine-tuning of long-context efficient techniques that can support lightweight models and show that similar perplexities can be reached to those of the original models on language modeling datasets. We fine-tune the element-wise ReLU function in place of Softmax, remove absolute position encodings, and substitute and fine-tune in Functional Interpolation for Relative Position Encoding (FIRE). We show that fine-tuning this combination into a pre-trained LLM model yields a compounding effect: simultaneously increasing the max context length and inference efficiency for longer contexts. We illustrate this in hardware with performance, power, and area (PPA) analysis, showing that ReLU has 8 times higher frequency, uses 0.1\\% of power, and 0.11\\% energy-per-cycle compared to Softmax. We propose to fine-tune long-context with ReLU-enhanced FIRE (FLARE), demonstrating how FIRE and ReLU can be fused into an equivalent algorithm that allows bypassing, on average, 98.9\\% of FIRE\u2019s original operations during inference. Finally, we show how this technique can extend inference speed and efficiency gains to training, contributing a ReLU-augmented FlashAttention forward-pass implementation in CUDA, which demonstrates a 3.8x speedup over conventional Softmax-based FlashAttention for 4096 context length and greater savings projected for larger contexts.",
+    "keywords": [
+        "FIRE",
+        "Functional Interpolation for Relative Position Encoding",
+        "fine-tune",
+        "fine-tuning",
+        "ReLU",
+        "Softmax",
+        "Softplus",
+        "Softmax alternatives",
+        "long context",
+        "transformer",
+        "large language model",
+        "edge device",
+        "Flash Attention"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "We fine-tune LLMs for edge hardware by replacing Softmax with ReLU and Softplus element-wise alternatives, combining FIRE and ReLU into a single more efficient operation, and showing significant efficiency improvements scaling with context length.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=LlE61BEYpB",
+    "pdf_link": "https://openreview.net/pdf?id=LlE61BEYpB",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper propose to combine FIRE position encoding method with ReLU activation to serve as an efficient attention mechanism for long context input. It evaluates on GPT-2 within a commercial EDA tool. The experiment is designed to fine-tune GPT-2 with the new architecture on OpenWebText data. The validation loss and inference speed is compared to demonstrate the effectiveness of the method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. reasonable but less common paper writing flow.\n2. effective proposal on combining FIRE with ReLU to replace softmax based attention. \n3. solid implementation on proposed ReLUFlashAttention and hardware profiling."
+            },
+            "weaknesses": {
+                "value": "1. the paper presentation is poor, e.g., typos, figure formatting, section organization, etc. \n2. the idea is driven by single model experiment and lack of insightful analysis."
+            },
+            "questions": {
+                "value": "1. L83-L90, the notation \"n\" is missing definition. \n2. L322, \"don't\" is less formal. \n3. Fig. 8 and Fig. 9, captions are not centered. \n4. The number 20K seems to be model dependent, and it cannot generalize to other models. There is no guarantee how long to fine-tune the proposed method, which is also mentioned as a concern of instability from using ReLU as in L151. \n5. why only compare ReLU and softmax in section 8? \n6. where are other curves in figure 3, 5 and 7?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents the ideas to improve the performance and energy consumption for LLM models. Ideas presented in the paper can be summarized in the following points\n* Replacing Softmax with ReLU for attention blocks.\n* Integrating the above change in FIRE positional encodings to show the effectiveness of the technique for a long context (termed as FLARE).\n* Study of improvement in performance of softmax block on GPU.\n* Study of improvement in PPA of hardware implementation of FLARE vs Softmax."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Paper has been written clearly with progressive introduction of concepts.\n* It captures and presents interesting insights about the training models with FLARE and Softmax."
+            },
+            "weaknesses": {
+                "value": "* The major weakness is the lack of novelty (or a lack of clarity in conveying the primary contribution). To the best of my understanding, the paper provides the following contributions:\n\n  * Replacing Softmax with ReLU for attention blocks.\n  > * The use of ReLU instead of Softmax is well-studied (e.g., [1] [2]). The paper provides evidence of the feasibility of replacing Softmax with ReLU; however, the results align with expectations set by [1]. As noted in reference [1], \"we observe that attention with ReLU divided by sequence length can approach or match traditional Softmax attention in terms of scaling behavior as a function of compute for vision transformers.\" This is consistent with the results presented in the paper. It will be helpful to prominently mention any new insights that will be helpful for the community.\n  * Integrating the above change in FIRE positional encodings to show the effectiveness of the technique for a long context (termed as FLARE).\n  > * Line 260-261: \"At time of writing, we haven\u2019t seen any previous attempts to finetune FIRE encodings into models to add longer context capabilities\". Ref [3], the paper which introduced FIRE contains the section named \"FINETUNING ON LONG TEXT BENCHMARK\". Please highlight the difference with your work. \n\n  * Study of performance improvement in the softmax block on GPU.\n  > The practical enhancement achieved by using ReLU with zero-skipping is impressive for both CUDA and hardware implementation. However, an analysis of the overall impact on the model's execution time is lacking. Please include the end-to-end execution time of the models presented in the paper, as this will help underscore the comprehensive impact of the proposed change.\n\n  * Study of improvements in PPA for hardware implementation of FLARE vs. Softmax.\n  > The significance of this study would be strengthened by adding the percentage area of the blocks in a DNN ASIC accelerator or alternative metrics to quantify the overall impact of these hardware modifications.\n\n[1] Replacing softmax with ReLU in Vision Transformers, https://arxiv.org/abs/2309.08586v2  \n[2] A Study on ReLU and Softmax in Transformer https://arxiv.org/abs/2302.06461  \n[3] Functional Interpolation for Relative Positions Improves Long Context Transformers, https://arxiv.org/abs/2310.04418"
+            },
+            "questions": {
+                "value": "* Is there a reason for using the 130nm PDK for the PPA comparison, given that it is several generations old? The results could differ significantly on more recent technologies, and employing a newer technology node would enhance the credibility of the results.\n> Some more advanced open-source PDKs are available, such as [1][2]. However, depending on the tools used, integration may not be straightforward.\n\n[1] https://github.com/mflowgen/freepdk-45nm   \n[2] https://eda.ncsu.edu/freepdk15/"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper tackles the challenge of deploying large language models (LLMs) on edge devices by optimizing attention mechanisms. Specifically, the authors replace the Softmax operation used in traditional transformers with ReLU, aiming to improve computational efficiency for long-context sequences. They also integrate FIRE (Functional Interpolation for Relative Encoding) to improve the handling of long input sequences. The paper introduces a system named FLARE, which combines ReLU-based attention with FIRE encoding and fine-tunes it on GPT-2 to showcase the performance benefits in terms of speed, efficiency, and memory usage."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "While the idea of using ReLU in place of Softmax has appeared in prior research, this paper is novel in the sense that it combines it with FIRE positional encoding for long-context acceleration. The focus on deploying these techniques for edge devices is timely and practically relevant, given the rising demand for efficient LLMs in constrained environments.\n\nBesides, the paper presents a well-structured experimental evaluation, profiling memory usage, speed, and power efficiency. The experiments are thoughtfully designed to show how ReLU-based attention performs compared to Softmax on long-context inference. \n\nIn terms of the writing quality, the paper is clear and easy to follow, with well-defined objectives and explanations of both ReLU and FIRE techniques. The figures and tables help convey the improvements in speed and power usage, though additional comparisons with other positional encodings would have been helpful."
+            },
+            "weaknesses": {
+                "value": "1. The core ideas\u2014using ReLU instead of Softmax and FIRE for positional encoding\u2014are borrowed from prior work. The contribution lies mainly in engineering and integration, rather than in proposing a new method or theory. This makes the paper more of an \u201cA + B\u201d-style contribution.\n\n2. The paper primarily evaluates performance on GPT-2. It is unclear how well the proposed optimization generalizes to larger models like Qwen, LLaMA, or LLaMA-2. Could these gains be replicated on models with billions of parameters? Further benchmarking would have strengthened the paper. As long as the authors mentioned that they had access to 80GB A100s, I think larger and more-updated models shall be fine-tuned in the similar approach with FSDP support, and the results shall be included in the experiments to demonstrate the effectiveness of the purposed algorithms,.\n\n3. The paper claims the target of improving inference efficiency on edge devices, but only the experiment of PPA hardware has been provided. In real edge devices like an android device, the power measurement is not that straightforward. I know the authors could not directly use edge-LLM implementations like Llama.cpp to test on a real edge because modifications on the backend and the computation-graph formulation stage are required, but I think it is fine to implement a single attention block and test on different real edge platforms, to give a more direct sensing of the effectiveness of the proposed algorithms.\n\n4. I think the only validation loss could not demonstrate the ability of a language model before and after fine-tuning. More down-stream tasks are more important than validation loss."
+            },
+            "questions": {
+                "value": "My question is summarized as:\n\n1.  Can the proposed method scale to larger models like Qwen, LLaMA, or LLaMA-2?\n\n2.  How would the method perform on real edge devices, like Android phones? Could a single attention block be tested on such devices for more practical insights?\n\n3. Why were downstream tasks not included to assess the fine-tuned model\u2019s real-world performance beyond validation loss?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Deploying transformer models on edge devices with limited battery life presents significant challenges, particularly for long-context applications. The Softmax operation often becomes a major bottleneck due to constraints like reduced memory bandwidth and parallelism, making it hard to utilize latency-optimizing techniques. This paper proposes a solution by fine-tuning the ReLU function as a replacement for Softmax, along with utilizing Functional Interpolation for Relative Position Encoding (FIRE), which improves model efficiency and maintains accuracy. The resulting algorithm, ReLU-enhanced FIRE (FLARE), combines these techniques, reducing power consumption and operational complexity, which is particularly suitable for large language models on edge devices."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1.\tThe tackled problem is relevant to the community.\n2.\tThe proposed method is useful for reducing the computation complexity of large language models."
+            },
+            "weaknesses": {
+                "value": "1.\tThe limitations of the related work and how these issues are addressed in the proposed method should be clarified.\n2.\tThis work builds upon several related works and combines multiple techniques. A clear distinction between what is novel in the proposed method and what is implemented based on existing methods is required.\n3.\tThe proposed method should be discussed in more detail describing all the operations involved. Please also explain all the design decisions made to develop it.\n4.\tThe experimental setup and tool flow used to conduct the experiments should be discussed in more detail."
+            },
+            "questions": {
+                "value": "1.\tWhat are the limitations of this paper and what are the potential impacts at large scale of this work?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,168 @@
+{
+    "id": "EQZMx8Lc0n",
+    "title": "RoCoFT: Efficient Finetuning of Large Language Models with Row-Column Updates",
+    "abstract": "We propose RoCoFT, a parameter-efficient fine-tuning method for large-scale language models (LMs) based on updating only a few rows and columns of the weight matrices in transformers. Through extensive experiments with medium size LMs like BERT and RoBERTa, and larger LMs like Bloom-7B, Llama2-7B, and Llama2-13B, we show that our method gives comparable or better accuracies than state-of-art PEFT methods while also being more memory and computation- efficient. We also study the reason behind the effectiveness of our method with tools from neural tangent kernel theory. We empirically demonstrate that our kernel, constructed using a restricted set of row and column parameters, are numerically close to the full-parameter kernel and gives comparable classification performance. Ablation studies are conducted to investigate the impact of different algorithmic choices, including the selection strategy for rows and columns as well as the optimal rank for effective implementation of our method.",
+    "keywords": [
+        "RoCoFT",
+        "Parameter-efficient finetuning",
+        "LLMs",
+        "Neural Tangent Kernel"
+    ],
+    "primary_area": "transfer learning, meta learning, and lifelong learning",
+    "TLDR": "RoCoFT is a parameter-efficient finetuning method for large language models that updates only a few rows and columns of weight matrices, offering better accuracy and efficiency than SOTA peft methods, supported by neural tangent kernel theory",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=EQZMx8Lc0n",
+    "pdf_link": "https://openreview.net/pdf?id=EQZMx8Lc0n",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces RoCoFT, a parameter-efficient fine-tuning (PEFT) method designed for large language models (LLMs) that updates only a subset of rows and columns in transformer weight matrices. This approach aims to retain model accuracy while reducing memory and computational requirements compared to traditional fine-tuning methods. RoCoFT achieves state-of-the-art or comparable results on tasks like GLUE, question answering, and summarization, as well as on benchmarks requiring common sense and mathematical reasoning. The authors analyze the method\u2019s effectiveness through neural tangent kernel (NTK) theory, showing that kernels from RoCoFT are numerically close to full-parameter kernels, suggesting that fine-tuning a limited parameter subset preserves core model knowledge."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The presentation is clear, and the paper is easy to follow, with only a few minor typos. \n- The proposed method, RoCoFT, is straightforward and demonstrates strong empirical performance.\n- The results are reported across multiple tasks and base models, evaluated using various metrics, including memory usage, computation time, and accuracy. This is a good plus to the paper."
+            },
+            "weaknesses": {
+                "value": "- **Lack of Related Work Discussion**: One weakness of this paper is the limited scope of its related work discussion, focusing primarily on low-rank methods (e.g., LoRA). However, RoCoFT has a closer methodological resemblance to pruning and sparse fine-tuning methods, which are underrepresented in this review. In the parameter-efficient fine-tuning (PEFT) field, methods generally fall into either low-rank or subset of trainable parameter categories, so a more comprehensive comparison should include subset of trainable parameters finetuning baselines (or sparse fine-tuning), such as [1-8]. Adding a discussion of these methods in the related work section would strengthen the contextual foundation of this paper.\n\n- **Need Additional Novelty Clarification**: The paper lacks a detailed discussion of how RoCoFT differs from existing sparse PEFT methods, such as those presented in [1-8]. \n\n- **Lack of Baseline Comparisons**: While RoCoFT has similarities with pruning and sparse fine-tuning techniques, the paper currently lacks direct baseline comparisons to these methods. Including baselines from sparse fine-tuning methods in the experiments would offer a more balanced evaluation of RoCoFT's performance and efficiency.\n\n- **Inclusion of More SOTA Models**: The experiments include recent models like DeBERTaV3 and LLaMA-2, which is commendable. However, the study would be more persuasive if it also incorporated newer state-of-the-art models (e.g., Llama3-8B, Llama3.1, Minstrel) to reflect the rapidly advancing field of pre-trained model performance.\n\n- **Typos**:\n\"prevailing paradiagm\" should be corrected to \"prevailing paradigm\".\n\"state-of-art\" should be \"state-of-the-art\".\n\"massive amount of text\" should be \"massive amounts of text\".\n\"signficant savings\" should be \"significant savings\".\n\n- **Clarity of Baseline Model in Figures**: In Figure 2 and Figure 3 of Section 4, the efficiency comparisons are unclear because the base model for fine-tuning (used to report memory and time costs) is not specified. Similarly, Figure 5 lacks clarity on which base model was used for reporting average accuracy across different metrics. Including these model details would improve transparency in the experimental setup.\n\n[1] The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks\n\n[2] Parameter-Efficient Fine-Tuning without Introducing New Latency\n\n[3] Sparse Matrix in Large Language Model Fine-tuning\n\n[4] Parameter-Efficient Transfer Learning with Diff Pruning\n\n[5] Training Neural Networks with Fixed Sparse Masks\n\n[6] Scaling Sparse Fine-Tuning to Large Language Models\n\n[7] Composable Sparse Fine-Tuning for Cross-Lingual Transfer\n\n[8] Diff prunning: Parameter-Efficient Transfer Learning with Diff Pruning"
+            },
+            "questions": {
+                "value": "-  **Discussion on Fisher Information**: Reference [5] uses empirical Fisher information to select the most efficient parameters for fine-tuning. It would be beneficial if the authors discussed the efficiency of this method relative to RoCoFT, as this comparison could highlight RoCoFT\u2019s strengths and potential trade-offs.\n\n-  **Memory Cost Clarification**: In fig.2, the author reports the memory cost for baselines and RoCoFT. However, the results are not easy to follow/understand. In LLM, since Adam optimizer is the most common optimizer, the memory cost for full Adam optimizer will be 2 times than the model weights. For instance In Llama-2-7B model, the model weight is 13.6G and the optimizer will cost 2*13.6GB. However, LoRA can reduce the optimizer memory cost to less than 1%. In Fig.2, the authors report the memory cost for RoCoFT and LoRA is still 2 times than the model weight, can you kindly discuss why is that?\n\n- **percentage of trainable parameters**: In PEFT field, papers usually use percentage of trainable parameters to present the algorithm efficiency. Since in Figure2, Figure3 of Section4, efficiency comparison, the author didn\u2019t clarify what is the fine-tuning base model author used to report all the memory and time cost. It\u2019s also different to find In figure what is the fine-tuning base model author used to report the average accuracy for different metrics in figure 5. Can the author discuss the percentage of trainable parameters they use?\n\n- **Implementation for Memory Reduction**: Low-rank methods like LoRA use additional trainable adapters, while sparse fine-tuning often applies binary masks to reduce memory. It would strengthen the paper if the authors elaborated on how the paper implement RoCoFT to achieve memory reduction and speedup compared to these existing techniques, and discuss it from the aspect of system. Do RoCoFT need to implement full forward and backward propagation for all parameters? Do RoCoFT will introduce more modules during the fine-tuning process? \n\nI would like to discuss the questions I raised regarding the weaknesses and concerns with the authors. If my concerns are adequately addressed, I would be willing to reconsider my rating.\n\n**References**: \n\n[1] The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks\n\n[2] Parameter-Efficient Fine-Tuning without Introducing New Latency\n\n[3] Sparse Matrix in Large Language Model Fine-tuning\n\n[4] Parameter-Efficient Transfer Learning with Diff Pruning\n\n[5] Training Neural Networks with Fixed Sparse Masks\n\n[6] Scaling Sparse Fine-Tuning to Large Language Models\n\n[7] Composable Sparse Fine-Tuning for Cross-Lingual Transfer\n\n[8] Diff Pruning: Parameter-Efficient Transfer Learning with Diff Pruning"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors address the challenge of efficiently adapting a large language model to a new task. This problem, known as Parameter Efficient Fine Tuning (PEFT), has gained significant attention in recent years following Lora's success. The main observation in this paper is that training only a small subset of rows or columns of the original weight matrices is sufficient for attaining good performance on the new task. This means fine-tuning could be performed by updating a few parameters with no memory overhead (as required with Lora-style methods). This type of fine-tuning is evaluated on multiple datasets and using several base models. The results demonstrate that this approach is competitive with leading baselines."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The authors study an important problem in LLMs.\n\nThe method is relatively efficient and lightweight.\n\nThe evaluation covers multiple transfer tasks and several base models.\n\nThey provide an NTK based empirical evaluation that aims to explain the observed phenomenon."
+            },
+            "weaknesses": {
+                "value": "The paper is not well written, multiple parts are not clear, and there are many typos.\n\nIn essence, the method presented in this paper was already presented in another paper [1].\nIn fact, in [1] the authors wrote:\n\n\u201c We randomly sampled the same amount of parameters as in BitFit from the entire model, and fine-tuned only them (\u201crand uniform\u201d line in Table 3). The results are substantially worse across all tasks; similar patterns are observed when the random parameters are sampled as complete rows/columns in the parameter matrices (\u201crand row/col\u201d line in Table 3). \u201c\n\nWhich basically indicates that the authors in [1] have already evaluated the procedure detailed in this paper and concluded that updating the bias terms (also known as fitbit) is better. \nThe results by the authors demonstrate comparable results between single row/column updates and fitbit. In contrast, the authors in [1] demonstrated that row/column update does not work well in some datasets. Can the authors explain why there is a performance gap between the evaluation in [1] and what is reported in this paper?\n\n\nAnother problem, is that proper credit is not given to [1], which were the first to propose using row/column updates.\n\n\nEven when ignoring the fact that this idea was already presented in [1], I can still see value in providing new insights about this row/column optimization scheme. But I don\u2019t see the paper providing such new insights in its current form. The row/column selection strategy is pretty standard, and the evaluated selection schemes work as well as random selection.\n\n\n\n[1] Ben Zaken et al. BitFit: Simple Parameter-efficient Fine-tuning for Transformer-based Masked Language-models.\n\nThe NTK perspective is also unclear; since it is primarily empirical, I don\u2019t see what new intuition is gained from these evaluations. It is intuitive that changing only one raw/column from the entire matrix won\u2019t change the NTK much, but also that a few steps of fine-tuning won\u2019t. If anything, the authors should have also compared these kernels to the original kernel (before fine-tuning). If they are all similar to the original one (before fine-tuning), then I don\u2019t understand what we gain from this insight. \n\nIn terms of presentation, the paper needs significant improvement. Currently, the results are presented without providing a clear explanation of the \u201cmethod.\u201d Specifically, the scheme for the selection of rows and columns is only described in the results section."
+            },
+            "questions": {
+                "value": "In the results, the authors detail methods termed 1-row and 3-row without explaining what those are.\n\nAlso, regarding the number of parameters, it seems that the 3-row uses 5 times the number of parameters as the 1-row. So, is it three rows vs. one? Something does not make sense here.\n\nWhy are the methods presented in Table 1 not included in all other tables?\nFor example, why isn\u2019t Fitbit (which is the most related paper to this one) not included in Tables 2+3+4, figure 2+3?\n\n\n\n\n\nMultiple typos:\n\n \"paradiagm\" -> \"paradigm\".\n\"mermory\" -> \"memory\".\n\"signficant\"  -> \"significant\".\n\"tranformer\"  -> \"transformer\".\n\n\u201ccomputation-efficient\u201d  -> \u201ccomputationally efficient.\u201d\nIn the abstract \u201cour kernel\u2026are numerically\u201d-> should be *is* numerically\n\nSeveral abbreviations are mentioned in the abstract without introducing what they mean: RoCoFT, PEFT..\n\nNo intuition about the selection is provided in the abstract.\n\nMany times, two numbers are presented without explaining what they mean, for example, in line 203 85.65/90.61?! And in many cases, in the tables. This is not clear, even from the caption, which tries to explain what they mean.\n\nIn some cases, as shown in Table 1, FT is substantially worse than many low-rank methods, for example, in RTE. Doesn\u2019t this suggest that there is severe overfitting?\n\nIn the optimal rank evaluation, the performance of the RoCoFT method is not consistent with the results of the same method presented in Table 1 (for this data, SST2).\n\n\nOverall, I would recommend the authors rewrite the paper as an \u201cinsight paper\u201d, which provides empirical evaluations that support a phenomenon, rather than a \u201cmethod paper\u201d. It would also be valuable to look into the dedicated scheme for selecting the rows/columns."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors proposed a simple fine tuning method for LLMs that updates only a few columns/rows in the base model. NTK regression-based analysis proposed to explain why single row/column updates work and extensive experiments were conducted to evaluate the method on diverse language tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- The method is very simple but shows prominent results for some datasets\n- The method was evaluated on large and diverse number of datasets\n- Applying NTK regression to get explanation for why the method works - looks interesting"
+            },
+            "weaknesses": {
+                "value": "- Limited novelty of the proposed method: the authors propose to update a few columns/rows in the base model and exploit the existing NTK regression method to explain it. \n- I don\u2019t understand how the results in Table 5 are consistent with Table 1 so we can explain why the method works with NTK regression. In Table 5 the proposed method performs worse than FT while in Table 1 it is not the case. \n- In-place updates disable the behavior of the model as an adaptor. This is a trade-off that should be discussed while presenting 0 additional parameters\n- Missing explanation / intuition why the method fails on some datasets, e.g. MNLI, QNLI, RTE in Table 1. \n- Missing additional recent LoRA-style baselines with low number of trainable parameters, e.g. [1-3] \n- The efficiency gains are not significant compared to other LoRA-style methods, also it is not interesting since the number of trainable parameters is small for adapter-like methods.\n\n\n[1] Ba\u0142azy, Klaudia, et al. \"LoRA-XS: Low-Rank Adaptation with Extremely Small Number of Parameters.\" arXiv preprint arXiv:2405.17604 (2024).\n\n[2] Kopiczko, Dawid J., Tijmen Blankevoort, and Yuki M. Asano. \"Vera: Vector-based random matrix adaptation.\" arXiv preprint arXiv:2310.11454 (2023).\n\n[3] Zhang, Longteng, et al. \"Lora-fa: Memory-efficient low-rank adaptation for large language models fine-tuning.\" arXiv preprint arXiv:2308.03303 (2023)."
+            },
+            "questions": {
+                "value": "- I would like to see an experiment where no weights are updated in the pretrained model and only classification head is trained and how the obtained accuracy differs from the single-column/row adaptations.\n- It is not clear from the Sec.4 if the setup of baselines in terms of hyper parameters is the same as of the proposed method. I\u2019m concerned that the small differences in the evaluation between the proposed method and baselines stems from setup differences."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a novel method named RoCoFT for parameter-efficient fine-tuning (PEFT). RoCoFT updates only a few rows or columns of the trained parameter matrices, achieving even lower complexity compared to existing PEFT methods. The effectiveness of RoCoFT is supported by neural tangent kernel (NTK) theory, as demonstrated by the authors. The empirical performance of RoCoFT is extensively evaluated on several benchmarks and compared with a large number of baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The method is simple, straightforward, yet effective. The presentation is clear and easy to follow.\n\n2. The performance comparison with baselines is extensive. Besides, the learnable parameters in RoCoFT are much less than existing methods, which is very useful.\n\n3. As shown in ablation studies, the strategy of choosing rows and columns is robust and does not need much tuning."
+            },
+            "weaknesses": {
+                "value": "1. The NTK analysis in Section 5 is not complete. The results in Tables 5 and 6 only include comparisons between RoCoFT, FT, and the pre-trained weights. However, if other methods, such as LoRA, also have a kernel that is empirically close to the full-parameter kernel, it becomes unclear why RoCoFT can achieve performance improvements over them. Similar experiments on other baselines should also be included.\n2. Further explanation should be provided on why the few-shot learning performance is used as a downstream task for kernel comparison in Tables 5 and 6. Why are the performances in Tables 1, 2, and 3 not used for kernel comparison?\n3. The empirical improvement in memory costs in Figure 2 and training time costs in Figure 3 appears marginal, which is inconsistent with the large improvement suggested by Table 4. Please provide a detailed explanation."
+            },
+            "questions": {
+                "value": "1. How are the two values in the \"Avg.\" column computed in Table 1?\n\n2. Can the row update and column update be used simultaneously? It seems to me that this simple strategy allows for more flexibility and enhanced performance."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

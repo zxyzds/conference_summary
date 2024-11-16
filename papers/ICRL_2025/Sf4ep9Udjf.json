@@ -1,0 +1,166 @@
+{
+    "id": "Sf4ep9Udjf",
+    "title": "P-SPIKESSM: HARNESSING PROBABILISTIC SPIKING STATE SPACE MODELS FOR LONG-RANGE DEPENDENCY TASKS",
+    "abstract": "Spiking neural networks (SNNs) are posited as a computationally efficient and biologically plausible alternative to conventional neural architectures, with their core computational framework primarily using the leaky integrate-and-fire (LIF) neuron model. However, the limited hidden state representation of LIF neurons, characterized by a scalar membrane potential, and sequential spike generation process, poses challenges for effectively developing scalable spiking models to address long-range dependencies in sequence learning tasks. In this study, we  develop a scalable probabilistic spiking learning framework for long-range dependency tasks leveraging the fundamentals of state space models. Unlike LIF neurons that rely on the determinitic Heaviside function for a sequential process of spike generation, we introduce a SpikeSampler layer that samples spikes stochastically based on an SSM-based neuronal model while allowing parallel computations. To address non-differentiability of the spiking operation and enable effective training, we also propose a surrogate function tailored for the stochastic nature of the SpikeSampler layer. To enhance inter-neuron communication, we introduce the SpikeMixer block, which integrates spikes from neuron populations in each layer. This is followed by a ClampFuse layer, incorporating a residual connection to capture complex dependencies, enabling scalability of the model. Our models attain state-of-the-art performance among SNN models across diverse long-range dependency tasks, encompassing the Long Range Arena benchmark, permuted sequential MNIST, and the Speech Command dataset and demonstrate sparse spiking pattern highlighting its computational efficiency.",
+    "keywords": [
+        "Spiking Neural Networks",
+        "Sequence Learning"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "Computationally efficient solution for long-range dependency tasks using spiking neural networks.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Sf4ep9Udjf",
+    "pdf_link": "https://openreview.net/pdf?id=Sf4ep9Udjf",
+    "comments": [
+        {
+            "summary": {
+                "value": "The article proposes a framework for learning in long-range sequence tasks. It introduces a series of tactics to address the associated challenges. Firstly, the authors employ a stochastic sampler based on a State-Space Model (SSM) neuronal model in conjunction with a differentiable function. Additionally, the paper provides comparison results to demonstrate the effectiveness of the proposed approach."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper explores the differences between two neuron models: the conventional Leaky Integrate-and-Fire (LIF) model and a modified version that employs sampling-based techniques. Additionally, the authors present comprehensive comparison results to highlight the effectiveness of their method."
+            },
+            "weaknesses": {
+                "value": "The authors do not provide strong evidence that the sampling-based technique outperforms the conventional LIF neuronal model. The absence of an input/output step may also hinder the flow of internal dynamics information. I suggest that they compare their architecture using both approaches to clearly demonstrate the benefits of their method. While it is evident that their approach facilitates the parallelization of the algorithm, this does not necessarily imply that the solution can be obtained faster, as more steps might be required to achieve the appropriate spiking rate."
+            },
+            "questions": {
+                "value": "n/a"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work introduces P-SpikeSSM, a stochastic spiking neural network (SNN) that replaces the conventional scalar LIF neuron membrane potential with an SSM linear dynamical system. The multi-dimensional of the SSM increases the expressivity of each neuron. The SSM inside each neuron is read out through a linear map, the output of which is then clamped between 0 and 1 to be interpreted as a probability. This probability is used to generate spikes stochastically during each timestep according to a Bernoulli distribution. \n\nThe inspiration for using a multidimensional SSM instead of a scalar membrane potential in the spiking neurons is the increased temporal-dynamic expressivity afforded by SSMs. The neural SSMs are initialized using HiPPO matrices, inspired by prior SSM work. \n\nThe reasoning for introducing a probabilistic spiking model is that it affords convenient parallelizability. The authors use the probability as a surrogate operation to propagate gradients through the probabilistic spiking layers.\n\nThe authors show through experiments that the P-SpikeSSM performs better or competitively with transformer and other SSM baselines, and the authors perform ablation studies, showing all components of their model discussed in the paper contribute to task performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Significance.\nReplacing the membrane potential of a spiking neuron with an SSM is a well-motivated modification, and the encouraging results presented in this work suggest this modification could be broadly valuable in efficient neural network research.\n\nOriginality.\nThis is the first work that I\u2019ve seen to replace the membrane potential in and SNN with an SSM. \n\nQuality.\nThe work includes ablation studies to demonstrate the necessity of each component of the model.\n\nClarity.\nThe work builds up the model in a step-by-step manner with sufficient details so that the reader can readily understand the motivation for each step."
+            },
+            "weaknesses": {
+                "value": "On line 141 and the caption for Figure 2, has it truly been proven to be the case that LIF neurons cannot be parallelized? What is the distinction between a non-linear LIF neuron and a linear LIF neuron? (To me, all LIF neurons are non-linear because they have reset terms.) Do efficient algorithms exist for LIF neurons? E.g., see \u201cEXODUS: Stable and Efficient Training of Spiking Neural Networks\u201d by Bauer et al., or the work SLAYER that they reference?\n\nOn line 77, the authors claim the surrogate operation Expection[S_t] is novel. I believe such a surrogate operation has already been introduced. E.g., see \u201cAutomatic Differentiation of Programs with Discrete Randomness\u201d by Arya et al. NeurIPS 2022.\n\nIn Table 1, it is unclear to me the model size/computation budget of these various models. I could imagine model size/compute budget is a key reason why one model would outperform another, so I would like to clearly understand how this table presents a fair comparison. E.g., could you show me how the P-SpikeSSM model is iso-parameter-count?\n\nOn line 102, the authors imply that P-SpikeSSM is a \u201cfully\u201d spiking model. While \u201cfully\u201d spiking is not defined in the literature, one might argue that P-SpikeSSM is not fully spiking because each spiking neuron contains a non-spiking SSM within it. I might suggest dropping the \u201cfully\u201d adjective. On line 415, \u201cfully spiking\u201d is implied to be defined as \u201cnot requiring floating point MAC operations,\u201d but I am now confused regarding how P-SpikeSSM is fully spiking even though there is an SSM inside every neuron. \n\nI struggle to understand the \u201cAnalysis of Energy Efficiency\u201d section. In particular I do not see how the computational cost of the n SSM state variables inside the N P-SpikeSSM neurons in each layer are accounted for. To me, it seems a factor of n is missing.\n\nI noted in line 810 \u201cMemory Footprint\u201d that the SSM parameters in each neuron in a layer can be shared. Are the parameters of the SSMs shared in your experiments?"
+            },
+            "questions": {
+                "value": "I asked the most salient questions above in the \u201cWeaknesses\u201d section. The questions that follow are more minor.\n\nOn line 57, the authors state that long-range dependency tasks are largely unexplored in the spiking domain, but then the authors go on to cite works on SNNs with SSMs in paragraph starting on line 139. What do the authors mean by \u2018largely unexplored\u2019? I suppose \u2018largely unexplored\u2019 is a subjective assessment, however. I might suggest more consistent language.\n\nI would suggest clarifying that the \u201cAnalysis of Energy Efficiency\u201d section is treating parallel inference specifically.\n\nIs there anything that can be said about the hyperparameter selection process used in this work, to help justify that the ablation study experiment results are not an artifact of certain hyperparameter choices?\n\nWhile probabilistic spiking affords convenient parallelization, is there anything that can be said about the drawbacks of or parallelizable alternatives to probabilistic spiking?\n\nThank you for this fascinating work."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "To exploit the energy-saving potential of spiking neural networks (SNNs) and to overcome the bottleneck of SNNs in long-range dependency tasks, this work proposes a scalable probabilistic spiking learning framework based on state space models (SSMs). Unlike the other model that simply concatenates SSMs with the leaky integrate-and-fire (LIF), this work incorporates SSMs into the membrane potential update of spiking neurons, and innovatively proposes P-SpikeSSM in a bid to address the performance issues of LIF and overcome its inability of parallel computations. To build a scalable architecture, this work designs several modules, including SpikeSampler, SpikeMixer, and FuseClamp. With the contribution of these modules, P-SpikeSSM outperforms other SNN models in various long-range dependency tasks. In addition, P-SpikeSSM shows a large improvement compared to its ANN counterpart in energy efficiency analysis."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The motivation for this work is clear and sound, and the presentation of the methodology is very detailed and easy to follow.\n2. P-SpikeSSM integrates the recently high-profile SSM into spiking neural networks from a novel perspective, addressing the problem that the commonly used LIF cannot handle parallel computations. It may provide new insights for future research on the combination of SSM and SNN.\n3. By incorporating P-SpikeSSM with some well-designed modules, the proposed model achieves better performance than other spiking networks and some non-spiking networks."
+            },
+            "weaknesses": {
+                "value": "Major points:\n1. P-SpikeSSM is an interesting exploration, but the elements that play a key role in it seem to be just an application of what SSM proposes, such as temporal convolution to enable parallel computation.\n2. The network cannot be considered a fully spiking neural network, and is best called a partial SNN because of the use of gelu in SpikeMixer Block (Eq. 10). In addition, the introduction of gelu greatly increases the difficulty of deploying this network on neuromorphic hardware.\n3. Considering that the network is a partial SNN, it performs only marginally better than BinaryS4D, which is also a partial SNN, on some of the LRA benchmark tasks, and even worse on others (Table 2). Given that P-SpikeSSM and BinaryS4D are both based on SSM, it's debatable whether their advantages over other transformer-based networks mostly stem from SSM.\n4. For the experiment on the Speech Command dataset (Table 3), Spiking LMUFormer achieved 96.12% accuracy on the full 35-category dataset, whereas this work is only validated on a subset of 10 categories and is not compared to some recent advanced baselines [1, 2].\n\nMinor point:\n1. There is a comparison of energy consumption with the ANN counterpart, but no comparison of the number of parameters with other baselines, which is an important metric influencing performance.\n\n[1] Zeyu Liu, Gourav Datta, Anni Li, and Peter Anthony Beerel. Lmuformer: Low complexity yet powerful spiking model with legendre memory units. ICLR. 2024.\n\n[2] Alexandre Bittar and Philip N Garner. A surrogate gradient spiking baseline for speech command recognition. Frontiers in Neuroscience. 2022."
+            },
+            "questions": {
+                "value": "1. The benefits of stochasticity? Would there be better or more consistent performance if probabilistic spike sampling is replaced by spike firing at a fixed or learnable threshold?\n2. How can the network be trained with the removal of the surrogate gradient (Table 5)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors present a new model that combines state space model (SSM) layers with stochastic (Bernouilli) spiking layers. They test it on various long sequence benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Very good accuracy, outperforming all other spiking proposals and even most non-spiking ones (all except S4)."
+            },
+            "weaknesses": {
+                "value": "* IMHO, the main weakness is that this network is not fully spiking, and it's not clear if it could be implemented on existing neuromorphic chips (e.g., Intel Loihi). The temporal convolution of the SSM (eq  6) could probably be implemented by delays. But the gelu in eq 10, and the non-local normalization (in ClampFused layers) are problematic. I suggest the authors discuss these issues and possible solutions. Also, I think the authors should cast their network as \"Partial SNN\" in Table 1-3\n\n* IMHO psMNIST is not challenging enough (SOTA is nearly 100%, which may mask differences between approaches); I would recommend trying as well on sequential CIFAR10/100 (much more challenging).\n\n* The authors seem to ignore the sliding PSN neuron (http://arxiv.org/abs/2304.12760), which has many similarities with their model. Both use spikes. Both use temporal convolutions instead of stateful units and for this reason, both avoid BPTT and are parallelizable. A comparison with the PSN (both qualitative and quantitative) would be useful.\n\nMinor points:\n\n* \"A is a parameter controlling the evolution\" -> \"A is a matrix controlling the evolution\"\n\n* Fig 1 b: the y dimension is useless here. I would recommend plotting the curve y = p(t) instead of a heat map.\n\n* L184: \"since probability p[t] in [0, 1].\" I think in continuous time, p is a pdf, so it could be >1"
+            },
+            "questions": {
+                "value": "* I think the authors could bypass the SpikeSampler layer and send the real-valued probabilities directly to the next layer. Do you confirm? Have you tried? Of course, the computational advantages of spikes would be lost, but I expect an increase in accuracy, and it would be interesting to quantify it. \n\n* Would it be possible to encourage even sparser activity via some additional term in the loss function?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

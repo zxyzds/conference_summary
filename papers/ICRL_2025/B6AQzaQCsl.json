@@ -1,0 +1,228 @@
+{
+    "id": "B6AQzaQCsl",
+    "title": "Hot PATE: Private Aggregation of Distributions  for Diverse Tasks",
+    "abstract": "The Private Aggregation of Teacher Ensembles (PATE) framework is a versatile approach to privacy-preserving machine learning. In PATE, responses made based on different parts of sensitive data are aggregated into a single response in a privacy-preserving way. Recently, multiple works applied PATE for tasks such as sequential text generation that are inherently\n diverse (or \"hot\"), with multiple valid responses. These designs, however, suffer from\n  tension between diversity and privacy -- since diversity in the responses reduces agreement which forces the aggregation to use smaller noise scales and thus incur higher privacy loss. But limiting diversity of the aggregate response is undesirable since in large models, the very knowledge we want to transfer is encapsulated in the response distribution.\n   We propose \\emph{hot PATE} that is tailored for the diverse setting where responses are distributions. We formally define \\emph{preserving diversity} and design an efficient aggregation method that provably transfers the diversity to the (randomized) aggregate response while incurring no privacy penalty. The method can be implemented using an API access to proprietary models and used as a plug-in replacement for the baseline ``cold'' PATE in existing methods. We demonstrate empirically the potential of hot PATE for an order of magnitude improvement in a task of in-context learning via prompts.",
+    "keywords": [
+        "PATE",
+        "diverse tasks",
+        "privacy-preserving machine learning",
+        "coordinated sampling",
+        "in-context learning"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "A PATE design for diverse tasks with no privacy-diversity tradeoff",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=B6AQzaQCsl",
+    "pdf_link": "https://openreview.net/pdf?id=B6AQzaQCsl",
+    "comments": [
+        {
+            "title": {
+                "value": "Part 3 of response"
+            },
+            "comment": {
+                "value": "## Question 1\n\n\u201cCan you ground your notion of diversity in a practical example? Why should one adopt your notion of diversity? What utility does it bring? Can you provide concrete empirical results to support the benefit of improved diversity as you define it?\n\n### Answer:\n\nIt is not \u201cour notion\u201d of diversity. Diversity is present in current LLMs in that the next-token distribution is a distribution and not a point mass. LLMs are tuned (via the temperature parameter) to allow for significant diversity \u2013 often 2-7 bits of entropy per token. When you prompt an LLM, it will sample different responses. \n\nNote that our goal is not to \u201ccreate\u201d diversity but simply to allow for it to be transferred effectively in a privacy preserving way. Simply to  emulate as effectively as  we can (while preserving  privacy) what an LLM prompted with sensitive data would do. We measure performance by the effectiveness of this \u201ctransfer.\u201d \n\n## Question 2\n\n\u201cI had a lot of trouble with your presentation of the suggested method as a privacy-preserving algorithm. Having read the paper, I am not convinced of claims such as Line 337:\nThis high agreement allows rare tokens to pass even with high privacy noise and allow for the aggregate distribution, with fixed privacy requirements, to satisfy Definition 1.\nCan you make a clear case for this?\u201d\n\n### Answer:\n\nCoordinated ensembles produce histograms that have \u201chigh agreement\u201d on  a single (or very few) tokens. Magically, this happens even with high diversity, which is exactly the point of Hot PATE.  You might want to look at Figure 10 to see an illustration. With coordinated ensembles, each time we sample the histogram the agreement token might be different.  Now,  high agreement (high count) means that we can use more noise. More noise means that the privacy loss is lower."
+            }
+        },
+        {
+            "title": {
+                "value": "Part 2 of response"
+            },
+            "comment": {
+                "value": "## \"Weakness\" 2:\n\n\u201cWriting and exposition is not polished. The introduction is too long and full of technical detail with frequent forward references. None of the technical terms first appearance receive proper introduction. I find page 4 almost completely incomprehensible as a result. New terms are frequently used before they are properly defined. For instance, \"homogeneous ensembles\" is used in Line 186 but partially defined in Line 191. Some terms are really never properly defined at all in the introduction (\"diversity\", \"robustness parameter\", etc.)\u201d\n\n### Response\n\nOur work is a technical contribution that is established formally. It must have technical details and we deferred what we could to the appendix. There are forward references to more details in order to make the presentation more accessible, which is standard practice. If you have constructive suggestions, we are happy to implement them.  As for \u201chomogeneous\u201d ensembles in line 186, this is the \u201cworking assumption\u201d of \u201csample and aggregate\u201d DP  schemes like  PATE. We are happy not to use that term in line 186. You claim that the  \u201crobustness parameter\u201d $\\tau$ is not formally defined, but this is incorrect. In the first mention (page 3) its purpose is explained at a higher level. We state it is a parameter and then state how it is used. We then fully formalize this in Definition 1 (That the reviewer indicated somehow they had read (see \"Weakness\" 1) but apparently missed that part?). Finally, you claim that we do not define \"diversity.\" We say exactly what we refer to -- \u201cdiversity\u201d is simply the notion that there are \u201cmultiple good answers\u201d which is the reality with generative tasks.  The conditional distribution of the next token and the fact that it is not simply point mass means there is diversity.  We do formalize the notion of  \u201ctransferring diversity\u201d.\n\n## \"Weakness\" 3:\n\n\"Experimental results are limited. The results are mostly validating that the algorithm produces more \"diverse\" tokens. I think this is necessary and good. However, throughout the paper it is unclear what the value of this \"diversity\" is. I was hoping the experimental results would showcases a concrete benefit from having more diverse tokens. For instance, better generalization (test error) on a down-stream task.\"\n\n### Response\n\nThe misunderstanding by the reviewer here is that the diversity is not something we generate but something that is **present** in the teacher\u2019s distributions. A teacher distribution is simply that of a tuned LLMl that is applied to the sensitive data. Our method is about allowing this diversity to be transferred in a privacy preserving way to the final privacy-preserving distribution. This is exactly what we demonstrate experimentally. Essentially, for a given privacy loss, our privacy-preserving token distribution is much closer to the average teacher distribution than what is produced by cold  PATE aggregation. There is an order of magnitude improvement. Therefore, in short, we are not evaluating the LLM (llama 8B in this case). We take it as a given and there is no actual need to validate \u201cgeneralization.\u201d The goal is simply to transfer more effectively what it already does and not lose it in our privacy-preserving mechanism.  \n\n## \"Weakness\" 4:\n\n\"Empirical results contain no privacy quantification. Although the paper seeks to find the trade-off between privacy and diversity, the empirical section contains no quantification of the privacy budget of the algorithm. Coupled with the fact that a proper privacy analysis is missing (see first point above) I have serious doubts regarding the privacy claims of the paper and the empirical section did not do much to alleviate them.\"\n\n### Response:\n\nWhat we compare is the baseline \u201cindependent ensembles\u201d and the proposed \u201ccoordinated ensembles\u201d. They are compared on the coverage and diversity of \u201cfiltered\u201d histograms that filter out the counts that are below a threshold $T$. Note that the histogram produced using shared randomness (coordinated ensembles) has the same privacy properties (L1 distance 2 between neighboring datasets) as a histogram produced via \"cold\" PATE.  The only difference is the shape of the histograms, which is what we evaluate. The metric of coverage and diversity after filtering precisely captures what we want since the noise scale (privacy loss) determines that effective threshold. Doing the comparison this way is cleaner as it is not specific to the particular noise distribution (Laplace or Gaussian)."
+            }
+        },
+        {
+            "title": {
+                "value": "Reviewer expertise mismatch? part 1 of response"
+            },
+            "comment": {
+                "value": "Thank you for your time and feedback. We recognize that our paper presents a specialized technical contribution, which may require relevant background to fully appreciate. Regarding your last question, \"Have I misunderstood part of your work,\"  the review does reflect a misunderstanding of key aspects of our approach\u2014more than just a \u201cpart\u201d of the work. Given this, the confidence score of \"3\" seems higher than warranted by the level of understanding reflected in the review.\n\nBelow (see multiple responses) we specifically address the claims made in the review, point to the misunderstandings, and answer the questions asked.\n\n## \"Weakness\" 1:\n\u201c A robust privacy analysis is missing. The paper introduces a particular histogram aggregation strategy that produces rate token frequency. In a sense, this is not an aggregation that produces a single vote but rather a transformed histogram. Overall, I found the presentation of this rather simple idea overly complicated in Section 3. However, the key issue here is not the contrived procedure and Definition 1, but rather the complete lack of privacy analysis under this new aggregation method. Let me clarify this point: the PATE privacy analysis only holds under the noisy argmax release. In particualr, the analysis is a function of the gap between the top vote and the second top vote of the histogram. If we were to use Def.1 and instead release transformed vote count (for the purposes of diversity), we are strictly releasing more information. In fact, since the rare token frequencies are kept (for diversity purposes), such a scheme will likely have higher privacy cost than releasing a full noised histogram of votes.\u201d\n\n### Response\n\nThe first major misunderstanding here is that we do not release the histogram. We release a single token each time -- just like \u201ccold\u201d (standard) PATE. This is explained in Section 2 that introduces the framework for Hot PATE  and also illustrated in Figure 4. We are happy to get constructive suggestions on what led to this misunderstanding of our text and figure. \n\nThe heart of our method is the way the histogram is sampled (with correlated teacher votes) in Algorithm 1. You dismiss it as \u201ccontrived,\u201d which is a poor choice of an adjective.\n\nDefinition 1 is not about privacy at all. It is a formal definition of what it means for an aggregate distribution to transfer the diversity of a collection of distributions. This is our \"utility.\" We then propose a way to do this in a privacy preserving way (via ensemble coordination). The aggregate distribution corresponds to that of the output of the probabilistic end-to-end aggregation process that produces a single token. \n\nYou claim that a \u201crobust privacy analysis is missing.\u201d In fact, since what we change is the way the histogram is produced, and each teacher contributes a single vote, we can simply plug in the privacy analysis of cold PATE. We do state this clearly (see lines 185-187  \u2013 the fifth paragraph of page 4). Additionally, we consider in Appendix D and E additional regimes (heterogeneous ensembles) and additional privacy analysis methods (based on TCT) but the high order bit is that you can simply apply standard PATE aggregation.  Again, the primary benefit of Hot PATE, at an intuitive level,  is that the histograms are much more favorable, since there tends to be a very high count to a single token even with very diverse distributions. This is all made very precise mathematically.\n\nAs for \u201cthe gap\u201d, in fact, with PATE, if there are multiple \u201csimilar\u201d tokens we are ok with releasing either one. Typically the parameters are not set as to separate the highest and second highest when the difference is small, especially with diversity, but so that we can release one of top votes and not release tokens with no votes or very low vote counts. \n\nWe are not sure we addressed all the misunderstandings in \"Weakness 1\", but please read our response  and we are happy to clarify further."
+            }
+        },
+        {
+            "title": {
+                "value": "Beginner-friendliness"
+            },
+            "comment": {
+                "value": "### Reviewer's concern:\n\"The paper is not beginner-friendly and seems to assume a reader who is already very familar with DP, PATE and LLMs. In fairness, this probably is going to be the chief audience of this paper, but at the same time I find it somewhat egregious that differential privacy is never formally defined (even if the definition has to be deferred to the appendix due to space constraints).\"\n\n### Response\n\nWe appreciate the feedback and understand the need to make the paper more accessible. As the reviewer noted, there is a natural tradeoff in balancing technical depth with approachability for less familiar readers. The presentation in the main body is already an attempt to present concepts at a higher level.\n\nAs for the absent definition of differential privacy. We agree that we should include it in the appendix, especially with parts of our considerations focused on $(\\varepsilon,\\delta)$-DP. It\u2019s worth noting that our contributions and improvements are applicable across DP models (different divergences) and apply with $(\\varepsilon,\\delta)$ privacy but also with concentrated differential privacy (CDP and zCDP), and R\u00e9nyi differential privacy (RDP). Moreover, it also applies when the goal is not privacy but robustness to \u201coutlier\" examples in the training data. This flexibility is why we initially chose to avoid a precise definition in the main text and consider metrics that transcend a particular definition."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to the reviewer's questions"
+            },
+            "comment": {
+                "value": "### Question 1:\n\u201cBesides coverage and diversity, are there other metrics which could be used to demonstrate the effectiveness of hot PATE?\u201d\n\n### Response:\nWe did consider other metrics such as the TV distance between the average and \u201cfiltered\u201d distribution (after removing counts below threshold) for independent (\u201ccold\u201d PATE) and coordinated (\u201chot\u201d PATE) teacher ensembles (Figure 5). We also considered diversity per coverage. See also \u201crobust average\u201d (Remark 3 in Appendix B.2) and Figure 7. This focuses on the fraction that we can transfer \u201cprivately\u201d versus the potential for what can be transferred privately (the robust average distribution).\n\nBut overall these are the \"right\" metrics for our goal of transferring the diversity present in the teacher distributions.\nAll our metrics demonstrate very significant gains from the hot PATE method (coordinated teacher ensembles). \n\n### Question 2\n\u201cLine 274\u201d\n\n### Response:\nYes exactly. Often (such as in the original PATE works [Papernot et al 2018]  the noise scale $\\sigma$ is scaled to the level of obtaining utility and this determines the privacy cost. (Other privacy analysis frameworks such as TCT do this as well) So the privacy loss from transferring is  inversely related to $\\max_j c_j$  (the $\\arg$ there is a typo which we will fix)"
+            }
+        },
+        {
+            "title": {
+                "value": "Re rigorous privacy guarantees"
+            },
+            "comment": {
+                "value": "Thank you for your review! We will respond to the questions in multiple comments.\n\n\n\n### Addressing the stated \"weakness\" on rigorous privacy guarantees:\n\u201cI felt that the privacy guarantees are not rigorously stated, DP implementations are largely left as poorly-described black boxes (e.g., `NoisyArgMax' in Algorithm 2 is never formally introduced) and none of the algorithms include the privacy parameters as input. I didn't see a formal privacy analysis that can be easily verified, and in terms of reproducibility I feel like the algorithms can\u2019t really be implemented without knowing, for example, how to calibrate the noise scale.\u201d\n\n### Response:\nThe detailed privacy analysis can be found in Appendix D and Appendix E. While this analysis is deferred to the Appendix due to its technical nature, it primarily reflects the fact that the aggregation methods\u2014specifically, transforming a vote histogram into a single token via NoisyArgMax or private sampling\u2014are **standard techniques in the literature.** In particular, for NoisyArgMax, one can simply **plug in** the procedures proposed in the original PATE paper (Laplace noise) or follow up work (Gaussian noise) and apply it with the histograms produced with Hot PATE.  In the appendix, we study the tradeoffs obtained using the TCT framework (an extension of the sparse vector technique, but this is a \u201cbonus\u201d study that is not necessary for Hot PATE implementation).\nThe key insight here is that with all these (standard) aggregation methods, the level of privacy noise required depends on the maximum frequency of any given token. That is, high consensus among teachers is best. With Cold PATE, consensus breaks down with diverse responses. In contrast, Hot PATE maintains high agreement even with diverse teacher responses\u2014a property we establish both mathematically and empirically.\n\nIn the main text, we aimed for an accessible overview that is focused on the novel components of our work. The privacy loss improvement is demonstrated via the impact on maximum token frequency, that with all aggregation methods, is directly related to the privacy loss. We demonstrate a very significant **order of magnitude** improvement. Mathematically, Hot PATE aggregation can only result in improvement, and this increases with diversity."
+            }
+        },
+        {
+            "title": {
+                "value": "Diversity and utility"
+            },
+            "comment": {
+                "value": "Thank you for the review. As for the question: \"In practice, does increasing diversity ever harm utility?\"\n\nIn practice, the temperature parameter in language generation models is tuned to balance the tradeoff between diversity and accuracy. Lower temperatures limit diversity, which often helps with focused factual responses but also tends to reduce creativity. Note that the tuning in current large models allow for significant diversity -- 2-7 bits of entropy per token. \n \nHowever, this discussion is beyond the scope of our work! Our goal is to preserve the diversity that is already present in the teacher models, which are already tuned to have the \"right level\" of diversity.  Methods that incur privacy-diversity tradeoff, like cold PATE, often must suppress diversity for utility. Hot PATE allows for diversity to be transferred with no privacy loss by producing correlated vote histograms via shared randomness. \n\nFor instance, consider the prompt \u201cI like my ***\u201d in a conversation about pets that follows examples in a private context (say each teacher sees data of 10 different families from a town that has only dogs, cats, or frogs for pets). In this case we do want the model to randomly choose from these 3 good answers. Suppose most teacher models assign a probability of  \u2153 to each, as expected. Now, with Cold PATE, the histogram would have 1/3 of teachers' votes for each pet type. With hot PATE, the histogram would have nearly all votes for the same option, depending on the shared randomness, also with  probability 1/3 to each.  This means that with hot PATE it suffices to use X3 the noise scale than with cold  PATE.  Again, this diversity is something that is present in an already-tuned model. It is not something we add. Hot PATE just allows for better utility-privacy tradeoff when transferring it."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces HotPATE, a method based on the Private Aggregation of Teacher Ensemble with the distinction that the method forgoes independent teacher data and models. In fact, the teacher coordinate their sampling such that upon aggregation of their votes, rare teacher decisions (for instance, rare tokens in the case of private synthetic next-token generation) can still be produced without requiring a lot of agreement between teachers. The paper claims this process improves the diversity of the resulting vote histograms without privacy cost of not having high agreement  (which is traditionally what ensures low PATE privacy costs for private prediction). A new definition for diversity-preserving aggregeation of distributions is presented. Empirical results show that under that definition, HotPATE improves upon ColdPATE. However, practical implications of the definition and broader contribution is unclear."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Improving diversity of PATE responses is an interesting goal, given how much the privacy of PATE comes from teacher agreement (therefore lack of diversity in teacher votes).\n- The idea of coordinated sampling of tokens seems novel. Although its privacy implications are unclear."
+            },
+            "weaknesses": {
+                "value": "As someone who is quite familiar with PATE and its derivatives, I found this paper very hard to read and digest. I think there are a couple of reasons for this:\n\n- **A robust privacy analysis is missing.** The paper introduces a particular histogram aggregation strategy that produces rate token frequency. In a sense, this is not an aggregation that produces a single vote but rather a transformed histogram. Overall, I found the presentation of this rather simple idea overly complicated in Section 3. However, the key issue here is not the contrived procedure and Definition 1, but rather the complete lack of privacy analysis under this new aggregation method. Let me clarify this point: the PATE privacy analysis only holds under the noisy argmax release. In particualr, the analysis is a function of the gap between the top vote and the second top vote of the histogram. If we were to use Def.1 and instead release transformed vote count (for the purposes of diversity), we are strictly releasing more information. In fact, since the rare token frequencies are kept (for diversity purposes), such a scheme will likely have higher privacy cost than releasing a full noised histogram of votes.\n\n- **Writing and exposition is not polished.** The introduction is too long and full of technical detail with frequent forward references. None of the technical terms first appearance receive proper introduction.  I find page 4 almost completely incomprehensible as a result. New terms are frequently used before they are properly defined. For instance, \"homogeneous ensembles\" is used in Line 186 but partially defined in Line 191. Some terms are really never properly defined at all in the introduction (\"diversity\", \"robustness parameter\", etc.)\n\n- **Experimental results are limited.** The results are mostly validating that the algorithm produces more \"diverse\" tokens. I think this is necessary and good. However, throughout the paper it is unclear what the value of this \"diversity\" is. I was hoping the experimental results would showcases a concrete benefit from having more diverse tokens. For instance, better generalization (test error) on a down-stream task.\n\n- **Empirical results contain no privacy quantification.** Although the paper seeks to find the trade-off between privacy and diversity, the empirical section contains no quantification of the privacy budget of the algorithm. Coupled with the fact that a proper privacy analysis is missing (see first point above) I have serious doubts regarding the privacy claims of the paper and the empirical section did not do much to alleviate them."
+            },
+            "questions": {
+                "value": "- Can you ground your notion of diversity in a practical example? Why should one adopt your notion of diversity? What utility does it bring? Can you provide concrete empirical results to support the benefit of improved diversity as you define it?\n- I had a lot of trouble with your presentation of the suggested method as a privacy-preserving algorithm. Having read the paper, I am not convinced of claims such as Line 337:\n  > This high agreement allows rare tokens to pass even with high privacy noise and allow for the aggregate distribution, with fixed privacy requirements, to satisfy Definition 1.  \nCan you make a clear case for this?  \n- Have I misunderstood part of your work? To be clear, I think as is, this paper is not ready for publication. However, I want to be fair and make sure that I have not misunderstood your work. So I'll be happy to engage with you during the rebuttal process."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "- Can you ground your notion of diversity in a practical example? Why should one adopt your notion of diversity? What utility does it bring? Can you provide concrete empirical results to support the benefit of improved diversity as you define it?\n- I had a lot of trouble with your presentation of the suggested method as a privacy-preserving algorithm. Having read the paper, I am not convinced of claims such as Line 337:\n  > This high agreement allows rare tokens to pass even with high privacy noise and allow for the aggregate distribution, with fixed privacy requirements, to satisfy Definition 1.  \nCan you make a clear case for this?  \n- Have I misunderstood part of your work? To be clear, I think as is, this paper is not ready for publication. However, I want to be fair and make sure that I have not misunderstood your work. So I'll be happy to engage with you during the rebuttal process."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Hot PATE, an extension of the PATE (Private Aggregation of Teacher Ensembles) framework, to settings where output diversity is important. PATE works by partitioning the data and training a teacher model on each partition. Then, for a given model input, the each teacher model \"votes\" on a label, and a final label is privately sampled from the teacher histogram. \n\nThe key idea of Hot PATE is to preserve both privacy in the output label and the diversity of teacher distributions.\u00a0The paper introduces the property of diversity preserving aggregation and introduces ensemble coordination as a technique to satisfy the property.\u00a0Ensemble coordination strategically introduces correlation between teacher votes to ensure that rare tokens are transferred with high privacy noise, effectively mitigating the privacy penalty associated with high diversity, due to private sampling.\n\nThe authors provide an empirical demonstration of this approach in the context of in-context learning and show that Hot PATE yields greater diversity in output tokens."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Introduces an extension of PATE that overcomes the diversity-privacy tradeoff\n- Motivates the analysis through the notion of diversity preserving aggregation\n- Connects proposed method with existing statistics literature: coordinated sampling\n- Paper reads well, particularly with comparisons between hot and cold PATE"
+            },
+            "weaknesses": {
+                "value": "- The empirical analysis is more along the lines of a proof-of-concept rather than a thorough comparison. The paper would benefit from more systematic experiments between hot and cold PATE.\n- No discussion of the limitations of the proposed methods. See question 1."
+            },
+            "questions": {
+                "value": "1. In practice, does increasing diversity ever harm utility?\n\nOther Notes:\n\n- Typo on Line 93: \"...include component that...\"\n\n- Typo on Line 190: \"...two use scenarios of applications...\"\n\n- Typo on Line 323: \"A tokens j that...\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Private Aggregation of Teacher Ensembles (PATE) was designed for classification-like tasks where each datapoint has a single ground-truth label. For \u201cdiverse\" tasks such as sequential text generation, the responses might instead be distributions. But there is a tension between diversity and privacy: diversity in the responses reduces agreement among the teachers, which in turn requires a smaller noise scale and less privacy. This paper proposes \u201chot PATE\u201d which allows for higher diversity in the responses without increasing the privacy cost."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "* I think this paper has a significant contribution \u2014 via a carefully designed aggregation method, PATE can now thrive in a broader and more modern setting. Formalizing the notion of \u201cdiversity-preserving\u201d (Definition 1) is also a helpful contribution.\n* The PATE framework can now be applied to very fashionable problems such as in-context learning."
+            },
+            "weaknesses": {
+                "value": "* The paper is not beginner-friendly and seems to assume a reader who is already very familar with DP, PATE and LLMs. In fairness, this probably is going to be the chief audience of this paper, but at the same time I find it somewhat egregious that differential privacy is never formally defined (even if the definition has to be deferred to the appendix due to space constraints).\n* I felt that the privacy guarantees are not rigorously stated, DP implementations are largely left as poorly-described black boxes (e.g., NoisyArgMax in Algorithm 2 is never formally introduced) and none of the algorithms include the privacy parameters as input. I didn't see a formal privacy analysis that can be easily verified, and in terms of reproducibility I feel like the algorithms can\u2019t really be implemented without knowing, for example, how to calibrate the noise scale."
+            },
+            "questions": {
+                "value": "* Besides coverage and diversity, are there other metrics which could be used to demonstrate the effectiveness of hot PATE?\n* Line 274: If I\u2019ve understood correctly, \u201cthe noise scale must satisfy $\\sigma << \\arg \\max_j c_j$\u201d is a requirement on the utility, and not the privacy? It might be helpful to explain this more thoroughly."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces \"hot\" PATE, an extension of PATE designed for in-context learning via prompts, addressing tasks that are \"diverse\" and open-ended. They empirically demonstrate the potential of hot PATE for in-context learning."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The motivation is clear: sequential text generation tasks through in-context learning are inherently diverse (\"hot\") with multiple valid responses.\n\n\n2. The idea of aggregating responses from different teachers to maintain both diversity and privacy is interesting."
+            },
+            "weaknesses": {
+                "value": "1. My primary concern is the empirical evaluation. The utility of in-context learning is typically measured by accuracy in the literature (e.g., [1,2,3]). However, this paper does not report in-context learning accuracy on specific tasks. It is unclear how much benefit hot PATE can provide for in-context learning. Additionally, the experiment is conducted on only one dataset, which is insufficient, and there is only one baseline (\"cold\" PATE). It is unclear why comparisons to prior in-context learning work (e.g., [1,2,3]) are not included.\n\n\n[1] Duan, Haonan, et al. \"Flocks of stochastic parrots: Differentially private prompt learning for large language models.\" Advances in Neural Information Processing Systems 36 (2024).\n\n[2] Tang, Xinyu, et al. \"Privacy-Preserving In-Context Learning with Differentially Private Few-Shot Generation.\" The Twelfth International Conference on Learning Representations.\n\n[3] Wu, Tong, et al. \"Privacy-Preserving In-Context Learning for Large Language Models.\" The Twelfth International Conference on Learning Representations.\n\n\n2. The paper states that Wu et al. (2023), Lin et al. (2024), and Xie et al. (2024) are independent concurrent work, which is inaccurate. These should be considered prior work, as Wu et al. (2023) and Lin et al. (2024) were published at ICLR 2024, and Xie et al. (2024) at ICML 2024.\n\n\n3. I suggest extending the literature review of this paper by including the work \"Tang, Xinyu, et al. Privacy-Preserving In-Context Learning with Differentially Private Few-Shot Generation. The Twelfth International Conference on Learning Representations.\". This work studies differentially private in-context learning and proposes to use the sample and aggregate framework to generate DP synthetic examples for in-context learning inference. It could also serve as an experimental baseline for comparison.\n\n\n\n\n3. Some typos:\n\n(1) I recommend ensuring the correct application of \\citet and \\citep.\n\n\n(2) Missing periods in Line 299, Line 396, and Line 427."
+            },
+            "questions": {
+                "value": "As in the weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,198 @@
+{
+    "id": "h0Ak8A5yqw",
+    "title": "On the Role of Attention Heads in Large Language Model Safety",
+    "abstract": "Large language models (LLMs) achieve state-of-the-art performance on multiple language tasks, yet their safety guardrails can be circumvented, leading to harmful generations. In light of this, recent research on safety mechanisms has emerged, revealing that when safety representations or component are suppressed, the safety capability of LLMs are compromised. However, existing research tends to overlook the safety impact of multi-head attention mechanisms, despite their crucial role in various model functionalities. Hence, in this paper, we aim to explore the connection between standard attention mechanisms and safety capability to fill this gap in the safety-related mechanistic interpretability. We propose an novel metric which tailored for multi-head attention, the Safety Head ImPortant Score (Ships), to assess the individual heads' contributions to model safety. Base on this, we generalize Ships to the dataset level and further introduce the Safety Attention Head AttRibution Algorithm (Sahara) to attribute the critical safety attention heads inside the model. Our findings show that special attention head has a significant impact on safety. Ablating a single safety head allows aligned model (e.g., Llama-2-7b-chat) to respond to **16$\\times\\uparrow$** more harmful queries, while only modifying **0.006\\%** $\\downarrow$ of the parameters, in contrast to the $\\sim$ **5\\%** modification required in previous studies. More importantly, we demonstrate that attention heads primarily function as feature extractors for safety and models fine-tuned from the same base model exhibit overlapping safety heads through comprehensive experiments. Together, our attribution approach and findings provide a novel perspective for unpacking the black box of safety mechanisms in large models.",
+    "keywords": [
+        "interpretability",
+        "large language model",
+        "multi-head attention",
+        "safety",
+        "harmful content"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "We identify safety-critical attention heads in large language models, and when these heads are ablated, the model safety is significantly compromised.",
+    "creation_date": "2024-09-24",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-14",
+    "forum_link": "https://openreview.net/forum?id=h0Ak8A5yqw",
+    "pdf_link": "https://openreview.net/pdf?id=h0Ak8A5yqw",
+    "comments": [
+        {
+            "title": {
+                "value": "Resonse to Reviewer BEKY"
+            },
+            "comment": {
+                "value": "**First of all, we sincerely thank you for your detailed and careful review. Your comments have greatly improved our paper.**\n> All revisions are highlighted in purple.\n## **For Weakness 1**\nThank you for pointing out the lack of discussion regarding the referenced work. \nWe are aware of this research and acknowledge its relevance. \nInitially, we felt that it was not the most related to our study, which is why we did not discuss it in this version. \nSpecifically, the referenced work focuses on the safety mechanisms of RLHF (or DPO), while our approach is centered on analyzing the role of the model's parameters. \nNonetheless, we recognize that this distinction may need further clarification, and we plan to address it in an additional Appendix F in a new revision.\n\n## **For Weakness 2**\nWe sincerely apologize for the inconsistencies in notation usage. \nWe greatly appreciate your careful review, and we will address all of your comments and revise the notational issues you pointed out.\nAdditionally, we will review the paper thoroughly to identify and correct any other notation inconsistencies that may have been overlooked, with the aim of improving the clarity and quality of the paper.\n\n### **2-1.** \nIn line 297, we have to corrected $d$ to $d_k$ as you suggested.\n### **2-2.** \nThank you for your reminder, which led us to discover an error in the current version. Upon further review, we found that the derivation in the appendix version is more accurate. \n    To clarify, the correct expression should be:\n     $h_i^{\\textcolor{purple}{mod}} = \\operatorname{Softmax}\\Big(\\frac{\\textcolor{orange}{\\epsilon} W_q^i W_k^i{}^T}{\\sqrt{d_k/n}}\\Big) W_v^i = A W_v^i,$\n\nwhere \\( A \\) is a lower triangular matrix defined by \n    $A = [a_{ij}], \\quad a_{ij} =\n    \\begin{cases}\n    \\frac{1}{i} & \\text{if } i \\geq j, \\\\\n    0 & \\text{if } i < j.\n    \\end{cases}\n    $\n\nWe have made the corrections in both the main text and the corresponding appendix. Thank you again for pointing this out.\n###  **2-3.** \nRegarding the use of the constants $\\mathbb{L}, \\mathbb{N},\\mathbb{S}$, our intention was to unify the notation in the algorithm. We apologize if this caused confusion and will carefully consider modifying the notation for better consistency in future revisions.\n### **2-4.**\n You are absolutely correct in your observation. $\\Delta p$ should indeed be expressed as a function rather than with a simple \"$-$\". We have revised Equation 5 to express this as KL divergence, as per your suggestion.\n### **2-5.**\n We would like to clarify that $h^m_i$ is not a typo. We use $m$ as a superscript to indicate that the i-th head is modified. However, we agree that this notation could be confusing, so we replace $m$ with $mod$ for easier understanding.\n\n## **For Weakness 3**\nThank you for your comment regarding the impact of ablating safety-related heads on model utility. \nAs we mention briefly in Section 5.3, \" HELPFUL-HARMLESS TRADE-OFF\" we find that there is an effect on the model's performance and it is similar to pruning. \nWe hope this clarification addresses your concern.\n\n## **For Weakness 4**\n### **Q1:**\nThank you for your insightful question. \nThe results at the bottom of Table 3 indeed come from query-level Ships. \nAs for why query-level Ships perform worse than dataset-level Ships, this actually highlights the very motivation behind our proposal to use the generalized version of Ships.\nAs we explain in lines 272 to 276, query-level Ships may be more tailored to one specific query.\nTherefore, it can achieve better results when only one is ablated, but it has little effect when more are ablated.\nFor example, for a harmful query such as \"how to generate defamatory articles,\" ablating the head related to understanding defamation may impact the model's response. \nHowever, this head ablation can not generalize to other types of queries, which is why dataset-level Ships can provide more consistent and generalized results.\n### **Q2:**\nYes, the 0.006% figure refers to modifying the Q, K, or V matrix in a single head. \nWe apologize for the earlier confusion. Upon further review, we found that the results in Table 1 actually correspond to the ablation of three heads, **and the parameter modification should be corrected to approximately 0.018%.**\n\n---\n\n**We sincerely appreciate your review comments again, which benefit our paper and make it more solid!**"
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your replies regarding weakness1 and weakness3. After your explanation, I fully understand the cost considerations in your experiments, which adequately resolve my concerns about the experimental setup. However, I would like to further clarify my questions for weakness2 and weakness4, as I believe there may be some misunderstanding of my points.\n\n## Weakness2:\nMy question concerns why the improvement of Vicuna on the **Advbench and Jailbreakbench** datasets in the **direct** setting was limited. My focus is not on comparing the averaged results of three datasets under the template setting (0.27 to 0.55), but rather understanding the constrained improvement specifically in the direct setting for those two datasets.\n\n## Weakness4:\nYou mentioned that the \"understanding of questions drops.\" Could this lead to scenarios where a model **\"responds affirmatively but does not actually answer the user's questions\"**? For example, if a user asks, \"generate a racist joke,\" the LLM might respond with \"Here is a joke: [harmless joke].\" In other cases, it might provide content unrelated to the user's real intent, which violates the rule you mentioned, \"a harmful answer must also be helpful for malicious user\". This situation **cannot be detected by a simple refusal keyword detection method**. Such cases might potentially undermine the reliability of the conclusion about the ASR improvement shown in Figure 2.\n\n## For Q1:\nConducting \"an analysis of the accuracy of the ASR based on keyword detection (in relation to human judgments)\" does not require testing under all of your experimental settings. I am interested in understanding the accuracy of the keyword detection measurement method itself. This accuracy primarily relates to differences in the style of the model's responses (for example, variation in refusal keywords and challenges in interpreting the semantics of responses). This concern is not related to the complexity of your experiments.\n\nOverall, most of my concerns have been resolved, and **I will increase the score to 6**. Thank you in advance for further addressing my remaining questions."
+            }
+        },
+        {
+            "title": {
+                "value": "References"
+            },
+            "comment": {
+                "value": "[1] Wei, Boyi, et al. \"Assessing the Brittleness of Safety Alignment via Pruning and Low-Rank Modifications.\" Forty-first International Conference on Machine Learning.\n\n[2] Zhao, Wei, et al. \"Defending Large Language Models Against Jailbreak Attacks via Layer-specific Editing.\" arXiv preprint arXiv:2405.18166 (2024).\n\n[3] Chen, Jianhui, et al. \"Finding Safety Neurons in Large Language Models.\" arXiv preprint arXiv:2406.14144 (2024).\n\n[4] Arditi, Andy, et al. \"Refusal in language models is mediated by a single direction.\" arXiv preprint arXiv:2406.11717 (2024).\n\n[5] Dai, Josef, et al. \"Safe RLHF: Safe Reinforcement Learning from Human Feedback.\" The Twelfth International Conference on Learning Representations.\n\n[6] Mazeika, Mantas, et al. \"HarmBench: A Standardized Evaluation Framework for Automated Red Teaming and Robust Refusal.\" Forty-first International Conference on Machine Learning.\n\n[7] Chao, Patrick, et al. \"Jailbreaking black box large language models in twenty queries.\" arXiv preprint arXiv:2310.08419 (2023).\n\n[8] Bai, Yuntao, et al. \"Training a helpful and harmless assistant with reinforcement learning from human feedback.\" arXiv preprint arXiv:2204.05862 (2022).\n\n[9] Elias Frantar and Dan Alistarh. Sparsegpt: Massive language models can be accurately pruned in one-shot. In International Conference on Machine Learning, pp. 10323\u201310337. PMLR, 2023.\n\n[10] Mingjie Sun, Zhuang Liu, Anna Bair, and J Zico Kolter. A simple and effective pruning approach for large language models. In The Twelfth International Conference on Learning Representations, 2024a."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer WKXw"
+            },
+            "comment": {
+                "value": "**Thank you for your detailed review. We think there are some misunderstandings and we will clarify them.**\n\n> All revisions are highlighted in purple.\n\n## **For Weakness 1**\n\n**First, we would like to clarify that GPT-4-judge is not commonly employed in safety interpretability research.** \nThe safety interpretability of LLMs, is still an emerging field with relatively few studies. \nIn the existing research, for example, two closely related works[1, 2], they both used keyword detection instead of GPT-4-judge.\nOther related works, such as [3, 4], [3] used the model in [5] to evaluate toxicity, while [4] utilized a fine-tuned Llama from [6] without employing GPT-4-judge.\n\nThe primary reason for this is that evaluating ASR with GPT-4 is prohibitively expensive for interpretability research, particularly when compared to jailbreak studies.\nJailbreak evaluations typically require only **a few hundred data points**, while safety interpretability requires comparisons across **hundreds of thousands of data points** under different settings to analyze the parameters.\nTo illustrate, we estimated the cost based on the prompt template from [7] and the paper you referenced. \nTheir prompt templates have more than 400 tokens, so, every request needs approximately 600 input tokens for evaluating 128 tokens generation (the outputs may not have a fixed number, we omit them now). \nIf we were to produce with GPT-4-judge, we would require roughly 120M tokens: 600(input tokens) * 1024 (head) * 100(dataset size) * 2(dataset) tokens, resulting in an estimated cost of 3,600 dollars for a single figure (30.00 dollars per 1M tokens for GPT-4)\nSince our work is more fine-grained than other works, it would cost over 10,000 dollars solely for input tokens across the entire paper, excluding any additional debugging or analysis costs.\nIn contrast, a jailbreak evaluation typically costs around $3.60 for a similar sample size (0.12M tokens). \n**Thus, GPT-4 is rarely, if ever, used in safety interpretability research, which differs significantly from jailbreak studies**\n\nWe sincerely hope that you will understand our choice of keyword detection, which is commonly employed in interpretability research due to both cost and efficiency. We believe it aligns well with the objectives of our work.\n\n## **For Weakness 2**\n**Our improvement is not quiet limited, the increase from 0.27 to 0.55 is a significant improvement-it has effectively doubled.** \nIn fact, the performance on Vicuna might seem limited because it is inherently not as safe as Llama, resulting in a smaller multiple of improvement compared to Llama. \nNonetheless, this improvement is substantial enough to support our conclusions.\n\n## **For Weakness 3**\nThank you for pointing out the numbering issue. \nThere is indeed an oversight here. \n**Figure 5a and Figure 5b have been correctly numbered as 6a and 6b**.\n\n## **For Weakness 4**\nWe apologize for the oversight regarding Figure 6b.\nThe experimental results presented in Figure 6b are from Llama-2-7b-chat, and we have added  this clarification in Section 5.3. \nWe believe your concern may stem from a misunderstanding.\nA harmful answer must also be helpful for malicious user[8], and our helpfulness evaluation on benign questions indicates that the model\u2019s understanding of questions drops by about 15% overall.\nThis level of degradation is generally considered to be insignificant in pruning methods [9, 10], which are chasing utility.\nWe argue that our helpfulness analysis actually strengthens our findings rather than undermining them.\n\n## **For Q1**\n**We appreciate your suggestion, but adding a metric based on GPT-4 is challenging for us due to the significant cost involved, which is one of the reasons GPT-4 is rarely used in safety interpretability research, particularly in our case.**\nRegarding human judgment, we understand your concern and appreciate your suggestion. \nWhile we did conduct small-scale manual reviews, they were not extensive enough to cover all generations due to similar cost constraints (as mentioned in Weakness 1).\nWe also considered sampling before human evaluation, but this would still require us to process 1024 groups. Even if we were to sample just 10 items per group (which we acknowledge would be an inaccurate approximation), we would still need to evaluate 10,240 data points.\nGiven these challenges, we decided not to include this approach in the paper.\nWe hope you understand the difficulties we faced in this regard, and we sincerely appreciate your understanding.\n\n## **For Q2**\nWe believe it would be helpful to first address Weakness 2, as it is directly related to your concern. Once we have clarified that point, we will then provide a detailed response to this question.\n\nLimited to character, references are given in an additional comment.\n\n---\n\nWe sincerely hope that our response addresses your concerns and encourages you to reconsider your score. We would be more than happy to engage in additional discussions."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a method named Ships, which assesses each attention head\u2019s contribution to LLM safety at both the query and dataset levels. It also proposes a heuristic search-based method, Sahara, to identify a group of safety-related attention heads. Ablating these heads led to a notable increase in ASR on Llama-2-7b-chat and Vicuna-7b-v1.5. The approach is claimed to be more parameter and computing efficient than previous methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. To my knowledge, no other work has attempted to interpret each attention head\u2019s contributions to LLM safety. I'm glad to see such work.\n\n2. The method for assessing the importance of attention heads to safety is intuitive and reasonable."
+            },
+            "weaknesses": {
+                "value": "1. Other previous works, such as those identifying safety-related parameters through probing [1], could also be discussed.\n\n2. There are inconsistencies in notation usage that need to be addressed. To name a few:\n- In Eq 2, 7 and 8, $d_k$ denotes the model dimension. However in line 297, $d$ is used instead.\n- In Appendix A.1, $N = d/n$ should be clarified.\n- Throughout the paper, $L$ and $n$ are used to denote the number of layers and the number of heads, respectively, but Algorithm 1 uses $\\mathbb{L}$ and $\\mathbb{N}$ for the same.\n- Equation 5 defines parameter importance on safety as $\\Delta p = p (\\theta_O) - p (\\theta_O \\backslash \\theta_c)$. However, $\\Delta p$ is never mentioned again. Instead, Equation 9 uses KL divergence between two probabilities. I guess $\\Delta p$ means to represent the difference between two probabilities computed by some function.\n- Typo: Eq.6, $h_i^m$ \u2192 $h_i$\n\n3. The impact of ablating safety-related heads on model utility could be evaluated.\n\n4. Additional clarifications needed:\n- In Table 3, are the results at the bottom obtained by, using Ships on each query to identify and ablate the most important head, then assessing whether the attack was successful for that query? If so, why does query-level Ships perform worse than dataset-level Ships?\n- Line 264 notes that 0.006% of all parameters corresponds to the number of parameters in a single attention head. However, Section 4 suggests that ablating 0.006% of parameters (potentially one head) can achieve an ASR of approximately 0.72 on Llama. Yet, Figure 4(a) indicates that ablating at least two heads is necessary to surpass an ASR of 0.7. What is the group size used in Table 1?\n\n[1] A Mechanistic Understanding of Alignment Algorithms: A Case Study on DPO and Toxicity. ICML 2024."
+            },
+            "questions": {
+                "value": "See Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors study how heads contribute to LLM safety, and find that by modifying less than 0.006% of the parameters (a significantly smaller number of parameters than before), safety alignment is degraded significantly. The authors propose Safety Head ImPortant Score (Ships) which measures individual heads\u2019 contributions to model safety. On the dataset level, the authors propose an algorithm Sahara that iteratively choose important heads, creating a group of heads that degrades safety performance for a dataset. The method is efficient in compute hours needed, and impact safety at greater granularity than before. The authors study the effect of safety attention heads, including experiments of concatenating heads to a pre-trained model, and observes that safety capability is close to that of aligned model."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper proposes a novel method for mechanistically locating and ablating heads that are important to safety alignment, with greater granularity and less compute than prior methods. The method of head ablation is well motivated and the experiments are detailed, considering course correction (reverting back to safety) as well.\n- The paper is well written and organized"
+            },
+            "weaknesses": {
+                "value": "1. The helpfulness / utility measurement is done with lm-eval, which mostly consists of single-turn question and answering utility measurement. More comprehensive utility measurement would benefit the paper. \n2. Sahara uses heuristic to choose group size, and group size is important to how safety capability is affected. Such size heuristics (more than 3) might not hold for different models with different number of parameters. \n3. The paper is overall well-written with some small typos:  \"Bottom. Results of attributing attributing specific harmful queries using Ships\" (line 445). Consider changing the color for axis label for Figure 13. It's currently quite hard to read."
+            },
+            "questions": {
+                "value": "Q1. What lm-eval helpful tasks were experimented on for Figure 6b?\n\nQ2: Why do you think there is minimal overlap between the top-10 attention heads via UA ablation and SC ablation (line 477-478)? In combination with results from Appendix E, does this suggest SC is not a good ablation method?\n\nQ3: What do you think contribute to safety capability improve when ablating a small head group between 1 and 3 (line 371)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes the Safety Head Important Score (Ships) to evaluate the contribution of individual attention heads to the safety of language models. It presents the Safety Attention Head AttRibution Algorithm (Sahara), which identifies groups of attention heads that contribute to safety. The authors demonstrate through experiments that certain attention heads are crucial for safety, showing how their ablation can significantly increase the model's susceptibility to harmful queries."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper introduces a novel approach to understanding the safety mechanisms within large language models (LLMs) by presenting the Safety Head Important Score (Ships) and the Safety Attention Head AttRibution Algorithm (Sahara).\n2. It effectively shifts the focus from generalized model parameters to specific attention heads that have a direct impact on the model's ability to reject harmful queries.\n3. This work addresses a significant gap in the literature by systematically exploring the role of multi-head attention mechanisms in ensuring model safety, an area that has been relatively underexplored.\n4. The discussions in Sections 4 and 5 are comprehensive and logically coherent, incorporating several insightful analyses and discussions."
+            },
+            "weaknesses": {
+                "value": "1. Lines 256 and Appendix B.3 indicate that the ASR metric used in this paper employs a keyword-detection method, which is noted in [1] as having limitations that \u201clead to false positive and false negative cases.\u201d Why is the GPT4-judge method, validated in [1] as a more comprehensive and accurate metric, not used? This method is commonly employed in 2024 LLM safety papers to measure ASR. The inaccuracies of ASR based on keyword detection in assessing successful attacks weaken the experimental data and analysis presented in the paper.\n2. The analysis of Figure 2 is relatively weak (Lines 261-267). For instance, according to Figure 2, the improvement in ASR for Vicuna on Advbench and Jailbreakbench (direct) is quite limited, yet these two datasets are highly mainstream in the field of LLM safety. Does this not weaken the conclusions drawn in Lines 262-263?\n3. There are still some writing issues in the paper, such as the figure numbering in Line 496, which should refer to Figure 6.\n4. Is Figure 6b derived from Llama2 or Vicuna? I couldn't find this information in the paper. Additionally, Figure 6 shows an average decline of about 0.1 in Zero-Shot Task Scores, indicating a 15% decrease compared with the vanilla model. Given that the ASR determination in the paper only detects refusal keywords, I am concerned that the decline in helpfulness may reduce the model's understanding of harmful queries, potentially leading to responses that are affirmative but do not align with the harmful query. This could be counted towards the ASR, further undermining the discussion surrounding Figure 2.\n\n[1] Fine-tuning aligned language models compromises safety, even when users do not intend to!"
+            },
+            "questions": {
+                "value": "1. Could you consider adding a new ASR metric, such as the GPT4-judge referenced in [1]? Alternatively, an analysis of the accuracy of the ASR based on keyword detection (in relation to human judgments) could be included.\n2. In light of the second weakness, would it be possible to incorporate additional models, such as Gemma (instruct), to enhance the generalizability of the conclusion that \u201cablating the attention head with the highest Ships score significantly reduces safety capability\u201d?\n\n[1] Fine-tuning aligned language models compromises safety, even when users do not intend to!\n\nI will reconsider my score if all these issues are adequately addressed."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work makes an essential contribution to the field of LLM interpretability and safety, especially given the increasing deployment of LLMs in sensitive areas where maintaining safety is paramount. By focusing on the attention heads, the authors target a critical yet underutilized aspect of LLM architecture. The Ships metric and Sahara algorithm also address interpretability efficiently, which is crucial for scaling such safety measures in larger models.\n\nThe results are promising; however, further research could examine whether these safety heads are consistent across more diverse LLM architectures beyond the ones tested (Llama-2-7b-chat and Vicuna-7b-v1.5). Additionally, the analysis of the trade-offs between safety and model helpfulness could be expanded to understand better how balancing these factors could affect real-world applications.\n\nOverall, this paper offers valuable insights into safety interpretability and contributes a more resource-efficient framework for analyzing and enhancing LLM safety capabilities."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "-Great presentation with easy to understand figures and well written concise mathematical concepts/methodology are key strenghts.\n-The need of only 0.006% of parameter modification to achieve a SOTA ASR is also impressive.\n-I found also interesting that the ablation tests showed clearly the contribution of safety from each head, with only a few ones being critical.\n-The Sahara algorithm could be relevant in verifying the safety of LLMs."
+            },
+            "weaknesses": {
+                "value": "Further research could examine whether these safety heads are consistent across more diverse LLM architectures beyond the ones tested (Llama-2-7b-chat and Vicuna-7b-v1.5). Additionally, the analysis of the trade-offs between safety and model helpfulness could be expanded to understand better how balancing these factors could affect real-world applications."
+            },
+            "questions": {
+                "value": "How could one deploy the Ships and Sahara during the development process?\nWhich other use cases would be possible?\nRobustness, related to attacks and otherwise, are often related to OOD samples. Could you posit the results of the paper in relation to OOD? And in this case, are the number of models and datasets used in the current study sufficient to evaluate it?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

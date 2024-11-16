@@ -1,0 +1,205 @@
+{
+    "id": "Q95MaWfF4e",
+    "title": "Navigating Neural Space: Revisiting Concept Activation Vectors to Overcome Directional Divergence",
+    "abstract": "With a growing interest in understanding neural network prediction strategies, Concept Activation Vectors (CAVs) have emerged as a popular tool for modeling human-understandable concepts in the latent space.\nCommonly, CAVs are computed by leveraging linear classifiers optimizing the *separability* of latent representations of samples with and without a given concept. However, in this paper we show that such a separability-oriented computation leads to solutions, which may diverge from the actual goal of precisely modeling the concept direction.\nThis discrepancy can be attributed to the significant influence of distractor directions, i.e., signals unrelated to the concept, which are picked up by filters (i.e., weights) of linear models to optimize class-separability.\nTo address this, we introduce *pattern-based CAVs*, solely focussing on concept signals, thereby providing more accurate concept directions.\nWe evaluate various CAV methods in terms of their alignment with the true concept direction and their impact on CAV applications, including concept sensitivity testing and model correction for shortcut behavior caused by data artifacts. \nWe demonstrate the benefits of pattern-based CAVs using the Pediatric Bone Age, ISIC2019, and FunnyBirds datasets with VGG, ResNet, ReXNet, EfficientNet, and Vision Transformer as model architectures.",
+    "keywords": [
+        "Explainable AI",
+        "Concept-based Explanations",
+        "Concept Activation Vectors"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "We introduce pattern-based CAVs, an alternative to widely used filter (e.g., SVM) CAVs, more robust to distractor patterns and thereby providing more accurate concept directions.",
+    "creation_date": "2024-09-19",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Q95MaWfF4e",
+    "pdf_link": "https://openreview.net/pdf?id=Q95MaWfF4e",
+    "comments": [
+        {
+            "comment": {
+                "value": "- **RelMax - Explanation and suggested experiment (W3 and Q1):**\n    - **(Q1) Explanation:** Instead of searching samples with the highest activation for a certain neuron (ActMax), relevance maximization (RelMax) [1] searches for samples, for which the neuron of interest is most important for the prediction. These importance (or relevance) scores can be computed with backpropagation-based local attribution methods that assign relevance scores for a prediction to each activation and input value. Therefore, RelMax selects samples for which the neuron was really important for the prediction, in contrast to ActMax, which only selects based on activation. We will make this clearer in the paper. \n    - **(W3) Clarification of Figure 2 (Distribution over neurons):** A CAV can be considered as a distribution over neurons and therefore, the percentages above the neurons do not represent activations, but the fraction of that neuron for the entire CAV. Hence, higher scores for top neurons (as for Pattern-CAV) indicate a less uniform distribution over neurons, and a larger focus on the top neurons. We want to refer to Fig. 27 in the appendix for visualizations of the distribution over concepts for additional filter-based CAVs. We observe similar trends: Compared to Pattern-CAV, Filter-CAVs have a more uniform distribution over neurons, and the most important neurons are not necessarily focusing on the concept of interest (timestamp). \n  - **(W3) Quantification experiment (percentage of neurons to identify 95% of samples):** While the proposed experiment would be feasible, it does not address the core objective of the experiment presented in Fig. 2. The goal of ActMax/RelMax is not the detection of all concept samples, but the identification of most representative samples, in order to understand the role of a particular neuron (i.e. explaining the neuron by providing examples). Furthermore, many samples may not rank among the top-N representatives for any neuron and would therefore be undetectable. The suggested experiment can be considered as a data annotation experiment. Instead of using activations of single neurons to identify biased samples, we highly recommend the projection of activations onto a concept direction, i.e., a CAV. However, as noted in L501, this poses a scenario where the prediction of concept occurrence (i.e., class separability) matters, making filter-CAVs a more suitable option. While we consider data annotation as a very interesting research direction, it is out of the scope of this paper. \n- **(W4) Transformer-based architectures:** We are happy to move our results for vision transformers from the appendix to the final main paper.\n\nPlease let us know if anything remains unclear. If you are satisfied with the response, we would kindly ask you to reconsider your rating.\n\nBest regards,\n\nThe authors\n\n[1] Achtibat, Reduan, et al. \"From attribution maps to human-understandable explanations through concept relevance propagation.\" Nature Machine Intelligence 5.9 (2023): 1006-1019."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your constructive and insightful comments, as well as the positive feedback regarding the writing quality and our experiments. Below, we address your concerns and questions. \n\n- **(W1) Table 1 / significance of results:** While we do see large improvements in artifact relevance for the real artifact (band-aid in ISIC2019) for VGG16 (31% vs 46%) and ResNet (22% vs 26%), it is true that the artifact relevance remains consistent (22%) for EfficientNetB0. However, $\\Delta\\text{TCAV}^{\\text{gt}}$  largely improves (0.03 vs 0.11), indicating that the reliance on the abstract concept \u201cband-aid\u201d is highly reduced. In addition, the heatmaps in Fig. 6 confirm the reduction in artifact relevance through Pattern-CAVs for various real-world artifacts (band-aid, ruler, skin marker) for VGG16. We also want to stress that the improvement of bias mitigation approaches, such as RR-ClArC, is subject to future research to further decrease the artifact relevance. However, this is out of the scope of this paper, as our focus is the improvement of the precision of concept representations. Our findings indicate that Pattern-CAVs clearly address the shortcomings from Filter-CAVs, leading to precise concept directions. We would also like to stress that we do not regard the Pattern-CAV and Filter-CAV necessarily as competing methods, but rather as two complementing approaches providing two fundamentally different views on the classification problem. When looking at the problem through the lense of the \u201cfilter\u201d, we aim to optimally separate the data (\u201cdiscriminative\u201d perspective), e.g., in neuroimaging separate patients from healthy controls. When looking at the problem through the lens of the \u201cpattern\u201d, we aim to identify, e.g., the brain areas where the two populations differ (\u201cexplanatory\u201d perspective). The impactful insight of Haufe et al. (2014) was that these two views are not the same. Thus, when precise concept directions matter (e.g., concept erasure/addition, TCAV), we recommend the usage of Pattern-CAVs, due to the addressed shortcomings of filters. However, when a good decision boundary matters to predict the existence of a concept (e.g., as in concept-bottleneck models), Filter-CAVs are better suited. We strongly believe that these two perspectives are not known to the community of CAV users. \n- **(W2) Grayscale images:** We would like to kindly refer to our experiments with grayscale images, specifically the Bone Age dataset, in which we manipulate the brightness to insert a controlled artifact (see Fig. 9 in the appendix). In our experiments, (1) we measure a high alignment between Pattern-CAV and the ground truth concept direction (see Fig. 3, right) and (2) successfully decrease the reliance on the artifact by leveraging the CAV-based bias mitigation approach RR-ClArC (see Tab. 1, first value per cell). This confirms the superiority of Pattern-CAVs over Filter-CAVs also for grayscale images."
+            }
+        },
+        {
+            "comment": {
+                "value": "- **(Q2) Figure 5:** While we observe similar trends for VGG16 and EfficientNet-B0, interestingly, ResNet18 indeed poses an exception. As mentioned in L370, this can be explained by poorly localized concepts, which is visualized in Fig. 26 in the appendix. Instead of precisely localizing concepts, the sensitivity in the last Conv layer spreads over the entire sample (7 \u00d7 7 latent feature map). Therefore, TCAV scores for ResNet18 are less impacted by noisy concept sensitivity maps in irrelevant regions. Similar trends have been observed for ResNeXt50 and ReXNet100 models.\n- **(Q3) Theoretical analysis: how close can CAVs be to ground truth?:** While the CAVs can theoretically perfectly align with ground truth concepts even when certain noise is present, in practice the level of alignment depends on the imperfections of the models and the shape of the noise in the data.  However, we provide theoretical proofs for certain kinds of noise: Namely, for different feature scaling (section B.6 in appendix), and rotated additive noise (B.7), where pattern-CAVs lead to exact ground truth concept directions (and linear classifier-based CAVs do not).\n\nPlease let us know if anything remains unclear. If you are satisfied with the response, we would kindly ask you to reconsider your rating.\n\nBest regards,\n\nThe authors\n\n[1] Kim, Been, et al. \"Interpretability beyond feature attribution: Quantitative testing with concept activation vectors (tcav).\" International conference on machine learning. PMLR, 2018.\n\n[2] Anders, Christopher J., et al. \"Finding and removing clever hans: Using explanation methods to debug and improve deep models.\" Information Fusion 77 (2022): 261-295.\n\n[3] Nanda, Neel, at al. \"Emergent linear representations in world models of self-supervised sequence models.\" arXiv preprint arXiv:2309.00941 (2023).\n\n[4] Wang, Zihao, et al. \"Concept algebra for (score-based) text-controlled generative models.\"  NeurIPS (2024)."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your constructive and insightful comments, as well as the positive feedback regarding our experiments. Below, we address your concerns and questions. \n\n- **(W1) Organization of paper:** We decided to organize the paper as follows: After the introduction and related work, we discuss the filter-pattern problem, the resulting shortcomings of widely-used Filter-CAVs, and introduce our method, the Pattern-CAV as a robust alternative. Afterward, we demonstrate the effectiveness of our approach by (1) measuring the alignment of CAVs with true directions, and (2) evaluating their applicability in two applications, namely TCAV and ClArC. However, both applications are not part of our method, but means for evaluation. Therefore, in order to avoid confusion, we decided not to introduce TCAV in the methods-section. \n- **(W2) Novelty:** We can assure that our work is the first to analyze, evaluate, and mitigate the shortcomings of CAVs stemming from the pattern-filter problem. A previous, unpublished version of this paper is available on arXiv (due to double blindness we can not provide the reference here), but the concept of pattern-CAV has not been introduced in a published paper before. \nSince filter-based CAVs are highly popular in today\u2019s research and are used in hundreds of papers, e.g., they are the main basis of methods such as TCAV [1], ClArC [2], or in mechanistic interpretability [3,4], we believe that making the community aware of their fundamental shortcomings and proposing an improved pattern-based CAV variant is a novel contribution with a large practical value. While previous work such as Haufe et al. (2014) have shown that weights of linear models are susceptible to distractor components in multivariate neuroimaging and Kindermans et al. (2018) use these findings to introduce a new local explainability method (PatternAttribution), we are the first to report these shortcomings in extensive experiments in the context of CAVs. After a decade has passed, one can say without doubts that the results of Haufe et al. have had a large impact on the neuroimaging community. For instance, no one uses the filter weights of linear classifiers for the interpretation of EEG signals anymore, e.g., in the context of Brain-Computer Interfacing. On the contrary, it is unanimously clear that the corresponding pattern is the quantity of interest. We strongly believe that also the steadily growing community of CAV users will benefit from learning about the potential issues of linear classifiers for concept modeling, as well as the availability of a robust alternative. \n- **(W3) Realistic datasets:** We want to stress that we also used real-world datasets (ISIC2019, Bone Age) with real-world, non-hand-crafted artifacts (ruler, band-aid, skin-marker) to solve highly relevant medical tasks. In addition to these real artifacts, we decided to insert controlled artifacts (timestamp, brightness) in separate experiments, to have full control over the artifacts for an improved evaluation. This allows (1) the computation of ground truth CAVs by the generation of pairs of images with and without concept (see next bullet point), (2) the computation of accuracies on clean and attacked test sets, and (3) the computation of artifact relevance via the existence of ground truth masks localizing the artifacts. In addition to evaluating our method on 3 different datasets with controlled and real-world artifacts, we will run experiments with additional datasets (ImageNet, CelebA) in the next few days and add the results to the paper. \n- **(Q1) Pairs of samples with/without concept:** The controlled concepts/artifacts (timestamp, brightness) are inserted by manipulating the original image. Therefore, we can obtain a pair of samples with/without concept by loading the exact same image twice and manipulating only one of them. Examples for ISIC2019 (timestamp) and Bone Age (brightness) are shown in Fig. 9 in the appendix. In the case of FunnyBirds, the removal of a concept is implemented by the replacement of the concept (e.g., green wing of shape \u201cwing-01\u201d) by another, random design of the same body part, as visualized in Fig. 10 in the appendix."
+            }
+        },
+        {
+            "comment": {
+                "value": "- **(Q1) Unsupervised case:** To find concept directions in unsupervised manner, recent approaches perform matrix factorization (e.g, SVD, PCA, or NMF) on latent activations. This leads to two matrices, with one matrix reinterpreted as the concept basis and the other matrix as the activations within that new basis. A nice overview is provided in [5]. It is up to the user to interpret the found set of concepts and there is no guarantee for the desired concept (e.g., ruler, band-aid, skin marker) to be discovered. Investigating the pros and cons of supervised vs. unsupervised concept modelling is an interesting topic. We believe that the former approach is more suitable for model correction tasks (e.g., we know that there is a \u201cband-aid\u201d concept which we want to precisely model and remove), while the latter is focusing more on concept exploration and discovery (e.g., we want to find out in the first place what concepts are represented in the model). However, we agree with the reviewer that the unsupervised case is highly relevant in real-world applications, as the collection of concept labels can be expensive (but can be supported with tools like spectral relevance analysis [6]). We believe that the filter-pattern problem may also affect (depending on the optimization criterion) the unsupervised case, but this has to be investigated in future work.\n- **(Q2) EfficientNet-B0:** While we do see large and significant improvements for experiments with the timestamp artifact in ISIC2019 (biased accuracy 72% for Pattern-CAV vs 67% for logistic+ridge regression), and the band-aid artifact in ISIC2018 ($\\Delta\\text{TCAV}^{\\text{gt}}$ 0.03 for Pattern-CAV vs 0.11 for SVM-CAV), we indeed only see small differences for Bone Age experiments. Here, despite the distractor component, Filter-CAVs are able to improve the accuracy on the biased test dataset to be almost on par with the accuracy on the clean dataset, as well as to reduce $\\Delta\\text{TCAV}^{\\text{gt}}$ to 0. Therefore, in this case, there is not much room for improvement. \n \nPlease let us know if anything remains unclear. If you are satisfied with the response, we would kindly ask you to reconsider your rating.\n\nBest regards,\n\nThe authors\n\n[1] Kim, Been, et al. \"Interpretability beyond feature attribution: Quantitative testing with concept activation vectors (tcav).\" International conference on machine learning. PMLR, 2018.\n\n[2] Anders, Christopher J., et al. \"Finding and removing clever hans: Using explanation methods to debug and improve deep models.\" Information Fusion 77 (2022): 261-295.\n\n[3] Nanda, Neel, Andrew Lee, and Martin Wattenberg. \"Emergent linear representations in world models of self-supervised sequence models.\" arXiv preprint arXiv:2309.00941 (2023).\n\n[4] Wang, Zihao, et al. \"Concept algebra for (score-based) text-controlled generative models.\"  NeurIPS (2024).\n\n[5] Fel, Thomas, et al. \"A holistic approach to unifying automatic concept extraction and concept importance estimation.\" Advances in Neural Information Processing Systems 36 (2024).\n\n[6] Lapuschkin, Sebastian, et al. \"Unmasking Clever Hans predictors and assessing what machines really learn.\" Nature communications 10.1 (2019): 1096."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your constructive and insightful comments, as well as the positive feedback regarding our experiments. Below, we address your concerns and questions. \n\n- **(W1) Novelty:** We can assure that our work is the first to analyze, evaluate, and mitigate the shortcomings of CAVs stemming from the pattern-filter problem. A previous, unpublished version of this paper is available on arXiv (due to double blindness we can not provide the reference here), but the concept of pattern-CAV has not been introduced in a published paper before. \nSince filter-based CAVs are highly popular in today\u2019s research and are used in hundreds of papers, e.g., they are the main basis of methods such as TCAV [1], ClArC [2], or in mechanistic interpretability [3,4], we believe that making the community aware of their fundamental shortcomings and proposing an improved pattern-based CAV variant is a novel contribution with a large practical value. While previous work such as Haufe et al. (2014) have shown that weights of linear models are susceptible to distractor components in multivariate neuroimaging and Kindermans et al. (2018) use these findings to introduce a new local explainability method (PatternAttribution), we are the first to report these shortcomings in extensive experiments in the context of CAVs. After a decade has passed, one can say without doubts that the results of Haufe et al. have had a large impact on the neuroimaging community. For instance, no one uses the filter weights of linear classifiers for the interpretation of EEG signals anymore, e.g., in the context of Brain-Computer Interfacing. On the contrary, it is unanimously clear that the corresponding pattern is the quantity of interest. We strongly believe that also the steadily growing community of CAV users will benefit from learning about the potential issues of linear classifiers for concept modeling, as well as the availability of a robust alternative.  \n- **(W2) Lacks boundary optimization:** We strongly believe that due to the aforementioned filter-pattern problem, optimizing for class-separability (or boundary optimization) is the incorrect optimization target to obtain precise concept directions. This is confirmed by two toy experiments simulating ambiguous boundaries: First, in a 2D experiment in Fig. 7 (bottom row) in the appendix, we sample with different random seeds from two distributions with different means and high standard deviation, leading to overlapping distributions. In this experiment, Pattern-CAVs (green) are more robust than Filter-CAVs (magenta). In a second experiment (Section D.3.2 in appendix), we gradually increase the mislabeling rate of known artifact samples to obscure the decision boundary, and observe consistently higher concept alignment scores for Pattern-CAV compared to Filter-CAVs (see Fig. 29 in the appendix).\n- **(W3) When to use pattern-vs-filter:** When precise concept directions matter (e.g., concept erasure/addition, TCAV), we recommend the usage of Pattern-CAVs, due to the addressed shortcomings of filters. However, when a good decision boundary matters to predict the existence of a concept (e.g., as in concept-bottleneck models), SVM-CAVs are better suited. Please note that the choice whether to consider the pattern or the filter is not an arbitrary choice, but a fundamentally different view on the classification problem. When looking at the problem through the lense of the \u201cfilter\u201d, we aim to optimally separate the data (\u201cdiscriminative\u201d perspective), e.g., in neuroimaging separate patients from healthy controls. When looking at the problem through the lens of the \u201cpattern\u201d, we aim to identify, e.g., the brain areas where the two populations differ (\u201cexplanatory\u201d perspective). The impactful insight of Haufe et al. (2014) was that these two views are not the same. We strongly believe that these two perspectives are not known to the community of CAV users. We will make this guidance clearer in the paper."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your constructive and insightful comments, as well as the positive feedback regarding the writing quality and our experimental design. Below, we address your concerns and questions. \n\n- **(W1) Related Work (Fel at al., 2023):** We agree that [R1] is a highly relevant and related work and will mention it in our paper. In particular, we think it makes sense to discuss this work in the context of our experiments with unsupervised concept directions described in L266. While [R1] provides a holistic approach for the unsupervised detection of concept directions, our work leverages CAVs computed in supervised manner.\n- **(W2) Overlap with Dreyer et al. (2024):** We can assure this is the first and original work to discuss and demonstrate the limitations of filter-based CAVs in the presence of noise and introduce Pattern-CAVs as robust alternative. Dreyer at al.\u2019s contribution and main focus is the right reason gradient penalization method \u201cRR-ClArC\u201d, not the filter-pattern CAV problem. They do not claim to introduce Pattern-CAV, but rather refer to a previous, unpublished version of this work. Such an overlap in time, where a method is applied before the original paper introducing the method is published, is not uncommon in today\u2019s research.\n- **(W3/Q1) Evaluation on additional datasets:** We evaluate our method on 3 different datasets (ISIC2019, Bone Age, FunnyBirds) with controlled and real-world artifacts. We strongly believe these experiments are sufficiently demonstrating the benefits of our approach. However, we will run experiments with additional datasets (ImageNet, CelebA) in the next few days and add the results to the paper. \n- **(Q2) Statistical significance for results in Tab. 1:** In addition to the standard errors already reported in Tab. 8, we will also report statistical significance using z-tests, both in Tab. 1 (main paper) and Tab. 8 (appendix). Thank you for the suggestion!\n\nWe hope our responses are satisfactory. Please let us know if anything remains unclear. \n\nBest regards,\n\nThe authors"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors propose a pattern-based concept activation vectors (CAV), which focuses on concept signal and provides accurate concept directions. Previous CAV methods are designed to compute by leveraging linear classiifers optimizing the separability of latent repsresentations of samples, which is harmful for accurately modeling the concept direction. The authors evaluate various CAV methods in terms of their alignment with the true concept direction and their impact on CAV applications."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is well written and easy to read. Related work includes several key papers.\n- CAVs is widely explored to improve the interpretability of model and this paper tackles an important issue of the current CAV studies and propose a new CAV method named pattern-based CAV.\n- The authors measure the alignment of CAVs with the true concept direction by setting controlled environment and the results show that the pattern-CAVs align with the true concept direction.\n- The authors show the impact of directional alignment/shift in testing with CAV and model correction.\n- Experimental design with real-world datasets look interesting."
+            },
+            "weaknesses": {
+                "value": "- Some relevant papers are missing [R1]. It would be informative to clarify the contribution of the proposed method and discuss the pros and cons of the proposed method to better find better position of this paper.\n- The paper looks many overlaps with [R2]. It would be great to clarify the novel contribution of this study and add discussion with [R2].\n- The method is evaluated on BoneAge, ISIC2019 datasets. Evaluation on ImageNet/CelebA will make the paper more strong as in [R2]. \n\n\n[R1] Fel, Thomas, Victor Boutin, Louis B\u00e9thune, R\u00e9mi Cad\u00e8ne, Mazda Moayeri, L\u00e9o And\u00e9ol, Mathieu Chalvidal, and Thomas Serre. \"A holistic approach to unifying automatic concept extraction and concept importance estimation.\" Advances in Neural Information Processing Systems 36 (2023).\n[R2] Dreyer, Maximilian, Frederik Pahde, Christopher J. Anders, Wojciech Samek, and Sebastian Lapuschkin. \"From Hope to Safety: Unlearning Biases of Deep Models by Enforcing the Right Reasons in Latent Space.\" arXiv preprint arXiv:2308.09437 (2023)."
+            },
+            "questions": {
+                "value": "- Would it be possible to apply the proposed method on a large realworld dataset like ImageNet?\n- Would it be possible to add statistical significance of the results in Table 1?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Concept Activation Vectors (CAVs) is a tool in explainable AI for understanding neural network prediction strategies through human-understandable concepts in latent space. This paper argue that current CAV computation methods, which focus on class separability, often diverge from the actual goal of modeling the concept direction accurately. To address this, the authors propose \"pattern-based CAVs,\" which emphasize concept signals while disregarding distractors. They evaluate their method against various model architectures and datasets, demonstrating that pattern-based CAVs align more closely with the true concept direction and yield improved results in applications like concept sensitivity testing and model correction."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The authors clearly identify the limitations of traditional CAV methods, specifically the influence of distractors in filter-based CAVs.\n2. The authors conduct extensive experiments on multiple datasets and architectures, providing both quantitative and qualitative results that support their claims. The improved CAV method is demonstrated to benefit important applications, such as TCAV for concept sensitivity testing and ClArC for model correction."
+            },
+            "weaknesses": {
+                "value": "1. My main concern is on the limited novelty, it seems that the key idea of pattern-CAV has been proposed, and the paper puts more efforts on evaluation. \n2. The pattern-based CAV method, while precise in modeling concept directions, lacks the boundary optimization and transformation capabilities of traditional linear classifiers (e.g., SVM), which may limit its robustness in complex or noisy datasets. Specifically, the absence of separation-focused optimization could lead to inconsistencies in concept direction in cases with overlapping or ambiguous boundaries.\n3. The authors focus on achieving high alignment with the true concept direction but acknowledge that in some applications (e.g., post-hoc concept bottleneck models), class-separability may be more critical. A clearer guideline on when to use pattern- vs. filter-based CAVs based on application needs would be helpful."
+            },
+            "questions": {
+                "value": "1. how to address the unsupervised case? I see the descriptions in line 266 and Appendix, could you please provide more details, since the unsupervised is more important in real applications. \n2. In Table 1, why the results of Efficient Net-B0 are quite similar?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposed pattern-based CAVs based on Concept Activation Vectors (CAVs). The authors assume that the weight vector of the linear classifier may fail at precisely identifying the concept. To amend this, the proposed method slightly modifies the optimization objective from Eq. (1) to Eq. (2) called pattern-based CAV."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper performed a large number of experiments on both toy datasets and controlled datasets."
+            },
+            "weaknesses": {
+                "value": "The writing and presentation make the paper hard to follow. It could be better to reorganize the paper to make it easier to understand. For example, it seems better to introduce the concept of TCAV in the Method rather than Experiment section.\n\nThe novelty of the paper seems to be somewhat limited. The main contribution Eq. (2) was proposed by a previous work. The authors made a commendable effort to design the dataset, but the technical contribution seems to be the slight modification to the CAV based on linear models.\n\nThe datasets used here mainly emphasize hand-crafted concepts (\"band-aid\", \"ruler\", \"bird\", etc.). Is it possible to evaluate the performance on real-world and more realistic datasets like ImageNet?"
+            },
+            "questions": {
+                "value": "On page 5, \"we generate pairs of samples with and without the concept\". Was this generation the same or different for different datasets? It could be clearer how a pair for a timestamped image or a bird image is generated (e.g., with examples).\n\nIn Figure 5, it seems the performance is heavily dependent on the network architecture, and the results of Logistic, SVM, and Patter, are all very similar to GT if the model is ResNet. Does this mean that if we stick to ResNet as the model, then previous methods like SVM and Logistic are already good enough?\n\nIs there any theoretical analysis of how close the vectors can be to the ground truth concepts?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No ethical issues."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces pattern-based concept activation vectors (CAVs) that focus solely on concept signals to provide more accurate concept directions, addressing issues with distractor concept directions in filter-based CAVs. The proposed pattern-based CAVs are invariant to feature scaling and more robust to noise. \n\nThe method is evaluated across different datasets and model architectures through both controlled and uncontrolled real-world experiments."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This work proposes a novel computation approach for CAVs, known as pattern-based CAVs, which are less sensitive to distractors compared to existing filter-based CAV methods.\n\nThe paper is well-written and well-structured, presenting multiple experimental results to validate the method\u2019s effectiveness.\n\nThe authors objectively analyze the advantages, limitations, and suitable contexts for pattern-based CAVs, highlighting that while pattern-based CAVs offer more accurate concept signals, filter-based CAVs emphasize concept separability, which is important for tasks such as concept-based image classification.\n\nThis paper offers valuable insights by highlighting issues with existing filter-based CAVs in the presence of noise and feature rescaling, as well as potential challenges when using filter-based CAVs for TCAV and model explanation."
+            },
+            "weaknesses": {
+                "value": "However, I have the following concerns:\n1. In Table 1, the performance improvements of pattern-based CAVs on the real-world ISIC2019 dataset are not significant, particularly in reducing artifact sensitivity. Given that artifacts (e.g., textual elements in radiology reports or image discrepancies caused by different imaging equipment across medical centers) are hard to avoid in medical contexts, I am concerned that pattern-CAVs may not outperform filter-based CAVs in practical applications.\n2. Many medical imaging modalities produce grayscale images, where lesions may be small, and inter-class visual features are often very similar (unlike in ISIC, where subtypes generally have distinct attributes like color or shape). It might be beneficial to include experiments on grayscale datasets, such as Bone Age or similar medical datasets, to better assess the effectiveness of pattern-based CAVs.\n3. In the RelMax visualization, samples with the highest neuron activation values are presented. Why do the neurons in the pattern-CAV method have higher activation values than in other CAV methods? Could the authors provide the distribution of neuron activation values across different methods and analyze it? Additionally, could they quantify each CAV method\u2019s ability to identify samples with artifacts (e.g., showing that a certain percentage of neurons with the top activations can identify 95% of samples)?\n4. The experiments in the main text should include transformer-based architectures to evaluate the generalizability of the method across different model types."
+            },
+            "questions": {
+                "value": "My primary concern is the effectiveness of pattern-based CAVs in real-world applications, including tasks with real artifacts and grayscale image classification, please refer to the weaknesses for more details.\n\nhere are some minor questions:\n\n1. A brief introduction to RelMax should be provided for better understanding."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

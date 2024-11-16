@@ -1,0 +1,168 @@
+{
+    "id": "hovDbX4Gh6",
+    "title": "AutoG: Towards automatic graph construction from tabular data",
+    "abstract": "Recent years have witnessed significant advancements in graph machine learning, with its applications spanning numerous domains. However, the focus has predominantly been on developing powerful models, often overlooking a crucial initial step: constructing suitable graphs from common data formats, such as tabular data.\nThis construction process is fundamental to applying graph-based models, yet it remains largely understudied and lacks formalization.\nOur research aims to address this gap by formalizing the graph construction problem and proposing an effective solution. We identify two critical challenges to achieve this goal: 1. The absence of dedicated benchmarks to formalize and evaluate the effectiveness of graph construction methods, and 2. Existing automatic construction methods can only be applied to some specific cases, while tedious human engineering is required to generate high-quality schemas. \nTo tackle these challenges, we present a two-fold contribution.\nFirst, we introduce a benchmark to formalize and evaluate graph construction methods. \nSecond, we propose an LLM-based solution, AutoG, automatically generating high-quality graph structures without human intervention.\nThe experimental results demonstrate that the quality of constructed graphs is critical to downstream task performance, and AutoG can generate high-quality graphs that rival those produced by human experts.",
+    "keywords": [
+        "Graph machine learning",
+        "Automatic data science",
+        "Applications of large language models",
+        "Tabular data"
+    ],
+    "primary_area": "learning on graphs and other geometries & topologies",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=hovDbX4Gh6",
+    "pdf_link": "https://openreview.net/pdf?id=hovDbX4Gh6",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a method to convert table data into a graph by leveraging a large language model (LLM). \nThe primary features are as follows:\n- Detailed design of LLM prompts.\n- Comprehensive definition of basic actions (Section 4.2).\n- Quantitative oracle using GML, potentially effective for this task (Section 4.3)."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- S1: The proposal introduces a carefully devised LLM prompt (Appendix D)\n- S2: The evaluation experiments show that the proposal significantly outperforms existing techniques and achieves results close to those of manual graph generation.\n- S3: Section 3.1 identifies C4 (graph variations) , which is indeed an important challenge.\n- S4: Generating co-author relationships as edges is definitely effective for node classification of homophily graphs."
+            },
+            "weaknesses": {
+                "value": "- W1: The problem definition is not explicitly stated. \n\n- W2: Although the proposal utilizes carefully designed LLM prompts, it relies on standard techniques in LLMs like few-shot learning and chain of thought (CoT), making the novelty unclear.\n\n- W3: While the quantitative oracle evaluating GML with a validation set seems effective, Table 4 suggests the oracle may not be essential. The GML results are highly dependent on the choice of label selection (e.g., venue vs. year), making the conclusion \"LLMs can generate good candidates merely based on prior knowledge\" is not reasonable. We encourage the authors more detailed discussions here.\n\n- W4: Concerning the five challenges in Section 3.1, if the schema is normalized, issues like C2 and C3 (1NF) seem unlikely to arise. Additionally, the proposal only addresses node classification and does not handle tasks like link prediction or node clustering, so C5 appears to be an overstatement.\n\n- W5: There is a lack of evaluation on speed improvements. Section 4.2 claims the high cost of JTD, and Section 4.3 mentions a design for potential speed-ups, making such an evaluation essential."
+            },
+            "questions": {
+                "value": "Questions\n- Is the problem defined as follows?  The input: relational data, GML for downstream tasks, and records and class labels for training and validation data. output: transformed graph data from the relational data.\n\nComments\n- The term \"RGAT\" may be incorrect and should be \"GAT.\" The cited paper (Veli\u010dkovi\u0107 et al., 2017) refers to GAT.\n- Using GML models suited for homophilic graphs (e.g., RGCN, GAT) as an oracle may be unsuitable for tasks on heterophilic graphs. This issue could be addressed by selecting GML models tailored to heterophilic graphs as the oracle."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors provide a method for automatically converting relational tables into a knowledge graph. They forego manual engineering by using an LLM approach. First, the LLM is instructed to create a schema, restricted by calling certain functions. Then, an oracle is used to provide feedback for this schema generation. That feedback is then again used by the generator."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The general observation is an important one: the conversion of tabular data into graph form cannot be taken for granted. Existing graph benchmarks based on tables avoid the hard cases.\n* The setup with an LLM to generate candidates is pretty nice. Restricting its generation freedom using function calls is a good idea as well."
+            },
+            "weaknesses": {
+                "value": "* It remains unclear how well this method performs on the long tail. The evaluation is averaging over many cases, but the results might be dwarfed by very common ones.\n* The paper only considers very well behaving rectangular tables (relational database style), with column names and all. Even the data types are given. There is also a lot of web tables around with large datasets available. One could certainly question whether te chosen setting is realistic, now.\n* The datasets are pretty small.\n* Citations for relational graph learning are to 2023< papers, while this has been studies for 10+ years.\n* It is not clearly argued why relational graphs are most suitable. Other formalisms like hyper-relational ones might be more appropriate.\n* I suggest removing the claim of surpassing human experts. It is not clear whether all schemas from the experts are  such that they were made as an ideal schema for a GNN architecture / the specific task.\n\nminor:\n*  treate each ->  treated each"
+            },
+            "questions": {
+                "value": "* Recently, Alivanistos, et al. (2024) presented \"The Effect of Knowledge Graph Schema on Classifying Future Research Suggestions\". That work suggests that the classification performance depends on the chosen schema. Is this the same you observed in the current work? Should one consider existing schemas or let the model figure this creation out as well?\n* Much of the idea is clearly supported by argument, the choice of the oracle as a discriminator and the heuristics one gets out of that are rather arbitrary. It is not clear whether these are the best options. How do you know?\n* You only use RGCN and GAT, both of which are rather GNN based learning methods. Would you expect other methods to behave similarly? Why?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper focuses on the impact of automatic graph construction from input tabular data on downstream Graph Machine Learning (GML) tasks. It introduces a benchmark for evaluating graph construction and proposes AutoG, an automated graph construction method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. In the field of GML methods for tabular data, this paper is the first to concern graph construction evaluation, and introduces a benchmark for it.\n2. The authors identify five key challenges in converting tabular data into graphs and proposed AutoG, an agent-based approach. They design actions for the large language model (LLM) to utilize its prior knowledge for augmenting graph construction. Additionally, they implement a feedback mechanism to calibrate the LLM's output based on the validation performance of downstream GML tasks.\n3. The paper is well-structured, clearly expressed, and includes detailed information."
+            },
+            "weaknesses": {
+                "value": "My main concern is with the \"metrics used in the proposed benchmark for evaluating the conversion of tabular data into graphs (T2G).\" As stated in line 216, the authors use the performance of fixed GML models (RGCN, RGAT) trained on the generated graphs for quantitative evaluation. However, as a benchmark for T2G, it should be independent of specific downstream GML methods. Thus, the evaluation is limited to these two models and lacks generalizability to all GML models. Until it is demonstrated that the conclusions from RGCN and RGAT apply to all GML models, both the benchmark and the experimental findings in this paper remain constrained."
+            },
+            "questions": {
+                "value": "1. Can you prove that the conclusions from RGCN and RGAT apply to all GML models?\n2. Have you considered proposing a better metric to evaluate the constructed graph itself? Furthermore, if the constructed graph is closely tied to specific downstream tasks, does that suggest that T2G might be more suitable as a data augmentation module to be explored with specific GML models, rather than as a standalone benchmark?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a benchmark for constructing graphs from tabular data as well as an LLM-based method that generates graph schemas without human intervention."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "(S1) The paper proposes a direction to tackle the interesting problem of transforming tables into graphs.\n\n(S2) The benchmark datasets are a valuable addition to the community.\n\n(S3) The paper performs several experiments to show the effectiveness of the method on various data."
+            },
+            "weaknesses": {
+                "value": "(W1) The paper does not consider a rich database literature in mining functional dependencies [1,2] and data profiling [3] that automatically extracts dependencies among table columns. These methods can be used to generate more refined schemas that can solve some of the challenges expressed in Section 3.1. This method should be part of the experimental evaluation.\n\n(W2) After having mined uniqueness constraints and functional dependency, one can apply conventional data normalization to further remedy the problems highlighted in challenges C2, and C3. From this standpoint, it is not clear why a mine-and-normal step would not solve most of the issues.\n\n(W4) The benchmark only contains fairly small datasets with, at most 8 tables, for example, PTE has 38 tables (https://relational-data.org/dataset/PTE). There are also several datasets here: https://relational-data.org/\n\n(W5) Another challenge, not specifically addressed by the current paper, is missing values and NULL values. Can the proposed method cope with those? If not, why?\n\n(W6) Clarity: The paper is, in many parts hard to follow. Here are some examples\n\n- Figure 2: It is not clear what flexible design is and what the prompt looks like\n- at least two columns as FK and no PK: provide an example\n- chain of augmentation: please state what it is\n- validation set performance: explain\n\n(W7) 488: How does the method ensure that the test data is not included in the pre-training of the LLM? Do you have access to the training data?\n\n(W8) The paper relies on LLMs that are subject to changes. Does it mean that one has to adapt the method to a different LLM every time?\n\n### Minor\n\n(M1) I encourage the authors to use citations from published sources while in the current draft, several citations are from arXiv\n\n(M2) Typos:\n\n- 133: Treate\n- 277: LLM generates / tends \u2192 LLMs generate / tend\n- 282: single-steply\n\n(M3) In modelling the graph $G={V, E}$ it seems that the nodes are just a set of types as $\\mathcal{V}=\\bigcup_{v\\in V} \\mathcal{V}^v$. This definition does not seem standard for Heterogeneous graphs. There should be a set of nodes, each with a type (or a set of types) and a set of edges among the nodes.\n\n[1] Yao, H. and Hamilton, H.J., 2008. Mining functional dependencies from data.\u00a0*Data Mining and Knowledge Discovery*,\u00a0*16*, pp.197-219.\n\n[2] Liu, J., Li, J., Liu, C. and Chen, Y., 2010. Discover dependencies from data\u2014a review.\u00a0*IEEE Transactions on Knowledge and Data Engineering*,\u00a0*24*(2), pp.251-264.\n\n[3] Abedjan, Z., Golab, L. and Naumann, F., 2015. Profiling relational data: a survey.\u00a0*The VLDB Journal*,\u00a0*24*, pp.557-581."
+            },
+            "questions": {
+                "value": "The authors should carefully address the concern about the relationships with previous database research (W1, W2) and the assumptions of the method (W5). Moreover, the inclusion of a larger, more challenging set of datasets would also be encouraged (W4)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

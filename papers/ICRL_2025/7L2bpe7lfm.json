@@ -1,0 +1,168 @@
+{
+    "id": "7L2bpe7lfm",
+    "title": "Large Scale Video Continual Learning with Bootstrapped Compression",
+    "abstract": "Continual learning (CL) promises to allow neural networks to learn from continuous streams of inputs, instead of IID (independent and identically distributed) sampling, which requires random access to a full dataset. This would allow for much smaller storage requirements and self-sufficiency of deployed systems that cope with natural distribution shifts, similarly to biological learning. We focus on video CL employing a rehearsal-based approach, which reinforces past samples from a memory buffer. We posit that part of the reason why practical video CL is challenging is the high memory requirements of video, further exacerbated by long-videos and continual streams, which are at odds with the common rehearsal-buffer size constraints. To address this, we propose to use compressed vision, i.e. store video codes (embeddings) instead of raw inputs, and train a video classifier by IID sampling from this rolling buffer. Training a video compressor online (so not depending on any pre-trained networks) means that it is also subject to catastrophic forgetting. We propose a scheme to deal with this forgetting by refreshing video codes, which requires careful decompression with a previous version of the network and recompression with a new one. We expand current video CL benchmarks to large-scale settings, namely EpicKitchens-100 and Kinetics-700, with thousands of relatively long videos, and demonstrate empirically that our video CL method outperforms prior art with a significantly reduced memory footprint.",
+    "keywords": [
+        "video",
+        "video continual learning",
+        "continual learning",
+        "compression"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=7L2bpe7lfm",
+    "pdf_link": "https://openreview.net/pdf?id=7L2bpe7lfm",
+    "comments": [
+        {
+            "summary": {
+                "value": "In this work, the authors propose a method for large-scale long video continual learning to learn from continuous streams without access to the entire dataset. They employ a rehearsal-based approach which reinforces past samples in a memory buffer. To deal with long-videos and continuous streams, they propose to use video codes (video embeddings) instead of raw inputs, and train a video classifier by IID sampling from this buffer. \n\nA video compressor is used to generate the video codes. To deal with the video compressor's catastrophic forgetting, the authors propose continuous compression and decompression technique over the neural-code rehearsal buffer (past video codes). They also train a classifer in the compressed space. \n\nThe authors show results on EpicKitchens-100 and Kinetics-700 datasets in two settings -- \n- (i) incremental learning from scratch, and \n- (ii) pretraining."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The problem statement is interesting -- continual learning of large-scale long videos from continous video streams. \n\nThe proposed technique is reasonable, paper is well-written, and nicely motivated. \n\nThe design of the experiments is clearly explained and exhaustive-- \n- (i) default IID sampling, \n- (ii) incremental learning, and \n- (iii) CL with pretraining. \n\nFor both the incremental learning and CL with pretraining settings, evaluations are done on two large-scale long-video benchmarks -- Kinetics-700 and EpicKitchen-100. The proposed method outperforms the baselines."
+            },
+            "weaknesses": {
+                "value": "- During the incremental learning stage, the codes in the buffer are decoded using the decoder from the previous task. Can the authors quantify the additional memory required to store decoder weights from the previous task, and compare it with the memory savings from using compressed codes instead of the raw video frames. This would give a clear picture of the overall memory trade-offs in the proposed method. \n\n- Is a single latent code enough to compress/represent a temporally-long and possibly diverse video? Can the authors provide analysis or ablations showing how the performance varies with varying video lengths or video diversity? For instance, can you compare the performance on short vs long videos, or videos with varying amount of scene/action changes."
+            },
+            "questions": {
+                "value": "What was the number of frames in the videos that were used for training/evaluation? Could you clarify how the performance varies with video length, and whether there's a maximum video length beyond which the method's performance degrades significantly? This would help the readers understand the practical limitations of this approach?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a memory-efficient approach for video continual learning (CL) using compressed embeddings stored in a neural-code rehearsal buffer. The main idea is to reduce the high memory demands of video CL by compressing video frames into compact neural codes instead of storing raw data. The method also includes a code-refreshing mechanism to mitigate representational drift, which may happen as the model continues the incremental learning process. The method is evaluated on Epic-Kitchens-100 and Kinetics-700, across both pre-trained and completely incremental learning settings. Empirical results indicate that the method achieves promising performance with significantly reduced memory usage."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. **Reasonable Approach to Memory Efficiency**: The paper introduces a novel memory-efficient method for video continual learning by storing compressed neural codes rather than raw frames. This approach, combined with a code-refreshing mechanism, is a reasonable way to adapt continual learning to video data\u2019s storage constraints and combat representational drift and catastrophic forgetting.\n\n2. **Clear Experimental Setup**: The experiments are well-structured, covering both pre-training and incremental learning settings on widely-used large-scale video datasets (Epic-Kitchens-100 and Kinetics-700). Memory constraints and compression rates are clearly defined.\n\n3. **Potential Significance for Real-World Applications**: By focusing on reducing memory demands in video CL, the paper tackles a central obstacle in scaling continual learning to real-world applications. This approach could be impactful for memory-limited devices and applications requiring continual processing of video data, such as surveillance or autonomous systems."
+            },
+            "weaknesses": {
+                "value": "1. **Limited Novelty in Memory Efficiency Solutions**  \n   While the paper proposes a new method to address memory efficiency in video CL, this problem has already been identified and approached by prior works. From a benchmarking perspective, **vCLIMB** [1] redefined the memory metric specifically for video CL, proposing **Memory Frame Capacity** to measure memory usage in terms of frames rather than full video instances. This framework allows for evaluating frame selection strategies in video CL. From a method perspective, Furthermore, vCLIMB implemented a regularization term to reduce representation drift between original videos and stored frames, improving memory efficiency in rehearsal-based CL. Additionally, **FrameMaker** [2] further addresses memory efficiency by introducing **Frame Condensing**, where a single condensed frame per video is stored along with instance-specific prompts to retain temporal details. By not comparing against these methods, the paper\u2019s memory efficiency claim is weakened, as the approach lacks context relative to prior works.\n\n2. **Lack of Comparison to Rehearsal-Free Methods**  \n   If memory efficiency is a primary goal, comparisons with **rehearsal-free video CL methods** are essential, as these approaches inherently avoid memory constraints. For instance, **ST-Prompt** [3] achieves continual learning without rehearsal by using vision-language models and temporal prompts to encode sequential information, thus sidestepping the need for a memory buffer. More recently, **DPAT (Decoupled Prompt-Adapter Tuning)** [4] combines adapters for capturing spatio-temporal information with learnable prompts, employing a decoupled training strategy to mitigate forgetting without rehearsal. While DPAT may be too recent for comprehensive testing, at minimum, a comparison to ST-Prompt or a discussion on why rehearsal-free methods were not included would provide a more complete assessment of memory efficiency in CL.\n\n3. **Inadequate Baselines for Modern CL Standards**  \n   The paper\u2019s use of **GDumb** [5] as a baseline is insufficient for evaluating the performance of a modern CL method. GDumb, introduced in 2020, was meant to highlight flaws in existing CL evaluation metrics and methods, demonstrating that a simple random-sampling rehearsal method could outperform many complex algorithms of that time. However, it is not representative of state-of-the-art continual learning. Since its release, more advanced rehearsal-based methods, such as **ER-ACE** [6] and **L2P** [7] have been developed, each addressing the limitations GDumb originally exposed. GDumb\u2019s rudimentary approach lacks the complexity needed to benchmark against a method claiming novel contributions in memory-efficient CL, and thus relying on GDumb alone creates an unconvincing evaluation framework for the proposed method. Including state-of-the-art baselines from both image and video CL (see previous point for video baselines) would strengthen the paper\u2019s claims of memory efficiency and performance.\n\n4. **Insufficient Justification of Benchmark Superiority**  \n   The paper introduces a new benchmark with a pre-training phase on a subset of classes, followed by incremental learning. However, **Park et al. (2021)** [8] has already explored a similar pre-training and incremental learning setup for video CL. The paper does not provide sufficient justification for why its benchmark is necessary or superior to existing benchmarks (such as [1] and [8]). A new benchmark should ideally improve upon current setups in aspects such as realism, task granularity, or sequence transitions. Without a clear rationale, the proposed benchmark appears redundant rather than an improvement.\n\n5. **Unsubstantiated Novelty Claim in Large-Scale, Long-Video Testing**  \n   The paper claims to be the first to extend CL to \u201clarge-scale naturally-collected long videos.\u201d This claim is inaccurate, as several previous studies have conducted video CL on large, untrimmed datasets. For example, **vCLIMB** and other works used **ActivityNet** [1] for CL, which includes long, untrimmed videos from natural events and provides extensive temporal context. Similarly, the **Kinetics** and **Something-Something** datasets have been widely used for video CL research, with recent methods like **DPAT** [4] even leveraging Epic-Kitchens for long, naturally collected video scenarios. Without clear evidence that the benchmark adds unique value, such as in video length or task diversity, the claim of novelty is misleading and diminishes the contribution\u2019s significance.\n\n---\n\n### References:\n1. vCLIMB: \"A Novel Video Class Incremental Learning Benchmark\", CVPR 2022.\n2. FrameMaker: \"Learning a Condensed Frame for Memory-Efficient Video Class-Incremental Learnin.\", NeurIPS 2022. \n3. ST-Prompt: \"Space-time Prompting for Video Class-incremental Learning\", ICCV 2023\n4. DPAT: \"Decoupled Prompt-Adapter Tuning for Continual Activity Recognition\", CoLLAs 2024.\n5. GDumb: \"A Simple Approach That Questions Our Progress in Continual Learning\", ECCV 2020.\n6. ER-ACE: \u201cNew Insights on Reducing Abrupt Representation Change in Online Continual Learning\u201d, ICLR 2022.\n7. L2P: \u201cLearning to Prompt for Continual Learning\u201d, CVPR 2022. \n8. Park et al. (2021): \"Class-Incremental Learning for Action Recognition in Videos\", ICCV 2021."
+            },
+            "questions": {
+                "value": "1. **Comparison to Advanced Video CL Methods**: How does the proposed method compare with other recent memory-efficient video CL approaches like vCLIMB and FrameMaker, which use selective frame retention with temporal consistency regularization and condensed frames? These comparisons could contextualize the memory benefits claimed in the paper.\n\n2. **Evaluation Against Rehearsal-Free Methods**: Since memory efficiency is a key focus, why were rehearsal-free methods like ST-Prompt not included as baselines? Including or discussing these could provide a clearer assessment of the method\u2019s memory advantages.\n\n3. **Justification of Benchmark Novelty**: The paper introduces a new benchmark setup with pre-training followed by incremental learning. Could the authors elaborate on why this setup is preferable or unique compared to existing video CL benchmarks? Quantifying the differences and summarizing them in a table might be useful here. \n\n4. **Rationale behind Baselines**: Could the authors explain why the baselines were chosen, including GDumb?\n\n5. **Clarification of \u201cLarge-Scale, Naturally-Collected, Long Videos\u201d Claim**: The paper claims to be the first to use \u201clarge-scale, naturally-collected long videos\u201d in CL, but prior works have used datasets like ActivityNet, Kinetics, and Something-Something. Could the authors clarify what sets this benchmark apart from these established datasets?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work implements continual learning for action and object classification in relatively long video clips. This is an important setting for many applications such as robotics, and is quite challenging due to the high information density and temporal correlations inherent in video data. The authors employ a VQ-VAE-based video compression approach to enable large-scale storage of encoded video information in a buffer, enabling replay of previously encountered examples to mitigate catastrophic forgetting in incremental learning settings from scratch and with pretraining. The compression strategy is designed to balance stability and plasticity, using a frozen decoder for each task to minimize representational drift. The proposed algorithm outperforms several relevant baselines by large margins under memory-constrained conditions."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The described setting (continual learning of classification tasks involving long videos as input) is relevant to many practical applications in robotics, security camera systems, and other areas \u2013 it is also quite challenging due to the size of video data and the inherent temporal correlations, and as such has been explored by existing work to only a limited extent. \n\n2. Replay-based continual learning methods in image processing applications can have a large memory storage footprint \u2013 this is exacerbated with video data, making approaches like this one especially practically useful in this setting. \n\n3. Combining a stored set of frozen \u201cdecompressors\u201d to manage representational drift with a \u201ccompressor\u201d trained on-the-fly is an interesting and novel approach to this continual learning problem. Figure 2 is well-designed and quite helpful for understanding the approach. \n\n4. The proposed approach outperforms the baselines on all benchmarks, and often by large margins. The selected baselines are appropriate and are compared with the proposed method in reasonable ways. \n\n5. The paper is well-written, and for the most part is clear and easy to follow. For example, the methods section is written in a way that makes the proposed approach easy to understand, by first presenting the simplified IID case and then moving to the incremental learning case. There is an insightful and balanced account of biological inspiration and plausibility of the proposed algorithm in the introduction."
+            },
+            "weaknesses": {
+                "value": "This paper appears to present strong state-of-the-art results on an important and challenging continual learning problem, but the review score is limited primarily due to insufficient detail in describing and justifying the proposed algorithm and in describing the setting/datasets. Performance comparisons are also not presented in a sufficiently rigorous way (no estimates of uncertainty, no clear definition of the accuracy metric being used). However, the weaknesses of the paper appear relatively addressable in ways that could improve this reader\u2019s review score. \n\n1.\tThe proposed method uses an existing video compression algorithm to allow a large portion of compressed video data to be stored in a buffer for replay, with novelty mainly arising from the specific configuration of encoders and decoders and how they are trained or kept frozen at different stages of continual learning in different settings (e.g., keeping a separate decompressor for stored codes from each task) \u2013 however, this configuration is not strongly justified either theoretically or empirically (see also items 1 and 2 in the \u201cquestions\u201d section).\n\n2.\tIn the related works section under \u201cContinual Learning with Images and Videos\u201d, there is only one reference to an existing work on continual learning with videos. To make the claim that this is the first practical CL algorithm in a large-scale long video setting would seem to require a more thorough review of prior approaches (even if they do not fully meet this criterion) to distinguish the current work from them \u2013 for example, the authors could consider the following: \na.\tVerwimp, Eli, Kuo Yang, Sarah Parisot, Lanqing Hong, Steven McDonagh, Eduardo P\u00e9rez-Pellitero, Matthias De Lange, and Tinne Tuytelaars. \"Clad: A realistic continual learning benchmark for autonomous driving.\" Neural Networks 161 (2023): 659-669.\nb.\tWu, Jay Zhangjie, David Junhao Zhang, Wynne Hsu, Mengmi Zhang, and Mike Zheng Shou. \"Label-efficient online continual object detection in streaming video.\" In Proceedings of the IEEE/CVF International Conference on Computer Vision, pp. 19246-19255. 2023.\n\n3.\tThere is little to orient the unfamiliar reader with the overall setting, specifically the EpicKitchens and Kinetics-700 datasets.  It would be useful to include some additional details, such as basic statistics on how long the videos are, examples of the kinds of actions/objects that are depicted in the datasets, how the labeling works (e.g., does each frame of the video have one label and one label only? How do the models and the labeling schemes manage smooth transitions between classes?) and visualizations of a few examples (there are a few examples from Epic-Kitchen in Figure 1, but none from Kinetics-700 and there is no in-text reference to Figure 1).  \n\n4.\tAlthough the proposed method appears to outperform the baselines by large margins, there is no way to assess the statistical reliability of these results. I think it is important to include results from multiple training runs and assess variability among runs (e.g., reporting standard error or confidence intervals) in addition to the mean performance numbers, and to add error bars to Figure 3."
+            },
+            "questions": {
+                "value": "1.\tAdditional ablation studies could further justify aspects of the proposed approach. In particular, it would be interesting to explore the benefits and drawbacks of the specific way in which the autoencoder is trained. For the incremental setting, is it necessary to keep a separate decoder for each task to limit representational drift, or does the method perform well using only one decoder that is trained continuously? Does it improve performance to maintain a separate encoder for each task in addition to a separate decoder? Any performance tradeoffs here should be described alongside the drawbacks of maintaining more encoders/decoders \u2013 what is the size in memory of the autoencoder parameters relative to the replay buffer? For example, if it so happens that it is very cheap to store lots of different encoders/decoders for each task, this approach might be well-justified if it also improves performance. \n\n2.\tRelated to the above, it does not seem entirely clear what is meant by the compressor being trained \u201ccontinuously\u201d in the incremental setting. Is it that there is just one compressor that continues to be updated with each task? Or is a separate compressor trained from a random initialization for each task? Or, at the conclusion of each task, is the compressor for that task frozen and a copy made of it to form the initial condition of the compressor to be trained for the next task? \n\n3.\tThere are some prior works that have explored continual learning in video-formatted datasets. One claim that underscores the novelty/significance of the work is that these video clips are much longer \u2013 can you provide a measure of quantification for this? How much longer, and is this a practically meaningful increase in duration of videos that can be processed? \n\n4.\tIn section 5.1 where does the 224x224x14 dimension of each video clip come from? Are these grayscale videos with 14 frames? (this would seem inconsistent with the statement that the method operates on long videos)\n\n5.\tIn the \u201cbaselines\u201d section, a limit on the number of samples in the buffer per task is described. However, it is not described how these samples were selected \u2013 e.g., perhaps they were randomly (IID) selected from each task, in which case this should be made explicit. There is a statement in section 6.1 that \u201cOne interesting finding from our work is that we do not need to apply any frame selection or sampling strategy, even for very large videos,\u201d however it is not clear what this means \u2013 is it that the compression is so efficient that you can store every single frame? Or is it that random selection is sufficient? (this strategy is commonly used in replay-based continual learning approaches). For the sampling selection strategies of the baselines, I see that some are explained in the appendix, although it is not clear how the sampling worked for REMIND.\n\n6.\tAre the incremental and pretraining settings here best characterized as class-incremental learning or task-incremental learning? (i.e., when the trained model is evaluating a new, unknown sample, does it also need to be told which task the sample belongs to?)\n\n7.\tWhat is meant by \u201caverage accuracy\u201d in tables such as table 1? This can be measured in different ways \u2013 for example, it could be average accuracy on all tasks measured at the conclusion of the task sequence, or it could also be averaged across accuracy measured after each task increment. \n\nMinor comments: \n\n8.\tSome of the references appear to be incorrectly formatted \u2013 e.g. [1], [3], [6], and many more do not have a journal or conference listed. A few also have incomplete author information (e.g., [1] does not list an author, only the title and year). It is also my understanding that in-text citations should be author-date formatted instead of just numbers for each reference (specifically for ICLR). \n\n9.\tThere are a few typos - e.g., in section 3.2 \u201ca concatenation of m samples from each of the task\u201d and near the end of section 5.3 \u201cwe store the resulting the codes.\u201d Additional proofreading would be helpful to refine the paper. \n\n10.\tThe average forgetting (AvgF) metric should be briefly defined in the paper \u2013 currently, there is just a citation to the Avalanche GitHub repository. \n\n11.\tThe method seems to be referred to as \u201cBootstrapCL\u201d in some of the tables, but this name is not introduced anywhere else in the text. Why is it called \u201cBootstrapCL\u201d? It should be made more clear that this is the name of the new algorithm \u2013 e.g., in the tables it could be called \u201cBoostrapCL (Ours)\u201d. It can also be helpful to bold the best performance numbers on each metric in the tables. \n\n12.\tEquation 10 seems to imply that the same encoder is used for both new samples and samples reconstructed from the buffer. Why is it that the decoder from previous tasks needs to be retained to decode those older examples, but the same encoder can be used for all tasks?  It is seemingly contradictory that, in equations 6 and 7, there appear to be different versions of the encoder for each task ($\u03d5_1$, $\u03d5_2$, etc.) when it is also stated that the encoder is trained continuously in the incremental setting. \n\n13.\tI suggest combining the ablation study tables 3-5 in the appendix into a single table, so it is easier to compare the performance under each ablation with the baseline performance and also compare among the different ablations. \n\n14.\tIf I understand correctly, \u201ccompressor\u201d is used interchangeably with \u201cencoder\u201d and \u201cdecompressor\u201d with \u201cdecoder.\u201d I suggest choosing one set of terms and using them throughout the paper consistently. \n\n15.\tThe CL acronym for continual learning should also be used consistently."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a continual learning (CL) framework for video. The proposed method (pre)trains a compressor for video frames with an encoder and decoder. Additionally it maintains a buffer of past codes which are used when changing task. The system uses these buffers to do, in the case of experiments in the paper, noun and action classification. Catastrophic forgetting is minimized by maintaining the previous task buffer and making sure the compressor doesn't drift too much when changing tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Originality:\nWhile most of the work is based on existing literature, the use of compressed representations in this context is novel.\n\nQuality:\nIt's nice to see some \"real world\" datasets being used in this context so there is a beginning of good experimental validation here (but see below). The ablations in the appendix should have been in the main paper, but are nice.\n\nClarity:\nThe paper is nicely structure but see below."
+            },
+            "weaknesses": {
+                "value": "Unfortunately the paper suffers from several weaknesses;\n\nExperimental validation - while I appreciate the use of real world video the experimental validation is lacking. There are only two tasks used and if a method is aiming to show improvement in continual learning then I would really expect more. For example including more datasets (Ego4D, SSv2 for example) and more tasks (dense tasks, pixel prediction) would have made the case of the paper stronger.\n\nAnalysis - there is very little analysis as to what the model learns and how - the main ablation is the previous task buffer size, the rest is in the appendix but not a lot of analysis of the significance of the results is given. I would have loved to see how the compressed representation evolve as more tasks are introduced - do they stay the same? do they change abruptly to fit the new task (while still being meaningful for the old ones)? some visualization of the learned representation would be nice as well.\n\nClarity - I found the paper hard to follow. The model and problem set up are not well explained and the figure captions do little to help. Specifically, the method section (4) needs more context with clear definition of what tasks are and how they evolve over time. Figure 2 caption should be extended - the model is quite simple (I think) and should be completely understandable from that figure alone."
+            },
+            "questions": {
+                "value": "-"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

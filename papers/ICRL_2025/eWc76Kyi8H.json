@@ -1,0 +1,168 @@
+{
+    "id": "eWc76Kyi8H",
+    "title": "CPL: Critical Plan Step Learning Boosts LLM Generalization in Reasoning Tasks",
+    "abstract": "Post-training, particularly reinforcement learning (RL) using self-play-generated data, has become a new learning paradigm for large language models (LLMs). However, scaling RL to develop a general reasoner remains a research challenge, as existing methods focus on task-specific reasoning without adequately addressing generalization across a broader range of tasks. Moreover, unlike traditional RL with limited action space, LLMs operate in an infinite space, making it crucial to search for valuable and diverse strategies to solve problems effectively.\nTo address this, we propose searching within the action space on high-level abstract plans to enhance model generalization and introduce Critical Plan Step Learning (CPL), comprising: 1) searching on plan, using Monte Carlo Tree Search (MCTS) to explore diverse plan steps in multi-step reasoning tasks, and 2) learning critical plan steps through Step-level Advantage Preference Optimization (Step-APO), which integrates advantage estimates for step preference obtained via MCTS into Direct Preference Optimization (DPO). This combination helps the model effectively learn critical plan steps, enhancing both reasoning capabilities and generalization.\nExperimental results demonstrate that our method, trained exclusively on GSM8K and MATH, not only significantly improves performance on GSM8K (+10.5\\%) and MATH (+6.5\\%), but also enhances out-of-domain reasoning benchmarks, such as HumanEval (+12.2\\%), GPQA (+8.6\\%), ARC-C (+4.0\\%), MMLU-STEM (+2.2\\%), and BBH (+1.8\\%). The code is available at https://anonymous.4open.science/r/CPL.",
+    "keywords": [
+        "LLM Reasoning",
+        "Monte-Carlo Tree Search",
+        "Reinforcement Learning",
+        "Generalization"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=eWc76Kyi8H",
+    "pdf_link": "https://openreview.net/pdf?id=eWc76Kyi8H",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes critical plan step learning method. The CPL approach does MCTS on the abstract level plan and develop diverse plans. And then they incorporate step level advantage preference optimization to learn policy effectively. Similar to DPO, they derive a step level APO objective. They demonstrate that the proposed algorithm improve the base model performance considerably on the in domain as well as out of domain tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Proposes a method for learning high level actions which author argue is good for generalization beyond in domain tasks\n- The proposed algorithm is interesting and demonstrate improvement upon the base model performance.\n- Their ablation on section 3.4 is insightful which shows improvement due to step-APO."
+            },
+            "weaknesses": {
+                "value": "- LLM\u2019s are quite stochastic how ever the paper only reports a single number in plots and table which does not provide a clear comparison across methods. I would appreciate if they could compare distribution (e.g., variance or so as well)\n- Authors talk about scaling RL; but did not see efforts to address the sampling problem. I agree that search is reduced from MCTS over token level to abstract plan level. But the Isn\u2019t the search space is still huge (theoretically of the same complexity as before)?\n- The comparison is mainly around Deepseek model. I would suggest to try out another model for strengthen experimental conclusions"
+            },
+            "questions": {
+                "value": "- Rephrase: steps through Step-level Advantage Preference Optimization (Step-APO), which integrates advantage estimates for step preference obtained via MCTS into Direct Preference Optimization (DPO)\n- Can you comment on your training times as well?\n- I am curious how many samples are used for computing \\pi_\\ref (via sft?) and do you update it again?\n- The difference with DPO is still not fully clear to me. In eqn 12 is the main difference that you do not need full trajectories but partial/split trajectories are also sufficient? But I can also do this with DPO, I believe."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces Critical Plan Step Learning (CPL), a method designed to improve the generalization of large language models (LLMs) in multi-step reasoning tasks. The authors propose a novel approach that focuses on training LLMs through high-level abstract plans rather than task-specific actions. Their method consists of two main components: (1) using Monte Carlo Tree Search (MCTS) to explore diverse plan steps in multi-step tasks, and (2) introducing Step-level Advantage Preference Optimization (Step-APO), which refines the learning of critical plan steps by integrating advantage estimates from MCTS into Direct Preference Optimization (DPO). Experimental results show that the CPL method enhances both in-domain and out-of-domain reasoning capabilities across a variety of benchmarks, achieving significant improvements in datasets like GSM8K, MATH, HumanEval, and ARC-C."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- Approach: The paper proposes a method of focusing on high-level abstract plans instead of task-specific solutions, which helps improve model generalization across different reasoning tasks.\n- Empirical Results: The experimental results showing significant improvements in both in-domain (GSM8K, MATH) and out-of-domain (HumanEval, ARC-C) reasoning benchmarks.\n- Step-APO: The introduction of Step-APO, which integrates advantage estimates into DPO, provides a fine-grained optimization of critical plan steps."
+            },
+            "weaknesses": {
+                "value": "The paper does not clearly define high-level abstract plans. How should one distinguish between abstract plans and task-specific plans? What are the differences between this method and the chain/tree/graph-of-thoughts approach? Additionally, the process of generating abstract plans is not described in detail, nor does the paper compare its method with existing works that use thoughts to enhance models' general reasoning abilities [1-2]. Furthermore, regarding Step-APO, several existing works have proposed very similar ideas [3-5], but the paper neither cites, discusses, nor compares its approach with these works. Overall, this work feels incomplete.\n\n--- \n\n[1] Zelikman, Eric, et al. \"Star: Bootstrapping reasoning with reasoning.\" NeurIPS 2022.\n\n[2] Zelikman, Eric, et al. \"Quiet-star: Language models can teach themselves to think before speaking.\" arXiv preprint arXiv:2403.09629 (2024).\n\n[3] Rafailov, Rafael, et al. \"From $ r $ to $ Q^* $: Your Language Model is Secretly a Q-Function.\" arXiv preprint arXiv:2404.12358 (2024).\n\n[4] Zhong, Han, et al. \"Dpo meets ppo: Reinforced token optimization for rlhf.\" arXiv preprint arXiv:2404.18922 (2024).\n\n[5] Zeng, Yongcheng, et al. \"Token-level Direct Preference Optimization.\" ICML 2024."
+            },
+            "questions": {
+                "value": "See the Weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces Critical Plan Step Learning (CPL), a novel approach to improve large language models' reasoning abilities through reinforcement learning. The method uniquely combines Monte Carlo Tree Search for exploring diverse reasoning strategies with Step-level Advantage Preference Optimization for learning critical planning steps. While trained only on mathematical datasets (GSM8K and MATH), CPL demonstrates significant improvements not only on these training domains but also generalizes well to various out-of-domain reasoning tasks, including programming, physics, and general STEM problems. This suggests CPL effectively enhances models' general reasoning capabilities rather than just task-specific performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper proposes a novel plan-based MCTS simulation data construction method introduces a step-level APO algorithm\n- Comprehensive experimental validation is conducted across various reasoning datasets\n- The paper is well-written with clear structure and organization"
+            },
+            "weaknesses": {
+                "value": "- Using MCTS to sample high-quality data for fine-tuning is not a novel contribution, as [1] has already proposed a self-improvement method based on MCTS.\n- The methodology description lacks clarity, particularly regarding how the plan is integrated into the MCTS process.\n- The comparison with baselines is insufficient, as it lacks search-based algorithms such as [1][2] in the baseline comparisons.\n\n[1]AlphaZero-Like Tree-Search can Guide Large Language Model Decoding and Training\n\n[2]Toward Self-Improvement of LLMs via Imagination, Searching, and Criticizing"
+            },
+            "questions": {
+                "value": "- Could the authors provide more method details, particularly about how MCTS rewards are calculated and whether there is an additional reward model? Perhaps include a flowchart illustrating plan-based MCTS?\n- Training-based methods consume substantial computational resources. Could you elaborate on the differences between training-based and testing-based approaches, as mentioned in [1][2]? If minimal resources are required at test time, is RL fine-tuning necessary?\n- Please provide more results for different sampling methods in Section 3.3. The authors only compared with CoT methods - how does it compare with MCTS without planning, Tree of Thoughts, Q*[1], and other similar methods?\n\n[1]:Q*: Improving Multi-step Reasoning for LLMs with Deliberative Planning\n\n[2]:Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Critical Plan Step Learning (CPL), a novel approach for enhancing the generalization of large language models (LLMs) in reasoning tasks by leveraging plan-based reinforcement learning (RL). CPL employs Monte Carlo Tree Search (MCTS) to explore high-level, abstract problem-solving strategies, distinguishing critical steps that improve reasoning. Experimental results show that CPL significantly boosts in-domain and out-of-domain task performance, underscoring its potential for broader LLM applications."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Originality: The paper presents Critical Plan Step Learning (CPL), which focuses on identifying and learning critical steps in high-level abstract plans for generalization in reasoning tasks, a novel concept in reinforcement learning for LLMs.\n\n- Quality: The paper includes clear figures and comprehensive experiments to illustrate the effectiveness of CPL.\n\n- Significance: CPL demonstrates improvements over baseline models across both in-domain (e.g., GSM8K, MATH) and out-of-domain tasks (e.g., HumanEval, ARC-C).\n\n- Clarity: The paper is well-organized and accessible, with clear descriptions of CPL\u2019s components and step-by-step explanations of the methods, making complex concepts understandable."
+            },
+            "weaknesses": {
+                "value": "- In the contributions and conclusion, you mentioned \"critical steps\", while critical steps in this paper is not well-defined theoretically or experimentally. This undermines the interpretability of the process and raises questions about the reproducibility and consistency of its critical steps across different tasks.\n- The model label in Section 3.2 is unclear. What are CPL(Round2 SFT) and CPL-final respectively? I would think CPL(Round2 SFT) is the model after Round2 SFT but it seems like the performance of CPL(Round2 SFT) drops and is lower than the previous steps for some tasks.\n- The iterative training with MCTS and Step-APO requires multiple rounds of data generation, which can be prohibitively resource-intensive. There is little discussion on scalability or the potential trade-offs in model efficiency, which are crucial for real-world deployment."
+            },
+            "questions": {
+                "value": "1. As mentioned in Weakness, the performance of CPL(Round2 SFT) drops. If that denotes the model after Round2-SFT, could the authors provide insights into why the Round 2 SFT performance declines compared to Round 1?\n2. GSM8K and MATH are both math-centric. Will the result be different if the in-domain tasks change? For example, HumanEval is used as in-domain tasks, and MATH and GSM8K as out-of-domain tasks. \n3. Why was MCTS chosen over other search methods for exploring high-level plans? Were any alternative search techniques considered? Providing an ablation study about the search methods will be helpful.\n4. Have you compared CPL with general SOTA LLMs, especially the ones with chain-of-thought/tree-of-thought prompting or related techniques?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

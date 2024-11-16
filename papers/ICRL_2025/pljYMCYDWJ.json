@@ -1,0 +1,212 @@
+{
+    "id": "pljYMCYDWJ",
+    "title": "Logicbreaks: A Framework for Understanding Subversion of Rule-based Inference",
+    "abstract": "We study how to subvert large language models (LLMs) from following prompt-specified rules.\nWe model rule-following as inference in propositional Horn logic, a mathematical system in which rules have the form ``if $P$ and $Q$, then $R$'' for some propositions $P$, $Q$, and $R$.\nWe prove that although LLMs can faithfully follow such rules, maliciously crafted prompts can mislead even idealized, theoretically constructed models.\nEmpirically, we find that the reasoning behavior of LLMs aligns with that of our theoretical constructions, and popular attack algorithms find adversarial prompts with characteristics predicted by our theory.\nOur logic-based framework provides a novel perspective for mechanistically understanding the behavior of LLMs in rule-based settings such as jailbreak attacks.",
+    "keywords": [
+        "Logic",
+        "reasoning",
+        "inference",
+        "language model",
+        "jailbreak"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "We study how to subvert language models from following prompt-specified rules.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=pljYMCYDWJ",
+    "pdf_link": "https://openreview.net/pdf?id=pljYMCYDWJ",
+    "comments": [
+        {
+            "summary": {
+                "value": "This manuscript explores the subversion of logical entailment in transformer-based LLMs, in three steps:\n1. a theoretical/mathematical representation of a single layer transformer with one attention head (\u00a73.1): Theorem 3.1 establishes that this architecture can encode (propositional) logical entailment, characterized by _monotonicity_, _maximality_, and _soundness_.\n1. theory-based attacks against GPT-2 reasoners:\n   1. Theorem 3.3 presents binary encodings of theory-derived suffixes that implement attacks on each of the three logical properties, via the mathematical representation of the transformer.\n   1. Figure 3 then shows the success rate of each of the mathematical attacks.  Those against monotonicity and maximality are highly successful, while that on soundness generally fails, but can induce variance.  These attacks are somewhat validated by 'learned' attacks that minimise the BCE loss between a desired sequence of reasoning, and an actual induced sequence of reasoning.\n1. finally, the authors use the Greedy Coordinate Gradients (GCG) algorithm for generating adversarial attacks on GPT-2 and Llama-2 to induce the specific logical violations sought. Linear classifier probes tend to recover the induced adversarial states, rather than the true states, indicating the attacks' success."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**originality**\n\nWhile 'jailbreak'/'adversarial attack' papers are common, I have yet to see a paper that embeds such attacks in the transformer architecture underlying LLMs.\n\n**quality**\n\nThe paper seems well conducted.\n\n**clarity**\n\nThe paper is generally well structured.  For specific exposition, see below.\n\n**significance**\n\nI think that the paper contributes to the literature on LLM's ability to implement logical operations."
+            },
+            "weaknesses": {
+                "value": "1. throughout, as a non-expert in adversarial attacks, I found that steps in the paper's reasoning were hard to understand.  For example, I would like clearer explanation of:\n   1. the relation between the binary encodings and the Minecraft prompts: are terms like \"if I have\" and \"then I can\" somehow encoded to binary in this form, or are the implied logical operators encoded instead?\n   1. is there anything special about adversarial _suffixes_ (rather than e.g. adversarial prefixes)?\n   1. why is the ASR non-monotonic in the number of repeats (Fig. 3)?  I would have thought that a repeated attack is more likely to succeed.\n   1. I did not understand the variance explanation (Fig. 3) of the soundness attacks: my best guess is that adversarial suffixes can induce similar reasoning states across a range of prefixes; if so, this seems unsurprising - the tokens generated when a common token is appended to idiosyncratic tokens are more correlated than those generated in response to the idiosyncratic tokens alone?\n   1. what is a 'budget' (problem 3.2)?\n   1. Table 1: this seems to show that learned attacks are successful.  \n      1. Do they 'mirror' the theoretical attacks in the sense of implementing similar reasoning sequences, or using similar adversarial prefixes?\n      1. The caption claims that $v_{tgt}$ is larger on average than $v_{other}$ for fact amnesia; the figures in the table show the opposite?\n      1. The theory based attacks failed against soundness, yet the learned attacks seem to be quite successful.  In Table 2, the soundness attack seems the most successful.  Why is there this difference between the attack types' success?\n   1. The Suffix in Figure 4 contains various typos (e.g. \"I and have\", \"and and\").  Is this an intrinsic part of the attack, or just incidental?\n   1. Table 3: why are there no confidence intervals on the substitution ASR?\n   1. Table 4: is there any intuition behind the most targeted layers being consecutive?  Why is the pattern in Table 5 so different?\n   1. Figure 6: should the block between 'Suppressed Rule' and 'Output' be labeled?\n1. neither of the two LLMs used, GPT-2 and Llama-2, have been state-of-the-art for some time.  It would be helpful to either:\n   1. (ideally) demonstrate the same results on SOTA LLMs; or\n   1. (less ideally) explain why the non-SOTA LLMs still provide insight into the weaknesses of SOTA LLMs.\n\nNone of the expositional issues, above, are 'deal breakers'.  Thus, I have rated this paper as a weak accept: I would like to papers in top ML conferences like ICLR to be strong across the board, rather than good analyses that seem a bit rushed in their exposition."
+            },
+            "questions": {
+                "value": "See 'Weaknesses', above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "The paper considers adversarial attacks on transformer-based reasoners.  Clearly, there are ways of using such attacks to subvert guardrails built into transformer-based LLMs.  At the same time, I can see no better way forward than to publish analyses, hoping that this allows the 'defence' side to build as quickly as the 'offence' side does."
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper investigates methods to manipulate LLMs into deviating from prompt-specified rules. The study models rule-following as propositional Horn logic. The authors demonstrate how malicious prompts can exploit theoretical weaknesses, leading even robust models to fail in rule-based reasoning. This approach is validated both theoretically and empirically, linking the behavior of real-world adversarial attacks (jailbreaks) to their framework."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. A theoretical model is provided to study how the reasoning of transformer-based language models can be subverted. This approach bridges theory and practice, demonstrating that popular jailbreak attacks align with theoretical predictions. The presentation of the idea is quite clear.\n\n2. The framework is extendable to various LLMs, making it relevant for broader applications in model safety and adversarial robustness. Experimental results align with the theoretical analysis."
+            },
+            "weaknesses": {
+                "value": "1. The theoretical model is simplified by considering only Horn logic without quantifiers. \n\n\n2. A graph-based representation, rather than binary vectors, might provide a stronger representation of propositions but could be more challenging to analyze. \n\n\n3. While the study includes empirical validation, the range of language models and datasets tested may not fully capture the diversity of existing models.  Although recent models like GPT-3+ are not controllable at will, experiments with these models may yield unexpected results, and additional insights could be explored."
+            },
+            "questions": {
+                "value": "1. How should we interpret the curve in the left and middle figures, where the ASR initially increases but then decreases with additional repetitions?\n\n2. Does this alignment between theory and behavior appear only in your self-trained GPT-2 and Llama reasoners, or can we expect similar results in more advanced LLMs, such as GPT-4 or Llama 3?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Privacy, security and safety"
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "Since this paper focuses on how jailbreak attacks subvert prompt-specified rules, it can help LLM developers enhance model safeguards. However, malicious users might also leverage these findings to improve adversarial attacks."
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors investigate how adversarial suffixes can cause LLM to subvert from following rules specified in the input prompt. To do so, the authors introduce a theoretical framework using propositional Horn logic, which involves multiple inference steps. At each inference step, new facts are derived using a set of rules and a set of known and derived facts. Within this framework, the authors investigate how and which adversarial suffixes make LLMs violate the rules defined in the prompts. Here, the authors investigate three attack scenarios: fact amnesia (deletion of facts), rule suppression (the rule is not applied even though it could have been), and state Coercion (the current state is manipulated)."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Understanding why and how these jailbreak attacks work on LLMs is an interesting and important direction of research.\n- The paper is overall well-written and follows a clear structure. However, as an informed outsider, I find it hard to follow; while the theory is described in great detail, it could benefit from some more high-level insights, which would make it more accessible.\n- The authors provide both theoretical and empirical support for their framework to explain the behavior of LLMs under such jailbreak attacks."
+            },
+            "weaknesses": {
+                "value": "- The paper focuses on small language models, mostly GPT2, and for some experiments, llama2-7B-Chat. I am unsure how the results scale for even larger and deeper models and whether they could be applied to current LLM architectures (e.g., llama-3). \n- The Authors include an invalid link within the reproducibility statement for code and experiments.\n- As an informed outsider, the paper seems to be very technical, and I struggle to see the main insides you draw from the theory and empirical findings. Maybe a short elaboration on how and why these suffixes work could clarify that."
+            },
+            "questions": {
+                "value": "- why do we need so many repeats for the attack in Fig. 3, and why is the success rate dropping if the number is too high?\n- Is it more challenging to apply your code to larger and deeper LLMs from an implementation standpoint?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper investigates adversarial attacks against large language models (LLMs) through the lens of propositional logic. The authors represent sets of propositions in a vectorized form and model rule disjunctions as summations of binary elements of these vectors. Attacks are performed by removing some (of the indicators of) propositions to break the logical soundness of rule applications. Additionally, small transformer architectures are used to predict the next state, mimicking rule application. Experiments with LLMs are conducted on synthetic data."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The formalization of different types of rule-based adversarial attacks is novel, to the best of my knowledge, and provides a structured way of thinking about how LLMs might fail in following logical rules. \n\n- The authors\u2019 attempt to develop a theoretical framework that connects LLM behavior with logical rule-following is conceptually interesting and could inspire further work in this area. \n\n- The use of synthetic data and small transformer architectures for experimentation allows for controlled exploration of the proposed ideas, though this setup has its limitations."
+            },
+            "weaknesses": {
+                "value": "- The paper's clarity needs improvement, particularly in terms of defining key terms and methods. The architecture of the theoretical model is not sufficiently explained and the theoretical results not easy to trust given the lack of intuition about why they come about. \n\n- The paper makes a fundamental assumption that LLMs can follow prompt-specified rules, but this assumption is not validated. In fact, prior work, e.g. (Zhang at al., 2022a), disprove this, and the experiments indicate that LLMs struggle with logical reasoning, a point that is not fully acknowledged in the paper. A stronger link between theoretical expectations and empirical findings is needed. \n\n- The theoretical model is not a strong representation of how LLMs operate, as it treats propositions as binary events, and simulate inference by summation which is not clear whether can generally represent of LLMs' behavior, e.g. performing next-token prediction. The correspondence between the transformer architecture and the theoretical model is weak, and the results do not demonstrate rule-following as claimed. \n\n- The experiments are not adequately explained, and it\u2019s unclear how well the theoretical attacks translate to learned models. For example, the empirical results with GPT-2 lack sufficient explanation regarding how the theoretical attacks were applied to the LLM. The lack of clarity in the methodology undermines confidence in the results."
+            },
+            "questions": {
+                "value": "Content-related: \n\n- L49: The paper claims that the proposed logic-based framework can detect and describe rule disobedience by LLMs. I am not convinced that the claim holds since I cannot see a concrete correspondence between the proposed theoretical model and a transformer architecture like the ones you experiment with. This is probably due to presentation, since I did not find Eq (4) and (5) to be adequately described or justified. They read like a list of ingredients to me. Also the theorems are too informal and at least an intuition of why they are the case should be given. \n\n- L53: The paper states that attacks in the theoretical setting transfer to learned models and that LLMs exhibit consistent reasoning behaviors with the theoretical model\u2014can you provide evidence for this? I did not find the presented evidence clearly supporting this claim. \n\n- L141: \"Might violate rule-following differently\" refers to how predictions diverge from the ground truth. L159 mentions \"non-determinism in rule-application order\"\u2014does this mean the result of Apply() is not unique? Could you expand on this source of uncertainty? \n\n- L155: What do you mean by \"good coverage\"?  \n\n- L172: What result are you referring to here? The following model description is unclear, and some background and definitions are missing. \n\n- L185: Are the rules represented as a set of tuples? $\\{0,1\\}^{2n}$ is simply a set. \n\n- L195: When and how does thresholding come into play? \n\n- L209: How does the network's dimension support the results in Theorem 3.1? \n\n- L255: Is the reason for negative values of the attacks due to the embedding space and the way language models \"reason\"? \n\n- L262: Empirical results with GPT-2 are mentioned without explaining how theoretical attacks were translated to learned models. How does a model like GPT-2 fit into this framework? \n\n- L299: GCG is not introduced or described appropriately. \n\n- L322: How is the search for expected behavior conducted? \n\n- L357: Linear classifier probes are mentioned but not defined. \n\n- L365: Is there a difference between what is measured by accuracy and F1? I find the description of the metrics confusing. \n\n- L371: What are models T=1,3,5? You referred to models as $\\mathcal{R}$ earlier\u2014could you please clarify. \n\n- L374: SSR is not properly defined. \n\n- Table 2: What is the baseline here? How can you say that the jailbreak succeeded if results without the attack are not shown? \n\n- Table 4: Why is the suppression effect more pronounced in layers 6, 7, and 8? Is there something that can be inferred from this? \n\n- Figure 6: The figure is unclear. What is the prompt, the rule, the attack, and the output? \n\nMinor points: \n\n- L134: Equivalence to HORN-SAT should be referenced. \n\n- L187: Typo: \"autogregressively\" should be \"autoregressively.\" \n\n- L464: Typo: \"does\" should be corrected."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "One of the most visible limitations of large language models (LLMs) is their vulnerability to jailbreak attacks (i.e. manipulating input prompts with the intent to bypass the LLM's safeguards). Most of works focusing on jailbreak attacks in LLMs attempt to improve LLM defence to jailbreaking using different techniques (like fine-tuning, activation patching, prompt detection, etc), but without addressing the theoretical understandings of this vulnerability.     \n\nThis paper investigates this problem and unveil some insights about LLMs that are behind this vulnerability, by demonstrating with a concrete case of propositional logic reasoning. Intuitively, a small language model (LM), composed with one layer and one self-attention head, is constructed to autoregressively predict propositional logic inference. This LM serves as a theoretical reasoner to identify three attacking rules to breakdown inference properties, i.e. monotonicity, maximality and soundness.\nProofs of theorems regarding the validity of these attacks are provided. Additional evidence of the success of these attacks on LLMs (i.e., GPT-2 and Llama-2-7B-chat) is presented in the empirical study."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This work addresses an important and timely problem in LLMs and reveals significant aspects that could help devise better techniques against jailbreaking.\n- Overall, the paper is technically rigorous, well-organized, and clear. Moreover, it enhances understanding of the aims of this work by providing intuitive examples.\n- The experimental evaluation is comprehensive, and the empirical results support the theoretical findings."
+            },
+            "weaknesses": {
+                "value": "- The paper does not discuss possible alternatives to address jailbreak vulnerability in LLMs"
+            },
+            "questions": {
+                "value": "- Is it possible to relate the theoretical fundings of this work with safety issues in code generation with LLMs?\n\n\nMinor comments:\n\nline 357: This is evidence that = > evident?\nline 497: positional encoding => propositional encoding?\nline 498:  'quantifiers' can be use in first-order logic or above but not propositional logic."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

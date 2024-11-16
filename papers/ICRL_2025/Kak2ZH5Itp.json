@@ -1,0 +1,154 @@
+{
+    "id": "Kak2ZH5Itp",
+    "title": "Language Imbalance Driven Rewarding for Multilingual Self-improving",
+    "abstract": "Large Language Models (LLMs) have achieved state-of-the-art performance across numerous tasks. However, these advancements have predominantly benefited \"first-class\" languages such as English and Chinese, leaving many other languages underrepresented. This imbalance, while limiting broader applications, generates a natural preference ranking between languages, offering an opportunity to bootstrap the multilingual capabilities of LLM in a self-improving manner. Thus, we propose $\\textit{Language Imbalance Driven Rewarding}$, where the inherent imbalance between dominant and non-dominant languages within LLMs is leveraged as a reward signal. Iterative DPO training demonstrates that this approach not only enhances LLM performance in non-dominant languages but also improves the dominant language's capacity, thereby yielding an iterative reward signal. Fine-tuning Meta-Llama-3-8B-Instruct over two iterations of this approach results in continuous improvements in multilingual performance across instruction-following and arithmetic reasoning tasks, evidenced by an average improvement of 7.46\\% win rate on the X-AlpacaEval leaderboard and 13.9\\% accuracy on the MGSM benchmark. This work serves as an initial exploration, paving the way for multilingual self-improvement of LLMs.",
+    "keywords": [
+        "Large Language Model",
+        "Self-Improving",
+        "Multilinguality"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "This paper proposes Language Imbalance Driven Rewarding, which leverages the inherent imbalance in LLMs as a reward signal to bootstrap LLMs\u2019 multilingual capabilities in a self-improving manner.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Kak2ZH5Itp",
+    "pdf_link": "https://openreview.net/pdf?id=Kak2ZH5Itp",
+    "comments": [
+        {
+            "comment": {
+                "value": "I do recognize the paper has its own merit, for example, in designing the reward signal and using the model itself as the source of preference. However, I don't think it is proper to regard it as a complete separate work from She et al, 2024. \n\nFor the record, the authors do not mentioned the technical similarity to She et al., 2024 throughout the paper. The only mention is \"existing LLMs demonstrate inconsistent reasoning capabilities across different languages (She et al., 2024).\" I don't think this is an acceptable practice. \n\nAs additional comments to the authors in the above reply:\n\n1.  \"Ours\" uses iterative DPO, \"MAPO\" uses Iterative DPO or PPO. \n\n2. \"Ours\" uses preference pairs, \"MAPO\" uses preference pairs for the DPO training, but use preference score for PPO training.\n\nHow could the above two points been treated as a technical difference between the two work? The attempts in this paper is just a subset of the cited paper.\n\nIn my opinion, the differences in techniques is not directly related to the domain or tasks. There are many research in the general task/domain that are inspired by previous attempts in a certain task/domain, or vice versa.\n\nEven for the technical part, the proposed work and She et al., 2024 both use translation as a bridge between the results of the dominant language and non-dominant language, though in slightly different way. I do suggest a comparison between the two, which might bring new insight in utilizing the translation knowledge."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer AMKf"
+            },
+            "comment": {
+                "value": "We sincerely appreciate your questions. We highly value your feedback and provide detailed explanations to address your concerns.\n\n> Q1: Explanation and Analysis of the relation between Language performance and reward accuracy.\n\nIn `Lines 164-165`, we claimed that the insight behind our work is Language Imbalance Driven Rewarding: **The greater the disparity between the capabilities of the dominant and non-dominant languages, the stronger the reward signal, which subsequently leads to higher reward accuracy**. \n\nTherefore, (es, fr) are **well represented** in the training data, resulting in **a narrow performance gap with English** in preference pairs. As a result, the reward signal becomes **weaker**, leading to **lower reward accuracy**.\n\nHere is a more detailed analysis, corresponding to `Section 3` of the manuscript\uff1a\n\nIn `Table 1`, we can observe that the GPT-4 score for responses in (es, fr, it) are noticeably higher compared to those in (de, ja, ru), indicating that the former languages are well represented in the training data. \n \nIn `Table 2`, we can clearly observe that within the group (es, fr, it), the gap between the responses for \"Self Generation\" (the model generates responses in non-dominant languages) and \"Self Translation\" (the model translates English responses into non-dominant languages) is significantly smaller compared to the group (de, ja, ru). This indicates that the GPT-4 score gap between (es, fr, it) and English is narrower, suggesting a weaker reward signal, which results in lower reward accuracy.\n\nThe above analysis is consistent with the results in `Table 3`, where we directly obtain the reward accuracy of multilingual preference pairs. The model's weaker performance on (de, ja, ru) creates a large gap with English performance, which results in higher accuracy in preference pairs where English responses are chosen. In contrast, its stronger performance on (es, fr, it) creates a smaller gap with English performance, leading to lower reward accuracy in preference pairs where English responses are chosen.\n\nWe hope the above explanations have enhanced your understanding of our work. We appreciate your valuable feedback and are eager to further discuss any additional questions."
+            }
+        },
+        {
+            "title": {
+                "value": "Clarification on Ethics Concerns"
+            },
+            "comment": {
+                "value": "We would like to emphasize that the focus of our method is multilingual self-rewarding that self-improves the general multilingual capability without external resources. In `Lines 53-55`, we explicitly mention that our work is primarily inspired by Self-rewarding (Yuan et al., ICML 2024). Table r1 provides a detailed comparison, highlighting the potential similarities and differences between our work, Self-rewarding, and MAPO (She et al., ACL 2024). \n\n\nTable r1: The relationship between our approach, Self-rewarding, and MAPO.\n|                     | Ours                                                             | Self-rewarding              | MAPO                                                 |\n|---------------------|------------------------------------------------------------------|-----------------------------|------------------------------------------------------|\n| Task                | **Instruction following (mainly)** and _math reasoning (additionally)_ | **Instruction following**       | _Math reasoning_                                       |\n| Training method     | **Iterative DPO**                                              | **Iterative DPO**               | **Iterative DPO** or PPO                               |\n| Reward signal (core contribution)       | Intrinsic language imbalance (prior)                                    | LLM-as-a-Judge (self-judge) | Semantic consistency (evaluated by external MT model)         |\n| Preference data form     | **Preference pairs**                                                 | **Preference pairs**            | Preference score ('alignment' score) for each sample |\n| External model/data | **None**                                                             | **None**                        | Off-the-shelf MT model                               |\n| Multilingual    | _Yes_                                                              | No                          | _Yes_                                                  |\n\nAs shown in `Table r1`, our approach bears more resemblance to Self-rewarding (highlighted in **bold**), including the task we focused on, the training method, preference data form, and the self-improving paradigm. Therefore, we mainly contextualized our approach with LLM self-improving methods in related works. In contrast, the only similarity between our work and MAPO is that we all experimented on multilingual mathematical reasoning task (the _italicized_ text). \n\nRegarding the reviewer\u2019s comment on the similarity between our approach and MAPO, particularly concerning the use of MT for building preference data and iterative DPO for optimization, we believe there are key differences that set our work apart. \n\n1. **MT utilization**: Our work only leverages the **LLM itself** to translate responses across languages, while MAPO employs an **external MT model** as a reward model.\n2. **Preference pair construction**: \n\n    a) In our work, preference pairs are constructed based on **language imbalance**\u2014specifically, the prior that dominant languages generally outperform non-dominant ones. This contrasts with MAPO, which does not directly construct preference pairs. Instead, MAPO first employs an MT model to assess the **consistency between reasoning paths** generated in different languages, where the MT model functions as a reward model. The reward score derived from this consistency assessment is then used to construct preference pairs. \n\n    b) Our approach could construct preference pairs for **both dominate and non-dominate languages**, while MAPO can only derive reward signal for **non-dominate ones**.\n4. **Iterative DPO training**: As shown in `Table r1`, we draw inspiration from the Self-rewarding method, which constructs preference pairs without external supervision and **only adopts iterative DPO training**. MAPO, on the other hand, **employs both PPO and DPO training** in their experiment, as they can obtain a reward score ('alignment' score) for each response using the external MT model.\n\nIn conclusion, we believe the similarity in `Table r1` and the distinctions listed above make it clear that **our approach is directly inspired by Self-rewarding instead of MAPO**. \n\nWe did not include MAPO as a major related work, since it is designed for only reasoning tasks rather than general ones such as instruction following tasks. This is because off-the-shelf translators fail to assess consistency between LLM responses due to their limited context size. Besides, it does not completely obey the self-improving paradigm, due to the use of the external translator. \n\nTo clear up the misunderstandings, we will include a detailed discussion in the revised version on the relationship between our approach, Self-rewarding, and MAPO, emphasizing their major differences.\n \nWe hope the evidence provided above could address your concerns. We would greatly appreciate it if you could kindly reconsider our work with these distinctions in mind."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a method for bridging the language abilities for dominant languages and non-dominant languages. The method use the translation between the generation results in the dominant language and non-dominant language to build preference pairs, and conduct an iterative DPO optimization. The experiment shows improvement over the original model."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The method is effective in improving the performance of general instruction following and mathematical reasoning.\n\nThe paper also presents analysis for the effectiveness and accuracy of the preference pairs, which serves as a nice support for the method."
+            },
+            "weaknesses": {
+                "value": "The paper is not the first attempt to improve the multilingual ability of LLMs by cross-lingual optimizations. In one of the cited paper, She et al., ACL 2024, where experiments are conducted in optimizing the preference with DPO and an off-the-shell translator.\n\nI find the proposed method quite similar to the above one, but in this paper there is no clear indication of the potential relations."
+            },
+            "questions": {
+                "value": "I am not sure why languages such as es and fr only have a reward accuracy of 60%. It seems that they are well represented in the training data. It would be helpful if further explanation or analysis are provided."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Research integrity issues (e.g., plagiarism, dual submission)"
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "As I mentioned in the weaknesses, the paper present a method that use translation to build multilingual preferences, and use DPO to optimize the model, which is quite similar to the one proposed in She et al., ACL 2024. The authors obviously knew the referenced paper, but provides no explanation in the relation between the two. I don't think this is inappropriate. In case I was personally biased, I raise the problem to the ethics committee for further judgement."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes to create a preference dataset using a multilingual LLM by exploiting the quality difference in responses in dominant languages (`dl`) and non-dominant languages (`nl`). The paper makes two assumptions that for the same instruction, 1) an `nl` response after being translated to `dl` is still worse than the original `dl` response, and similarly, 2) a `dl` response after being translated to `nl` is still better than the original `nl` response. The authors then provided empirical evidence for these assumptions. Iterative DPO training was done using the synthesized data and the trained models were tested on multilingual AlpacaEval, multilingual MT-bench, and some structured multilingual tasks. Results are shown to be in favour of the proposed method that models can iteratively improve by using data synthesized from itself."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- I think the idea of exploiting the gap in an LLM's inherent language capability for self-improvement is interesting and intuitive.\n\n- The paper has extensive experiments across open-ended and close-ended benchmarks. Results are consistent and in favour of the proposed method. It is clear that through iterative data synthesis and training, models can progressively improve in both dominant languages (`dl`) and non-dominant languages (`nl`)."
+            },
+            "weaknesses": {
+                "value": "1. Several factors in asserting the assumptions could not be carefully controlled. Table 1 line 180: GPT4-as-a-judge is used to confirm the quality of responses in different languages, however, there is no guarantee that the scores for different languages are on the same scale and that GPT4 is able to judge those languages using the same \"standard\". This could apply to Table 2 and Table 3 too.\n\n2. I find the motivation of creating (`nl`, `dl->nl`) preference data reasonable. However, I did not find creating the response pair (`dl`, `nl->dl`) intuitive. Since the model already could generate `dl` well (higher quality), why would having a lower-quality sample benefit alignment, especially as your Finding 2 that \"the dominant language also benefits [...] a phenomenon that has rarely been observed\"? Do you have any explanations for this?\n\n3. I think that all multilingual benchmarks used in this work, both open-ended and structure tests, are machine-translated from English to other languages. Since the preference data is also constructed using self-translation e.g. (`nl`, `dl->nl`), it might be possible that some kind of \"translationese bias\" is exploited as opposed to actually improve multilingual capability."
+            },
+            "questions": {
+                "value": "1. Table 2 row 2 \"Self Translation\" is confusing me: which language is translated into English (8.03)?\n2. The structure of section 5 looks weird. Why would arithmetic reasoning be a separate section/experiment?\n3. Line 143, Equation (7), the length normalization term $|y_{win}|$ is inside $log$. Is this correct?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper leverage the langauge imbalance of LLMs to bootstrap the multilingual capabilities of LLM in a self-improving manner. The proposed approach involves training through Iterative Direct Preference Optimization (DPO), which leverages preference data generated by the model itself. By translating prompts and responses between dominant and non-dominant languages, the model assigns preferences, with responses in dominant languages generally preferred. The system iteratively fine-tunes the model on these preferences, improving multilingual performance without human-annotated data. Experiments on the Meta-Llama-3-8B-Instruct model show substantial performance improvements across both instruction-following and arithmetic reasoning tasks, with enhancements across all evaluated languages."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. This work suggests a promising direction for self-improving multilingual LLMs by leveraging intrinsic language imbalance.\n2. Experimental results demonstrate significant improvements over baseline models on multilingual benchmarks.\n3. The method is clearly explained, which is easy to understand."
+            },
+            "weaknesses": {
+                "value": "1. The evaluation heavily relies on GPT-4 to assess response quality, but its reliability as a multilingual judge is uncertain, which was discuessed in [1]. The evaluation in Table 1 across various languages may be biased because it's unclear if GPT-4 rates identical responses equally in different languages. A fairer method would be to evaluate responses in the same language, including both directly generated and translated ones, to ensure scores are more comparable. \n2. The method depends on LLMs to self-translate responses, but the quality may be inferior to established systems like Google Translate and NLLB, particularly for low-resource languages, as discuessed in [2]. To enhance the analysis, it would be beneficial to assess the method using low-resource languages such as Swahili, Thai, and Bengali, as well as comparing it with more translation systems like Google Translate.\n\n[1] Are Large Language Model-based Evaluators the Solution to Scaling Up Multilingual Evaluation?\n[2] Is Translation All You Need? A Study on Solving Multilingual Tasks with Large Language Models."
+            },
+            "questions": {
+                "value": "1. It would be better to use more advanced LLMs like GPT-4o as the judge due to its stonger multilingual capabilities. \n2. Does the approach for weaker models like Llama-2-7B and lower-resource langauges? If it works, this method would be more impactful."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

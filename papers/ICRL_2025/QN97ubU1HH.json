@@ -1,0 +1,200 @@
+{
+    "id": "QN97ubU1HH",
+    "title": "Model Extrapolation Expedites Alignment",
+    "abstract": "As the alignment training of large language models (LLMs) usually requires expensive computational resources, exploring more efficient alignment methods to reduce training overhead has always been an important and compelling research challenge. Inspired by prior work on *model interpolation*, we present a simple method called ***ExPO (model extrapolation)*** to expedite the alignment of LLMs with human preferences. Based on our observation that interpolating the weights between existing DPO/RLHF models and their initial SFT checkpoints usually produces new models with intermediate performance, we propose to treat a partially-trained model $\\mathcal{M}_1$ (corresponding to the intermediate-performing model) as the interpolated result between the initial SFT checkpoint $\\mathcal{M}_0$ and a hypothetical better-aligned model $\\mathcal{M}_2$. Thus, we can obtain the hypothetical $\\mathcal{M}_2$ by simply extrapolating the model weights along the direction from $\\mathcal{M}_0$ to $\\mathcal{M}_1$, which consequently saves the additional training overhead for $\\mathcal{M}_1$ to reach better alignment performance. We validate our hypothesis through controlled experiments, demonstrating that ExPO can boost a DPO model trained with only 20% steps to outperform the fully-trained one. Additionally, we show that ExPO can also notably improve existing open-source LLMs (ranging from 1.8B to 70B parameters), as evidenced by evaluations on the mainstream LLM benchmarks AlpacalEval 2.0 and MT-Bench, which further highlights ExPO's utility and potential in enabling more efficient LLM alignment.",
+    "keywords": [
+        "large language model",
+        "alignment",
+        "preference optimization",
+        "model merging"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We present the ExPO method, which applies model extrapolation to achieve efficient LLM alignment.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=QN97ubU1HH",
+    "pdf_link": "https://openreview.net/pdf?id=QN97ubU1HH",
+    "comments": [
+        {
+            "title": {
+                "value": "Rebuttal by Authors (2/2)"
+            },
+            "comment": {
+                "value": "> Line 225-229: The authors are trying to show that |\u03b1\u03b4\u03b8| is small. They argue that \u03b1 decreases through training, then conclude that |\u03b1\u03b4\u03b8| is small. But they do not discuss the fact that \u03b4\u03b8 is (presumably) increasing during training.\n\nWe have already discussed this fact in lines 227-228: \"This suggests that models trained with more steps, whose $|\\Delta\\theta|$ is usually larger, require smaller optimal $\\alpha$ values.\"\n\n> Section 3.4: The authors successfully demonstrate in this section that length bias can be an issue for the method. But this does not prove that length bias is the only issue causing reduced accuracy when training for longer. Also, shouldn't the same logic (length bias being an issue) apply to the standard training procedure? Yet, training for the full recipe produces optimal results, as opposed to training for a fraction of training steps. Why is length bias only an issue for ExPO?\n\nWe have not claimed or proved that length bias is the \"only\" issue affecting the accuracy of $\\Delta\\theta$. We want to point out that **\"This issue\" in line 242 refers to \"increasing the training steps makes the model more prone to learning spurious features from the training data\", not length bias**. If this wording caused confusion, we sincerely apologize. We use length bias here as an example of data quality mainly because it is a typical example that is simple and amenable to controlled experiments.\n\nFinally, we hope our responses can address your concerns, and we look forward to your favorable consideration of our work."
+            }
+        },
+        {
+            "title": {
+                "value": "Rebuttal by Authors (1/2)"
+            },
+            "comment": {
+                "value": "Thank you for your review and feedback. We address your concerns and questions as follows.\n\nFor your main issue, we first clarify:\n\n> The theory presented essentially states, \"we can partially train an RLHF model, then predict the result of fully training. The resulting predicted model will achieve the accuracy that would have been obtained by full training\".\n> \n> (We first clarify that our term \"full training\" refers to the baseline that uses the complete training steps. This does not imply that the model is trained to optimality.)\n\nOur formalization in Section 2 does not imply that ExPO is \"predicting full training\". ExPO hypothesizes that: for a partially-trained model $M_1$, there may exist a better-performing model $M_2$ on the extrapolation trajectory from $M_0$ to $M_1$. This $M_2$ **may not (and very likely cannot)** be obtained by continuing to train $M_1$, given the inherent uncertainty and non-uniqueness of neural network optimization and convergence (for large language models, this also involves learning rate dynamics, gradient clipping, etc.). **ExPO does not aim to, nor can it \"predict\" the results of full training.**\n\n> ... the results demonstrate that the extrapolation method results in strong gains even when M1 is a fully trained model. (This seems at first like a sign that M1 is undertrained, ...)\n\nAs you noted, we conjecture this is because $M_1$ has not been trained to optimality. Given the inherent challenges in training LLMs, alignment training is very likely to be suboptimal (as also evidenced in Section 4.1).\n\n> ... Based on the theory, the extrapolated model M2 should be most accurate if the search for M2 occurs along the line between M0 and the \"fully trained\" M1.\n\nWe respectfully disagree. A fully-trained model (i.e., the baseline using complete training steps) is not necessarily trained to optimality, thus its indicated $\\Delta\\theta$ may not be optimal (e.g., it may overfit or capture spurious features in the data, as stated in lines 240-242). A partially-trained model may indicate a more accurate $\\Delta\\theta$, in which case the optimal model on this extrapolation trajectory would outperform the optimal model on the trajectory indicated by the fully-trained model (according to our discussion in lines 266-268, since $\\theta_2=\\theta_0+(1+\\alpha)\\Delta\\theta$, the achievable performance of $M_2$ is uniquely determined by $\\Delta\\theta$).\n\n> This line is approximated by training a proxy (e.g. $M_1^{20\\\\%}$) and searching along the line between M0 and the proxy.\n\nBased on the previous responses, ExPO is not \"predicting full training\", thus the \"proxy\" is not approximating the trajectory from $M_0$ to the fully-trained $M_1$.\n\n> But for some reason, this proxy yields *better* results than searching the line between M0 and M1 (22.7% win rate compared to 18.0% win rate). Thus, a misalignment of the search space is beneficial to the model. This seems like a clear sign that something not predicted by the theory is causing the benefits in accuracy.\n\nBased on the previous responses, ExPO is not \"predicting full training\", and the \"proxy\" does not necessarily (and likely will not) indicate the same extrapolation direction $\\Delta\\theta$ as the fully-trained model. Therefore, the experimental results do not contradict Section 2. On the other hand, the performance improvements come from the accuracy of $\\Delta\\theta$, which is exactly what we discuss and analyze in detail in Section 3.3-3.5.\n\n> Given the above observations, it seems like the true gains in accuracy could be coming from the fact that ExPO models are selected using a method that finds the best-performing model on the UltraFeedback dev set as calculated by another reward model.\n\nWe respectfully disagree. As stated in lines 266-268, since $\\theta_2=\\theta_0+(1+\\alpha)\\Delta\\theta$, and $M_0$ is fixed, the achievable performance of $M_2$ is uniquely determined by $\\Delta\\theta$. The development set and reward model only assist in searching for $\\alpha$, they do not change $\\Delta\\theta$, and thus naturally cannot change the achievable performance of $M_2$ (although due to limitations of the reward model, the searched optimal $\\alpha$ may vary slightly; however, improving reward models to enhance search results is beyond the scope of our work).\n\n> My point here is, it seems like the theory presented doesn't match the given results, and there's some other reason for the gains in accuracy.\n\nBased on the above discussion, we respectfully suggest that you may have misunderstood the idea of ExPO (which is not \"predicting full training\"), and we have provided clarification and explanation. We hope this addresses your concerns about ExPO's soundness."
+            }
+        },
+        {
+            "title": {
+                "value": "Rebuttal by Authors"
+            },
+            "comment": {
+                "value": "Thank you for your review and feedback. We address your concerns and questions as follows.\n\n> Given that \u03b1 in EXPO operates over an open range [0,+\u221e), what strategies do the authors suggest for effectively managing and narrowing down the search space for \u03b1?\n\n> The paper mentions that EXPO\u2019s \u03b1 search process takes less than 0.5 GPU hours, which appears efficient. Could the authors provide a more detailed breakdown of how the search process unfolds? Specifically, how many steps or iterations are typically required, and what is the distribution of time spent in binary search versus grid search?\n\nWe answer these two questions together. We use the hyperparameter search in Table 1 as an example (the search process is actually reflected in **Figure 6 in the appendix**).\n\n* Starting with $M_2^{10\\\\%}$:\n  * First, with an interval of 5, we tried $\\alpha=5$ and $\\alpha=10$. We found both significantly outperformed $M_1$, but $(\\alpha=5)>(\\alpha=10)$.\n  * Then, setting the search range to $[5, 10]$ with an interval of 1, we applied binary search and tried $\\alpha=7$ and $\\alpha=8$. We found $(\\alpha=8)>(\\alpha=7)$. We then tried $\\alpha=9$ and found $(\\alpha=8)>(\\alpha=9)$.\n  * We thus determined $\\alpha=8$ as optimal (smaller search intervals might yield better results, but we deemed this unnecessary in practice).\n* Moving to $M_2^{20\\\\%}$:\n  * With previous experience, we first tried $\\alpha=2$ and $\\alpha=4$ with an interval of 2. We found $\\alpha=2$ significantly outperformed $M_1$, but $\\alpha=4$ performed worse than $M_1$.\n  * Then, setting search ranges to $[0, 2]$ and $[2, 4]$ with an interval of 1, we applied binary search and tried $\\alpha=1$ and $\\alpha=3$. We found $(\\alpha=2)>(\\alpha=3)>(\\alpha=1)$.\n  * Next, with an interval of 0.5 in $[2, 3]$, we tried $\\alpha=2.5$ and found $(\\alpha=2.5)>(\\alpha=2)$.\n  * We thus determined $\\alpha=2.5$ as optimal. This took 5 searches total, each taking about 5min (using one A100 80GB, including inference on dev set and reward model scoring), totaling about 0.5 GPU hours.\n* For $M_2^{40\\\\%}$:\n  * Based on previous experience, we first tried $\\alpha=0.5$ and found it outperformed $M_0$\n  * Then with an interval of 0.1, we applied grid search and tried $\\alpha=0.6$ and $\\alpha=0.4$. We found $\\alpha=0.6$ performed worse than $M_1$ (**Note that this is a key motivation for using $[0, 0.5]$ as search range with 0.1 interval for $M_2^{100\\\\%}$ and models in Section 4.1**), while $(\\alpha=0.5)>(\\alpha=0.4)$.\n  * We thus determined $\\alpha=0.5$ as optimal.\n\nOverall, we (and in practice) don't search blindly, but flexibly combine binary search, grid search, and dynamically adjusted search intervals. **These strategies are simple, practical, and represent consensus in practice.** Also note that the above search only requires **inference-level GPU hardware** (e.g., A10 24GB). Therefore, we believe that compared to the reduced training overhead (from 12 GPU hours for $M_1^{100\\\\%}$ to 2.5 GPU hours for $M_1^{20\\\\%}$) and training-level GPU hardware (from eight A100 80GB to one A10 24GB), the $\\alpha$ search process in ExPO is more economical and efficient.\n\nFinally, we hope our responses can address your concerns, and we look forward to your favorable consideration of our work."
+            }
+        },
+        {
+            "title": {
+                "value": "Rebuttal by Authors"
+            },
+            "comment": {
+                "value": "Thank you for your review and feedback. We address your concerns and questions as follows.\n\n> More in-depth discussion of the method is necessary (Why does it work? When does it fail? etc.), For example: it would be helpful to discuss why extrapolation can enhance alignment while being ineffective for general training.\n\nWe discussed this in Section 4.3. Based on our analysis in Section 3.3, alignment training typically involves smaller $\\Delta\\theta$, while general training (like SFT) has larger $\\Delta\\theta$ that invalidates ExPO's first-order approximation. Additionally, alignment training only involves adjusting the response distribution, while SFT's $\\Delta\\theta$ usually includes adaptation to chat templates - amplifying this part of information in $\\Delta\\theta$ can easily lead to model collapse and affect normal response generation.\n\n> Analysis on the selection choice and importance of \\alpha across various model sizes\n\nDue to computational resource constraints, we were unfortunately unable to train larger models, but instead applied ExPO directly to open-source models (Section 4.1). We found that the value of $\\alpha$ is not solely determined by model size, but is closely related to how $M_1$ was trained (based on our review of these open-source models' documentation or technical reports, such as tulu2, snorkel, starling, internlm2, etc.). The performance trends of different $M_2$ models with varying $\\alpha$ are similar, as can be seen in **Figure 6 of the appendix** (the green curve for 40% training steps).\n\nFinally, we hope our responses can address your concerns, and we appreciate your favorable consideration of our work."
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors introduce EXPO, an efficient method for enhancing LLM alignment with human preferences. The core concept of EXPO is that the weights of a partially-trained model can serve as an intermediate result between its initial SFT checkpoint and a hypothetical, better-aligned model. By extrapolating the weights from the initial model toward the partially-trained one, EXPO can efficiently estimate the weights of a better aligned model without additional training steps. Experiments validate the improvement and data efficiency of this approach, showing consistent gains across various open-source LLMs of differing parameter sizes and multiple benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "+ The important task of efficiency of LLM alignment, and the interesting idea of extrapolating the LLM weights along the direction of the initial model toward the partially-trained one\n+ Experiments are done on multimple open-source LLMs and bechmarks"
+            },
+            "weaknesses": {
+                "value": "- Lack of enough theoretical analysis\n- Some parameters seem difficult to fix (e.g., \\alpha) \n- English should be improved"
+            },
+            "questions": {
+                "value": "- More in-depth discussion of the method is necessary (Why does it work? When does it fail? etc.), For example:  it would be helpful to discuss why extrapolation can enhance alignment while being ineffective for general training.\n\n- Theoretical discussion is missing: there is no theoretically evidence provided to support on the factors contributing to its effectiveness\n\n- Analysis on the selection choice and importance of \\alpha across various model sizes"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces Model Extrapolation (EXPO), a novel method designed to expedite the alignment process for large language models. EXPO harnesses model extrapolation to substantially reduce the training overhead associated with traditional alignment methods, such as Direct Preference Optimization (DPO) and Reinforcement Learning from Human Feedback (RLHF). These traditional methods typically require substantial computational resources to fine-tune models to align with human preferences. By extrapolating weights between a supervised fine-tuning checkpoint and an intermediate, partially trained DPO model, EXPO achieves better model alignment with significantly reduced training time. The method is validated through experiments that show improved alignment performance using only 20% of the training steps required by conventional methods. EXPO consistently demonstrates performance gains across multiple open-source large language models (LLMs) on benchmarks such as AlpacaEval 2.0 and MT-Bench."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1.The paper provides theoretical explanation with comprehensive experiment results to show the e\ufb00ectiveness of EXPO.\n2. The paper presents thorough experimental results that span various model architectures and alignment techniques, highlighting EXPO\u2019s flexibility and robustness.\n3. The results suggest that EXPO could be beneficial, especially for LLMs, as it provides a computationally economical pathway to enhance alignment."
+            },
+            "weaknesses": {
+                "value": "1. The core idea of EXPO seems to be a straightforward extension of existing model merge concept, primarily adjusting the interpolation parameter to a negative value (extrapolation). While the results are promising, this incremental shift from interpolation to extrapolation may be seen as lacking in true innovation.\n2. Unlike interpolation, which typically operates within a bounded range [0,1], the extrapolation parameter \u03b1 in EXPO operates within an open range [0, +\u221e). this open-ended range can complicate the search process, as the optimal value could vary widely depending on the model and training stage.\n3. In addition to the open range above, the current manual search for \u03b1 detracts from EXPO\u2019s e\ufb03ciency and scalability. The authors acknowledge this limitation and suggest future work on optimizing \u03b1 automatically and adaptively. Having a better way to find the optimal \u03b1 in this paper will make the innovation more solid."
+            },
+            "questions": {
+                "value": "1. Given that \u03b1 in EXPO operates over an open range [0,+\u221e), what strategies do the authors suggest for e\ufb00ectively managing and narrowing down the search space for \u03b1?\n2. The paper mentions that EXPO\u2019s \u03b1 search process takes less than 0.5 GPU hours, which appears e\ufb03cient. Could the authors provide a more detailed breakdown of how the search process unfolds? Specifically, how many steps or iterations are typically required, and what is the distribution of time spent in binary search versus grid search?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a method called EXPO for improving the accuracy of language models fine-tuned with DPO/RLHF. The intuition is that model interpolation can produce a model with accuracy in between the original model and the reward-fine-tuned model. So, model extrapolation should be able to produce a model with greater accuracy. By partially training a model, then performing extrapolation, a more accurate final model can be obtained with less compute. The method searches along the line defined by M0 (the initialization for reward-fine-tuning (e.g. the SFT model)) and M1 (the partially-reward-fine-tuned model) to find a more accurate model. The paper presents results for a variety of open-source models."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper studies a method for improving reward-fine-tuned models. This is an important problem in current LLM research.\n- The paper is well-written and easy to understand. Figure 2 presents a clear indication of how the method works. Section 2 clearly presents the hypothesis, and the method is neatly summarized by equation 2.\n- The results presented are significant. Table 1 demonstrates significant gains in Win Rate using the proposed method. Table 5 demonstrates that the results extend to other models. Table 6 demonstrates the algorithm extends to other alignment methods.\n- The paper presents ablations to help understand the method. The ablation in Table 3 (extending the training regime or increasing the learning rate) is particularly important for understanding why the method differs in performance from simply extending training."
+            },
+            "weaknesses": {
+                "value": "1) To me, there seems to be a disconnect between the theory presented in Section 2 and the results presented. The results seem to point towards different conclusions that contradict the theory.\n  a) Line 192-193: Extrapolation strongly improves the results obtained by \"DPO 100%\". This is not predicted by the theory presented. The theory presented essentially states, \"we can partially train an RLHF model, then predict the result of fully training. The resulting predicted model will achieve the accuracy that would have been obtained by full training\". Instead, the results demonstrate that the extrapolation method results in strong gains even when M1 is a fully trained model. (This seems at first like a sign that M1 is undertrained, but this theory is rebuked in Table 3).\n  b) Based on the theory, the extrapolated model M2 should be most accurate if the search for M2 occurs along the line between M0 and the \"fully trained\" M1. This line is approximated by training a proxy (e.g. $M_1 ^{20\\%}$) and searching along the line between M0 and the proxy. But for some reason, this proxy yields *better* results than searching the line between M0 and M1 (22.7% win rate compared to 18.0% win rate). Thus, a misalignment of the search space is beneficial to the model. This seems like a clear sign that something not predicted by the theory is causing the benefits in accuracy.\n  c) Given the above observations, it seems like the true gains in accuracy could be coming from the fact that ExPO models are selected using a method that finds the best-performing model on the UltraFeedback dev set as calculated by another reward model. If so, this is an interesting discovery in itself, but it's not what the paper focuses on (and it's just a theory that could be completely wrong). My point here is, it seems like the theory presented doesn't match the given results, and there's some other reason for the gains in accuracy.\n\nLine 225-229: The authors are trying to show that $|\\alpha \\delta \\theta|$ is small. They argue that $\\alpha$ decreases through training, then conclude that $|\\alpha \\delta \\theta|$ is small. But they do not discuss the fact that $\\delta \\theta$ is (presumably) increasing during training. This justification seems incomplete/incorrect to me.\n\nSection 3.4: The authors successfully demonstrate in this section that length bias can be an issue for the method. But this does not prove that length bias is the only issue causing reduced accuracy when training for longer. Also, shouldn't the same logic (length bias being an issue) apply to the standard training procedure? Yet, training for the full recipe produces optimal results, as opposed to training for a fraction of training steps. Why is length bias only an issue for ExPO?"
+            },
+            "questions": {
+                "value": "The main issue that I'm looking to see resolved is in (1) above. The results of the paper are good, but there seems to be a mismatch between the theory and the method. It leaves me wondering if there's a different reason that the method works. See discussion in (1)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces **EXPO** (model extrapolation), a method to improve the efficiency of aligning large language models (LLMs) with human preferences. Instead of fully training models, EXPO extrapolates model weights from a partially-trained model, significantly reducing training time while improving performance. Through experiments, the method shows that models trained with fewer steps can outperform fully-trained ones, validated on benchmarks like AlpacaEval 2.0 and MT-Bench. EXPO is applicable to a wide range of LLMs, making alignment more efficient and less computationally expensive."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper tackles an important problem\u2014reducing the computational cost of aligning large language models\u2014which is crucial for scaling models efficiently.\n\n2. The explanation of the method is clear and easy to follow, with helpful figures that enhance understanding.\n\n3. The authors show EXPO\u2019s ability to cut down alignment training costs, which supports their claim."
+            },
+            "weaknesses": {
+                "value": "1. **Limited theoretical foundation**: The paper presents an interesting empirical finding with E X PO, but lacks a rigorous theoretical analysis of why it works. The discussion in Section 3.3 on why E X PO can work is somewhat speculative. A more formal theoretical treatment, perhaps drawing connections to optimization theory or analyzing the loss landscape, would strengthen the paper's contribution.\n\n2. **Limited analysis of failure cases**: While some negative results are reported (e.g. for KTO algorithm in Table 6), there's little in-depth analysis of when and why E X PO fails. A more comprehensive error analysis would provide insights into the method's limitations.\n\n3. **Limited analysis of extrapolation's impact on model calibration**: While the paper focuses on performance metrics, it doesn't investigate how E X PO affects the model's calibration. An analysis of how extrapolation impacts the model's uncertainty estimates and confidence calibration would be valuable, especially for safety considerations.\n\n4. **Insufficient investigation of extrapolation instability**: The authors mention in Section 4.3 that extrapolating from pre-trained to SFT models can lead to model collapse, but they don't provide a rigorous analysis of this phenomenon.\n\n5. **Lack of analysis on the impact of different \u03bb values in DPO**: In Table 4, the authors test \u03bb values of 0.001, 0.01, and 0.1, but don't provide a detailed analysis of how these different \u03bb values affect the optimization landscape and consequently E X PO's performance. A more granular sweep of \u03bb values and an analysis of how they interact with the optimal \u03b1 could provide insights into the method's sensitivity to DPO hyperparameters."
+            },
+            "questions": {
+                "value": "I encourage the authors to address the points raised in the weaknesses section and to conduct additional experiments where further investigation is required."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

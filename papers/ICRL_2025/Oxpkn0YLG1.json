@@ -1,0 +1,203 @@
+{
+    "id": "Oxpkn0YLG1",
+    "title": "GTR: Improving Large 3D Reconstruction Models through Geometry and Texture Refinement",
+    "abstract": "We propose a novel approach for 3D mesh reconstruction from multi-view images. We improve upon the large reconstruction model LRM that use a transformer-based triplane generator and a Neural Radiance Field (NeRF) model trained on multi-view images. We introduce three key components to significantly enhance the 3D reconstruction quality. First of all, we examine the original LRM architecture and find several shortcomings. Subsequently, we introduce respective modifications to the LRM architecture, which lead to improved multi-view image representation and more computationally efficient training. Second, in order to improve geometry reconstruction and enable supervision at full image resolution, we extract meshes from the NeRF in a differentiable manner and fine-tune the NeRF model through mesh rendering. These modifications allow us to achieve state-of-the-art performance on both 2D and 3D evaluation metrics on Google Scanned Objects (GSO) dataset and OmniObject3D dataset. Finally, we introduce a lightweight per-instance texture refinement procedure to better reconstruct complex textures, such as text and portraits on assets. To address this, we introduce a lightweight per-instance texture refinement procedure. This procedure fine-tunes the triplane representation and the NeRF's color estimation model on the mesh surface using the input multi-view images in just 4 seconds. This refinement achieves faithful reconstruction of complex textures. Additionally, our approach enables various downstream applications, including text/image-to-3D generation.",
+    "keywords": [
+        "3D Reconstruction",
+        "Feed-forward"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We propose a novel feed-forward approach for 3D mesh reconstruction from multi-view images.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Oxpkn0YLG1",
+    "pdf_link": "https://openreview.net/pdf?id=Oxpkn0YLG1",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents GTR, a model for improved 3D mesh reconstruction from multi-view images, which refines both geometry and texture to achieve state-of-the-art quality. It first finds several shortcomings of previous large reconstruction models (LRM) and introduces respective modifications to the LRM architecture, achieving improved quality and more efficient training. The modifications include using a new convolution encoder to replace the DiNO ViT used by previous work, replacing the deconvolution upsampling with a linear layer\nfollowed by a pixelshuffle, etc. Additionally, it presents an efficient per-instance texture refinement process, leveraging input images to\nenhance texture details. GTR significantly outperforms baseline models on datasets like GSO and OmniObject3D, supporting downstream tasks such as text/image-to-3D generation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Rapid Texture Refinement: The per-object texture refinement is lightweight and achieves faithful texture reconstruction requiring a mere 4 seconds on an A100 GPU. \n\n2. Architecture Modifications: By replacing the DINO ViT transformer with a convolutional encoder and deconvolution layers with a linear layer followed by a pixelshuffle, GTR reduces artifacts of results and enhances high-frequency detail. These changes improve both the visual quality and efficiency of the model training. \n\n3. GTR achieves better results on major 3D reconstruction benchmarks including GSO and OmniObject3D datasets, showing clear quantitative and qualitative improvements over baseline models in 2D and 3D evaluation metrics."
+            },
+            "weaknesses": {
+                "value": "1. Missing baseline: The paper does not compare with some stronger baselines, such as Mesh-LRM, which has released an online demo from its first author before the ICLR submission deadline.\n\n2. The mesh quality is not satisfactory. In the abstract, the authors said this approach was for \"3D mesh reconstruction\". However, according to the videos in the supplementary, the video quality is not satisfactory. The surfaces have a lot of bumpy and grid-like artifacts.\n\n3. The overall novelty is limited. The texture refinement part is not very attractive and has been explored in many other related 3D generation works, such as One-2-3-45++, Mesh-LRM, etc. The authors put forward some modifications to the original LRM in this paper.  The original team for the LRM paper has also released several follow-ups for the original LRM, including Mesh-LRM and GS-LRM. Mesh-LRN has shown better results than this work and its modifications seem simpler Therefore, the effectiveness of the proposed modifications should be compared with Mesh LRM's modification."
+            },
+            "questions": {
+                "value": "1. Please compare with Mesh-LRM\n\n2. Considering Mesh-LRM has shown better results, I am curious about the actual effectiveness of this method's modifications to the original LRM, compared with Mesh-LRM's.\nFor example, Mesh-LRM replaces DINO ViT with a simple patchify operation; it uses simple \"Linear &  Unpatchify\" to attach the triplane; it also uses separate MLPs but its MLPs have smaller sizes."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposed a feedforward method for extracting meshes from multi-view images \nbased on large reconstruction models. The paper proposes several improvements in \nterms of network architecture, including replacing pretrained DINO encoder with\nsimple convolution image encoders to capture image details,  and replacing deconvolution \nlayers with pixelshuffle layers. To extract meshes, the paper proposes to apply \nDifferentiable Marching Cubes on the density grid. To improve geometry quality, the \npaper applies additional losses on depth and normal maps. The paper compares to \nprevious methods such as LRM and InstantMesh and shows that the proposed method achieves \nbetter geometry reconstructions and renderings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. The paper proposes several designs that improve the quality of LRM.  The paper performs \nablation studies to validate the effectiveness of such designs."
+            },
+            "weaknesses": {
+                "value": "1. The overall pipeline of the paper is similar to that of InstantMesh, which also applies \nLRM for mesh reconstruction with differentiable iso-surface methods. Both papers apply\nlosses on depth and normal maps to improve the quality of the geometry.  While the proposed designs \nare helpful, they do not provide very significant technical contributions. Recent works \nsuch as MeshLRM, GS-LRM, and LGM have adopted similar strategies to improve the network design \nand should be discussed here.  \n\n2. The paper does not provide quantitative evaluations on the effectiveness of the network \ndesign choices such as pixelshuffle layers and encoders. Ideally, the numbers should be provided \nfor the ablation models in Table 1 for better clarity.\n\n3. In the ablation models, is the DiNO encoder frozen or trainable during training? It's not \nfully clear why the ViT cannot capture image details considering the existence of residual \nconnections.\n\nOverall, I am not convinced that the paper presents enough technical novelty to be accepted. \nTherefore, I vote for a borderline rejection."
+            },
+            "questions": {
+                "value": "Please see the weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a novel approach for 3D mesh reconstruction from multi-view images. The authors improve upon the large reconstruction model LRM that use a transformer-based triplane generator and a Neural Radiance Field (NeRF) model trained on multi-view images. They introduce three key components to significantly enhance the 3D reconstruction quality. First of all, they examine the original LRM architecture and find several shortcomings. Subsequently, they introduce respective modifications to the LRM architecture, which lead to improved multi-view image representation and more computationally efficient training. Second, in order to improve geometry reconstruction and enable supervision at full image resolution, they extract meshes from the NeRF in a differentiable manner and fine-tune the NeRF model through mesh rendering. The method enables various downstream applications, including text/image-to-3D generation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The results are good in terms of both qualitative and quantative result.\n2. The experiments are solid. Many baselines are compared.\n3. The paper in written very well."
+            },
+            "weaknesses": {
+                "value": "1. This work has a large improvement in terms of quantative resutls. However, this work differs from previous works only from some incremental improvements in architecture. So what bring this such a large improvement? An ablation study of the proposed tricks will be very appreciated.\n2. How long does it take to generate a single shape in total?\n3. Will this work be open-sourced?\n4. What is the common failure case of this method?\n5. In table 1, some baselines has better results than yours (CD, IoU), however, you mark your results in bold font."
+            },
+            "questions": {
+                "value": "See above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposed an improved 3D mesh geometry and texture refinement model based on large reconstruction model (LRM) structures.\n\nThe authors analyze the limitation of the LRM model and update this with modified LRM architecture, geometry refinement with NeRF initialization, and texture refinement stages."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors analyze and discuss well about why the previous LRM model has limitations and worse results. \n\nThe qualitative results of the paper show improvement over the previous methods, especially for the text."
+            },
+            "weaknesses": {
+                "value": "There are some typos.\n\nIn L. 66, theoptimization \u2192 the optimization\n\nIn L. 195, Lhuillier & Quan (2005)., \u2192 Lhuillier & Quan (2005),\n\nIn Fig. 4, LRM takes one front-view image, but GTR (the authors\u2019 method) takes 4 views, which is not a fair comparison. The authors need to use the same front-view image.\n\nThe paper lacks discussion and limitations of their method. The authors \bneed to discuss the limitations of their method and the possibilities for further development."
+            },
+            "questions": {
+                "value": "In L. 91, the authors mention that \u201cthis enables us to render full-resolution images for supervision\u201d for the advantage of the DiffMC pipeline. The reviewer wonders why it enables full-resolution images, and the authors need to add the reason; for instance, NeRF MLP needed heavy computation and was hard to use full-resolution, but mesh rasterization had effective computation.\n\nIn L. 97, the authors state, \u201cfine-tune both the triplane representation and the color estimation model \u2026\u201d. The reviewer suggests replacing representation with feature, which is consistent with the word used later in the paper and less confusing with the triplane generator.\n\nIn L. 243, the reviewer wonders why the authors use Plucker coordinates for their camera ray embedding. Is there any insight or reason?\n\nFor the dataset, what is the source of an internal 3D asset dataset, and when retained, 26k superior assets of high quality are used?\n\nIn the qualitative results, IoU means 3D mIoU? The authors need to denote 3D if it is 3D metric. In Table 1 and Table 2, the left three columns for 2D metrics and the right two columns for 3D metrics are not specified. Authors need to add these details in the caption.\n\nFor the CD metric, the authors need to state their full name (maybe Chamfer Distance) first and use an abbreviation."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper builds on the LRM framework with three main improvements: modifications to the LRM model structure, end-to-end geometry refinement with NeRF initialization, and per-instance texture refinement. These enhancements contribute to improved geometry reconstruction and texture quality."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The proposed methods are well-grounded, and the ablation studies thoroughly support the authors' claims.\n2. The visual results appear to achieve superior geometry and texture compared to previous methods.\n3. The paper is well-written overall, making it easy to follow."
+            },
+            "weaknesses": {
+                "value": "1. The approach involves multiple stages, which may require more time compared to the baseline.\n2. The paper lacks evaluation metrics for generation quality, such as FID or CLIP scores; including these metrics would strengthen the evaluation."
+            },
+            "questions": {
+                "value": "Aside from the mentioned weaknesses, I have the following questions:\n1. Using DiffMC for geometry could be time-consuming. The paper highlights that the color refinement stage only takes 4 seconds, but it does not mention the time required for the geometry stage. I would like to see a breakdown of the time taken for each stage compared to the baseline.\n2. In Section 3.2, where do the depth loss and normal loss supervision come from? If this is a single real-world image, how are depth and normal information obtained?\nI would be glad to raise my rating if my concerns are addressed."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,190 @@
+{
+    "id": "0T8vCKa7yu",
+    "title": "LLM Compression with Convex Optimization\u2014Part 1: Weight Quantization",
+    "abstract": "In recent years, compression of large language models (LLMs) has emerged as an important problem to enable language model deployment on resource-constrained devices, reduce computational costs, and mitigate the environmental footprint of large-scale AI infrastructure. In this paper, we lay down the foundation for LLM quantization from a convex optimization perspective and propose a quantization technique that builds on this foundation for optimum quantization outcomes. Our quantization framework, CVXQ, scales to models containing hundreds of billions of weight parameters and provides users with the flexibility to compress models to any specified model size, post-training. A reference implementation of CVXQ can be obtained from.",
+    "keywords": [
+        "weight quantization",
+        "model compression",
+        "large language models"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "For large language model compression, weight quantization using convex optimization leads to superior compressed model performance",
+    "creation_date": "2024-09-16",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=0T8vCKa7yu",
+    "pdf_link": "https://openreview.net/pdf?id=0T8vCKa7yu",
+    "comments": [
+        {
+            "title": {
+                "value": "Clearing reviewers' misconceptions about GPTQ and AWQ."
+            },
+            "comment": {
+                "value": "Some reviewers seem to be confused about how GPTQ and AWQ (Frantar et al., 2022; Lin et al., 2024) accelerate LLM inference on GPUs. These methods do not perform arithmetic directly using 3 or 4 bit weights (not possible because of float16 activations). Instead, these methods de-quantize the 3- or 4-bit weights back to float16 dynamically/as needed, multiplying them by float16 activations. This leads to acceleration because quantized weights can travel faster through the memory hierarchy. Our proposed method accelerates inference in the same way, by dequantizing groups of weights (some in 0 bits, some in 1 bits ... some in 8 bits, etc) to float16 as needed. Correctly understanding this is key to clearing any misconceptions about mixed-precision quantization not leading to acceleration on GPUs.\n\nExcerpt from GPTQ (Frantar et al., 2022):\nCompute is dominated by matrix-vector products. Unlike matrix-matrix products, these are primarily limited by memory bandwidth. We address this problem by developing a quantized-matrix full-precision-vector product kernel which performs a matrix vector product by dynamically dequantizing weights when needed ...\n\nExcerpt from AWQ (Lin et al., 2024): \nGeneration stage is memory-bound ... the only way to improve the peak performance is to reduce the total amount of memory traffic. AWQ reduces the weight memory by four times ... we need to dequantize integers to FP16 before performing matrix computation. We avoid writing dequantized weights into DRAM ...\n\nLn 30 of our original manuscript already summarizes the above excerpts."
+            }
+        },
+        {
+            "comment": {
+                "value": "Apologies if my tone seems direct; it's meant purely for clarity.\n__________\n*1. \"Mixed-precision quantization is a well-researched field ... highlight how its method differs from existing techniques ...\"*\n\nWhile mixed-precision quantization has previously been explored (Wang et al., 2019; Chen et al., 2021; Lee et al., 2024; Dettmers et al., 2023), these methods assign different bit depths from a limited set of bit-depth options (e.g., 4 or 16 bits) or only across different layers. This is due to combinatorial nature of mixed bit-depth assignment. This limits the attainable quantized model accuracy especially for LLMs with hundreds of billions of parameters.\n\nIn contrast, we formulate bit-depth assignment as a convex optimization problem. This allows us to overcome the combinatorial challenges faced by prior methods and to achieve true mixed-precision quantization at an arbitrary level of granularity (per-channel or per-layer) with a wider range of bit depth options, ({0, 1, 2, 3, 4, 5, 6, 7, 8}). This leads to optimal model quantization tailored specifically to the demands of each channel or layer. \n\n(These paragraphs now in the revised manuscript.)\n__________\n*\"... why it chose to compare solely with LLM quantization methods ...*\"\n\nOur paper is on LLM quantization. As such, we benchmark against state-of-the-art LLM quantization techniques, including mixed-precision and fixed-precision methods. These methods are also compared against in other LLM quantization works, ensuring a robust and contextually relevant evaluation of our method.\n__________\n*\"2. ... Group quantization is not a new concept ...*\"\n\nWe meant to say that per-channel mixed precision works well with the grouping mechanism; see Table 2(c). The revised manuscript now correctly attributes the grouping mechanism to GPTQ and AWQ (Frantar et al., 2022; Lin et al., 2024).\n__________\n*\"3.. ... The writing needs improvement. The definition of \"part-1\" in the title is unclear ...\"*\n\nThank you, we will revise/shorten the title per your suggestion.\n__________\n*\"4. ... The convex optimization formulation proposed seems flawed. For instance, in equation three, f(X) is not convex ...\"*\n\n__Not true.__  We never say or imply the network model $f$ is convex. It is the optimization objective $d$ that is convex with respect to continuous variables $B_1,\\dots,B_N$. Objective $d$ is convex by construction since $f$ is linear(-ized) as in Hassibi and Stork (1992) and the MSE loss is convex. See eq. (5) and Appendix A for details. \n__________\n*\"5. ... The utility of mixed precision within a matrix is unclear ... Most mixed-precision quantizations occur between layers, not within a matrix.*\"\n\nOur work, as well as GPTQ, AWQ and OWQ (Frantar et al., 2022; Lin et al., 2024; Lee et al., 2024) are examples of weight-only quantization methods. None of these methods / their kernels perform arithmetic in 3 or 4 bits. At inference time, weights are de-quantized back into float16 so that they can multiply with float16 activations. This still amounts to acceleration because quantized weights can essentially travel faster through the memory hierarchy (registers\u2013L1 cache\u2013L2 cache\u2013global). If weights must be dequantized, there is no need to insist upon mixed-precision quantization only across layers; see (Dettmers et al., 2022; Lee at al., 2024) for other examples of channel-wise mixed precision quantization. Our response to Pd64 clarifies this further."
+            }
+        },
+        {
+            "comment": {
+                "value": "Apologies in advance if my tone seems direct; it's meant purely for clarity.\n_________________\n*1. \"The main concern ... the authors permit each weight to have a different bit depth assignment, ...\"*\n\n__Not true.__ We use a grouping/clustering idea similar to GPTQ and AWQ (Frantar et al., 2022; Lin et al., 2024). Ln 356 says that we assign a single bit depth to a group of 512 weights (OPT) or 256 weights (Llama-2). Table 2(c) also shows that a group size of 512 performs better than 64, 128, or 256 for our quantized OPT models. For added clarity, we add to the caption of Figure 4: ... Clustering with a cluster size of 2 illustrated only for clarity.\n_________________\n*2. \"... AWQ employs dedicated kernels and uniformly quantizes all weights to 4 bits, aligning with the availability of a 4-bit engine. However, the manuscript lacks discussion on hardware acceleration or performance degradation.\"*\n\n__Not true.__ GPTQ and AWQ (Frantar et al., 2022; Lin et al., 2024) and their engines do not perform arithmetic in 4 or 3 bits. These methods dequantize 4- or 3-bit weights back into float16 on the fly so that weight-activation multiplication can performed in float16. We dequantize mixed precision weights (some of which are 3 bits, some 4 bits, some 8 bits, etc.) back into float16 in exactly the same way. \n__________________\n*3. \"... clarify how different bit-depth assignments would affect matrix multiplication kernels as batch size increases, as this could have a significant impact on performance.\"*\n\nIncreasing the batch size does not change inference, as weights are always dequantized back to float16 as a first step and activations are always kept in float16. Indeed, this is the approach used also used by (Frantar et al., 2022; Lin et al., 2024; Lee et al., 2024).\n__________________\n*4. \"the lack of considerations for hardware acceleration\"*\n\nFirst, GPTQ, AWQ and OWQ (Frantar et al., 2022; Lin et al., 2024; Lee et al., 2024) quantize weights only. At inference time, weights are de-quantized back into float16 (so that they can be used on float16 activations).  This still amounts to acceleration because quantized weights can essentially travel faster through the memory hierarchy (registers\u2013L1 cache\u2013L2 cache\u2013global). Our method leads to hardware acceleration in exactly the same manner.\n__________________\n*5. \"Use of configurations, such as varying bit depths, that seem impractical and create unfair comparisons with prior work ... the need for a reevaluation of experimental results, given that the proposed quantization schemes operate under fundamentally different assumptions\"*\n\n__Not true.__ The methods you mention (GPTQ, AWQ and OWQ) do __not__ perform arithmetic directly in 3 or 4 bit weights and activations. They assume weights will be de-quantized back to float16 as needed for weight\u2013activation multiplications in float16. This is the same assumption that our method is based on. Our method has the additional flexibility of assigning different bit depths (8, 7, 6, 5, 4, 3, 2, 1, or even 0 bits) to different groups of 512 weights to maximize the accuracy of the quantized model while maintaining the same de-quantization complexity (since everything is scalar quantized)."
+            }
+        },
+        {
+            "comment": {
+                "value": "Apologies if my tone seems direct; it's meant purely for clarity.\n_________________________\n*\"Lacks comparison with existing LLM quantization methods such as FlexRound [1] and QuIP [2].\"*\n\nFlexRound [1] does not have a publicly available code and its results are not reproducible. We now include QuIP [2] results in Tables 2 and 4 of the revised manuscript. Note that the official QuIP [2] code does not work correctly on Llama-2 models (a known issue reported on the QuIP GitHub), producing perplexities higher than RTN. Out of respect for the authors of QuIP, we do not report these QuIP results on Llama-2 models.\n_________________________\n*\"Primarily evaluates LLM performance using perplexity, with insufficient comparison across other metrics like MMLU and AlpacaEval.\"*\n\nYes. However, we have some concerns with MMLU and AlpacaEval, as they are not very widely used, not even in the FlexRound [1] and QuIP [2] works that you refer to. So, we include one more perplexity metric (on C4) as well as the following new QA metrics: Arc (Challenge), Arc (Easy), HellaSwag, PIQA, and Winogrande. These are popularly used in other model compression papers. These are now shown in the Tables 4 and 5 (c) of the revised manuscript.\n__________________________\n*\"Insufficient discussion ... accelerated on existing hardware such as GPUs.\"*\n\nOur work accelerates inference in the same manner as GPTQ, AWQ, and OWQ (Frantar et al., 2022; Lin et al., 2024), which are weight-only quantization methods. These methods / their kernels do not perform arithmetic in 3 or 4 bits. At inference time, weights are de-quantized dynamically back into float16 so that they can multiply with float16 activations. This still leads to acceleration because quantized weights can travel faster through the memory hierarchy (registers\u2013L1 cache\u2013L2 cache\u2013global). \n\n(This above text is now included in the revised manuscript. Please also see our response to Pd64.)\n__________________________\n*\"Tables 1 and 2 lack information on the average bit depth achieved by CVXQ ... may not exactly match the user-specific quantization bit depth ...\"*\n\nOur convergence tolerance is $10^{-6}$ bits (ln 233). The actual average bit depths achieved by CVXQ were 3.999999\u20134.000001 (for 4-bit models) and 2.999999\u20133.000001 (for 3 bit models).\n__________________________\n*\"What do the terms \"row\" and \"column\" mean in the context of row and column partitioning in Figure 3?\"*\n\nRow (resp. column) refers to the average bit depth savings achieved when assigning separate bit depths to rows (resp. columns) of each weight matrix. This is also stated more clearly in the revised manuscript.\n__________________________\n*\"What units were used for clustering in Tables 1 and 2?\"*\n\nLn 356 states that cluster sizes of 512 (OPT) and 256 (Llama-2) are used.\n__________________________\n*\"The Massive Activation paper[3] demonstrated significant performance degradation when clipping massive activations from activation distributions ... Can the proposed CVXQ method be extended to apply to activation distribution?*\"\n\nCVXQ already considers activation distribution. CVXQ uses the mean square magnitude of the weight gradient to inform bit depth assignment. By expressing weight gradient as the outer product of the input to the weights and the gradient of weight's output, we see that input magnitudes are indeed considered in the form of (mean square) gradient magnitude.\n___________________________\n*\"The quantization process described in the paper suggests that the time required for quantization might exponentially increase with the number of iterations, as shown in Figure 5.*\"\n\n__Not true.__ The number of iterations is kept the same across model sizes and the time each iteration takes is roughly linear (slightly super-linear) in the number of model parameters. CVXQ takes 47m to quantize the Llama-2-7B model, and 12h for the Llama-2-70B one. The revised manuscript now states these timings.\n___________________________\n*\"How does the size of the calibration set affect the performance of CVXQ?*\"\n\nFor OPT-1.3B and OPT-13B models, we experimented using 1024 calibration samples instead of 128 and the resulting perplexities on C4 were within \u00b10.01 of those based on 128 samples. This is consistent with the variance observed from choosing a different set of 128 calibration examples. \n\n(The above text is now included in the revised manuscript.)"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a method called CVXQ for mixed precision weight-only quantization of large language models (LLMs) using convex optimization techniques. CVXQ allows for user-specific quantization bit depths by defining the average bit depth and then seeking to minimize quantization error within this constraint. The method introduces row-wise and column-wise clustering to achieve this goal, where each cluster can be assigned different bit depths. To assign these bit depths, the problem is formulated in a Lagrangian form and solved using convex optimization. The effectiveness of CVXQ is demonstrated by achieving superior performance on the WikiText perplexity (PPL) metric compared to methods such as GPTQ, AWQ, and OWQ across various sizes of OPT models."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Demonstrates that companded quantization can reduce the mean square error of weights before and after quantization more effectively than uniform quantization.\n* Introduces a novel approach to weight-only quantization by employing various partitioning methods, specifically row and column clustering.\n* Proposes a method to minimize the degradation in performance due to quantization within a constrained average bit depth by finding the optimal bit assignment combination. This is achieved by defining the quantization objective function in a Lagrangian form and solving it using convex optimization.\n* Shows that the proposed partitioning methods can result in greater bit depth savings compared to non-partitioned methods."
+            },
+            "weaknesses": {
+                "value": "* Lacks comparison with existing LLM quantization methods such as FlexRound[1] and QuIP[2].\n* Primarily evaluates LLM performance using perplexity, with insufficient comparison across other metrics like MMLU and AlpacaEval.\n* Insufficient discussion and comparative analysis on how the proposed CVXQ method can be accelerated on existing hardware such as GPUs. One of the key goals of compression methods like quantization is to achieve actual acceleration. Although the paper mentions that this will be addressed in Part 2, it is crucial to include a discussion on how to accelerate the proposed quantization format.\n* Tables 1 and 2 lack information on the average bit depth achieved by CVXQ. Since the proposed method assigns bit depths through a convex optimization process, it may not exactly match the user-specific quantization bit depth, leading to potentially different compression rates in practice.\n* The quantization process described in the paper suggests that the time required for quantization might exponentially increase with the number of iterations, as shown in Figure 5.\n\n[1] FlexRound: Learnable Rounding by Element-wise Division for Post-Training Quantization, https://openreview.net/forum?id=-tYCaP0phY_\n\n[2] QuIP: 2-Bit Quantization of Large Language Models With Guarantees, https://arxiv.org/abs/2307.13304"
+            },
+            "questions": {
+                "value": "* What do the terms \"row\" and \"column\" mean in the context of row and column partitioning in Figure 3?\n* What units were used for clustering in Tables 1 and 2?\n* The Massive Activation paper[3] demonstrated significant performance degradation when clipping massive activations from activation distributions. Papers like LLM.int8, SmoothQuant, and AWQ have shown the importance of considering activation distributions to mitigate the impact of outliers. Can the proposed CVXQ method be extended to apply to activation distribution?\n* How does the size of the calibration set affect the performance of CVXQ?\n\n[3] Massive Activations in Large Language Models, https://arxiv.org/abs/2402.17762"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce a quantization framework called CVXQ, which first optimizes bit depth assignment and then refines step sizes and biases using convex optimization techniques. To further improve the quantization scheme, the framework incorporates matrix partitioning, dividing the matrix into a set of row or column sub-matrices, each with its own bit depth and step size. The experiments are conducted on Meta's LLaMA and OPT models, using PPL and GSM8K as evaluation metrics."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The authors derive several mathematical formulations for the quantization scheme, making a few assumptions about weight distributions, such as Normal or Laplace. They use figures to illustrate whether the statistical data from the OPT models align with these assumed distributions."
+            },
+            "weaknesses": {
+                "value": "The main concern with this manuscript is that it does not address practical hardware constraints. Specifically, the authors permit each weight to have a different bit depth assignment, a strategy that is rarely seen in existing literature. For instance, AWQ employs dedicated kernels and uniformly quantizes all weights to 4 bits, aligning with the availability of a 4-bit engine. However, the manuscript lacks discussion on hardware acceleration or performance degradation resulting from the proposed quantization scheme.\n\nBy neglecting hardware-related considerations, the comparisons with previous works may appear unfair. Well-established quantization methods like OWQ, AWQ, or RTN explicitly demonstrate how their quantized models achieve latency improvements on common GPUs. In contrast, this manuscript explores more complex ideas, such as pruning and matrix partitioning, without addressing the impact on parallelism or the hardware requirements these approaches would entail.\n\nIt is crucial to describe the limitations of the quantization scheme for practical hardware implementation. Without doing so, methods that account for hardware acceleration might seem inadequate, despite the practical challenges associated with mixed precision or varying bit depth assignments.\n\nFor example, the authors should clarify how different bit-depth assignments would affect matrix multiplication kernels as batch size increases, as this could have a significant impact on performance.\n\nIn summary, the major concerns are: 1) the lack of considerations for hardware acceleration; 2) the use of configurations, such as varying bit depths, that seem impractical and create unfair comparisons with prior work; and 3) the need for a reevaluation of experimental results, given that the proposed quantization schemes operate under fundamentally different assumptions."
+            },
+            "questions": {
+                "value": "Please see weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a framework for efficient handling of large language models (LLMs) by (1) determining mixed-precision quantization at layer or group levels to meet a target bitwidth and (2) proposing a novel method for deciding quantization step sizes."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The proposed techniques are well-grounded in theory, and each aspect of the framework appears logically sound and justifiable."
+            },
+            "weaknesses": {
+                "value": "The paper introduces a mixed-precision approach, but comparisons are primarily made with uniform-precision quantization methods. A broader survey and comparison with other mixed-precision methods, addressing their strengths and weaknesses, would provide a stronger context for evaluating the proposed method.\n\nAn ablation study is needed. According to Z-Fold [1], step size determination methods like Min-Max, MMSE, and Hessian-based approaches are often used in quantization. A comparative analysis showing the effectiveness of the proposed method against these would strengthen the evaluation.\n\nSeparating the processes of bit-precision allocation and the quantization algorithm applied could provide clearer insights into each aspect of the method.\n\nThe proposed methodology is reasonable but lacks comparative analysis, which would underscore its relative advantages.\n\n\nTesting on a wider range of models and benchmarks would further validate the generalizability of the proposed approach.\n\n\n\n\n[1] Jeon et al. \"A frustratingly easy post-training quantization scheme for llms.\" Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing. 2023."
+            },
+            "questions": {
+                "value": "The paper claims that the proposed algorithm completes the quantization quickly, yet a lack of experimental or theoretical analysis supports this assertion. Could the authors provide more evidence or discussion on this aspect?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper tackles the critical issue of large language model (LLM) compression, proposing a novel quantization technique, CVXQ, viewed from a convex optimization perspective. CVXQ, scalable to models with hundreds of billions of weight parameters, allows users to compress models to any specified size after training"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper introduces a comprehensive quantization method for applying different bit allocation to groups within a large language model (LLM) matrix."
+            },
+            "weaknesses": {
+                "value": "- The paper's contribution isn't distinct. Although it proposes treating dynamic bit allocation as a convex optimization problem, this approach faces several issues:\n  - Mixed-precision quantization is a well-researched field; the paper should highlight how its method differs from existing techniques and why it chose to compare solely with LLM quantization methods.\n  - Group quantization is not a new concept but a long-standing basic strategy in the quantization field.\n  - The convex optimization formulation proposed seems flawed. For instance, in equation three, f(X) is not convex, which questions the validity of the entire problem.\n- The writing needs improvement. The definition of \"part-1\" in the title is unclear, and many descriptions in the text are ambiguous.\n- The utility of mixed precision within a matrix is unclear. This approach would require complex, specific hardware design, limiting its broad application. Most mixed-precision quantizations occur between layers, not within a matrix."
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

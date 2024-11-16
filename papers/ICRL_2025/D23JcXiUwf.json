@@ -1,0 +1,170 @@
+{
+    "id": "D23JcXiUwf",
+    "title": "Formal Theorem Proving by Rewarding LLMs to Decompose Proofs Hierarchically",
+    "abstract": "Mathematical theorem proving is an important testbed for large language models\u2019 deep and abstract reasoning capability. This paper focuses on improving LLMs\u2019 ability to write proofs in formal languages that permit automated proof verification/ evaluation. Most previous results provide human-written lemmas to the theorem prover, which is an arguably oversimplified setting that does not sufficiently test the provers' planning and decomposition capabilities. Instead, we work in a more natural setup where the lemmas that are directly relevant to the theorem are not given to the theorem prover at test time. We design an RL-based training algorithm that encourages the model to decompose a theorem into lemmas, prove the lemmas, and then prove the theorem by using the lemmas. Our reward mechanism is inspired by how mathematicians train themselves: even if a theorem is too challenging to be proved by the current model, a reward is still given to the model for any correct and novel lemmas that are proposed and proved in this process. During training, our model proves 37.7% lemmas that are not in the training dataset. When tested on a set of holdout theorems, our model improves the pass rate from 40.8% to 45.5% compared with the supervised fine-tuned model.",
+    "keywords": [
+        "formal theorem proving",
+        "large language models",
+        "reinforcement learning"
+    ],
+    "primary_area": "neurosymbolic & hybrid AI systems (physics-informed, logic & formal reasoning, etc.)",
+    "TLDR": "We design an RL-based training algorithm that encourages LLMs to write formal proofs by proposing and proving new lemmas, mimicking how mathematicians train themselves.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=D23JcXiUwf",
+    "pdf_link": "https://openreview.net/pdf?id=D23JcXiUwf",
+    "comments": [
+        {
+            "summary": {
+                "value": "According to my understanding, this paper has the following two main contributions:\n\n1. **A Setting for Theorem Proving without the Help of Human-Written Lemmas**\n\n- **Contribution**: This paper introduces a new, more challenging evaluation setting in theorem proving, focusing on the use of human-written code libraries but with minimal reliance on human-proven lemmas. \n\n- **Motivation**: This setting arises from the observation that proofs in human-written projects display strong modularity: proofs are often broken down into lemmas, making final theorems relatively easy to prove by combining these intermediate steps. While efficient, this approach may obscure a prover's ability to handle full-scale proofs of original theorems independently, limiting evaluation of the prover's core capabilities.\n\n- **Method**: To address this, lemmas referenced in the proof of each selected theorem are excluded from the evaluation (however, the authors describe this as removing those \"not referred to in the remaining file contents,\" which seems intended to remove only redundancies). Additionally, the test set is split by dependency\u2014ensuring that no theorem in the test set is refered by any theorem in the training set.\n\n- **Soundness**: Experiments show that the pass rate under the \"without lemma proposal\" setting is lower than in the \"with lemmas  proposal\" setting, demonstrating the increased difficulty of this approach.\n\n2. **An Interface for Actively Proposing Lemmas during Proof Generation**\n\n- **Contribution**: This work offers a solution for language models to comply with the above lemma minimalism setting (in my words), enabling models to actively propose lemmas during theorem proving while relying minimally on human-written lemmas.\n\n- **Method**: The theorem proving process is structured as a hierarchical tree search. During proof generation for a specific statement, the model actively proposes lemmas and leverages them in subsequent proof steps, with the proofs of these lemmas deferred to a lower hierarchical level. For model training, reinforcement learning is applied to the supervised-fine-tuned model. By distinguishing between global and local rewards, the model is optimized both to propose provable lemmas that help solve the original theorem and to complete the proofs of proposed lemmas. Special tokens are used to guide the model in deciding when to propose lemmas, effectively controlling exploration.\n\n- **Soundness**: Experimental results indicate that the RL-trained model achieves a higher pass rate than the SFT model, with a 4.7% absolute improvement. Additionally, some proposed lemmas are successfully proved. Experiments over multiple rounds of RL further demonstrate the effectiveness of this approach."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. While the concept of splitting test sets based on file dependencies has been explored in the LeanDojo project ([arXiv:2306.15626](https://arxiv.org/abs/2306.15626)), the minimalist lemma approach introduced here is novel, with comparative experiments validating its challenges.\n\n2. The RL training framework designed to enhance lemma-proposing capabilities is both innovative and practical. The global and local reward design can be generalized to other tree search tasks. Notably, the use of special tokens to control lemma exploration is an exceptional feature."
+            },
+            "weaknesses": {
+                "value": "1. Although the test set split is restricted by file dependencies, the risk of lemma proposal leakage has not been fully addressed. It is possible that some theorems in the training and test sets rely on the same lemmas, which may have been learned during the supervised-finetuning phase. Furthermore, splitting the test set based on file dependencies might introduce bias. These isolated AFP files could be separated precisely because they are experimental or less widely used, which may not accurately represent the average difficulty of the AFP. The challenges observed in dependency-splitting experiments might instead arise from unfamiliar or unseen knowledge and proving skills specific to these isolated files. An alternative approach would be to train and test on an out-of-domain benchmark, such as miniF2F, which has fewer dependencies and reduces the risk of lemma proposal leakage.\n\n2. The comparison between the SFT and RL models, though straightforward, might be insufficient. It seems that the RL model\u2019s advantages arise from additional exploration and feedback on successful lemma proposals during the online training. A more fair comparison might involve comparing the RL model with an SFT model trained with additional expert iterations, where the SFT model also attempts lemma proposals while without the hierarchical reward.\n\n3. The comparison between proving with and without lemma proposals might also be unfair. In lemma proposal mode, the difficulty of proving theorems is deferred to lemma proving, which has more computational resources than direct theorem proving.\n\n4. *Figure 4* demonstrates that extra lemma proposals may not benefit proofs of higher difficulty. Instead of highlighting the hierarchical approach\u2019s advantages for difficult problems, this approach may exacerbate concerns that its benefits stem from unequal computational budgets."
+            },
+            "questions": {
+                "value": "1. Regarding *Weakness 4*, the advantages of lemma proposal for more challenging proofs are not immediately clear in *Figure 4*, as the data only presents absolute counts, and the relative advantage is not obvious. Could it be that the relative advantage for proofs with at least 5 steps is indeed more significant?\n\n2. It appears that the tree search depth is limited to 2 or 3. Why have deeper experiments not been conducted? Would increasing the depth help tackle more difficult proofs by allowing finer-grained decomposition, thereby making each lemma more manageable for the model?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a novel paradigm in neural theorem proving. Previous methods assume pre-provided lemmas during the proving stage. In contrast, this paper encourages the model to decompose the theorem into lemmas, prove the lemmas, and then use these lemmas to prove the theorem. This approach more closely resembles a real-world theorem-proving process. And the effectiveness of the proposed framework is demonstrated by the experiments."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The motivation for this work is strong, addressing a critical problem in the domain of neural theorem proving. The proposed framework is highly useful for this task.\n- The experimental results demonstrate its effectiveness in creating lemmas during the theorem-proving process.\n- The paper is well-written and easy to follow."
+            },
+            "weaknesses": {
+                "value": "- The primary concern with the proposed method is its performance. While effective, the enhancement offered by the framework is marginal when compared to the baseline scenario, with a modest 2.1% increase in the AFP test and a negligible 0.1% improvement in the AFP 2023 set.\n- One drawback of the lemma proposal mechanism is that the model\u2019s performance can be hindered by meaningless proposed lemmas. This issue is evident in the case study section. The key challenge lies in the ability to refine the proposed method to be able to generate lemmas that are genuinely beneficial."
+            },
+            "questions": {
+                "value": "- Why does the performance of `RL w/o lemma proposal` fare worse than `SFT w/o lemma proposal`? Does the RL loop function as an alternative to expert iteration, serving as an advanced version of it? If so, expert iteration has been shown to be effective for neural theorem proving in previous works such as GPT-f and PACT. Why does the current proposed RL loop fail to improve upon these results?\n- Why has the miniF2F result been removed in this submission, despite being presented in the previous NeurIPS submission?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces ProD-RL, an RL method to enhance LLM\u2019s theorem-proving capabilities by encouraging them to decompose proofs into lemmas. It avoids oversimplifying the task by removing direct lemma support from the training setup, requiring the model to independently propose intermediate steps in the proof process. The paper evaluates the model\u2019s performance on the Isabelle AFP dataset and shows 45.5%/39.5% accuracy on AFP-test/AFP-2023, which outperforms SFT baselines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This work proposes an RL-driven approach to proof decomposition without lemma reliance, an original contribution that aligns with similar ideas in [3], [4]\n2. ProD-RL\u2019s methodology yields improvements over SFT, highlighting the model\u2019s capability to generalize beyond pre-existing lemmas, and trains on a more realistic dataset, splitting by dependency rather than at random.\n3. The work contributes to LLM for theorem proving, an important direction for mathematical reasoning research."
+            },
+            "weaknesses": {
+                "value": "1. Clarity and Readability: The paper is a little bit difficult to follow, especially in algorithmic explanations and conditional proof notation. The baseline and proposed methods are not clearly differentiated in the results. Improved organization, clearer definitions, and visuals would make the methodology more accessible.\n2.  Generalization and Complexity: There is limited exploration of scalability to higher-complexity proofs. It's better to address whether ProD-RL is viable for deeper proof trees.\n3.  Comparative Benchmarks and Dataset Exclusion: The absence of benchmarks like minif2f in experiments raises questions, given its mention in the license section. Also, there could be more comparisons with other theorem-proving techniques in the experiment section."
+            },
+            "questions": {
+                "value": "1. Could the authors address the large experimental difference between ProD-RL (45.5%) and MagnusHammer\u2019s 71% on the PISA benchmark [2]? A direct comparison/discussion of scalability/ablation study could strengthen the work. \n\n2. Why is \u201cMiniF2F\u201d only in the licensing section without experiment inclusion? This benchmark is a robust test for theorem-proving tasks.\nit could be better to add the evaluation PutnamBench [1] which assesses the methods on hard competition level problems.\n\n\n\n[1] Tsoukalas, George, et al. \"PutnamBench: Evaluating Neural Theorem-Provers on the Putnam Mathematical Competition.\" arXiv preprint arXiv:2407.11214 (2024).\n[2] Miku\u0142a, Maciej, et al. \"Magnushammer: A transformer-based approach to premise selection.\" arXiv preprint arXiv:2303.04488 (2023).\n[3] Wang, Haiming, et al. \"Lego-prover: Neural theorem proving with growing libraries.\" arXiv preprint arXiv:2310.00656 (2023).\n[4] Ayg\u00fcn, Eser, et al. \"Proving theorems using incremental learning and hindsight experience replay.\" International Conference on Machine Learning. PMLR, 2022."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper explores neural theorem proving in a setting where existing lemmas cannot be used and proposes a RL-based approach that encourages the model to decompose proofs into multiple subgoals and propose new lemmas to prove. The authors demonstrate that their approach, which combines supervised fine-tuning with reinforcement learning, achieves superior performance on the AFP dataset compared to baseline methods, including those that do not propose new lemmas or rely solely on supervised fine-tuning."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "* The paper is well-written, clearly structured, and easy to follow.\n\n* The proposed method is well-motivated. Experiments on the AFP dataset effectively demonstrate the advantages of lemma proposal with reinforcement learning."
+            },
+            "weaknesses": {
+                "value": "* The idea of decomposing proofs into subgoals and proposing new lemmas is not entirely novel, as it has been explored in previous work. For instance, LEGO-Prover [1] uses informal proofs to break down proofs into manageable subgoals and leverages language models to either propose new lemmas or retrieve existing ones from a growing library. While the proposed setting of excluding relevant premises is indeed challenging, I believe it does not always reflect practical scenarios. Incorporating both lemma selection and lemma proposal would present a more generalized and realistic approach.\n\n* The experiments are conducted exclusively on the AFP dataset, which may not provide a thorough evaluation of the method's robustness, particularly in out-of-distribution scenarios like the miniF2F dataset, a more commonly used benchmark. As a result, it is unclear how well the proposed approach generalizes beyond the training set. Additionally, in Case 2, there seems to be evidence that the model may be memorizing lemmas from the training data rather than proposing genuinely novel ones, which raises concerns about its ability to generate useful new lemmas in unseen contexts.\n\n* Minor Points: There are some missing references to works that share similar ideas or components with this paper [2,3,4]. For instance, POETRY [4] introduces a recursive approach that decomposes proofs into subgoals and generates lemmas in a hierarchical, level-by-level manner. A broader overview of related work can be found in [5]. Additionally, the statement in Line 80 (\"the best method along this line of research requires more than 1k GPU days with A100s to train a model with 600M parameters\") may not be entirely accurate. More recent methods, such as InternLM-Step Prover [6], appear to have surpassed HTPS in both efficiency and requiring less computational resources.\n\n[1] LEGO-Prover: Neural Theorem Proving with Growing Libraries\n\n[2] TacticZero: Learning to Prove Theorems from Scratch with Deep Reinforcement Learning\n\n[3] Proving Theorems Using Incremental Learning and Hindsight Experience Replay\n\n[4] Proving Theorems Recursively\n\n[5] A Survey on Deep Learning for Theorem Proving\n\n[6] LEAN-GitHub: Compiling GitHub LEAN Repositories for a Versatile LEAN Prover"
+            },
+            "questions": {
+                "value": "* Could you evaluate the proposed method on the miniF2F benchmark? This dataset is more commonly used and would help assess the generalization of your approach beyond AFP.\n\n* The paragraph starting at Line 270 suggests that the reward in the RL setting is based on the conditional proof, with its weight influenced by the conditional proof as well. However, in practice (as described in Line 277), it appears that the proposed method uses a language model as a value network to predict True/False, and the probability is used as the reward score, without incorporating any information from the conditional proof. Could you clarify why the conditional proof is discarded for the value function? Additionally, in the RL w/o lemma proposal, what rewards or weights are used in the absence of lemmas?\n\n* Why does RL w/o lemma proposal underperform SFT w/o lemma proposal? For ProD-RL, you first apply SFT, followed by RL, which (almost) ensures that ProD-RL always outperforms ProD-SFT. Does RL w/o lemma proposal also involve an initial SFT stage? If so, it seems that RL w/o lemma proposal negatively impacts performance, and I would like more details on why this happens (since there are no details provided). If not, the comparison between RL w/o lemma proposal and ProD-RL may not be entirely fair."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,167 @@
+{
+    "id": "sjWG7B8dvt",
+    "title": "Instructional Segment Embedding: Improving LLM Safety with Instruction Hierarchy",
+    "abstract": "Large Language Models (LLMs) are susceptible to security and safety threats, such as prompt injection, prompt extraction, and harmful requests.\nOne major cause of these vulnerabilities is the lack of an instruction hierarchy.\nModern LLM architectures treat all inputs equally, failing to distinguish between and prioritize various types of instructions, such as system messages, user prompts, and data. \nAs a result, lower-priority user prompts may override more critical system instructions, including safety protocols. \nExisting approaches to achieving instruction hierarchy, such as delimiters and instruction-based training, do not address this issue at the architectural level.\nWe introduce the $\\textbf{I}$nstructional $\\textbf{S}$egment $\\textbf{E}$mbedding (ISE) technique, inspired by BERT, to modern large language models, which embeds instruction priority information directly into the model. \nThis approach enables models to explicitly differentiate and prioritize various instruction types, significantly improving safety against malicious prompts that attempt to override priority rules. \nOur experiments on the Structured Query and Instruction Hierarchy benchmarks demonstrate an average robust accuracy increase of up to 15.75\\% and 18.68\\%, respectively. \nFurthermore, we observe an improvement in instruction-following capability of up to 4.1\\% evaluated on AlpacaEval. \nOverall, our approach offers a promising direction for enhancing the safety and effectiveness of LLM architectures.",
+    "keywords": [
+        "Instruction Hierarchy",
+        "Segment Embedding",
+        "LLM safety and robustness"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=sjWG7B8dvt",
+    "pdf_link": "https://openreview.net/pdf?id=sjWG7B8dvt",
+    "comments": [
+        {
+            "summary": {
+                "value": "To address robustness issues within Large Language Models (LLMs), authors introduce Instructional Segment Embedding (ISE), where they give the model hierarchical information about the input through an embedding layer. The hierarchy is divided by \u2018system, user, data, and output\u2019. To encode this hierarchy, an additional embedding layer is given to the LLM. Each token embedding (each tokenized word of the input) is given an embedding of the size 4xD, where D is the embedding dimension, and four representing the hierarchy levels. They are tagged corresponding to their hierarchy, and the \u201csegment\u201d embedding value is added to the original token value and fed to the rest of the model. \t\nIn the evaluation, ISE is compared to a method that adds delimiters between hierarchies. It generally performs better than the delimiter method. The datasets used are Structured Query and a new Instruction Hierarchy dataset."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The paper is generally well written.\n\nThe paper addresses an important issue about trustworthiness of LLMs."
+            },
+            "weaknesses": {
+                "value": "I had a difficult time understanding the problem statement at the beginning of the paper.\n\nThe major weakness of the paper is the novelty of the approach. The approach merely adds an embedding layer to the LLM. \n\nPage 4: The authors state that the standard supervised fine tuning approach \u201cremains a fundamental limitation.\u201d(line 180) I think it would be nice to summarize the limitations/experimental results a bit here.\n\nPage 8, Robustness figures can be very misleading/look different based on order data chosen, I would recommend using a different figure.\n\nThe paper uses pretty small models (8-13B) and are adding (context length) x (embedding length) x 4 more parameters (so like up to 32 000 x 5120 x 4 = almost another billion parameters).An ablation study of just adding this number of tokens without \u201chierarchical splitting\u201d and seeing how the model improves would be beneficial.\n\n\nIt appears that adversarial training can do most of the work for avoiding hierarchical attacks? (Table 1)\n\nIn the dataset designed for the task in question (Instruction Hierarchy), ISE doesn\u2019t perform much better than the baseline. (Figure 6 and 7)\n\n## Minor comments \n\nAppendix line 776: \u201cInsturctional\u201d \u2192 \"Instructional\"\nPage 1, line 49: \u201cprompt injection insert malicious\u201d \u2192 \u201cprompt injection inserts malicious\u201d\nPage 1, line 51: \u201cprompt extraction aim to\u201d \u2192 \u201cprompt extraction aims to\u201d\nPage 5, line 251: \u201cLastly, We\u201d \u2192 \u201cLasty, we\u201d"
+            },
+            "questions": {
+                "value": "Page 9, line 467: Why use the UltraChat Baseline if its instruction-following capacity is so weak? Why not choose a different baseline?\n\nPage 9, line 483: Define \u201creasonable responses.\u201d How was GPT-4o queried to evaluate \u201creasonable responses\u201d?\n\nLine 247-250: How did you decompose GPT-4o to decompose 10K prompts to 3 components? Does it know the hierarchy?\n\nHow specifically are the hierarchies encoded in the embedding matrix? Are lower indices in H automatically considered lower importance? How is the training data used in conjunction with this?\n\nHow do you know that the GPT 4 output is correct?\n\nAny reason for just summing the segment embedding with the token embedding? What about concatenation? Would like to see ablation or justification."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces Instructional Segment Embedding (ISE) to enhance LLM safety by enabling the model to better distinguish and prioritize instructions.  The authors conducted comprehensive experiments on two benchmarks (Structured Query and Instruction Hierarchy) using multiple pre-trained LLMs, including Llama-2-13B, Llama-3-8B, and Llama-3.1-8B, and demonstrated the effectiveness of the proposed approach."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The idea of introducing instructional segment embedding to directly enhance LLM\u2019s safety is novel and promising.\n2. The authors provide rigorous experimental validation on a range of tasks and demonstrate the method\u2019s effectiveness."
+            },
+            "weaknesses": {
+                "value": "1. The paper employs full-parameter fine-tuning to learn the instructional segment embeddings, but it\u2019s unclear if the baseline models are fine-tuned similarly. Is it a fair comparison? An ablation study evaluating baseline performance with the same fine-tuning across all datasets (Clean Alpaca, Adversarial Alpaca, UltraChat) would strengthen the paper\n2. The paper lacks an assessment of how well the segment embeddings generalize across datasets. Specifically, it would be valuable to see how embeddings trained on one dataset (e.g., Clean Alpaca) perform when tested on a different dataset (e.g., UltraChat).\n3. Full-parameter fine-tuning, as proposed, may not be cost-efficient or scalable for larger LLMs. Exploring alternatives to full-parameter fine-tuning could make the approach more practical for broader applications."
+            },
+            "questions": {
+                "value": "1. Can the authors expand on the evaluation part as mentioned above?\n2. Can the authors elaborate on the feasibility of using parameter-efficient fine-tuning methods like LoRA or prefix tuning with ISE.?\n3. Can the authors conduct more specific cross-dataset experiments to demonstrate generalization, such as training on Clean Alpaca and testing on UltraChat, or vice versa?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes Instructional Segment Embedding (ISE) - a technique to encode instruction hierarchy in LLMs, aiming to improve robustness to vulnerabilities such as prompt injection, prompt extraction, and jailbreaks. The method works by training a \"segment embedding\" for each segment (system, user, data, output), enabling the model to distinguish between the segments at the level of internal representation. The authors evaluate ISE on two benchmarks, reporting improvements in robustness against various attack types.\n\nRating: 5- marginally below the acceptance threshold\nReasoning: ISE presents a compelling and well-motivated approach to enhancing LLM safety. However, the current experimental sections lack the necessary clarity to fully assess the effectiveness and applicability of ISE. Improving the explanation of training and evaluation processes would significantly strengthen the paper\u2019s contributions."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Clear problem framing and motivation\n  - The paper addresses a significant problem with modern LLMs. The lack of separation between different levels of input makes models vulnerable to prompt injection, prompt extraction, and jailbreaks.\n\n- Promising and intuitive solution\n  - ISE is a simple and well-motivated solution - it is natural and straightforward, making it a very good idea.\n  - The paper's presentation in sections 1-4 is very clear."
+            },
+            "weaknesses": {
+                "value": "- Lack of clarity in experimental design and results\n  - Sections 5 (Experimental Design) and 6 (Results) are difficult to understand, which makes it challenging to asses the performance of the method. I think the paper would benefit significantly from a refactoring of these sections to be as clear as possible.\n  - Concretely:\n    - It is unclear how the malicious instructions in Adversarial Alpaca are generated, and how the instructions in training relate to those in testing.\n    - It is unclear how much of Alpaca contains user vs data instructions.\n    - Same questions apply for the Instruction Hierarchy dataset.\n       - With this dataset, there is also a question of whether the outputs (generated by GPT-4o, according to Appendix B) represent desired behavior, or exhibit vulnerability to the attacks (since GPT-4o itself is vulnerable to prompt injection).\n    - See more questions below.\n  - Without a clearer presentation of methodology, it is difficult to assess the conclusions that ISE improves robustness to injection attacks."
+            },
+            "questions": {
+                "value": "1. Do the baselines involve fine-tuning?\n    - This was unclear to me. Certainly the baselines should include fine-tuning on the same training set, but this was not clear from the manuscript.\n\n2. For the Structured Query training dataset (Alpaca), what was the split between system vs user vs data?\n    - As written in Appendix B, I see that system and user are combined into a single instruction type. Do all of the Alpaca prompts have a data component? If not, it seems trivial for the model to separate the system/user portion from the injected data portion.\n\n3. For the Structured Query Adversarial Alpaca, are the injections of the same form as the evaluation injections (i.e. aiming to make the model output \"hacked\")? Or are they varied?\n  - This seems like an important detail to assess if the model's robustness is generalized or limited to specific/narrow instances of injection.\n\n4. For the Structured Query evaluations, which subcategories (Naive, Ignore, Escape-S, Completion-R) were included in the training dataset?\n    - Appendix B suggests just Naive and Completion - I think this should be indicated in the main body.\n    - Why is this not the notion of \"in-distribution\" vs \"out-of-distribution\" used (i.e. based on type of attack, vs where the attack is placed)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces instruction segment embedding, a type of input embedding that marks the hierarchy of text inputs in LLMs. It divides inputs into four categories: system message, user prompt, data, and output. While segment embedding itself isn\u2019t entirely new, the experiment results in the paper on the Structured Query and Instruction Hierarchy datasets show that this approach helps LLMs follow instructions better and improves their safety."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The method is simple and effective, and the results back up the improvements claimed.\n* The writing is clear and easy to follow, making it straightforward to understand."
+            },
+            "weaknesses": {
+                "value": "* Despite the strong experiment results, this paper lacks a more insightful investigation into the learned segment embedding. I am not surprised that adding segment embedding can improve the LLM's general following capability and safety since it is commonly used in many domains like dialogue language model, vision transformer. Therefore, I think the reason for this improvement is more interesting other than the performance difference. In particular, I am curious about how the attention pattern changes after adding the segment embedding. I would recommend authors investigate several scenarios to provide more insights about the segment embedding:\n  * What's the model behavior if no system prompt is provided?\n  * What's the model behavior if system prompt also uses user request segment embedding? Also, what if the data parts uses user segment embedding instead of data embedding?\n  * What's the attention pattern difference between a model with segment embedding and one without given attack prompt and benign prompt?\n\n* The paper only tests fixed prompt-space attacks to evaluate the new LLMs robustness to attacks; adding automatic attacks, like PAIR [1] or PAP [2], could make the evaluation more complete.\n* The experiments mainly focus on single-turn conversation data, which may limit the understanding of how the model would perform in multi-turn conversations.\n\n[1] Chao, Patrick, et al. \"Jailbreaking black box large language models in twenty queries.\" arXiv preprint arXiv:2310.08419 (2023).\n\n[2] Zeng, Yi, et al. \"How johnny can persuade llms to jailbreak them: Rethinking persuasion to challenge ai safety by humanizing llms.\" arXiv preprint arXiv:2401.06373 (2024)."
+            },
+            "questions": {
+                "value": "1. Can authors clarify how an instruction-following data sample is converted to the proposed format? Examples showing what parts of a sample are labeled as system, user, and data would be helpful. I\u2019m especially interested in how to distinguish between user and data segments since it's possible that users first provide data, then raise a request. Or multiple data/request in the input.\n\n2. If attackers can change the system message, is it possible that the model become more vulnerable to this kinds of attacks? I wonder if the instruction segment embedding strengthens the effect of system prompt too much."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

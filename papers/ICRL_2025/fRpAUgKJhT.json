@@ -1,0 +1,166 @@
+{
+    "id": "fRpAUgKJhT",
+    "title": "CARPRT: Class-Aware Prompt Reweighting for Pre-Trained Vision-Language Models",
+    "abstract": "When using a pre-trained vision-language model (VLM) to classify an image, we often need to use the pre-trained VLM to compute a similarity score between the image and texts containing a semantic label, e.g., \u201ca photo of a cat\u201d, where \u201ca photo of a\u201d is called a prompt and \u201ccat\u201d is the semantic label (a.k.a. a class in classification tasks). The existing studies have shown that the selection of prompts can significantly affect the scoring scheme between a given image and a semantic label, and they proposed a new score via using a weighting vector to reassemble scores regarding different prompts. However, these studies assume that all classes should share the same weighting vector. In this paper, we first empirically show that the existing approach is sub-optimal. We subsequently revisit the existing reweighting strategy from a probabilistic view and find an implicit assumption in prior work: the conditional independence of classes and weights, which often does not hold in practice. To cope with this problem, we propose class-aware prompt reweighting (CARPRT), a strategy designed to adjust the weighting vector for each class. CARPRT calculates the relevance scores for prompt-class pairs with respect to all images, and identifies the maximum score for each prompt-class pair. These maximum scores are then averaged across prompts for each class to estimate the class-specific weighting vectors, ensuring that prompts are optimally reweighted based on class-specific information. Our experiments demonstrate that CARPRT outperforms the existing reweighting strategy under the image classification tasks.",
+    "keywords": [
+        "Prompt Weighting",
+        "Vision-language Models"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=fRpAUgKJhT",
+    "pdf_link": "https://openreview.net/pdf?id=fRpAUgKJhT",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper studies how to improve the prompting for the CLIP model. The motivation lies in the fact that existing prompting methods ignore the dependence of prompt weights on different classes. The authors first conduct experiments to demonstrate the positive influence of class-specific weights on prediction performance. Then, a class-aware prompt reweighting method CARPRT is proposed. CARPRT calculates the weight matrix based on the relevance scores between images and prompt-class pairs. Experimental results show that CARPRT surpasses ZPE in most cases."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The motivation is intuitive while reasonable. As far as I know, it is the first work applying the class-aware weighted prompt ensemble.\n- The paper is well-written and easy to follow. The authors revisit the existing works, present detailed analyses and explanations, and give clear formulations and an algorithm procedure for the proposed method.\n- Extensive experimental results are reported."
+            },
+            "weaknesses": {
+                "value": "- One concern is regarding the computational complexity. Unlike class-wise or prompt-wise reweighting, the proposed method calculates the weight matrix based on two dimensions. Is there any complexity analysis?\n- Another concern is regarding the performance gains. It seems that the results in Table 2 showcase marginal improvement compared to ZPE. The performance gains of some datasets in Table 1 are also limited. This may raise concerns regarding the limited contributions to the community.\n- I am also concerned with the hyper-parameter sensitivity across different datasets. It seems that the results in Figure 3 are the overall results. However, I am still concerned with the results for each dataset. Are the hyper-parameter settings (e.g. $\\tau=3.0$) suitable for all datasets? Considering the generality of the proposed method, I suggest the authors report more detailed results and analyses."
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents CARPRT, a method to automatically choose and assign weights to a given set of standard prompts when used for zero shot image classification. CARPRT specifically addresses the limitation of the current zero-shot method that uses a fixed weighting vector for the given set of prompts for all classes. Instead, it adjusts prompt weights for each class based on image-prompt relevance by leveraging pseudo-labeling. Experiments on multiple benchmarks show that CARPRT improves zero-shot classification accuracy, especially in fine-grained classification tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**Well motivated**: CARPRT effectively demonstrates the need for class-aware weights, showing that a shared weight for prompts for all classescan hinder zero-shot VLM performance.\n\n**Simple, mathematically sound probabilistic framework**: The paper uses an energy-based probabilistic framework to model underlying class distributions for prompt reweighting, enhancing the interpretability of CARPRT\u2019s approach.\n\n**Improvements on Fine-grained datasets**: The method achieves state-of-the-art results on multiple datasets, notably improving accuracy on some fine-grained datasets like EuroSAT and Flowers102."
+            },
+            "weaknesses": {
+                "value": "**W1 Limited Improvement on ImageNet Variants**: The performance gains on datasets like ImageNet-A and ImageNet-R are modest, suggesting that CARPRT\u2019s advantages may be less pronounced on general image datasets compared to fine-grained datasets. more testing on other large datasets (e.g. Places 365) would help better evaluate the methods sginficance for large datasets\n\n**W2 - Pseudo-Label Accuracy Dependency**: The method depends on accurate pseudo-labels to derive class-specific weights, which can be problematic in scenarios where pseudo-labeling quality is low. A more detailed study on how this affects performance might help increase the utility of the method."
+            },
+            "questions": {
+                "value": "1. Did you try using models other than Energy based ones to model the underlying class distributions (e.g. GMMs, Local Manifold models) ? It would be interesting to see how/ if the choice makes a difference. \n2. How well does CARPRT work on fine-grained datasets that have class imbalances ? Does using a different weights for each class improve performance here too ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a category-aware prompt re-weighting (CARPRT) method to improve the performance of pre-trained visual language models (VLMs) on zero-shot image classification tasks. It first finds the limitations of existing prompt re-weighting methods, and explains the root cause from a probabilistic analysis perspective. The proposed CARPRT calculates the relevance scores of prompt-class pairs and determines the optimal prompt weight vector for each class based on these scores. The experimental results show that CARPRT outperforms existing re-weighting strategies on various image classification benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The proposed CARPRT introduces a class-specific weighting mechanism, significantly improving the alignment of prompts with class-specific information.\n2. The paper provides a solid theoretical foundation, addressing the conditional independence limitations in previous methods.\n3. By automating the prompt reweighting process, the method reduces dependency on manually crafted prompts."
+            },
+            "weaknesses": {
+                "value": "1. The approach introduces additional computational complexity while the improvement is extremely limited (less than 1%) on part of situations. Moreover, only the weighted baselines are compared, I doubt that whether it can enhance existing prompt engineer methods.\n2. The effectiveness of CARPRT is tied to the quality and diversity of the prompt template pool, is it effective for learned prompts?"
+            },
+            "questions": {
+                "value": "see weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies class-aware prompt reweighting strategy for vision-langauge models. The idea is that when doing prompt ensembling, using the same weighting vector for all classes overlooks the diverse characteristics of different classes, and may yield suboptimal results. Further, the authors present a probabilistic viewpoint based on Bayes' Theorem to show the conditional independence assumption between the class and weights in the class-shared weighting method. CARPRT is proposed that obtains weight vectors based on the relevance score to prioritize the most relevant prompts for each class. The efficacy of CARPRT is verified using CLIP model over multiple benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This paper studies the important prompt ensembling task. With the popularity of zero-shot image classification with multimodal models such as CLIP, the proposed method/idea can be useful to a wide audience.\n\n- The idea of class-aware prompt weighting is simple, but the authors present a probabilistic viewpoint based on Bayes' theorem to show its advantage over class-independent prompt weighting.\n\n- The final CARPRT method is a simple implementation that adheres to the key principles established in the probabilistic analyses. Over 10 fine-grained datasets and 3 ImageNet variants, it shows an improvement in accuracy over ZPE. Both ViT and ResNet backbones are considered. Hyper-parameter studies are adequate.\n\n- The paper is well-written and easy to follow."
+            },
+            "weaknesses": {
+                "value": "- The proposed CARPRT adheres to the key principles established in Section 3, but the detailed correspondences are not explicitly presented. If I understand it correctly, the marginalization in Eq.(6) over $W$ reduces to a point estimation of $W$ for the following analysis. $Pr(W|P)$ is not reflected in the implementation. $Pr(y_c|W,P)$ is approximated by Eq.(9). The final weights $w$ in Eq.(16) seem to be the posterior approximation of Eq.(7), but how to derive these formulations (from Eq.(13) to Eq.(16)) are omitted in the paper. The authors may want to add a section of mathematical derivations in the appendix that can assist audiences to understand how CARPRT is designed from the probabilistic forumations.\n\n- Using class-aware prompt weighting theoretically is better than class-independant prompt weighting, but its robustness is also a practical concern. The authors also mention the influences of pseudo-labels and prompt template pool, but relevant empirical analyses are not provided. For example, is CARPRT more sensitive to noisy pseudo-labels than ZPE? (perhaps we can manually inject noises into pseudo-labels to understand the influences) What happens when fine-grained datasets have more or less diverse template pool? Is it really necessary to combine templates from different datasets for a particular test dataset?"
+            },
+            "questions": {
+                "value": "- Please clarify the correspondances between CARPRT formulations and probabilistic derivation.\n\n- In Appendix D, the authors discuss several forms of $Pr(W|P)$. Could the authors explain how these priors can be obtained and used, for example, in the Test-Time Adaptation situation mentioned in the paper?\n\n- I am confused about the toy example in Proposition 3. Why all the three (Ln 880-883) have $y_1$ as their variates? How Ln 886-889 are derived?\n\n- In Ln 431, a typo in 'iaccuracy'."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

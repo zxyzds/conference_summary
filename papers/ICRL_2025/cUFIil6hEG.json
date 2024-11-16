@@ -1,0 +1,182 @@
+{
+    "id": "cUFIil6hEG",
+    "title": "Accelerating Training with Neuron Interaction and Nowcasting Networks",
+    "abstract": "Neural network training can be accelerated when a learnable update rule is used in lieu of classic adaptive optimizers (e.g. Adam). However, learnable update rules can be costly and unstable to train and use. Recently, Jang et al. (2023) proposed a simpler approach to accelerate training based on weight nowcaster networks (WNNs). In their approach, Adam is used for most of the optimization steps and periodically, only every few steps, a WNN nowcasts (predicts near future) parameters. We improve WNNs by proposing neuron interaction and nowcasting (NiNo) networks. In contrast to WNNs, NiNo leverages neuron connectivity and graph neural networks to more accurately nowcast parameters. We further show that in some networks, such as Transformers, modeling neuron connectivity accurately is challenging. We address this and other limitations, which allows NiNo to accelerate Adam training by up to 50% in vision and language tasks.",
+    "keywords": [
+        "accelerated optimization",
+        "parameter prediction",
+        "graphs",
+        "transformers",
+        "learning to optimize"
+    ],
+    "primary_area": "learning on graphs and other geometries & topologies",
+    "TLDR": "We present a meta-model predicting future parameters along the SGD/Adam-optimization trajectories using graphs of neurons and graph neural networks to speed up training of neural networks.",
+    "creation_date": "2024-09-24",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=cUFIil6hEG",
+    "pdf_link": "https://openreview.net/pdf?id=cUFIil6hEG",
+    "comments": [
+        {
+            "comment": {
+                "value": "We thank the reviewer for the time and valuable feedback and would like to promptly respond to the concerns and questions.\n\n> **W1.1**  It is recommended that the authors provide more analysis on the impact of hyperparameter tuning on model performance.\n\nWe reported the impact of different hyperparameters (and ablations) in Table 3 and Fig. 5a,b. In Table 3e and Fig. 5a, we show the results for different NiNo's hidden sizes and numbers of layers. In Table 3f, we show the results for different batch sizes, learning rates and numbers of training models (also shown in detail on Fig. 5b). These are the main hyperparameters of NiNo. The ablations in Table 3a,b,c,d complement the analysis.\n\n> **W1.2** Computational resource consumption: Although the paper mentions the memory and time overhead of NiNo, it does not provide a direct comparison with existing methods. It is recommended to add analysis in this regard, especially on resource consumption on large-scale datasets and large models.\n\nIn Table 6 in Appendix we compare to the baseline (Adam), WNN+ and L2O. WNN+ has the same memory/overhead as WNN (Jang et al., 2023), since the architecture is identical. \nIn addition to Table 6, we recently also measured the memory/overhead of NiNo (with hidden size=32) on our Llama-3-based architecture (with 111M params).\n\n| Method | Peak Mem | Time | Overhead |\n| -------- | ------- | ------- | ------- | \n| Adam | 76GB/step | 909ms/step | 0% |\n| WNN+ (hid=32) | 42GB/predict | 2.01sec/predict | 0.22% |\n| NiNo (hid=32) | 57GB/predict | 5.52sec/predict | 0.61% |\n| L2O (mlp, hid=32) | 76GB/step | 917ms/step | 0.88% |\n\nOverall, NiNo's computational resource consumption is comparable to other approaches, while it consistently outperforms other approaches in terms of speed up.\n\n> **Q1** The paper mainly focuses on the performance improvement of specific tasks, but lacks discussion on the generalization ability of the model on unseen tasks. It is recommended to increase the evaluation of the model's generalization ability.\n\nIn our paper we systematically investigated \"the generalization ability of the model on unseen tasks\". For example, in Tables 1 and 2, we specifically highlight five **Out-of-distribution tasks**. All the five out-of-distribution tasks are unseen: the dataset and/or architecture change compared to the training tasks (FM/16, C10/16, LM1B/3-24, LM1B/2-32). Among the five unseen tasks, the tasks C100/32 and Wiki/3-64 are most different w.r.t. the training ones, because both the datasets and the architectures are unseen. Moreover, in Table 4, we evaluate on the Llama3-based Wiki task, which is the most challenging generalization setup (unseen and very different architecture and unseen dataset).\nWe also evaluated a NiNo model trained only on FM-16 (NiNo/FM16) and compared its performance on an unseen task (C10/32) in Fig. 6 (middle). Our NiNo/FM16 outperformed all the baselines (e.g. L2O, WNN).\n\n==== We will add these clarifications in the revision. We thank again the reviewer and will be glad to clarify further questions."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to concerns and questions"
+            },
+            "comment": {
+                "value": "We thank the reviewer for the time and valuable feedback and would like to promptly respond to the concerns and questions.\n\n> **W1** It is unclear if training multiple models during meta-training is practical for real-world applications, where typically only a limited number of models are trained.\n\nWe assume the reviewer is concerned that training 1k models used for meta-training NiNo is not practical. In this regard, in our paper we presented the results of NiNo with a smaller number of models (in the range 40-1000, see Fig. 5b). For example, NiNo's average speed up is around 45% with just 100 models, making NiNo's training practical and performant. So we believe that for real-world applications, it should be possible to train NiNo on existing models without collecting a specific meta-training dataset. We collected such a dataset to enable a systematic study and remove potential confounding factors.\n\n> **W2** The generalization performance of NiNo should be further tested. The largest test case is 100 M models on small dataset like Wikitext-103. It may not fully represent NiNo's capabilities in broader applications.\n\nIn our paper (Fig. 5c), we show how NiNo performs when applied to models of different sizes (from 2 to 6 layers). The trend shows that further generalization is unlikely. Nevertheless, the generalization performance is already remarkable in our view because as Fig. 5c highlights (red rectangular), NiNo can be applied to models that are around **18 times larger than those used in meta-training**. So to generalize beyond 100M models, one needs to scale up meta-training models and/or further improve NiNo's architecture. This is left for future work.\n\n> **Q1**  I notice that there are some strange performance jumps in Figure 6. Training loss periodically jumps/spikes for NiNo variants. Could the authors clarify the reasons behind these fluctuations?\n\nWhen NiNo makes predictions, most of the parameters are generally predicted in the right direction however some parameters may be predicted inaccurately. For the loss spike it can be enough to have just a few parameters to be predicted way off. However, a few training iterations with Adam can easily correct those wrong parameter values. So NiNo makes a good global-level prediction while Adam can fix any local-level mistakes.\n\n> **Q2** How is NiNo or WNN applied during inference stage? Specifically, do you forward NiNo k steps and set the network weights to the output of NiNo while retaining the optimizer states? Further details on the inference process would improve clarity.\n\nThe \"set the network weights to the output of NiNo while retaining the optimizer states\" is correct (we also tried resetting the states but that didn't change the results significantly). Overall the inference process is the following. NiNo is applied every 1k steps of Adam (see Fig. 1). For example, given 10k training steps in some task, NiNo is applied at steps 1k, 2k, ..., 9k, 10k. NiNo's forward pass is done for a specific k value, where k is decayed during the optimization process (Fig. 12 in Appendix). For example, for 10k step the k is decayed as: k=40 at 1k, 33 at 2k, ..., 1 at 10k.\n\nPseudo code of using NiNo (see supplementary material for full code):\n```\nmodel = AutoModelForCausalLM.from_config(...)  # some model\n# NiNo is implemented as a wrapper around the base optimizer\n# any optimizer other than Adam should also be possible to use with NiNo\nopt = NiNo(base_opt=torch.optim.AdamW(model.parameters(), lr=1e-3),\n           ckpt='checkpoints/nino.pt',\n           model=model,\n           period=1000,\n           max_train_steps=10000)\nfor step in range(10000):\n    if opt.need_grads:  # True for Adam steps (e.g. 0-999)\n        opt.zero_grad() \n        data, targets = ...  # get data\n        outputs = model(data)  # forward pass\n        loss = F.cross_entropy(outputs, targets)  # loss\n        loss.backward()  # grads for Adam        \n    opt.step()  # Adam step or, every 1000 steps, nowcast params using NiNo \n    ...\n```\n\n> **Q3** Could the authors provide details about the computational costs of the meta-training process?\n\nTraining of NiNo completes in under 7 hours on a single NVIDIA RTX8000 with 48GB of memory (see Section A.7 in Appendix). It can be further sped up using multiple GPUs as in standard training pipelines. There are many other potential approaches to make training more efficient (e.g. subgraph/subnetwork sampling common in the GNN works, which can be interesting to investigate in future work). Collecting the meta-training dataset is relatively cheap (can be done in a few hours) and the dataset takes around 200GB (raw memmap data, which we will release upon publication). But as pointed out above, it would be intriguing to try already existing datasets of models in future work.\n\n====\nWe will clarify these concerns in the revision.\nWe thank again the reviewer and will be glad to clarify further questions."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes to improve training, by leveraging out specific transformer strcture and representing it is as a Neural Graph to model connectivity. The weights of the model would then be encoded as features on the edges of the graph (the nodes corespond to neuron/activation).  Ideally,  isomorphic permutations of such graphs, \nshould result in no-functional change to the model itself, thus capturing the underlying symmetries of the model. In contrast with earlier work, authors proposed a more fine-grained structure that accurately captures multi-headed-self-attention blocks, and thus allows them to improve performance of their meta-learning method. Once such graph is built authors leverage a combination of nodes and edge embedding, methods from GNN which are then translated to model updates.."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "I think the construction of the graph whose isomorphic permutations of nodes preserves the model functionality,  for transformer layer is neat and interesting."
+            },
+            "weaknesses": {
+                "value": "I have two major concerns about the papers:\n1. My main concern is that the experimental section contains only fairly trivial datasets (FashionMNist, Cifar-10), which are very far from anything reasonable these days, and the models authors consider for forecasting is limited to ~1M parameters, and many are 15K params,  which is barely practical for the simplest tasks. I think for image tasks, showing reasonable performance on something like ImageNet is\na must.  On the other hand authors run their training procedures for thousands of steps, which seems an overkill  for simple problems like this (Gradient Descent for Fashion Mnist for instance can converge in ~100 steps).  On the other hand experiments on Liama are not convincing because it is a well  known fact that it is often easy to speed up initial convergence, but the end result can still be significantly worse than slower algorithm. To demonstrate performance gains on these tasks authors should run at least run ablation study with different learning rates of the original model and show that they all converge (hopefully their method still shows the improvement).\n\n2) The actual algorithm descriptions has very little detail what exactly their meta-learning algorithm does, even when reading the  appendix  carefully. Most of the detail is in section 4.2. In particular having at least a basic definition of GNN layers. Given that it is the crux of the paper, i think it should be carefully expanded and explained. I think the graph-construction section, is fairly well written, but it is very much unclear how it is then translated into actual meta-learning algorithms, as best as i could tell authors use some black-box message passing algorithms to come up with the new update, but i think that section would benefit greatly from expansion. \n\n3) Some discussion about optimality of their graph construction would be nice, but it is a minor comment."
+            },
+            "questions": {
+                "value": "1. How are  the gradients are fed into the NiNo algorihtm? It is part of V^w? \n2. What are the nodes features? \n3. Was there any ablation study done for AdamW in Liama3 style architecture particularly around using different learning rates."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel approach for accelerating the training of neural networks. This technique called NiNo builds upon the concept of Weight Nowcaster Networks (WNNs), which periodically predict future parameter values thus speeding up optimization. However, in contrast to WNNs, NiNo leverages the inherent network structure by incorporating neuron connectivity using graph neural networks. This allows the model to achieve more accurate prediction of future parameters and leads to faster training. The authors also address challenges in modeling neuron connectivity, particularly in Transformers, and demonstrate NiNo's effectiveness in accelerating Adam optimization in various vision and language tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is sufficiently well written and is fairly accessible.\n2. The proposed approach is sufficiently sound and novel. Even though it can be seen as a combination of two existing techniques (WNNs and an improved GNN model weight representation), this paper still contains a number of non-trivial innovations. For example, among other things, the authors make a number of logical steps improving on a previously published graph topology for multi-headed self-attention.\n3. Experimental results appear to be promising. When fully realized the proposed technique could potentially be quite impactful for training modern large models including large language models. Even 10-20% improvements in training speed could be of large practical significance."
+            },
+            "weaknesses": {
+                "value": "1. Some discussions could perhaps be improved upon to be even more clear. For example, while being sufficiently understandable, Section 4.1 could still be clarified further. Figure 2 is also difficult to interpret in its current form. Color coding takes time to digest.\n2. The training method is fairly computationally expensive as the authors collect on the order of $10^6$ checkpoints. To be practical, this initial computational investment should be compensated by the future computational wins from utilizing a more efficient optimizer. Early results seem to paint an optimistic picture and suggest that trained models generalize to much larger underlying models and novel datasets and tasks. However, most current practical LLMs start at around 1B parameters, which still leaves at least 1 to 2 orders of magnitude from the current 111M models the authors experimented with."
+            },
+            "questions": {
+                "value": "1. How could one bridge the gap between current experiments and practically interesting large model sizes (1-100B parameters)? Would generation of multiple future steps (various values of $k$) present a major obstacle? What about stacked feature representations that gather information from $c$ weight instances?\n2. I could have missed this discussion, but what would happen if one decoupled the number of steps between predicting model weights and the size of the history used to make this prediction (both currently chosen to be $c$ if I am not mistaken)? It would seem that there are roughly three time hyper-parameters (at least locally): (a) how frequently do update predictions; (b) how many past states to use for making these predictions (lower would be more advantageous); (c) how far ahead to predict (larger would be more advantageous)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces NiNo, a method that improves WNN by utilizing graph neural networks (GNNs). Experiments on relatively small datasets demonstrate that NiNo achieves superior performance compared to the WNN baseline."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is well-motivated. It is an improved version of WNN by integrating GNN.\n2. The experiments cover different tasks including language modeling and image classification tasks."
+            },
+            "weaknesses": {
+                "value": "1. It is unclear if training multiple models during meta-training is practical for real-world applications, where typically only a limited number of models are trained. \n2. The generalization performance of NiNo should be further tested. The largest test case is 100 M models on small dataset like Wikitext-103. It may not fully represent NiNo's capabilities in broader applications."
+            },
+            "questions": {
+                "value": "1. I notice that there are some strange performance jumps in Figure 6. Training loss periodically jumps/spikes for NiNo variants. Could the authors clarify the reasons behind these fluctuations?\n2. How is NiNo or WNN applied during inference stage? Specifically, do you forward NiNo k steps and set the network weights to the output of NiNo while retaining the optimizer states? Further details on the inference process would improve clarity.\n3. Could the authors provide details about the computational costs of the meta-training process?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel approach to accelerate the training of neural networks by using Neuron Interaction and Prediction (NiNo) networks to predict future parameter changes, thereby reducing the number of iterations required by traditional optimizers such as Adam. This approach shows significant speed-ups on visual and language tasks while maintaining low memory overhead. The theoretical analysis and experimental results of the paper support the effectiveness of this method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The method proposed in the paper has significantly improved compared to the existing technology in multiple benchmark tests, especially in reducing the number of training iterations."
+            },
+            "weaknesses": {
+                "value": "Hyperparameter tuning: The paper mentions the k-decay strategy, but does not discuss the selection and tuning of hyperparameters in detail. It is recommended that the authors provide more analysis on the impact of hyperparameter tuning on model performance.\nComputational resource consumption: Although the paper mentions the memory and time overhead of NiNo, it does not provide a direct comparison with existing methods. It is recommended to add analysis in this regard, especially on resource consumption on large-scale datasets and large models."
+            },
+            "questions": {
+                "value": "The paper mainly focuses on the performance improvement of specific tasks, but lacks discussion on the generalization ability of the model on unseen tasks. It is recommended to increase the evaluation of the model's generalization ability."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,208 @@
+{
+    "id": "n4HH7g9hxk",
+    "title": "Deep Exploration with PAC-Bayes",
+    "abstract": "Reinforcement learning for continuous control under sparse rewards is an under-explored problem despite its significance in real life. Many complex skills build on intermediate ones as prerequisites. For instance, a humanoid locomotor has to learn how to stand before it can learn to walk. To cope with reward sparsity, a reinforcement learning agent has to perform deep exploration. However, existing deep exploration methods are designed for small discrete action spaces, and their successful generalization to state-of-the-art continuous control remains unproven.  We address the deep exploration problem for the first time from a PAC-Bayesian perspective in the context of actor-critic learning.  To do this, we quantify the error of the Bellman operator through a PAC-Bayes bound, where a bootstrapped ensemble of critic networks represents the posterior distribution, and their targets serve as a data-informed function-space prior. \nWe derive an objective function from this bound and use it to train the critic ensemble. Each critic trains an individual actor network, implemented as a shared trunk and critic-specific heads. The agent performs deep exploration by acting deterministically on a randomly chosen actor head. Our proposed algorithm, named PAC-Bayesian Actor-Critic (PBAC), is the only algorithm to successfully discover sparse rewards on a diverse set of continuous control tasks with varying difficulty.",
+    "keywords": [
+        "Reinforcement learning",
+        "deep exploration",
+        "sparse rewards",
+        "PAC Bayes"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "We propose a novel actor-critic algorithm for continuous control in sparse reward settings, using a critic ensemble and PAC-Bayesian bounds on Bellman operator error to enable deep exploration via posterior sampling.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=n4HH7g9hxk",
+    "pdf_link": "https://openreview.net/pdf?id=n4HH7g9hxk",
+    "comments": [
+        {
+            "title": {
+                "value": "Could you clarify the question? Answer to dcYY"
+            },
+            "comment": {
+                "value": "Could you clarify the question? Thank you for reviewing our submission and the provided feedback. \n\n- **Why does PBAC outperform baselines in the environments where it does? Why doesn't it see a similar improvement for the other benchmarks**\nThe only two environments where PBAC does not perform as well as or better than the baselines are humanoid in both performance metrics and reacher in the area under learning curve. For humanoid, we hypothesize that this is due to the very high health reward the agent receives (5x as large as in the other dense environments). For reacher, while the difference is statistically significant, it is still very small in absolute reward.  \n\n- **I think it would be good to see some other common exploration benchmarks.**  \nBased upon the suggestion of reviewer v8fi, we are currently running experiments on various Meta-World environments and will update the general answer with those results once they are ready. Would you require further benchmarks?\n\n- **Can you give more intuition for how to interpret the positional delay parameter? How many timesteps does it take for the agent to reach these distances?**  \nThe _forward reward_ in MuJoCo environments depends on an agent's movement as measured in changes of the $x$ coordinate (See the `gymnasium` documentation for specifics on each environment). The delay parameter $c$ enforces that the agent only receives this reward if it has moved a distance of 1 or 2 from its starting position. As the hopper agent can fall over more easily, and thus end its episode, than an ant agent, we chose the required distance for the latter to be higher. See also Section B.2.1 for further details. As the humanoid environment is even more complex, even removing the health reward causes the baselines to fail. Further adding a positional delay restriction on the forward reward makes learning practically impossible. \n\n- **How are hyperparameters tuned for comparison algorithms?**  \nTo stay close to each other, all methods share the same optimizer and architectural backbone. _BootDQN-P_ and _PBAC_ contain several extra hyperparameters, summarized in Tables 4 & 7. Note that most of these parameters are constant throughout the experiments, i.e., the methods tend to be robust to them. _REDQ_ does not contain any extra hyperparameters that require tuning on top of the shared ones. _BEN's_ hyperparameters are also all shared apart from a similar bootstrap rate parameter which we kept fixed throughout after preliminary results showed it to be robust against it. Finally, for _DRND_ the $\\alpha$ scaling parameter from SAC is optimized via gradient descent during training. Its main distinction from the other baselines and our proposal is its predictive network. As a large search over potential architectures for each environment would have been too costly, we followed the choices of the original authors, who kept them constant on a wide array of experiments indicating their robustness. \n\n- **Why does your method perform better on the sparse version of humanoid than the original?**  \nAs discussed in the conclusion, the high health reward (five times higher than in the other two MuJoCo environments) means that our method with its focus on exploration is unlikely to be able to compete. However, as soon as this health reward is dropped, the very sparse reward signal requires a powerful exploration method. \n\nWe hope that these answers clarify your concerns. Please let us know if there are further points that should be discussed."
+            }
+        },
+        {
+            "title": {
+                "value": "ANswer to v8fi"
+            },
+            "comment": {
+                "value": "Thank you for the detailed review of our submission. \n\n- **In dense reward environments random exploration performs as well or better.**  \nThat is to be expected. If the reward structure is dense, a method build for deep exploration looses its distinguishing feature. \nThis is indeed the main motivation for performing deep exploration. See, e.g., the discussion in Osband et al. (2016a).\n\n- **The method lacks convergence guarantees, limiting confidence in its stability and long-term performance across diverse tasks.**  \n    We acknowledge that we do not provide a theoretical convergence guarantee. Note, that neither does $Q$-learning for continuous state-action spaces, and consequently any deep actor-critic method. All guarantees assume finite state space size. See for instance Theorem 1 of the famous TD3 method proposed by Fujimoto et al. (2018) for a proof of convergence assuming a finite Markov decision process.  Once these assumptions are made, it is trivial to show that our method has identical convergence profile to any other actor-critic approach.. Currently only empirical results are available for its long-term performance and stability. We are currently increasing the diversity of our experiments by running further experiments on the Meta-World testbed as you suggested.\n- **Looking at the results, particularly the reward plots and Figure 4, it seems that the complexity of this method outweighs its advantages. The performance improvements shown aren\u2019t particularly impressive, and given the considerable complexity involved.**  \nWe provide one-sided paired t-tests in the general answer above, which demonstrates significantly ($p<0.05$) improved performance for most experiments. Could you provide further details on where you see a _considerable complexity_? The final algorithm (Alg 1 on p23) can be implemented in a straight-forward manner that isn't more difficult than our reported baselines.\n- **I\u2019m curious why the authors opted to modify Gym environments for sparse rewards. Sparse reward testbeds, such as Meta-World and D4RL, naturally simulate environments with sparse feedback.**  \nThank you for the suggestion. We are now running additional experiments on Meta-World and will provide them in a general answer once they are ready. Our decision to report custom environments was due to our aim to provide a set of experiments of increasing sparsity which a clearly defined reward structure (see Sec B.2.1).\n\n- **Could you elaborate on the decision to present performance results in Table 1 using IQM scores rather than traditional reward plots?**  \nWe do report the reward plots in Figure 2 and 4, which you also refer to in this review. Table 1 gives an additional concise scalar summary of these plots. Table 1(a) summarizes the results at the end of training, i.e., the end of each reward plot, while Table 1(b) summarizes the overall learning trajectory by computing its area under curve. We consider both, tabular and graphical presentation as important. The decision to include only a subset of the reward plots in the main text was only due to space restrictions. Could you clarify the question? \n\nWe hope that this clarifies the concerns raised in this review. If there are further questions, please let us know.\n\n\n_____\nFujimoto et al. 2018., _Addressing function approximation error in actor-critic methods_"
+            }
+        },
+        {
+            "title": {
+                "value": "Answer to 1HUF"
+            },
+            "comment": {
+                "value": "Thank you for your review. We will answer to each of your points below.\n\n- **The algorithm requires \"a series of approximations [...] which are well described in the paper but strike me as somewhat complicated and ad-hoc**  \n    Could you point to the specific approximations that seem ad-hoc? We could then offer further details and justification. In Section 3.2, the first and second steps in moving the ensemble to a function space are justified by a growing trend in the Bayesian deep-learning literature to switch from weight-space priors to function-space priors. See, e.g., Papamarkou et al. (2024) and the justifications therein. Data-informed priors (Step 3) are well-known in the PAC-Bayesian literature, and bootstrapping (Step 6) was evaluated at length by Osband et al. (2016a,1018). The remaining two (Steps 4 and 5) are indeed primarily motivated by empirical results and numerical stability. Our proposed model is not decomposable and individual effects wouldn't be visible. However, if you have a specific factor in mind that should be observed in isolation, we are happy to conduct such an experiment. \n\n- **How easy would it be to reproduce and build on top of it?**  \n  We provide a full pseudo-code version of the final algorithm in Algorithm 1 (see p 23), which together with the provided hyperparameters, architectural details, and a public pytorch implementation (currently hidden to keep anonymity) of the experimental pipeline ensure reproducibility of our reported results. \n  The required critic ensemble and multi-headed actor network described in Table 6 are straightforward and the loss objective consists mainly of moment computations and their predictive mean-squared error terms, i.e., is comparable to our baselines. \n  \n - **The empirical results still only consider fairly low-dimensional domains and no vision-based policies/critics. What about more expressive function approximator classes such as using transformers or other large models?** \nHumanoid and ant both already provide a rather large observation space compared to other benchmarks (348 and 105 dimensions respectively). PBAC and the baselines share the same architectural backbone to stay as comparable as possible. Architectural advancements such as transformers, or layers adapted for spatial information, such as convolutional layers, would have to be shared with the baselines, after which we expect that the relative performance structure remains the same. Note that while the architectures are seemingly simple they already follow the latest recommendations from a recent study by Nauman et al. (2024). Of course, depending on the use case more powerful approximators, or newer ensembling methods, could directly replace the current backbone. As such the model could also be applied to vision-based benchmarks or similar. Our implementation is agnostic to such details. \nWe would also like to remind, that the focus of this paper is on continuous control where the true bottleneck is the action space dimensionality rather than the observation space. Deep exploration in continuous control is far from being solved even from small action spaces. Hence, we leave scaling to future work.\n\n- **I could not fully understand how the treatment still captures the uncertainty over the full trajectory space**  \nThe critic network approximates the value function, which is a predictor for the discounted return of a trajectory starting from a given state and generated by following a fixed policy. Hence, an uncertainty on the value of a state given as an input directly models the uncertainty over the value whole trajectory following that state. Does this clarify the question?\n\nPlease let us know in case these answers have not fully clarified your concerns and questions. \n\n_____\nPapamarkou et al., 2024: _Position: Bayesian Deep Learning is Needed in the Age of Large-Scale AI_"
+            }
+        },
+        {
+            "title": {
+                "value": "Answer to NDSb"
+            },
+            "comment": {
+                "value": "Thank you for reviewing our submission and for your comments.\n\n- **W1. The main theoretical result is vacuous**.  \nIndeed, the PAC-Bayes bound is, as discussed in the paper, vacuous. Its motivation is to serve as a training objective as is commonly done in PAC-Bayesian learning. Note that there is no relation between whether the bound is tight and whether it is a suitable training objective. If a non-vacuous generalization bound is desired at a later stage, the inferred posterior can be plugged into any tight PAC-Bayesian bound. \nThe $\\frac{nR^2}{(1 - \\gamma)^2}$ which we introduce in the proof of Theorem 2 (line 851) is independent of the parameters, i.e., is irrelevant in the training process. \n\n- **W2. The experimental evaluation is limited**  \n    - Regarding the limited set of results, we are currently running experiments on the Meta-World (Yu et al., 2019) benchmark, as suggested by reviewer v8fi. We will report these results as a main answer to all reviewers once they are completed.  \n    - Regarding the significance. See the general answer for a pairwise one-sided t-test analysis of the results reported in Table 1. Please note that even in the currently reported way of highlighting every method whose interquartile range overlaps, we get the following ranking, which clearly shows the average improvement of PBAC upon the baselines (the brackets provide the number of overlaps with the highest IQM range).  \n        - Final episode reward: DRND(1), BootDQN-P(3), BEN(4), REDQ (8), and PBAC (10)\n        - Area under learning curve: BootDQN-P (0), DRND (1), BEN (1), REDQ (5), and PBAC (8)\n- **W3. Writing of the paper and overall storyline**  \n    - **_\"Apply PAC-Bayes analysis [...] to induce exploration in a USB-like manner\"_**  \n        We essentially do posterior sampling, which is nowadays emerging as an alternative to UCB. The idea is to sample a value function from the learned posterior and act greedily with respect to it. There exist theoretical findings showing that posterior sampling is more sample-efficient than UCB (see, e.g., Tiapkin et al., 2022).\n    - **What does _\"Implement the bound\"_ mean?**  \n    Throughout this work, we follow the common practice of designing a PAC-Bayesian bound that is subsequently used as a training objective to be minimized. The expression implementing the bound means that we derive in Section 3.2 an approximation to the theoretical bound we proved in Theorem 2. This approximation finally provides us the loss term given by equation (3) which is subsequently minimized as described in Algorithm 1.\n    - **Line 266: It was not clear to me why a function is replaced by a distribution here.**  \n        We do this to capture the randomness caused by the function approximation error resulting from the approximate TD approach. Standard actor-critic methods use double critics and min-clipping to overcome the negative effects of this error. Our novelty is to model the distribution caused by this error and use the resulting uncertainty for deep exploration.\n    - **It was difficult to parse what the final algorithm actually is.**  \n        We described the final algorithm in Algorithm 1 in the appendix (see p23) which implements equation (3). We aim to explain every step in Section 3.2. Could you tell which of these steps is unclear or not sufficiently justified? Does the algorithm make the specific steps clearer, or would a further explanation be helpful?\n                \n- **W4. Another paper that would be good to compare against is Sunrise.**  \nThank you for the reference, we will add it to our related work section. SUNRISE (Lee et al., 2021) uses an ensemble of actor critic nets in a SAC setup and weights the Bellman error by the empirical standard deviation of their predictions. Additionally, they rely on a bootstrapping mask, as do we, and perform UCB-based exploration. Their target can be interpreted as roughly corresponding to a weighted version of the first term in our objective in Equation (3).\n\nPlease let us know whether these answers clarify your questions or whether you have further requests or additional questions.\n\n_____\nLee et al., 2021: _SUNRISE: A Simple Unified Framework for Ensemble Learning in Deep Reinforcement Learning_  \nTiapkin et al., 2022: _Optimistic posterior sampling for reinforcement learning with few samples and tight guarantees_Optimistic posterior sampling for reinforcement learning with few samples and tight guarantees_"
+            }
+        },
+        {
+            "title": {
+                "value": "General Answer"
+            },
+            "comment": {
+                "value": "We thank all reviewers for reading our submission in detail. This answer contains shared answers, with further answers given individually to each reviewer. To assure that our clarifications are sufficient we will provide them first here and will subsequently update the pdf throughout the discussion period whenever the reviewers agree. \n\n- We will provide additional results on Meta-World (Yu et al., 2019) as suggested v8fi. The experiments are currently running and we will update this answer whenever they are ready. This provides us with a second set of experiments, extending the results we have reported so far.\n- Regarding the significance of the current results. The following two tables provide the results of pairwise one-sided t-tests between the highest mean and the others, with the null hypothesis being that two means are equal. Cells marked with _X_ indicate that the hypothesis was not rejected (for $p \\leq 0.05$ ). Ranking the method by their performance, we have that overall PBAC performs as well as or better than the other models in most environments.   \n    - Final reward: DRND (3), BootDQN-P (4), BEN (5), REDQ (8), PBAC (9)\n    - Area under learning curve: BootDQN-P (0), BEN (1), DRND (2), REDQ (6), PBAC (9)\n\n### Final episode reward\n| Environment | BEN | BootDQN-P | DRND | REDQ | PBAC (ours) |\n| -------- | -------- | -------- |-------- | -------- | -------- |\n| ant | | | | X | X |\n| hopper | | X | X | X | X | \n| humanoid | | | X | X | |\n| ballincup | X | X| X | X | X |\n| cartpole | | | | | X|\n| reacher| X | | | X | | \n| ant (sparse) | | | | X | X|\n| ant (very sparse) | X | | | | X |\n| hopper (sparse) | X | X | | X | X |\n| hopper (very sparse) | X | X |  | X | X |\n| humanoid (sparse) | | | | | X |\n\n\n### Area under learning curve\n| Environment | BEN | BootDQN-P | DRND | REDQ | PBAC (ours) |\n| -------- | -------- | -------- |-------- | -------- | -------- |\n| ant | | | | X | X |\n| hopper | | | | X | X |\n| humanoid | | | X | X | | \n| ballincup | X | | | X | X |\n| cartpole | | | | | X |\n| reacher| | | | X | | \n| ant (sparse) || | | | X |\n| ant (very sparse) | | | | | X |\n| hopper (sparse) | | | | | X |\n| hopper (very sparse) | | | | X | X |\n| humanoid (sparse) | | | | | X | \n\n_____\nYu et al., 2019: _Meta-World: A Benchmark and Evaluation for Multi-Task and Meta Reinforcement Learning_"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies RL in continuous spaces, and is specifically motivated by sparse-reward problems that require exploration. They take a PAC-Bayesian perspective, and derive an algorithmic approach motivated by a PAC-Bayes analysis to address such hard exploration problems. Experimental results are given illustrating its performance on several Mujoco tasks, and that it is able to solve problems with sparse rewards."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The PAC-Bayes perspective has not been given significant attention in the RL community, and this work takes a step towards addressing that. Furthermore, the proposed algorithm does indeed appear to solve sparse-reward settings effectively."
+            },
+            "weaknesses": {
+                "value": "1. The main theoretical result (Theorem 2) is vacuous, as is noted by the authors. It is not clear to me what purpose this result serves given this\u2014it is trivially true that $\\| Q_\\pi - X \\|_{P_\\pi}^2 \\le \\frac{R^2}{(1-\\gamma)^2}$, which is all this bound claims to show (unless the negative variance term can be shown to cancel out this term, but this avenue is not pursued here). Furthermore, this bound is used to motivate the algorithm, yet given that it is vacuous, one cannot draw any real conclusions from it, and thus the motivation for the algorithm becomes unclear. I would suggest removing this result and cleaning up the algorithmic motivation.\n2. The experimental evaluation is limited, only considering DMC environments, and several other Mujoco tasks. Furthermore, the gains over existing methods are relatively marginal\u2014in the majority of examples, it performs comparably to existing methods (or the stochasticity is high enough that it is not possible to give a clear ranking). \n3. The writing of this paper could be improved and the overall story made more explicit. In particular, as I understand it, the main idea is to apply a PAC-Bayes analysis to get a measure of uncertainty, then use this measure of uncertainty to induce exploration in a UCB-like manner. This was not clear, however, from reading the paper. For example, there are statements like \u201cimplement the bound\u201d (line 306) which seem to imply this but are ambiguous (what does it mean to implement a bound?). I would encourage the authors to tighten the story and make connections between the analysis and resulting algorithm more explicit. There were various other unclear statements or issues with the exposition, for example:\n\t* Line 266: It was not clear to me why a function is replaced by a distribution here. This may be standard in PAC-Bayes analysis (I am not too familiar with PAC-Bayes), but is not standard in the RL literature, and I would suggest further exposition here to make clear why the loss is now over a distribution.\n\t* Line 302-303: In the sentence starting with \u201cHowever\u2026\u201d, what is an \u201cexisting bound rigorously developed for a specific purpose\u201d? Some explanation of this statement (or relevant citations of such a bound) would be helpful.\n\t* It was difficult to parse what the final algorithm actually is. Many of the details given in Section 3.2 are not necessary for the main body, and make it difficult to determine which points are the most salient. It would be very helpful to give an algorithm box putting all the pieces together.\n4. Another paper that would be good to compare against is [1].\n\n[1] Lee, Kimin, et al. \"Sunrise: A simple unified framework for ensemble learning in deep reinforcement learning.\" International Conference on Machine Learning. PMLR, 2021."
+            },
+            "questions": {
+                "value": "See Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper addresses the challenge of efficient exploration in reinforcement learning with sparse reward tasks. This is a challenging problem that has wide reaching applications in continuous control domains. They review the literature on (Bayesian inspired) deep exploration algorithms that are designed to find solutions in this setting. They then propose a novel algorithm called PAC-Bayesian Actor critic that leverages a PAC bound to achieve efficient exploration. In practice their method involves fitting a bootstrapped ensemble of function approximators (neural network) regressed to represent the error of the one-step TD Q-learning objective. This is the first principled PAC Bayesian treatment of an Actor-Critic algorithm and it seems to perform well (albeit the evaluations are on relatively standard 'simple' control domains)."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This is a relevant problem in the field of reinforcement learning and from the reviewers limited exposure to PAC-Bayesian theory the derivation seems sound and is intuitive. \n- The empirical results showcase the algorithms effectiveness particularly in tasks where existing methods for deep exploration struggle (i.e. very sparse 'ant' target finding domain, humanoid etc.) which gives a convincing picture.\n- I have limited understanding of PAC-Bayesian methods but am an expert on off-policy RL. From what I can tell the derivations do indeed seem novel and the idea of modelling the error of the TD-operator with a PAC-Bayesian approach seems highly promising and worthwhile for the community."
+            },
+            "weaknesses": {
+                "value": "- The practical implementation of the well motivated general algorithm requires a series of approximations (e.g. ensemble of networks, Gaussian assumption on the adaptive prior etc.) which are well described in the paper but strike me as somewhat complicated and ad-hoc. It would have been great to see some ablations of different choices here and provide the reader with understanding of why these choices are reasonable (I understand at least the ensemble of networks follows prior art. but the rest seems not already well established).\n- The core derivation is relatively simple and clear, but the resulting method (due to the points above) becomes quite complicated. Making me wonder how easy it would be to reproduce and built on top of it.\n- The empirical results still only consider fairly low-dimensional domains and no vision based policies/critics (perhaps with the exception of the humanoid domain which is fairly high-dimensional). And the domains are also mostly not naturally sparse reward problems but have been 'sparsified' from their dense reward versions. I have some concerns whether the presented method would also work in more relevant modern settings such as learning vision based policies in e.g. robotics and or more expressive function approximator classes such as using transformers or other large models. Do the authors have any intuitions on these and/or could one more relevant complex domain be considered? E.g. as in recent papers on RND etc."
+            },
+            "questions": {
+                "value": "A discussion of the weaknesses above would be highly appreciated for me to raise my score. Additionally I have a problem in understanding one crucial part of the paper:\n- The authors mention that due to the long episodes in RL a PAC-Bayesian treatment has to be done based on TD errors (and these only consider consecutive state-action-state tuples and not trajectories). This makes intuitive sense to me, however I could not fully understand how the treatment still captures the uncertainty over the full trajectory space when the estimator used for bootstrapping (i.e. of the Bellman error) conflates everything to the expectation over future trajectories. Could the authors help me understand this more clearly?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes an approach for deep exploration in sparse reward environments by applying a PAC-Bayesian framework in RL. Empirical results are presented in sparse reward environments however this method does not work in dense reward environments and lacks theoretical convergence guarantees.\n\n\nModeling the Posterior Distribution consists of the following pieces: The posterior distribution is represented as an ensemble of $K$ critic networks, each weighted equally. Distributions $\\rho$ and $\\rho_0$ are modeled directly in function space rather than weight space.\nA data-informed prior $\\rho_0$ is constructed based on the critic targets, providing the most recent information about action values. This prior is modeled as a normal distribution estimated from the critic targets. The KL divergence between $\\rho$ and $\\rho_0$ \nis then calculated using probability density functions evaluated at the outputs of the critic ensemble."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The PAC-Bayesian framework provides a flexible way to assess generalization, allowing any posterior distribution to be optimized for data, making it highly adaptable. It's a nice area of research.\n- The paper covers aspects of PAC-Bayesian RL, ensuring the bound\u2019s validity and robustness in training.\n- Applying the PAC-Bayesian framework for exploration in RL is novel and challenging. So I appreciate the effort.\n- Empirical across various continuous control tasks with different reward structures."
+            },
+            "weaknesses": {
+                "value": "- PBAC\u2019s structured exploration approach is less effective in dense reward environments, particularly when high rewards are frequent. In these settings, random exploration often performs as well or better.\n- The method lacks convergence guarantees,  limiting confidence in its stability and long-term performance across diverse tasks. \n- Looking at the results, particularly the reward plots and Figure 4, it seems that the complexity of this method outweighs its advantages. The performance improvements shown aren\u2019t particularly impressive, and given the considerable complexity involved."
+            },
+            "questions": {
+                "value": "- There are several established sparse reward testbeds in robotics. I\u2019m curious why the authors opted to modify Gym environments for sparse rewards. Sparse reward testbeds, such as Meta-World and D4RL, naturally simulate environments with sparse feedback. These frameworks offer realistic benchmarks that directly address sparse rewards, enabling comparison with other established state-of-the-art methods on these platforms without the need for manual modifications.\n\n- Choice of IQM over Reward Plots: Could you elaborate on the decision to present performance results in Table 1 using IQM scores rather than traditional reward plots? I\u2019m curious if this choice was intended to mitigate variability across seeds or to provide a more concise comparison across tasks. Would reward plots offer additional insights, or do IQM tables capture the main performance differences effectively? I understand that reward plots can sometimes be misleading due to high variability across seeds, especially in sparse reward environments where performance can vary significantly. \n\n\n**Miscellaneous Comments**\n- Table 1: In the table description, \"IQM of the area under learning curve\" should be corrected to \"area under the learning curve.\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a novel method for exploration in deep reinforcement learning. The method uses a PAC-Bayesian perspective to derive a novel critic update rule, which it then uses as part of an actor-critic setup. They actualize this using a bootstrapped ensemble of critics"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Originality:\n * The method is the first to formulate the deep exploration problem from a PAC-Bayesian perspective and overall their method seems original.\n\nQuality:\n * Overall the paper is well written. They achieve decent results, especially in their custom environments.\n\nSignificance:\n * Exploration continues to be a difficult problem in a variety of settings. I believe that the problem setting is well motivated and the paper has the potential to be significant from this perspective.\n* The paper has some decent results"
+            },
+            "weaknesses": {
+                "value": "Some key issues:\n * The paper lacks any real analysis of the results. The main takeaway seems to be \"our method is better\" and that's it. Why does PBAC outperform baselines in the environments where it does? Why doesn't it see a similar improvement for the other benchmarks? Are there any other insights you can share\n * I find it concerning that the main place you see a win is in your own custom environments, because it's difficult to know if this win is because of your algorithm truly doing better or if the baselines could be tuned to achieve similar performance. I think it would be good to see some other common exploration benchmarks."
+            },
+            "questions": {
+                "value": "Experiments questions:\n * Can you give more intuition for how to interpret the positional delay parameter $c$? You say in the paper that it is 2 and 1 for ant and humanoid respectively but what do these values mean? How many timesteps does it take for the agent to reach these distances? Can they be reached occasionally through random actions or do they absolutely require an exploration bonus?\n * Why no very sparse version for the humanoid environment?\n * How are hyperparameters tuned for comparison algorithms? Is there any chance that if you tuned their hyperparameters to the extent that you tuned yours then you would see similar performance? I see you tuned BootDQN-P but how about important exploration benchmarks like DRND?\n * Why does your method perform better on the sparse version of humanoid than the original?\n\nTiny notes / questions:\n * Figure 3 needs axis labels"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

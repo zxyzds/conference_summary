@@ -1,0 +1,184 @@
+{
+    "id": "6N5OM5Duuj",
+    "title": "STAR: Stability-Inducing Weight Perturbation for Continual Learning",
+    "abstract": "Humans can naturally learn new and varying tasks in a sequential manner. \n  Continual learning is a class of learning algorithms that updates its learned model as it sees new data (on potentially new tasks) in a sequence.\n  A key challenge in continual learning is that as the model is updated to learn new tasks, it becomes susceptible to \\textit{catastrophic forgetting}, where knowledge of previously learned tasks is lost. A popular approach to mitigate forgetting during continual learning is to maintain a small buffer of previously-seen samples, and to replay them during training. However, this approach is limited by the small buffer size and, while forgetting is reduced, it is still present.  In this paper, we propose\na novel loss function STAR that exploits the worst-case parameter perturbation that reduces the KL-divergence of model predictions with that of its local parameter neighborhood to promote stability and alleviate forgetting. STAR can be combined with almost any existing rehearsal-based methods as a plug-and-play component. We empirically show that STAR consistently improves performance of existing methods by up to $\\sim15\\%$ across varying baselines, and achieves superior or competitive accuracy to that of state-of-the-art methods aimed at improving rehearsal-based continual learning.",
+    "keywords": [
+        "Continual Learning",
+        "Deep Learning",
+        "Weight Perturbation",
+        "Representation Learning"
+    ],
+    "primary_area": "transfer learning, meta learning, and lifelong learning",
+    "TLDR": "In Continual Learning, we regularize the divergence of the model output distribution with regards to past data via worst-case weight perturbation, alleviating forgetting in future updates.",
+    "creation_date": "2024-09-21",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=6N5OM5Duuj",
+    "pdf_link": "https://openreview.net/pdf?id=6N5OM5Duuj",
+    "comments": [
+        {
+            "title": {
+                "value": "Initial Response"
+            },
+            "comment": {
+                "value": "We thank the reviewer for praising our work as being \u201ceasy to follow\u201d, and \u201cthorough\u201d.\n\n**Theoretical justification**: We would like to reiterate the connection of our formulation to forgetting based on empirical error (i.e. accuracy). Our method uses weight perturbation to reduce the KL-Divergence of the output with that of future output distributions. We refer to [A], which shows that empirical error can be bounded by some function of a classification calibrated loss function, such as KL-Divergence. The theoretical justification of weight perturbation, beyond our formulation, is a subject of extensive research: AWP [B] mentions a relationship with PAC-bayes generalization bounds but does not investigate thoroughly. Finally, the seminal work of [C] claims the PAC-bayes relationship is incomplete and provides convergence proofs for a worst-case perturbation method in the stochastic and non-convex scenario.\n\n**Perturbation norm ratio**: We would like to clarify and reiterate our formulation from the paper. The ratio gamma is not defined as the norm ratio, but **we design the perturbation $\\delta$ such that the norm ratio  $\\frac{\\|\\delta^{(l)}\\|_2}{\\|\\theta^{(l)}\\|_2}$ for each layer $l$ is approximately equal to $\\gamma$**. The normalization is done on a per layer basis, and then scaled by the hyperparameter $\\gamma$ for controlling the magnitude of the perturbation. This is motivated by different layers having different numerical distributions, as well as the scale invariance of the neural network layers [D] (i.e. multiplying the weights of one layer by a number and dividing the weights of the next layer by that number leads to the same network). We have added further clarification of this to the revised manuscript.\nFinally, we\u2019d like to thank the reviewer for pointing out the algorithm inconsistency and we have fixed the notation. We would like to reiterate that the notion of time in our algorithm is not necessarily epoch and can be thought of as an optimization step.\n\n[A] Bartlett, Peter L., Michael I. Jordan, and Jon D. McAuliffe. \"Convexity, classification, and risk bounds.\" Journal of the American Statistical Association 101.473 (2006): 138-156.\n\n[B] Wu, Dongxian, Shu-Tao Xia, and Yisen Wang. \"Adversarial weight perturbation helps robust generalization.\" Advances in neural information processing systems 33 (2020): 2958-2969.\n\n[C] Andriushchenko, Maksym, and Nicolas Flammarion. \"Towards understanding sharpness-aware minimization.\" International Conference on Machine Learning. PMLR, 2022.\n\n[D] Hao Li, Zheng Xu, Gavin Taylor, Christoph Studer, and Tom Goldstein. Visualizing the loss landscape of neural nets. Advances in neural information processing systems, 31, 2018"
+            }
+        },
+        {
+            "title": {
+                "value": "Initial Response"
+            },
+            "comment": {
+                "value": "We would like to thank the reviewer for their comments and for describing our method as \u201cnovel\u201d and \u201cinteresting\u201d and our evaluations as \u201cconcise and to the point\u201d. \n\n**LiDER**: We would like to start our response by highlighting the major difference between our work and that of LiDER [A]. First, LiDER focuses on regularizing the Lipschitz constant of the neural network, while STAR (ours) optimizes the KL-divergence of the output distribution between current parameters and the potential future parameters. Second, and more importantly, **computing the Lipschitz constant is non-trivial** and requires approximations and relaxations based on the activation functions and possibly the architecture of the network. To quote the authors of LiDER in the limitations section **\u201cour approximation cannot be applied to not-Lipschitz continuous layers (e.g., cross-attention)\u201d**. STAR, on the other hand, is general to probabilistic modeling of the output classes and can be used with attention-based architectures, e.g. the transformer.\n\n**Prompting-based methods**:  First, the usage of prompting methods in CL requires pre-trained models, often with a large number of parameters, and furthermore, comes with certain limitations in terms of expressiveness [C]. Our method, on the other hand, is applicable to a general training scheme. Second, we would like to note that our method is a complementary approach that can also be combined with prompting methods with the inclusion of a small rehearsal buffer (as is done in some existing CL prompting works [B]). \n\n**Results on CIFAR100 and miniImageNet**: We would like to note the results in table 1 and that our improvements over most existing baselines are significant (up to a ~10% increase in accuracy across the two datasets). Regarding the results in Table 2, out of the 12 experiment settings presented for CIFAR100 and miniImagenet in Table 2, we achieve best or second best accuracy compared to competing enhancement methods for 10 of them.\n\n**Mismatched results in Table 1**: We thank the reviewer for the keen eye and noticing the difference, however, we use the same hyperparameters as [A, D] and reported the same results for the X-DER [E] (meaning [A,D] also suffer from this inconsistency). Upon further investigation, we suspect this is due to using a different batch size (64) than that of the original paper (32). We have rerun the experiments with the original batch size and have updated the results in the revised manuscript in Table 1. (Note that the batch size used for this experiment is not reported in [E]).\n\n**Minor errors**: Thank you for indicating these, we have revised them in the manuscript.\n\n\n[A] Bonicelli, Lorenzo, et al. \"On the effectiveness of lipschitz-driven rehearsal in continual learning.\" Advances in Neural Information Processing Systems 35 (2022): 31886-31901.\n\n[B] Wang, Zifeng, et al. \"Learning to prompt for continual learning.\" Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2022.\n\n[C] Wang, Yihan, et al. \"Universality and limitations of prompt tuning.\" Advances in Neural Information Processing Systems 36 (2024).\n\n[D] Wang, Zifeng, et al. \"DualHSIC: HSIC-bottleneck and alignment for continual learning.\" International Conference on Machine Learning. PMLR, 2023.\n\n[E] Boschini, Matteo, et al. \"Class-incremental continual learning into the extended der-verse.\" IEEE transactions on pattern analysis and machine intelligence 45.5 (2022): 5497-5512."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces STAR, a plug-and-play loss component designed to enhance rehearsal baselines by addressing potential forgetting from future parameter updates. Since future parameters are unknown, STAR estimates forgetting through a surrogate measure: i.e., capturing the worst-case perturbation of current parameters within their local neighborhood. Substantially, the authors argue that making the model resilient to perturbations (with a dedicated loss components) helps in reducing the future forgetting. Ideally, STAR is evaluated across three datasets, comparing rehearsal baselines i) with and without its application, and ii) against other state-of-the-art plug-and-play components."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1) Tackling the problem of future forgetting by acting on the current task is novel and interesting;\n2) the ablations and exploratory experiments are concise yet to the point;\n3) leveraging straight weight perturbation as a regularizer when training in continual learning is compelling, although similar in spirit to [1].\n\n[1] Lorenzo Bonicelli, Matteo Boschini, Angelo Porrello, Concetto Spampinato, and Simone Calderara. On the effectiveness of lipschitz-driven rehearsal in continual learning. Advances in Neural Information Processing Systems, 35:31886\u201331901, 2022."
+            },
+            "weaknesses": {
+                "value": "1) While an improvement over existing rehearsal baselines is interesting, its appeal is limited as these baselines have largely been surpassed by prompting approaches. Indeed, some of these techniques [1, 2] now represent the state of the art in Continual Learning;\n2) while the improvements on Split-CIFAR10 are solid, those on Split-CIFAR100 and Split-miniImageNet (Table 2) are far less noticeable and sometimes absent;\n3) the results in Table 1 for Split-CIFAR100 seems to be different for X-DER [3] to what reported in the original paper. This hinders a good evaluation, as the original results (reported in [3]) surpass those of X-DER equipped with the proposed methodology.\n\nGenerally, I feel this work is incremental w.r.t. LiDER [4] in its idea. Also, the improvement w.r.t. other plug-and-play techniques appears not significant enough.\n\nSome minor issues that did **not** affect my evaluation:\n - In the related works section, regularization-based methods are listed twice.\n - In the line preceding Eq. 4, \u201cf\u201d should be \u201cf(x).\u201d\n - For the gradient ascent step, eta seems to be used in place of gamma (as in Figure 2).\n - In the explanation of the gradient ascent, the equivalence of eta within the i.e. parentheses appears incorrect.\n - In Algorithm 1, \u201cf\u201d is used instead of \u201cq\u201d in the STAR gradient.\n\n\n[1] Smith, James Seale, et al. \"Coda-prompt: Continual decomposed attention-based prompting for rehearsal-free continual learning.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2023.\n\n[2] Wang, Liyuan, et al. \"Hierarchical decomposition of prompt-based continual learning: Rethinking obscured sub-optimality.\" Advances in Neural Information Processing Systems (2024).\n\n[3] Boschini, Matteo, et al. \"Class-incremental continual learning into the extended der-verse.\" IEEE transactions on pattern analysis and machine intelligence (2022).\n\n[4] Bonicelli, Lorenzo, et al. \"On the effectiveness of lipschitz-driven rehearsal in continual learning.\" Advances in Neural Information Processing Systems (2022)."
+            },
+            "questions": {
+                "value": "None"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors mainly focused on maintaining the output distribution of previous models to prevent the catastrophic forgetting in rehearsal-based CL. To maintain the output distribution, the proposed method adopts not only the regularization between the future output and the output of the current model, but also minimizing the worst case version of this regularization. By doing so, the models can be updated toward the region in which the model outputs are well preserved. In the experiment, the authors show that the proposed method can strengthen the baselines, and also extensively conducted the ablation analysis."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Strengths\n\n1. The viewpoint that the model should preserve the output distribution may be similar to the methods using the knowledge distillation in CL, the approach minimizing the worst case version of the regularization is novel. I think the critical difference between STAR and previous methods lies on the optimization scheme."
+            },
+            "weaknesses": {
+                "value": "Weaknesses\n\n1. I think the proposed method highly focuses on the stability of the model. If the number of incoming tasks is quite large (e.g. 50 tasks in split Omniglot), I wonder the proposed approach can still strengthen the baselines in the settings containing large number of tasks.\n\n2. The authors said that this method does not assume any information on the task boundary. However, in the experiment, is it possible to consider the notion of epoch without the assumption on the task boundary? I know there is no terms on the task identifier in the formula, but I think the experiment setting is not consistent to the authors' argument. If the proposed method can cover any scenario in CL, does this methods also can work in single epoch setting?\n\n3. The computational cost on optimizing the min-max loss is not negligible. I think it would be better to show the running time of this algorithm.\n\n4. There is no experiments on large-scale dataset. Since the optimization procedure is much complex than previous methods, I wonder the proposed approach can be applied to much larger networks with large datasets\n\n5. In terms of computing the gradient of Eq.8, the authors said that they assume the Hessian is identity matrix. However, I wonder using this gradient can find the minimum of the worst case loss function. In the all procedure, there are too many approximations to optimize the loss function."
+            },
+            "questions": {
+                "value": "Already mentioned in the weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper focuses on improving rehearsal-based continual learning by stabilizing future predictions across the local neighborhood of the parameters. Specifically, it proposes a plug-and-play loss function, STAR, which applies parameter perturbation and reduces the KL-divergence between the model's predictions and those of its local parameters neighborhood. For each forward pass during training, a local neighbor of the current parameters is sampled, and this neighbor is perturbed by a single step of normalized gradient ascent to maximize the KL-divergence between the predictions of the model and the neighbor. Then, by combining the gradient of the KL-divergence between predictions with respect to the perturbed neighbor and the gradients of the rehearsal method's log-likelihood, the model parameters are updated cumulatively. This approach allows the models to learn a flat loss landscape, making the learned local parameter space less sensitive to future updates."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is easy to follow and provides extensive experiments to show its plug-and-play effectiveness across different replay-based methods on small to large-scale datasets.\n\n2. The authors have thorough experiments including ablation study, choice of buffer or current data for STAR loss and demonstration of distribution shift for seen tasks."
+            },
+            "weaknesses": {
+                "value": "1. The paper lacks theoretical justification for why the method works, which could have further strenghtened the proposed method. \n\n1. Minor Inconsistencies in Algorithm 1: (i) does not use epochs, (ii) two different hyper-parameters $\\gamma$ and $\\eta$ in equation (11) for perturbation coefficient (iii) $f$ used instead of $q$ in 345."
+            },
+            "questions": {
+                "value": "1. Why is the perturbation ratio defined as the ratio of two norms in line 316 even though it is called and actually used as a hyper-parameter, as shown in table 7.\n\n2. What is the essence for scaling gradients by the norm of weights in equation 11?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a new method \u2018STAR\u2019 to prevent catastrophic forgetting in continual learning, by minimizing the KL divergence between the output of the current parameters and the worst case parameters in a neighborhood of the current ones. The hypothesis is that if the parameters in the neighborhood of the current solution don\u2019t change the output much for past tasks, then it will be easier to find a solution within that region that also performs well on new tasks. Since the exact computation of this method is intractable, a practical approximation is proposed by first taking a gradient ascent step to find the worst case parameters and then it is assumed that the gradient at the worst case parameters is approximately equal to the gradient of the actual current parameters. The approach is tested by combining this idea with several state of the art rehearsal methods. STAR consistently improves other rehearsal baselines across different datasets and memory sizes."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The paper is well written and clearly explains the followed methodology\n* The hypothesis and solution are plausible\n* The results are well tested with regard to improvement of typical CL baselines and adequately compared to other similar approaches.\n* Section 3 is especially clear, which makes the remainder of the paper a lot easier to understand."
+            },
+            "weaknesses": {
+                "value": "* The main hypothesis of this paper is that it is important to reduce the difference in output with the worst case parameters in the neighborhood of the current solution. A loss function is proposed to avoid the worst case parameters, but I am not convinced that is sufficiently shown that this works as intended. Figure 3 does show that the final KL divergence between the current model and the final model are reduced, but that doesn\u2019t imply anything about the worst case situation, only that one specific instance in the neighborhood is closer. To test this, an experiment could be done were a gradient ascent step is taken as in Equation 10 for both the proposed solution and one of the other replay benchmarks to directly compare the worst case parameters. An alternative explanation for the current results may be that the additional loss function acts as a good regularizer to prevent overfitting on the memory samples.  \n\n* The drawing in Figure 1 and 2 are solely hypothetical. There is no evidence that the actual loss landscape looks like this nor that the proposed method actually follows the path that is indicated in these figures. Without evidence that this is the problem, it is hard to accept a solution as long as the problem is not clearly identified.\n\n* The mathematical derivation in lines 288:321 is confusing. First a gradient ascent step is taken to maximize the KL divergence (Eq. 10). Then at those parameters a new gradient is calculated to minimize the same KL divergence (line 323), which should be equal to the negative gradient of Eq. 10, if linearity is assumed (which is done in line 323). Applying this gradient at parameters $\\theta$ is then simply a gradient descent step at the initial parameters. So either this derivation could be simplified, or it could be shown that because of the non-linearity of the loss surface, these extra steps actually make a difference (but then the assumption in line 323 is no longer accurate). Figure 2 shows this differently, but only because non-linearity is assumed there.\n\n* Line 051: in a class incremental setting stability is sometimes not sufficient; if new classes are similar to representation of old classes may need to change too. (E.g. if a model had only learned a color representation of a past object and later a new yellow object is added an old yellow object cannot be represented as only being yellow).\n\n * Line 109: repeated sentence from earlier."
+            },
+            "questions": {
+                "value": "* Is it possible that the results are explained by a different hypothesis, e.g. reduced overfitting on the memory?\n* Is there any empirical evidence for the loss landscapes in Figures 1 and 2?\n* Can the mathematical derivation in 4.3 be simplified, or the importance of non-linearities be highlighted?\n* Is local stability always sufficient in a class incremental settings, as is claimed in line 051?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

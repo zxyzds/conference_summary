@@ -1,0 +1,170 @@
+{
+    "id": "e1Z4NCQ146",
+    "title": "ProTrain: Efficient LLM Training via Automatic Memory Management",
+    "abstract": "Training billion-scale large language models (LLMs) with just a few consumer-grade graphics cards is key to democratizing LLM access. However, existing frameworks often depend on manual tuning of memory management settings, leading to inefficient hardware utilization and suboptimal performance. This paper introduces ProTrain, a novel training system that automatically tailors memory management policies to the model architecture and underlying hardware resources, eliminating the need for manual intervention. ProTrain features (1) automated memory management that abstracts complex memory management strategies into a few tunable configuration parameters and searches for optimal parameter settings using cost models and (2) a runtime profiler that provides precise estimates of latency, memory usage, and I/O bandwidth to build high-fidelity cost models. \nProTrain does not change the training algorithm and thus does not compromise accuracy. Experiments show that ProTrain improves training throughput by 1.43$\\times$ to 2.71$\\times$ compared to the state-of-the-art training systems.",
+    "keywords": [
+        "ML System",
+        "Memory Optimization",
+        "Data Parallelism",
+        "ZeRO",
+        "Gradient Checkpointing",
+        "Tensor Offloading"
+    ],
+    "primary_area": "infrastructure, software libraries, hardware, systems, etc.",
+    "TLDR": "a high-throughput training framework for LLMs that intelligently balance memory usage and performance via automatic memory management",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=e1Z4NCQ146",
+    "pdf_link": "https://openreview.net/pdf?id=e1Z4NCQ146",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduced ProTrain, a novel training system designed to simplify the training process through automatic memory management. ProTrain highlights the significance of precise memory usage and runtime data gathered through memory-aware, model-wise profiling to build high-fidelity cost models, along with the careful abstraction of configuration parameters from memory management strategies to automate optimal configuration search.The basic idea of ProTrain is to abstract memory management strategies into a few tunable configuration parameters. ProTrain then builds runtime and memory usage estimators that quantify the impacts of these configuration parameters on training performance. These cost models, informed with accurate profiling information on latency, memory, and I/O bandwidth, allow ProTrain to search for the optimal memory management strategy that minimizes runtime while ensuring the peak memory consumption meets the hardware constraints."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Thank you for submitting this paper to ICLR!\n\n1. Important problem. Reducing memory consumption in LLM training is important and challenging.\n\n2. Clear written, well-organized, and easy to follow."
+            },
+            "weaknesses": {
+                "value": "1. Limited technical innovation. The technical contribution of the paper is somewhat restricted, as it relies on the application of ZeRO, Offloading and Activation Checkpointing. Their combination is not novel enough, and the large search space is not well justified (can be easily pruned).\n\n2. Small-scale experiments: The experiments are conducted on a single node server, with only 4 GPUs. Although authors have some discussion on the two V100 nodes, the experiments are not sufficient to support the LLM training scenario. The paper should provide more extensive experiments on larger scales to demonstrate the scalability of the proposed method. \n\n3. Unfair baseline comparison: The paper compares the proposed method with the vanilla FSDP (i.e., ZeRO-3 etc). However, Pytorch already support selective activation checkpointing. The paper should compare with the Pytorch's combination of FSDP, Offloading and Activation Checkpointing."
+            },
+            "questions": {
+                "value": "1. Please provide some results about search overhead and the searched configuration.\n\n2. Please discuss the novelty part. I think the technical contribution of the paper is somewhat restricted, as it relies on the application of ZeRO, Offloading and Activation Checkpointing. Their combination is not novel enough. Could you please highlight the challenge of combining them?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposed a cost model to evaluate different memory technics to achive best perf under memory constraint. The memory technics include 1) parameters offloading, 2) parameters all-gather and gradients reduce-scatter, 3) activation checkpoint, 4) activation offloading. It also proposed a dual-chunk heuristics that persist first layer on gpu to avoid exposed all-gathers. \n\nThe author also built 2 fundemental components to support cost model: 1) runtime estimator for forward, backward, gpu/cpu optimizer, 2) peak memory estimator"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The search space covers wide spectrum of memory technics including ZeRO, param offloading, activation offloading, activation checkpoint, gpu persistent parameters, and optimizer in the backward\n\n2. Runtime estimator and peak memory estimator are foudemental work that can be useful in general, including OOM prevention and offline simulation"
+            },
+            "weaknesses": {
+                "value": "1. The explanation for maximun trainable model size seem to be vague. \"Some frameworks fail to scale model sizes with more GPUs,\nprimarily due to inefficiencies in handling model initialization across devices.\". It would be great to be concrete about this. How exactly each baseline is configured and why they fail. Is it because of meta/cpu/gpu init, or cpu offloading\n\n2. For training throughput, it would be great to cover the configuration for baseline - whether they use cpu offloading, what are the activation checkpoints, how parameters are grouped for all-gather and reduce-scatter"
+            },
+            "questions": {
+                "value": "1. for optimizer in the backward, curious how does it compose with gradient norm clipping? for LLM training, it seems quite critical to clip gradients base on total norms to avoid numeric issues. If I understand it correctly, we perform optimizer step for each gradient or layer now without knowing the total gradient norms\n\n2. for \"Some frameworks fail to scale model sizes with more GPUs, primarily due to inefficiencies in handling model initialization across devices.\", curious what are the foundmental issue for FSDP to only support 1B model at most? Is it init model on gpu before applying fsdp?\n\n3. it would be great to summarize the exact combination of different tricks when they reach the best memory and perf."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces **ProTrain**, a training framework aimed at optimizing large language model (LLM) training on memory-limited hardware through **automated** data management across GPUs and CPUs, using a few tunable parameters. ProTrain\u2019s design is based on two key insights: (a) **Model states**\u2014prioritizing GPU residence for the initial layers minimizes latency due to cold starts and backward computation order; (b) **Activations**\u2014retaining the final layers on GPU facilitates immediate access during backward passes. For all other model states and activations, ProTrain employs **offloading (swapping)**  and **checkpointing** to reduce memory usage. ProTrain\u2019s memory and computation profiling enables efficient overlap of memory operations with computation, maximizing hardware utilization. Evaluations show that ProTrain supports models up to **1.64x larger** and achieves a **1.43x throughput improvement** over state-of-the-art solutions."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The dual-chunk design for model states and interleaved organization for activation management effectively reduce memory overhead by transforming memory management into a configuration task with a few tunable parameters.\n2. The authors implement a memory and computation profiling system that supports automated memory management during training, optimizing resource allocation without manual intervention.\n3. ProTrain demonstrates promising results, not only in expanding the trainable model size but also in boosting throughput. Integrating this system into existing platforms could significantly enhance training efficiency."
+            },
+            "weaknesses": {
+                "value": "1. The paper primarily addresses training with data parallelism; however, expanding ProTrain to pipeline parallelism would improve its applicability, especially as modern models rarely fit on a single GPU during training.\n2. Forward pass efficiency also depends on batch size, and a limited parallel scale may not sufficiently overlap memory transfer with computation. A more detailed micro-benchmark could clarify how effectively ProTrain overlaps memory transfer with computation."
+            },
+            "questions": {
+                "value": "1. **Persistent Chunks?** Given that the model states for the initial chunk are only required at the start and end of the training pipeline, what is the advantage of keeping them persistently on the GPU? In two consecutive iterations, it\u2019s understandable that updating these states on the GPU is efficient since they\u2019re reused right after the first iteration. However, why not evict these states during the forward pass to free up space for other data, swapping them back only at the end of the backward pass to optimize memory usage, just like the other chunks?\n2. **Difference from LRU?** Although the dual observations on managing model states and activations are valuable, it\u2019s unclear how this approach offers distinct benefits over a computation-aware Least Recently Used (LRU) caching strategy, which also prioritizes recent data retention on the GPU within the stacked training pipeline. Could you clarify this difference?\n3. **Portability Concerns** Since ProTrain is built independently on top of PyTorch, how can developers who are already using frameworks like DeepSpeed or Colossal-AI integrate ProTrain into their existing codebases?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Training large language models (LLMs) demands intricate memory management strategies. However, current memory management approaches often rely on manually tuned configurations, which results in suboptimal hardware utilization and performance. In this paper, the authors introduce ProTrain, an advanced training system that autonomously develops memory management policies to efficiently support the training of various LLMs across diverse hardware platforms. ProTrain reframes memory management as an optimization problem with a limited set of tunable parameters that are optimized using a cost model. Additionally, it incorporates a runtime profiler to provide precise estimations of latency, memory consumption, and I/O bandwidth, thus enhancing the accuracy of the cost model."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper works on an important topic.\n2. The techniques are evaluated on various LLMs.\n3. The techniques are tested on different hardware platforms."
+            },
+            "weaknesses": {
+                "value": "1. The techniques proposed by this paper cannot be applied on the real-world LLM training systems, since it includes off-loading. At most, these techniques can be used for only fine-tuning of the LLMs.\n\n2. The paper lacks of motivaiton. Although this paper claims that \"existing frameworks often depend on manual tuning of memory management settings, leading to inefficient hardware utilization and suboptimal performance\". The paper did not show how bad existing frameworks are.\n\n3. Why not LORA? Maybe LORA can achieve the same performance but consumes much less training overhead.\n\n4. The paper is not well-written. Many key concepts are not well-introduced. For example, off-loading, and activation recomputation."
+            },
+            "questions": {
+                "value": "1. What is the design overhead of ProTrain?\n\n2. Why is managing activation swapping and gradient checkpointing operations at the transformer block level a better policy? Is it possible to achieve better thourghput with a more fine-grained management scheme, e.g., the smallest granularity of managing activation swapping and gradient checkpointing operations is 1/3 of the transformer block?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

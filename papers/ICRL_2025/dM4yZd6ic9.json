@@ -1,0 +1,209 @@
+{
+    "id": "dM4yZd6ic9",
+    "title": "MAD: Multi-Alignment MEG-to-Text Decoding",
+    "abstract": "Deciphering language from brain activity is a crucial task in brain-computer interface (BCI) research. Non-invasive cerebral signaling techniques including electroencephalography (EEG) and magnetoencephalography (MEG) are becoming increasingly popular due to their safety and practicality, avoiding invasive electrode implantation. However, current works under-investigated three points: 1) a predominant focus on EEG with limited exploration of MEG, which provides superior signal quality; 2) poor performance on unseen text, indicating the need for models that can better generalize to diverse linguistic contexts; 3) insufficient integration of information from other modalities, which could potentially constrain our capacity to comprehensively understand the intricate dynamics of brain activity.\n\nThis study presents a novel approach for translating MEG signals into text using a speech-decoding framework with multiple alignments. Our method is the first to introduce an end-to-end multi-alignment framework for totally unseen text generation directly from MEG signals. We achieve an impressive BLEU-1 score on the $\\textit{GWilliams}$ dataset, significantly outperforming the baseline from 5.49 to 10.44 on the BLEU-1 metric. This improvement demonstrates the advancement of our model towards real-world applications and underscores its potential in advancing BCI research.",
+    "keywords": [
+        "MEG",
+        "text",
+        "speech",
+        "transfer learning"
+    ],
+    "primary_area": "applications to neuroscience & cognitive science",
+    "TLDR": "The first end-to-end multi-alignment framework for totally unseen text generation directly from MEG signals.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=dM4yZd6ic9",
+    "pdf_link": "https://openreview.net/pdf?id=dM4yZd6ic9",
+    "comments": [
+        {},
+        {},
+        {},
+        {},
+        {
+            "summary": {
+                "value": "This paper presents **MAD**, an end-to-end framework for decoding MEG signals into text. They use a novel multi-alignment approach with audio and text representations. They present their results utilizing the GWilliams dataset showing high BLEU score on entirely unseen text. They highlight the framework's potential for generalization. They conduct comprehensive ablation studies that highlight the important of high dimensional representations alignment over direct text alignment for robust performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- **Clarity**: The paper is exceptionally well-written and easy to understand.\n- **Novelty**: It introduces a novel multi-alignment approach that utilizes auxiliary modalities, such as Mel spectrograms, to enhance the translation of MEG signals into text. This work is notable for being one of the few that reports results without using teacher forcing.\n- **Performance**: The method achieves state-of-the-art results on the BLEU-1 metric for this dataset.\n- **Ablation Studies**: The paper includes comprehensive experiments and ablation studies that clarify the contributions of each model component, especially the loss functions and alignment mechanisms."
+            },
+            "weaknesses": {
+                "value": "- **Dataset**: The reliance on a single dataset reduces the impact of the results. Although the authors claim good performance on entirely unseen text, the word overlap is 46% on stories belonging to the same corpus and same subjects. This assumption should be validated across other datasets.\n  \n- **Losses**: The authors indicate that the Le loss is the most important in the study, but they do not explain why. A part-of-speech analysis could clarify the performance differences between content and function words. They assert that high-level speech is better decoded than low-level speech; however, this has been demonstrated in previous studies (https://www.biorxiv.org/content/10.1101/2024.04.19.590280v1). Additionally, the authors do not provide a solid hypothesis for why the Lt loss negatively impacts the BLEU-1 score. They also do not show the performance when only using Lt, as they do for Lm and Le.\n\n- **Noise Study**: In the Evaluation Metrics section, noise is employed to demonstrate that the model effectively learns from MEG signals. It would be more insightful to train the model on noise rather than simply evaluating it.\n\n- **Metrics**: Although the paper mentions five different metrics, the discussion predominantly focuses on the BLEU-1 score, while the ROUGE-1 and CER scores exhibit different (opposite?) behaviors that do not show SOTA results. Notably, one of the main findings regarding the detrimental effect of Lt is not corroborated by the CER metrics. While it is commendable to use five metrics, the authors primarily discuss BLEU-1 without explaining why it is the most relevant metric.\n\n- **Remarks**:\n  - **Introduction and Related Work**: Consider integrating the related work section into the introduction for better flow, or relocating some introductory elements to the related work section.\n  - **Dataset Description**: The paper states 2 hours per session, but it should be corrected to 1 hour per session, as per the MEG-MASC paper (Methods/Participants section, https://www.nature.com/articles/s41597-023-02752-5).\n  - **Limitations**: The limitations section is underdeveloped and should be expanded.\n  - **Typos**: Correct \"setted\" to \"set\" (section 4.1), \"primarized\" to \"prioritized\" (section 4.4.1), add a missing space between \"state-of-the-art\" and \"(SOTA)\" (conclusion), and address incorrect references (Supplementary A1).\n  - **References**: On two different computers, the PDF displays a \"double\" reference in the Related Work section, mentioning the same studies twice in succession."
+            },
+            "questions": {
+                "value": "- **Dataset**: Could you clarify your choice of dataset? Why did you select GWilliams instead of alternatives like Armeni (https://www.nature.com/articles/s41597-022-01382-7)? If the model is SOTA on unseen text, why not test it on other available datasets?\n\n- **Inputs**: Can you explain how you transform a shifted 4-second window into a fixed-size sample for the Mel spectrogram?\n\n- **Splitting**: Would it be possible to include experiments that demonstrate performance using different data splits (i.e., different combinations of the 4 stories)?\n\n- **Multi-Modality Integration**: Could you elaborate on the challenges encountered when aligning MEG data with Mel spectrograms and hidden states?\n\n- **Losses**: Can you provide the performance results when only using the Lt loss? Additionally, could you expand on the significance of the Le loss in this setup?\n\n- **Discussion**: Could you elaborate on the other metrics used in your analysis? How does the performance behavior differ among them, and what insights do they provide to enhance the overall analysis?\n\n- **Noise**: Would you consider experimenting with a model trained on noise, rather than merely evaluating it on noisy data?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a MEG2Text framework, which consists of a Brain Module and a Whisper Codec. MEG is initially decoded into a Mel spectrogram and subsequently translated into text using the Whisper model. The framework incorporates three alignments: low-level, high-level, and text-level alignments, which have potential inspiration for neural transcription."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The incorporation of a new modality in the MEG2Text translation is desirable.\n2. High-level L_e loss is proven to be effective."
+            },
+            "weaknesses": {
+                "value": "The residual connection in Figure 1 (b) is missing an arrow.\n\tThe main experimental results in Table 2 have no advantage over RS and NeuSpeech, and are almost all lower except for B-1 and self-B.\n\tThe brain module within Wav2vecCTC is not trained on text, so it exhibits poor performance and struggles to generate coherent words. The comparison is unfair.\n\tBaseline models should be compared both w/ and w/o tf.\n\tThe paper aims to showcase the model's ability to generalize to unseen text, yet this attribute is not evident within the experimental setup presented. The paper solely conducts experiments on a test set with 46% overlap in words, which fails to represent unseen text. For a more thorough evaluation, it is crucial to compare the model with the baselines on both seen and unseen text separately. Furthermore, experiments should be conducted on additional datasets to enhance the validation of generalization.\n\tAblation studies have demonstrated that L_t and LoRA are redundant and should be omitted from the model structure."
+            },
+            "questions": {
+                "value": "1.\tWhat is the purpose of random window shifting in line 304?\n2.\tHow is cross-subject implemented in Section A.1? Why does it perform similarly to intra-subject despite having a different subject index input to the brain module?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The submission studies text decoding from brain activity based on a publicly available dataset that contains magnetoencephalography (MEG) recording of 27 subjects while they were passively listening to different stories.\nBuilding upon recent prior work, the authors utilize a brain module and train it to predict mel spectrograms derived from the audio signals.\nThese MEG-derived mel spectrograms are then fed through a publicly available, pre-trained speech decoding model (whisper, OpenAI) to complete the MEG-to-text decoder.\nThe authors propose a combination of three loss terms with the aim to align mel spectrograms, latent speech encoder representations as well as decoder outputs and labels.\nGiven the small amount of data, they find that training merely the brain module parameters and freezing the remaining modules yielded best results (BLEU-1 of 10.44 % without teacher forcing) if the model was trained to align the latent speech encoder representations and the mel spectrograms.\nAlthough the proposed method outperforms the considered baseline models, the overall poor performance (BLEU-1 values of approx. 10%) prevents practical utilization."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The paper can be classified as a combination of existing ideas.\nIn terms of architecture, the authors follow the idea of (Yang et al. 2024) and combine a convolutional network with a pre-trained whisper speech decoder; instead of standard convolution layers they propose to use the brain module of (D\u00e9fossez et al. 2023).\nAs training objectives, they compare combinations of similar (and related) loss functions as proposed in (D\u00e9fossez et al. 2023) and (Yang et al. 2024).\n\n### Quality\n\nI appreciate that the authors evaluated the models on unseen stories and put substantial effort in assessing the significance of the results. They compare the obtained results against shuffled data and models with random inputs.\n\n### Clarity\n\nThe problem setting and the overall approach of the contribution are clearly communicated.\n\n### Significance\n\nThe work confirms that pre-trained speech models (e.g., whisper here or wave2vec in (D\u00e9fossez et al. 2023)) are helpful to extract a significant amount of language information from non-invasive brain activity (MEG here). Yet, the reported generalization results to unseen stories (Table 2) and subjects (Table 5) are discouraging.\n\n### References\n\nA. D\u00e9fossez, C. Caucheteux, J. Rapin, O. Kabeli, and J.-R. King, \u201cDecoding speech perception from non-invasive brain recordings,\u201d Nat Mach Intell, Oct. 2023, doi: 10.1038/s42256-023-00714-5.\n\nY. Yang et al., \u201cNeuSpeech: Decode Neural signal as Speech,\u201d Jun. 03, 2024, arXiv: 2403.01748.[Online]. Available: http://arxiv.org/abs/2403.01748"
+            },
+            "weaknesses": {
+                "value": "### Originality\n- Brain activity (invasive and non-invasive) to speech/text translation has already been introduced in prior works, as summarized in section 2 (related work).\n\n- The methodological contribution is incremental. \nD\u00e9fossez et al. (2023) introduced the idea of aligning M/EEG signals with latent representations of a pre-trained ASR model (wav2vec2.0) with the CLIP loss. In the submission, the authors use a related approach (whisper encoder instead of wav2vce2.0, and MMD loss instead of CLIP).\nYang et al. (2024) combined the whisper model with a convolutional adapter network (trained with AdaLoRa). In this submission, the authors propose a modified architecture that uses the brain module of (D\u00e9fossez et al. 2023) as adapter network.\n\n### Quality\n- While I appreciate that the authors report results of the considered performance metrics for random effects (i.e., random shuffling and noise as input), their approach is insufficient to actually estimate the significance of the results. Instead of a single evaluation they should have used permutation testing (see e.g., Maris 2012) to estimate the metrics' distribution under the null hypothesis (i.e., no-relation between the MEG-derived text and the ground truth).\n\n- Unlike (D\u00e9fossez et al. 2023) and (Yang et al. 2024) the authors decided to analyze only one public dataset. I think the authors should have also analyzed the results for the (Schoffelen et al. 2019) dataset. Beyond that, the results lack quantification of the stability/variability of the results across random weight initializations.\n\n### Clarity\n- Figure 1(a) does not correspond to the proposed MAD model in Table 2.\nThis discrepancy suggests that the study might be affected by the double dipping problem (Kriegeskorte et al. 2009) in the sense that the authors tested many different configurations and then picked the final MAD model based on the test set result.\n\n### References\n\nA. D\u00e9fossez, C. Caucheteux, J. Rapin, O. Kabeli, and J.-R. King, \u201cDecoding speech perception from non-invasive brain recordings,\u201d Nat Mach Intell, Oct. 2023, doi: 10.1038/s42256-023-00714-5.\n\nY. Yang et al., \u201cNeuSpeech: Decode Neural signal as Speech,\u201d Jun. 03, 2024, arXiv: 2403.01748.[Online]. Available: http://arxiv.org/abs/2403.01748\n\nJ.-M. Schoffelen, R. Oostenveld, N. H. L. Lam, J. Udd\u00e9n, A. Hult\u00e9n, and P. Hagoort, \u201cA 204-subject multimodal neuroimaging dataset to study language processing,\u201d Sci Data, vol. 6, no. 1, p. 17, Apr. 2019, doi: 10.1038/s41597-019-0020-y.\n\nE. Maris, \u201cStatistical testing in electrophysiological studies,\u201d Psychophysiology, vol. 49, no. 4, pp. 549\u2013565, 2012, doi: 10.1111/j.1469-8986.2011.01320.x.\n\nN. Kriegeskorte, W. K. Simmons, P. S. F. Bellgowan, and C. I. Baker, \u201cCircular analysis in systems neuroscience: the dangers of double dipping,\u201d Nat Neurosci, vol. 12, no. 5, pp. 535\u2013540, May 2009, doi: 10.1038/nn.2303."
+            },
+            "questions": {
+                "value": "### Methods\n- Please use consistent symbols for the same concept (for example either $n$ or $N$ for the batch size)\n- $\\phi$ is not defined in (2)\n- line 304: define the random shifts. Were they samples from the interval $[-0.5, 0.5]$ or the set $\\{-0.5, 0.5\\}$?\n- the considered baseline method `Wav2vec2CTC` was not proposed in (D\u00e9fossez et al. 2023). \n\n\n### Wording, Grammar and Organization\n- citation formatting: please use the `\\citep` and `\\citet` latex commands appropriately.\n- line 42: \"letter\" -> \"letters\"\n- line 201: \"don't\" -> \"do not\"\n- lines 207 to 208: grammar issues\n- line 231: \"in default\" -> \"by default\"\n- some references miss important information (e.g., the journal). Please check thoroughly.\n\n\n### References\n\nA. D\u00e9fossez, C. Caucheteux, J. Rapin, O. Kabeli, and J.-R. King, \u201cDecoding speech perception from non-invasive brain recordings,\u201d Nat Mach Intell, Oct. 2023, doi: 10.1038/s42256-023-00714-5."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel brain-to-text perceived speech decoding pipeline (MAD) that leverages alignments from multiple modalities. The key contributions highlighted by the authors are the ability of their framework to generalize to unseen text, eliminating the need for word time segmentation (e.g. teacher-forcing, pre-training, or via eye-tracker), and a performance analysis with a suite of metrics, ablation testing, and benchmarking against other models. A comparison of different modalities is possible due to the modular structure of their design."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The approach as a whole is novel and the reported performance is strong across metrics for both high level accuracy and low level semantic content. The inclusion of random gaussian baselines should be noted and adopted as standard for future decoding studies. The push for evaluations on unseen text is also laudable."
+            },
+            "weaknesses": {
+                "value": "There appears to be some issue with citation formatting that should be fixed (see ICLR 2025 style guide), as well as a few grammatical issues. Additionally, the benchmarking comparison with D\u00e9fossez et al. (2023) appears to be in bad faith. Instead of comparing the performance of their decoding framework against D\u00e9fossez et al.'s model as originally designed, it seems as if the authors of this paper use only the brain model and then apply a decoding head in the style of their framework. Thus, it results in many of the generated unigrams being gibberish as opposed to actual words and greatly reduces whatever the real performance of the D\u00e9fossez et al. model should be across all reported metrics. The original model from D\u00e9fossez et al. returns the most likely segment of audio given the meg input and therefore always returns real words. The paper by D\u00e9fossez et al. explicitly mentions the ability to decode segments not present in the training set. Thus, it is still reasonable to benchmark with the D\u00e9fossez et al. model as originally designed. If the intention was to underscore that the model from D\u00e9fossez et al. needs access to the segmented test audio while the proposed framework operates with MEG data alone, this could have been stated and the D\u00e9fossez et al. model omitted from bechmarking comparison."
+            },
+            "questions": {
+                "value": "Questions:\n- Are there results of benchmarking of the proposed model against other SOTA models using different test splits (i.e. not for entirely unseen data)? or with the D\u00e9fossez et al. model as originally proposed (i.e. classification with the unseen test audio)?\n\nSuggestions:\n- fix the citation styling (see section 4.1 of the Formatting Instructions for ICLR 2025 Conference Submissions)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces MAD, an end-to-end multi-alignment framework for translating MEG signals to text. This framework addresses challenges related to decoding unseen text by aligning MEG data with speech and text modalities. Using the GWilliams dataset, MAD achieves improved performance in MEG-to-text generation compared to prior approaches. The study also examines the impact of different loss functions on decoding performance, offering insights that may aid in future optimization of MEG-based language decoding."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This paper introduces a new open-vocabulary MEG-to-Text translation framework MAD, avoiding the teacher-forcing problem seen in previous models and using a more reasonable evaluation method.\n\n- The experimental design is robust, including comprehensive ablation studies that underscore the advantages of multi-modal alignment.\n\n- Explanations of the model architecture, data, and experimental setup are clear and well-structured.\n\n- The model sets a new standard in MEG-to-Text decoding accuracy, showcasing the valuable potential for real-world BCI applications."
+            },
+            "weaknesses": {
+                "value": "The primary concern is the limited dataset, as the experiments were only conducted on the GWilliams dataset, while the model was trained with MEG-Speech-Text modality pairs. Testing on a single dataset limits the model's robustness and generalizability claims."
+            },
+            "questions": {
+                "value": "1.\tLack of Multi-Dataset Testing: The model is only evaluated on the GWilliams dataset, unlike related works such as NeuSpeech and Wav2vecCTC, which test on additional datasets like Schoffelen. Although the authors acknowledge risks of overfitting on small datasets and discuss generalizability, a practical demonstration on other datasets like Schoffelen would better validate the model\u2019s transferability and robustness.\n2.\tInference Process for Sliding Windows: The model uses 4-second sliding windows with a shift of 1 second, incorporating random shifts of \u00b10.5 seconds to generate training samples. However, it remains unclear whether the inference stage aggregates outputs across windows or applies additional processing steps. Moreover, this raises concerns about the effect of different window sizes on the decoding results, an aspect not explored in the paper.\n3.\tAblation Study on Loss Functions: The ablation studies discuss three loss functions\u2014high-level feature alignment ($L_e$), low-level feature alignment ($L_m$), and text alignment ($L_t$)\u2014but do not provide concrete evidence of how each influences decoding results. Adding examples of decoding results under different combinations of these loss functions would provide valuable insight, especially in validating the importance of high-level and low-level feature alignments as argued by the authors."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

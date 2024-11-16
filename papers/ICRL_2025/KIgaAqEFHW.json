@@ -1,0 +1,133 @@
+{
+    "id": "KIgaAqEFHW",
+    "title": "miniCTX: Neural Theorem Proving with (Long-)Contexts",
+    "abstract": "Real-world formal theorem proving often depends on a wealth of context, including definitions, lemmas, comments, file structure, and other information. We introduce $\\texttt{miniCTX}$, which tests a model's ability to prove formal mathematical theorems that depend on new context that is not seen during training. $\\texttt{miniCTX}$ contains theorems sourced from real Lean projects and textbooks, each associated with a context that can span tens of thousands of tokens. Models are tasked with proving a theorem given access to code from the theorem's repository, which contains context that is needed for the proof. As a baseline for $\\texttt{miniCTX}$, we tested fine-tuning and prompting methods that condition theorem proving on preceding context. Both approaches substantially outperform traditional methods that rely solely on state information. We found that this ability to use context is not captured by previous benchmarks such as $\\texttt{miniF2F}$. Alongside $\\texttt{miniCTX}$, we offer $\\texttt{ntp-toolkit}$ for automatically extracting and annotating theorem proving data, making it easy to add new projects into $\\texttt{miniCTX}$ to ensure that contexts are not seen during training. $\\texttt{miniCTX}$ offers a challenging and realistic evaluation of neural theorem provers.",
+    "keywords": [
+        "Neural theorem proving",
+        "Formal mathematics",
+        "Benchmark dataset"
+    ],
+    "primary_area": "datasets and benchmarks",
+    "TLDR": "We introduce a context-rich dataset and toolkit for evaluation of neural theorem proving under a more realistic scenario.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=KIgaAqEFHW",
+    "pdf_link": "https://openreview.net/pdf?id=KIgaAqEFHW",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces $\\texttt{miniCTX}$, a benchmark of 384 problems with context-rich information, e.g., in-file definitions and lemmas, and evaluates the model's theorem-proving ability under new context, which claims to be closer to the real-world scenario when researchers develop the formal repository. The paper further includes the NTP-TOOLKIT that the authors use for data extraction. The authors provide several baseline experiments, including the common practice of state-tactic tuning and prompting methods (which works for standalone problems as presented in $\\texttt{miniF2F}$) and file-tuning that works under such a context-rich setup."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. The $\\texttt{miniCTX}$ benchmark fills the gap in the current community: it expands current benchmarks by addressing the limitations of standalone theorem proving and enabling evaluation in real-world scenarios where context is critical.\n\n2. I appreciate the authors' commitment to automatically updating the benchmark and maintaining a temporal split to mitigate the data contamination, given that most LLMs nowadays crawl GitHub and train on it.\n\n3. The authors present details for constructing the benchmark and the sources. The addition of the $\\texttt{miniCTX}$ and the NTP-TOOLKIT will be valuable assets to the community. The authors also present solid baselines in Table 3 using inference-time methods with GPT-4o and fine-tuning methods using 1.3b model. An ablation of providing different contexts is also presented in Table 4 to show the source of gain from each context component."
+            },
+            "weaknesses": {
+                "value": "1. $\\texttt{miniCTX}$ does not have a valid/test set separation. Though it's not inherently an issue for a benchmark, separating a valid set could make the benchmark less gameable under Goodhart's law.\n\n2. It seems that some problems in $\\texttt{miniCTX}$ are with contexts that could be easily \"in-lined\" and transformed into context-less problems. For example, the example shown in Appendix A.1: one could easily in-line the square function $s$ definition into the lemma s\\_eq\\_pow\\_two and make the statement to be $x * x = x ^ 2$ from $s \\ x = x ^ 2$. The same in-line transformation seems to be also applied to the example in Appendix A.2 by inlining the Rectangle definition. It would be great for the author to assess how many problems in $\\texttt{miniCTX}$ could be transformed into context-free problems under certain efforts."
+            },
+            "questions": {
+                "value": "1. Is the 1.3b model in L349 the same as the DeepSeek Coder 1.3b in L343?\n\n2. What is the \"Environment\" in Table 4? Does it stand for the import statements / open namespace statements or something else?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a new benchmark called miniCTX for evaluating a model's context-dependent theorem proving abilities, i.e., a model's ability to maximize Expectation_{(theorem, context) ~ repository} Expectation_{proof ~ model(. | theorem, context )} [theorem is valid proof in context]. In-file context includes the source code that precedes the theorem in the file while cross-context includes the in-file context and relevant premises from imported modules. The authors argue that this is a more realistic evaluation of a model's theorem proving abilities. Additionally, the paper introduces NTP-toolkit, a tool for constructing/extending miniCTX with future repositories and running baseline evaluations."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper introduces a useful tool (NTP-toolkit) and benchmark (miniCTX) for evaluating a model's theorem proving capabilities. The Python Lean REPL, provided that it is performant, is another useful component that will enable researchers to more easily evaluate models.\n- A benchmark of context-dependent theorem proving and a model that performs well on it could potentially be useful for assisting humans using Lean for formal verification.\n- The idea of file tuning, i.e., training model(tactic | theorem, context) is novel."
+            },
+            "weaknesses": {
+                "value": "- The differences between benchmarks shown in Table 1 is, in my perspective, superficial. For example, what fundamental reason is there from preventing other theorem-proving extraction tools from extracting a timestamp or saving the file name that a theorem is extracted from?\n- There seem to be a few missing experiments. First, since the temporal split is emphasized, is there any empirical evidence to support the failure of other benchmarks to handle this properly? Second, for file-tuning, have other LLMs / those fine-tuned on Mathlib been tested with file-tuning to see if file-tuning works across different models? Third, In Table 4, I'd like to see context = environment + definition + lemma statement but without natural language comments. This way, we can see just how much having the lemma proof affects file-tuning to better support the claim that models can learn from previous proofs in context.\n-  While the paper offers empirical evidence and some analysis, there isn't much in the form of hypotheses to guide the design of the benchmark or experiments. As an example hypothesis, while it might not be surprising that model(tactic | theorem, context) > model(tactic | theorem) since we condition on more information, we hypothesize that the gains come mostly from context = previous proofs since this offers the appropriate context as to when an automated tactic can be most beneficially applied. Such hypotheses would help guide and focus the experiments, and offer more insight into the success and failure cases of neural theorem proving with LLMs."
+            },
+            "questions": {
+                "value": "- The weaknesses section contains questions that I'd be curious to hear the answers to.\n- Why doesn't the cross-file context include the source code of imported modules as opposed to just the premises? Is this just because of context-length limitations?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work propose a new formal theorm proving dataset that tests a model's ability to prove formal mathematical theorems that depend on new context that is not seen during training. This work also reports the baseline results of the miniCTX dataset."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* This work provides a new dataset for the theorem proving, which tests the model's ability to prove formal mathematical theorems that depend on new context that is not seen during training. And the ability to use context is not captured by previous benchmarks such as miniF2F.\n* The work provides baseline results on miniCTX, telling the difficulty of the proposed miniCTX.\n* The work provides detailed analysis on the experiments.\n* The work provides details of the miniCTX dataset and samples in the Appendix, which makes it easy to understand what the miniCTX looks like."
+            },
+            "weaknesses": {
+                "value": "* For the Table 3, how do you test the File tuning Model result on miniF2F, as the miniF2F only has the formal statement? You may: 1) only give the formal statement for File tuning Model and get the result; 2) Or, you provide addtional context information by any way?; \n* For Table 3, you do not report the result of GPT-4o (full proof), could you explain why? Previous works (DSP, LEGO-Prover or Lyra) all reports the results GPT-4 on miniF2F."
+            },
+            "questions": {
+                "value": "Please check the weakness"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

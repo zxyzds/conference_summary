@@ -1,0 +1,284 @@
+{
+    "id": "4FIjRodbW6",
+    "title": "Toward Robust Defenses Against LLM Weight Tampering Attacks",
+    "abstract": "Rapid advances in the capabilities of large language models (LLMs) have raised widespread concerns regarding their potential for malicious use. Open-weight LLMs present unique challenges, as existing safeguards lack robustness to tampering attacks that modify model weights. For example, recent works have demonstrated that refusal and unlearning safeguards can be trivially removed with a few steps of fine-tuning. These vulnerabilities necessitate new approaches for enabling the safe release of open-weight LLMs. We develop a method, called TAR, for building tamper-resistant safeguards into open-weight LLMs such that adversaries cannot remove the safeguards even after thousands of steps of fine-tuning. In extensive evaluations and red teaming analyses, we find that our method greatly improves tamper-resistance while preserving benign capabilities. Our results demonstrate that progress on tamper-resistance is possible, opening up a promising new avenue to improve the safety and security of open-weight LLMs.",
+    "keywords": [
+        "ai safety",
+        "large language models",
+        "tamper-resistance",
+        "unlearning",
+        "meta-learning"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "We introduce the first safeguards for LLMs that defend against a significant number of fine-tuning attacks.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=4FIjRodbW6",
+    "pdf_link": "https://openreview.net/pdf?id=4FIjRodbW6",
+    "comments": [
+        {
+            "title": {
+                "value": "Author Response (3/3)"
+            },
+            "comment": {
+                "value": "**Explanation of metrics used.**\n\n> The performance metrics used in the experiments require clear explanation. \n\nTo clarify, we do not create new metrics. Rather, we use the existing MMLU and WMDP benchmarks\u2014along with standard metrics for those benchmarks\u2014to evaluate benign performance and safety properties. For the harmful request refusal experiments, we also use MT-Bench as a benign performance metric, and HarmBench to measure prompting ASR. We list the benchmarks and metrics for evaluation in Table 1 in its caption as well as in Section 3.2. We are happy to re-state the use of these benchmarks in Section 5.1 to improve clarity.\n\n**Capabilities-robustness tradeoff.**\n\n> Based on the results presented, the proposed solution appears to sacrifice task performance in favor of enhanced robustness, suggesting potential flaws in the method.\n\nWe do observe a trade-off between benign capabilities and robustness, similar to nearly all prior work on adversarial robustness. While we would prefer to not have this trade-off, please note that this is not a technical flaw in the method. Rather, it is a common property of many adversarial robustness defenses, including ours.\n\nPreviously, it was not possible to obtain tamper-resistance at all, even at much lower levels of benign performance. Our results show that with a moderate reduction in benign performance, we can greatly improve the tamper-resistance of LLMs, demonstrating for the first time that this problem is tractable. To reiterate, trading off benign performance is not a technical flaw in the method. However, we believe that improving benign capabilities alongside robustness is an important area for future work.\n\nThank you again for your detailed comments. If we have addressed the thrust of your concerns, we kindly ask that you consider raising your score."
+            }
+        },
+        {
+            "title": {
+                "value": "Author Response (2/3)"
+            },
+            "comment": {
+                "value": "**Clarifying the threat model and metrics**\n\n> The threat model lacks clarity. The authors assume that the attacker is compute-bounded but do not provide a clear definition of what this entails. \n\nWhen defining our threat model, our aim was to capture a broad range of attacks to define the scope of tamper-resistance research, rather than varying specific hyperparameters. As you pointed out, quantifying attacks strictly based on the number of optimization steps or other hyperparameters could be misleading. However, we agree that limiting the adversary\u2019s compute budget with a concrete metric, such as total FLOPs, could bring more clarity to our threat model. Thank you for pointing this out. \n\n> Furthermore, including concrete examples of the metrics for capabilities_metric and safety_metric would enhance understanding.\n\nWe include concrete examples of both the capabilities_metric and safety_metric in Section 3.2, in the two paragraphs immediately following the initial definition of these metrics. Specifically, we mention the use of MMLU and WMDP as our main evaluations for knowledge restriction, as well as MT-Bench and HarmBench for harmful request refusal. We would be happy to suggest other benchmarks for evaluations in this section, such as GSM8K or HumanEval. Thank you for this suggestion.\n\n\n**Clarifying differences between tamper-resistance training and standard meta-learning.**\n\n> In section 4.2, the authors emphasized that the proposed method is different from standard meta-learning. However, the differences highlighted seem minor and do not present significant technical challenges.\n\nWe agree that our regime lies within the meta-learning framework. In fact, we clearly acknowledge this several times in our paper. However, there are numerous substantial differences between standard use cases of meta-learning and our own, with significant technical implications:\n- In standard meta-learning, the inner and outer loop optimizers typically use the same loss and are not adversarial. By contrast, our method uses adversarial inner and outer loop optimizers that are actively optimizing against each other. This adversarial optimization significantly affects the training dynamics.\n- In standard meta-learning, the goal is to minimize the loss for test-time tasks in *as few steps as possible*. By contrast, in our threat model, the goal is to maintain high adversary loss at test-time for *as many steps as possible*. While both settings use the machinery of meta-learning, this is a fundamental difference with significant implications, one of which being that tamper-resistance training seeks to generalize robustness to a larger number of steps than seen at training time, which has no analogy in standard meta-learning.\n\nDue to the fundamental differences described above, we had to develop efficiency tricks to make training in this adversarial meta-learning possible with reasonable runtime, like our inner-loop subsampling trick in Appendix B.3 and B.4.\n\nWe realize these differences are a bit in the weeds for most readers, so we will add a section to the appendix clarifying this distinction. Thank you for your suggestion.\n\n\n\n\n**Theoretical analyses may be premature, so we instead follow best practices in empirical robustness research.**\n\n> The term 'empirically' is employed multiple times in the methods section. While drawing conclusions from empirical observations is valuable for informing solution design, relying solely on empirical data, particularly in the selection of a loss function, may impose limitations on the solution's robustness. A theoretical analysis comparing the efficacy of the entropy loss function versus cross-entropy loss is necessary.\n\nWe agree that a theoretical analysis could be valuable. However, obtaining theoretical guarantees for tamper-resistance is quite difficult at this stage, given that research on the problem has only just begun. This is common in adversarial robustness research, where certified robustness often takes several years to catch up to empirical robustness.\n\nTo provide a better understanding of the robustness of our method, we follow standard best practices in empirical robustness research. Namely, we adversarially stress-test our defense against a diverse suite of strong adversaries, including attacks specifically developed to break our defense (e.g., attacks using different training sets or optimizers than what we trained against). This led us to make several discoveries for how to improve empirical robustness, including the selection of a loss function that worked better across a broad range of test-time attacks. There is still much room for improvement on tamper-resistance, potentially including in the loss function design. Thus, a theoretical analysis of our particular loss function would likely be premature, since the methods are liable to change in followup work."
+            }
+        },
+        {
+            "title": {
+                "value": "Author Response (1/3)"
+            },
+            "comment": {
+                "value": "Thank you for your careful analysis of our work. We hope the following response addresses your concerns.\n\n**Clarifying design motivation in Section 4.**\n\n> The organization of Section 4 requires further refinement for improved readability. It would be beneficial to briefly outline the design motivation before delving into specific details, particularly regarding the content of Fig. 3.\n\nWe apologize for any lack of clarity in Section 4. To improve clarity, we will briefly outline the motivation for our tamper-resistance loss at the top of Section 4.2. Thank you for your suggestion.\n\n\n**We have added mathematical formulations for the tamper-resistance losses.**\n\n> the mathematical formulation of the loss function used is currently absent.\n\nWe kindly point the reviewer to Appendix B.2, where we fully describe the tamper-resistance losses used during TAR. However, we agree that adding mathematical formulas in the main paper for the tamper-resistance losses would improve readability. We have added these to the updated paper. Thank you for your suggestion.\n\n\n**Improved caption for Figure 1.**\n\n> The caption of figure 1 needs to explain the difference between the two branches more clearly. For example, what's the difference between the first nodes of the two branches.\n\nPlease see below for the improved Figure 1 caption. We agree that the original caption lacked clarity, and we think the new version will help readers understand the problem setting better. Thank you for your suggestion.\n\nNew caption:\n\u201cAn illustration comparing two approaches to LLM safety when subjected to adversarial fine-tuning. The top branch shows conventional safeguards (like refusal training), which can be easily bypassed when adversaries fine-tune the model weights to remove safety constraints. The bottom branch demonstrates our proposed TAR (Tamper-Resistant) method, which maintains robustness even when adversaries attempt to fine-tune the model to reintroduce harmful capabilities. While conventional safeguards can be circumvented by adversaries with access to model weights, TAR provides significantly more protection against attempts to weaponize open-weight LLMs through malicious fine-tuning.\u201d\n\n**Clarifying 5000 step claim and attack configurations.**\n\n> In Section 1, the authors assert that the proposed method can endure fine-tuning of up to 5000 steps \u2026 this claim does not intuitively convey the contribution of the paper. \n\nThe 5000-step attacks correspond to Adv. 1 and Adv. 2 in Table 9 and Figure 4, which utilize a fully held-out biology dataset. We agree that claims based on hyperparameters such as step-count could be misleading, and considering the hyperparameters of the attack is crucial. We show in Table 9 that the 5000-step adversaries use similar optimization hyperparameters as all other attacks in our red-teaming suite, with the learning rate for these 2 adversaries varied between $2\\times10^{-5} $ and $ 4\\times10^{-5}$. We believe our robustness results on these adversaries support our claims, in that our method is capable of withstanding much stronger optimization pressure compared to prior work. We will clarify this in the updated paper.\n\n> The details surrounding fine-tuning, such as batch size and learning rate, are unclear; these parameters significantly influence the number of fine-tuning steps. \n\nWe have already fully specified these hyperparameters in Tables 7, 8, 9, and 10 in our Appendix.\n\n> Secondly, a comparative analysis with the typical number of steps required to fine-tune models on downstream tasks is lacking.\n\nIn Table 9, we list out all of our attacks, which are performed on standard fine-tuning hyperparameters such as varying the learning between between $2\\times10^{-6}$, $2\\times10^{-5}$, and $4\\times10^{-5}$, optimization steps of 1000 or 5000, and batch sizes of 32 or 64. We also consider LoRA training alongside full-parameter training. These are all representative of common fine-tuning settings for Llama-3-8B models."
+            }
+        },
+        {
+            "title": {
+                "value": "Author Response"
+            },
+            "comment": {
+                "value": "Thank you for your careful analysis of our work. We are glad you found our experiments to support the performance of our method. We hope the following response addresses your concerns.\n\n**Our main contribution is to show that tamper-resistance is tractable.**\n\n> Insufficient sustainability \u2026 this effectiveness actually depends on the diversity of attack types included in the training data \u2026 the resilience of the proposed mechanism may be superficial and does not guarantee the security of open-weight LLMs. Furthermore, the authors do not provide corresponding theoretical analysis or proof.\n\nIn the paper, we clearly state that our method does not guarantee robustness across arbitrary adversaries. Obtaining theoretical guarantees for tamper-resistance is quite difficult at this stage, given that research on the problem has only just begun. To address this, we emphasize in the paper that extensive red teaming of methods is critical to gain confidence in their empirical robustness.\n\nFor this reason, we stress-test our method with 28 diverse attacks, finding that some do succeed. Our main contribution is to show that tamper-resistance is a tractable problem in the first place, which we demonstrate for the first time in LLMs.\n\n**Clarifying technical contributions.**\n\n> Incremental technical contributions. Although the paper is expressed clearly, its innovation is not evident in terms of both technical aspects and application scenarios. Specifically, the proposed solutions are based on existing widely used methods, and the authors have not clearly articulated their unique contributions.\n\nPlease see our above description of how our main contribution is to show that tamper-resistance for LLMs is tractable in the first place. This itself is a significant technical contribution that we stress throughout the paper.\n\nOur technical methods indeed build on prior work. As we mention in the paper, our TAR method builds on MLAC and first-order MAML. However, we make numerous significant technical contributions on top of these works as follows:\n\nOther technical contributions include:\n- Developing a tamper-resistance evaluation pipeline for LLMs, including an extensive red teaming suite. This did not exist prior to our work.\n- Demonstrating that MLAC does not scale to LLMs\n- Developing a 2-stage method with an initial unlearning/alignment stage that doesn\u2019t use tamper-resistance training, which greatly outperforms prior work\n- Demonstrating that input-based adversarial training (e.g., R2D2) does not generalize to provide robustness to weight tampering attacks. This had not previously been shown.\n- Demonstrating that concurrent work (e.g., RepNoise) lacks robustness against a broader set of attacks\n- Identifying a significantly improved outer loop loss for tamper-resistance training\n- Introduced methods for minimizing memory overhead during meta-learning, making our adversarial meta-learning procedure possible.\n\nGiven these contributions that can be found in our paper, we kindly disagree that the technical and experimental contributions of the paper are incremental. However, we agree that the contributions could be made more clear. We will add an explicit contributions list to the updated paper. Thank you for your suggestion.\n\n**We significantly improve resilience compared to prior work.**\n\n> The performance of the proposed mechanism is closely related to the adversarial training ... which means its resilience remains a significant issue.\n\nWe agree that resilience to attacks is an important issue. As previously mentioned, our goal is to show that progress is possible in contrast with prior work, since the best existing methods are not robust to fine-tuning attacks. Thus, while our method does not provide full resilience, it does improve resilience.\n\n**Clarifying Figure 5.**\n\n> The presentation of the performance comparison between TAR and existing mechanisms in Figure 5 is unclear and potentially confusing. The authors should provide further analysis of this result, explaining why the performance of TAR shows a significant change as the step size increases.\n\nPlease note that the optimizer step-size does not increase in Figure 5. Rather, the x-axis shows the number of optimizer steps. Also note that TAR keeps the adversary\u2019s loss high (above the recovery region) across all 1000 steps, indicating that TAR\u2019s performance is strong compared to the baseline.\n\nYou may be asking about significant changes in the adversary\u2019s loss shown in Figure 5. We partly explain these changes in Section 5.3. However, we agree that further analysis could improve clarity for readers, which we will add to the updated paper. Namely, we will explain that the model has implemented the entropy maximization by sharply increasing the cross-entropy loss at the beginning of fine-tuning. Thank you for your suggestion.\n\nThank you again for your comments. If we have addressed the thrust of your concerns, we kindly ask that you consider raising your score."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a method (TAR) for improving tamper-resistance, i.e. model-level defense against adversarial finetuning attacks, of open-weight large language models. The method consists of several components: (1) initial safeguarding via _random mapping_ of harmful representations, (2) outer loop minimizing tamper-resistance and retain losses, (3) inner loop for computing tamper-resistance loss, which applies multiple finetuning attacks. Different design choices for tamper-resistance loss and its empirical significance are discussed: for weaponization knowledge restriction setting a negative _entropy_ loss is proposed, and for harmful request refusal a direct preference optimization (DPO) loss is used. The retain loss consists of language modeling loss and $l_2$-norm loss for representations of optimized and a base model. The results suggest the proposed method effectively defends the model against the majority of considered finetuning attacks, maintaining low accuracies on harmful questions post-(finetuning)-attack, although at the considerable cost of drop in accuracy on benign questions (pre-attack). Additionally, the authors acknowledge that the set of finetuning attacks during tamper-resistance training directly impacts the tamper-resistance against test-time attacks (e.g. \"Retain $\\rightarrow$ Forget\" attack breaks the defense if it is not included in the training phase), suggesting the defense might struggle with unseen attacks (e.g. PEFT-attacks could break the defense in many of the settings)."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. **Significance** of the problem. The paper addresses an important and challenging problem of defending open-weight large language models against finetuning attacks. In authors words: \"_This problem has been considered very challenging and by some intractable, as no method has yet provided substantial robustness to these attacks. However, making progress on this problem would provide a valuable tool to regulators and model developers by ameliorating the dual-use dilemma of open-weight models_\".\n\n2. **Originality**. Although most of the components of the proposed method are inspired from previous works (e.g. adversarial training, representation engineering), the overall approach constitutes substantial novel contribution to the field, to the best of my knowledge. The results on tamper-resistance for post-attack harmful accuracies demonstrate substantial improvement over previous methods (for most of the considered attacks)."
+            },
+            "weaknesses": {
+                "value": "1. **Evaluation** against out-of-distribution attacks. \n- My main concern is that the defense might be effective mostly against observed attacks, and it could break against other unseen attacks. For example, Table 4 in Appendix shows that \"Retain $\\rightarrow$ Forget\" attack breaks the defense if it is not included in the training phase. Figure 4, and Figure 8 from Appendix show that PEFT attacks are more effective than Full Parameter attacks (in case of Biosecurity, PEFT attacks break the proposed defense method), given that the TAR used Full Parameter attacks during training.\n- Therefore, more emphasis and red teaming effort should be put into unseen attacks during evaluation, e.g. the Post-Attack scores in Table 1 could be divided into \"in-distribution\" and \"out-of-distribution\" attacks, where the categorization of attacks should be agnostic to LR, LR scheduler, optimizer, number of steps, batch size. In other words, out-of-distribution attacks could be defined as those that use fundamentally different approaches or data sources than what was used during training, rather than just different hyperparameters. Testing against attacks that use different optimization algorithms, loss functions, or data distributions not seen during training could provide a more comprehensive assessment of the method's robustness.\n- Since PEFT finetuning is more compute-efficient than Full Parameter tuning, the variants of PEFT attacks with more optimization steps should be considered under the compute-constrained attacker setup. PEFT attacks should also be considered for harmful request refusal. \n- Other out-of-distribution attacks could also be proposed and evaluated, e.g. initializing an attack by perturbing the weights into a random direction before following gradients to avoid local potentially gradient obfuscated region; or running a ground-truth informed attack by following a fixed worst-case direction towards the weights of a harmful model to observe how far the optimization should run to get harmful results.  \n- Input-level red teaming approaches (e.g. from HarmBench benchmark) could also be evaluated as alternative attacks, which do not include gradients or weight perturbations.\n\n\n2. More **detailed analysis** of the method is missing. The problem of **obfuscated gradients** should be addressed.\n- The results for Chemical Security in Table 1 suggest that post-attack harmful accuracies for TAR are lower than pre-attack ones, which is unexpected and worrying. Could you provide a more detailed analysis of this phenomenon? Could you investigate whether this is due to a quirk in your evaluation setup, or if it reveals something fundamental about how your method works? \n- Also the plots in Figure 6 in Appendix show that the loss values first start to increase under the gradient-based attacks, which is surprising. Could the loss decrease just by switching the gradient sign in the beginning of the optimization? This might point towards the problem of obfuscated gradients [a]. Other attacks, e.g. gradient-free ones, or the exploration of the loss landscape could provide a better understanding of the phenomenon.  \n- Section A in Appendix states that post-attack accuracy on benign questions for TAR method is low. This should be reflected in the main paper, and the reasons for this phenomenon could be studied and discussed. Section C1 of Appendix addresses the problem of benign finetuning, however it does not provide comparison with benign finetuning of the base model (or other non-TAR trained harmless models). What percentage of harmful questions could appear in finetuning to prevent the benign learning? Could benign prompts from Over-Refusal benchmark [b] cause the issues with benign finetuning?\n- Over-Refusal benchmark [b] results should be included for the restricted models for full evaluation.\n\n3. The **capability-robustness tradeoff** could be studied and discussed more in-detail, since this is the main limiting factor of applying TAR comparing to baseline methods. \n- From Table 1, TAR is considerably *worse than baselines in terms of benign capabilities* in adjacent domain knowledge for about 10% in all domains. What about other capabilities such as reasoning, multi-lingual understanding, creative writing, coding etc?\n- Could the whole capabilities-robustness tradeoff curve be explored and demonstrated for TAR and for baseline methods by varying hyperparameters (e.g. such as $\\lambda_{TR}$)? Could a single metric for the method's tradeoff performance be proposed and compared between baselines, similar to Accuracy-Robustness Tradeoff Score (ART-score) in [c]?\n\n4. **Clarity**. \n- Many important parts of the paper are in Appendix, e.g. Random Mapping, attack categories, many crucial evaluations (see above). This makes the main paper less clear and prevents it from being self-sufficient.\n- Was a single model trained to be tamper-resistant against all 3 weaponization domains, or were 3 different TAR models considered (e.g. in Table 1)? Was a single model trained for both weaponization restriction and harmful request refusal, or 2 different ones? Could a single model be defended against all considered harms? How would it affect benign capabilities? Is the approach the same for baseline methods? It was not clear from the text for me. These details could be included in the experimental setup section, and you could include a diagram or table summarizing the model configurations used for different experiments.\n- What are the computational costs of TAR comparing to benign PEFT, Full Parameter finetuning and other baselines? \n- Minor comment: could the scores in Table 1 be scaled such that random model gets 0, and perfect model get 100? It would help visualizing the effectiveness of TAR more clearly.\n\n[a] Athalye, A., Carlini, N., & Wagner, D. (2018, July). Obfuscated gradients give a false sense of security: Circumventing defenses to adversarial examples. In International conference on machine learning (pp. 274-283). PMLR.\n\n[b] Cui, J., Chiang, W. L., Stoica, I., & Hsieh, C. J. (2024). OR-Bench: An Over-Refusal Benchmark for Large Language Models. arXiv preprint arXiv:2405.20947.\n\n[c] Nurlanov, Z., Schmidt, F.R., Bernard, F. (2024). Adaptive Certified Training: Towards Better Accuracy-Robustness Tradeoffs. In: Bifet, A., et al. Machine Learning and Knowledge Discovery in Databases. Research Track and Demo Track. ECML PKDD 2024. Lecture Notes in Computer Science(), vol 14948. Springer, Cham. https://doi.org/10.1007/978-3-031-70371-3_8"
+            },
+            "questions": {
+                "value": "See weaknesses section for questions and suggestions. I would be happy to change my opinion if my main concerns regarding fair evaluation of the defense method could be addressed."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper focuses on the robustness of open-weight LLMs and proposes a novel defense method called TAR."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**About contribution**\n\n+ The experimental results shown in Table 1 are significant enough to validate the main claims of this paper. \n+ The proposed method is intuitive.  By providing detailed discussions of the related works, it is not hard to understand why the authors designed the algorithms as presented, even for readers not familiar with the defense of LLMs.\n\n**About novelty**\n\nAccording to Section 2, this paper proposes the first defense method for autoregressive LLMs against tampering attacks. To the best of my knowledge, concurrent jailbreaking attacks are mostly input-based. However, as claimed in Section 1, the tampering attacks are also posing threats to LLMs. This paper will bring new insight into the research on the robustness of LLMs.\n\n**About presentation**\n\n+ The preliminary part (Section 3) is brief and clear, making the technical part of this paper easy to follow."
+            },
+            "weaknesses": {
+                "value": "**About presentation**\n\n+ The authors do not discuss the cost of the experiments, including time cost and GPU memory cost. Section B.4 mentioned that the experiments use 8 A100 with 80GB GPU memory. What is the minimum requirement for the experiments? \n+ I suggest including a statement of contribution to make this paper easier to follow."
+            },
+            "questions": {
+                "value": "+ In Figure 2, the difference between TAR and the baseline methods is significant. However, it seems that the capabilities of TAR are lower than the baseline methods. Is there a trade-off between capabilities and tamper resistance?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No ethics review is needed."
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper focuses on the issue of the lack of robustness in open LLMs when facing model weight tampering attacks. The authors propose a method called TAR, designed to establish tamper-resistant protection mechanisms for LLMs, ensuring that attackers cannot compromise these protections after minimal optimization. Extensive experiments validate the performance of this approach, showing that it outperforms existing methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The security issues related to open LLMs are both important and intriguing; The authors present a series of solutions to address these security threats; and experiments validate the performance of the proposed mechanisms."
+            },
+            "weaknesses": {
+                "value": "1. Insufficient sustainability. This paper proposes the integration of adversarial learning and meta-learning to enhance the effectiveness of defense mechanisms, making it difficult for attackers to compromise them in a short period. However, this effectiveness actually depends on the diversity of attack types included in the training data for optimizing eqn.1. In other words, the resilience of the proposed mechanism may be superficial and does not guarantee the security of open-weight LLMs. Furthermore, the authors do not provide corresponding theoretical analysis or proof.\n2. Incremental technical contributions. Although the paper is expressed clearly, its innovation is not evident in terms of both technical aspects and application scenarios. Specifically, the proposed solutions are based on existing widely used methods, and the authors have not clearly articulated their unique contributions. Therefore, it is recommended that the authors provide further clarification on this matter.\n3. The performance of the proposed mechanism is closely related to the adversarial training methods and data, which means its resilience remains a significant issue.\n4. The presentation of the performance comparison between TAR and existing mechanisms in Figure 5 is unclear and potentially confusing. The authors should provide further analysis of this result, explaining why the performance of TAR shows a significant change as the step size increases."
+            },
+            "questions": {
+                "value": "1. Insufficient sustainability. This paper proposes the integration of adversarial learning and meta-learning to enhance the effectiveness of defense mechanisms, making it difficult for attackers to compromise them in a short period. However, this effectiveness actually depends on the diversity of attack types included in the training data for optimizing eqn.1. In other words, the resilience of the proposed mechanism may be superficial and does not guarantee the security of open-weight LLMs. Furthermore, the authors do not provide corresponding theoretical analysis or proof.\n2. Incremental technical contributions. Although the paper is expressed clearly, its innovation is not evident in terms of both technical aspects and application scenarios. Specifically, the proposed solutions are based on existing widely used methods, and the authors have not clearly articulated their unique contributions. Therefore, it is recommended that the authors provide further clarification on this matter.\n3. The performance of the proposed mechanism is closely related to the adversarial training methods and data, which means its resilience remains a significant issue.\n4. The presentation of the performance comparison between TAR and existing mechanisms in Figure 5 is unclear and potentially confusing. The authors should provide further analysis of this result, explaining why the performance of TAR shows a significant change as the step size increases."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel method called TAR, designed to enhance the robustness of large language models (LLMs) against tampering attacks, addressing significant vulnerabilities in existing safeguards."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The topic studied in this paper is of great significance. Malicious LLMs can cause serious harm, such as spreading false news about public figures, causing discrimination and unfair results due to prejudice, and generating violent terrorist information. Therefore, it is necessary to apply robust safeguards to open source LLMs.\n\n2. The proposed method successfully resists thousands of malicious fine-tuning."
+            },
+            "weaknesses": {
+                "value": "1. The organization of Section 4 requires further refinement for improved readability. It would be beneficial to briefly outline the design motivation before delving into specific details, particularly regarding the content of Fig. 3. Additionally, the mathematical formulation of the loss function used is currently absent.\n\n2. The caption of figure 1 needs to explain the difference between the two branches more clearly. For example, what's the difference between the first nodes of the two branches.\n\n3. In Section 1, the authors assert that the proposed method can endure fine-tuning of up to 5000 steps. However, this claim does not intuitively convey the contribution of the paper. Firstly, the details surrounding fine-tuning, such as batch size and learning rate, are unclear; these parameters significantly influence the number of fine-tuning steps. Secondly, a comparative analysis with the typical number of steps required to fine-tune models on downstream tasks is lacking.\n\n4. The threat model lacks clarity. The authors assume that the attacker is compute-bounded but do not provide a clear definition of what this entails. Furthermore, including concrete examples of the metrics for capabilities_metric and safety_metric would enhance understanding.\n\n5. In section 4.2, the authors emphasized that the proposed method is different from standard meta-learning. However,  the differences highlighted seem minor and do not present significant technical challenges.\n\n6. The term 'empirically' is employed multiple times in the methods section. While drawing conclusions from empirical observations is valuable for informing solution design, relying solely on empirical data, particularly in the selection of a loss function, may impose limitations on the solution's robustness. A theoretical analysis comparing the efficacy of the entropy loss function versus cross-entropy loss is necessary.\n\n7. The performance metrics used in the experiments require clear explanation. Based on the results presented, the proposed solution appears to sacrifice task performance in favor of enhanced robustness, suggesting potential flaws in the method."
+            },
+            "questions": {
+                "value": "None"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N.A."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies an important problem: fine-tuning attacks on LLMs. They propose a novel defense method, TAR, to improve the robustness of LLMs against possible malicious fine-tuning attacks. This method is based on adversarial training and meta-learning, and a novel training objective combining both an adversarial objective and a retaining objective is proposed to maintain utility. Extensive experiments are conducted to illustrate the effectiveness of proposed method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This paper is written well and logically. I enjoy reading this work and every detail is properly described. The large-scale experiments are comprehensive and convincing."
+            },
+            "weaknesses": {
+                "value": "1. The time complexity analysis is important but not included. Both adversarial training and meta-learning are time-consuming. The proposed method can be expensive especially when the model size is increasing. This brings a concern about whether this method is practical for protecting large models. I suggest the authors provide computation analysis either empirical or theoretical.\n\n2. There are many hyperparameters in either objective in Eq (1) or optimizing it, such as the number of outer loops and coefficients before tamper-resistance loss and retain loss (lambda_TR and lambda_retain). How they influence the defending performance is not discussed, and I suggest including it."
+            },
+            "questions": {
+                "value": "I am curious about what kind of A_train in the objective in Eq(1) is required to have a good defense. For example, how diverse attacks need to be included; how many adversarial examples for each attack need to be included, etc."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes Tampering Attack Resistance (TAR) method which builds robust safe LLMs under weight tampering attacks. The method achieves superior performance on weaponization knowledge restriction and harmful refusal training."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The defense of LLM's weight tampering attacks is an important topic. This work has great significance."
+            },
+            "weaknesses": {
+                "value": "1. there are to many proxy objectives, like \"safety_metric\", \"capabilities_metric\". These pre-defined metrics will limit the significance and universality of the proposed method. Unless the author can prove that TAR is still working under other \"safety_metric\" or \"capabilities_metric\".\n2. From Eq.1, TAR is a simple adversarial training paradigm, with some proxy indicators. While adversarial training is an exist well known technique."
+            },
+            "questions": {
+                "value": "1. Are there any experiments to validate TAR on proxy metrics has a certain degree of generalization on other safety scenes or benchmarks?\n2. How about the training cost of TAR. Is it larger than original training?\n3. Except for the adversarial training, are there any novel findings or modifications of TAR, which suggest the novelty."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

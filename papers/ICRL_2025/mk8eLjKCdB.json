@@ -1,0 +1,170 @@
+{
+    "id": "mk8eLjKCdB",
+    "title": "WaveletGPT: Wavelet Inspired LLMs",
+    "abstract": "Large Language Models (LLMs) have ushered in a new wave of artificial intelligence advancements impacting every scientific field and discipline. We live in a world where most of the data around us, e.g., text, audio, and music, has a multi-scale structure associated with it. This paper infuses LLMs with a traditional signal processing idea, namely wavelets, during pre-training to take advantage of the structure. Without adding \\textbf{any extra parameters} to a GPT-style LLM architecture in academic setup, we achieve the same pre-training performance almost twice as fast in text, raw audio, and symbolic music. This is achieved by imposing a structure on intermediate embeddings. When trained for the same number of training steps, we achieve significant gains in performance, which is comparable to pre-training a larger neural architecture. Our architecture allows every next token prediction access to intermediate embeddings at different temporal resolutions in every Transformer decoder block. This work will hopefully pave the way for incorporating multi-rate signal processing ideas into traditional LLM pre-training. Further, we showcase pushing model performance by improving internal structure instead of just going after scale.",
+    "keywords": [
+        "Wavelets",
+        "GPT",
+        "LLM"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "Fusing GPT with wavelet inspired blocks.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=mk8eLjKCdB",
+    "pdf_link": "https://openreview.net/pdf?id=mk8eLjKCdB",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors propose a method to encode multi-resolution context in GPT-style LLMs inspired by haar wavelet transform.\n\nThe method works by modifying the intermediate embeddings of the transformer blocks: replacing half the embeddings by the average pooling (of this half) over the context with windows growing exponentially in size."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The proposed method is simple with minimal computation overhead but results in performance improvements and a great reduction in the training time. The authors show this in different modalities and datasets. I feel the idea of encoding the context as an inductive bias is relevant for the community and worth studying."
+            },
+            "weaknesses": {
+                "value": "- I think the study has been done in a small setup, architecture, context length, and datasets; it's hard to tell if these findings would scale up, as the baseline does. From the results, it seems this method helps by sacrificing half the embedding space to average pooling over the context (albeit with different windows); it's hard to tell if this would be the case when scaling to more difficult tasks and longer context.\n- Table 1, lacks the complete results for learnable and unlearnable kernels on all the datasets. \n- Although the authors motivate their method by wavelet transform from signal processing, I think the final method can be simpler to describe, as it's implemented as simply an average pooling operation (with different window sizes; window size is a function of the band).\n\nMinor Issues:\n\n\n- Lines 53 and 76, the text is duplicated.\n- Line 114 typos\n- Sections 4.3, 4.4 and 4.5, I think it's better to summarize the results in a table."
+            },
+            "questions": {
+                "value": "In addition to the weaknesses above, I have the following questions:\n\n\n- How do you deal with residual connections for the modified embedings 0:E\u00f72 . I mean, in the top transformer blocks, these embedings have residual connections coming from the modified (pooled) embedings. Is this the optimal setup? \n\n- Why choose the avg-pooling on the embedings instead of biasing the attention mechanism like WavSPA? \n\n- From Line 247, it seems the max window size is determined during training to be the context L, will this hinder the ability to expand the model context size after training ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces WaveletGPT, a method that integrates wavelets with Large Language Models (LLMs). By applying a multi-scale structure to intermediate embeddings in a GPT-style LLM architecture, WaveletGPT achieves pre-training performance nearly twice as fast in text, raw audio, and symbolic music without adding much parameters. The architecture ensures that each token prediction can access intermediate embeddings at varied temporal resolutions in every layer. The effectiveness of WaveletGPT is demonstrated using three open-source datasets: text-8 for natural language, YouTube-Mix-8 for raw audio waveform, and MAESTRO for symbolic music. Additionally, the architecture's performance on the Long Range Arena (LRA) benchmark tasks shows significant improvements across all three modalities."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The authors proposed an almost free technique to help training LLMs from scratch, without the need of pre-trained larger teachers or significant modifications of the model architecture. \n2. The proposed technique is simple but plausible. The authors also tried to address the feasibility in areas like audio and symbolic music."
+            },
+            "weaknesses": {
+                "value": "1. The idea of leveraging wavelets in Transformers is novel. However, the exploration of wavelet transform is insufficient in the paper, instead, the technique degrades to hand-crafted intermediate convolutional layers between the Transformer blocks (averaging and upsampling is just a special case of a convolutional layer). So extremely speaking, the authors simply added multi-scale convolutional layers between Transformer blocks to speed up convergence, which is rather intuitive. This undermines the innovativeness. \n2. Still the concern, the authors claim that the proposed method is superior because it gathers multi-scale information. However, there is no evidence to support that a single-scale averaging/convolution operation is underperformed (i.e., an averaging operation or convolutional layer with fixed kernal length). \n3. There is a lack of ablation experiments, and many of the designs are assumed rather than experimentally supported. Details are listed in the Questions section.\n4. The experimental setup is unclear, which brings huge obstacles for reproducibility. The authors repeatedly mention \"academic setup\" without describing the actual setup they have. \n5. The writing is poor, with countless gramatical errors and repeating sentences."
+            },
+            "questions": {
+                "value": "1. line 127-128, the authors claimed that the proposed method can be easily extrapolated to state space architectures. However, there is no evidence or validation in this paper to support this claim. \n2. line 250, what is this \"$l$\" in $xn^l_{(i)}(k)$? Is that the layer index defined before? Because the fonts are different, and according to the definition in paragraph 189-201, this could also stand for wavelet coefficient level. \n3. line 248, if in this case i <= E/2, F will be a negative integer, f(i) will be less then 1, is this a mistake?\n4. line 433, the authors mentioned a 32-dim version of the proposed model, where the performance was illustrated in Figure 4. However, in line 384, Figure 4 is mentioned to refer the full size model. In addition, in line 450, Figure 4 is mentioned to refer the learnable version. So which architecture does this diagram actually refer to? Is there a contradiction here?\n5. line 115-116, the authors used an audio dataset, YouTube-Mix-8, for \"long-context modeling\". However, the context length remains still, which is 512 and is identical to other datasets. So why did the authors emphasize long context? Furthermore, in common practice of audio language modeling, a codec tokenizer is utilized to encode and compress audio signals to yeild short representations, because, as also mentioned in line 389, a context length of 512 only represents 32ms of audio, which is practically meaningless. Why didn't the authors tokenize the audios first nor expand the context length? \n6. line 416, the authors used an $\\alpha$ linearly varying between 0 and 1. However, $ 0 < \\alpha < 1 $. So, what are the boundary values of $\\alpha$ at the two endpoints? Also, in line 417-418, what are the other scores regarding the audio and music?\n7. Still considering $\\alpha$, why an $\\alpha$ linearly varying between 0 and 1 is equivalent to the proposed multi-scale wavelet transform? The smallest kernel size of the proposed transform is 2, so it's the average of 2 tokens, which is approximately equivalent to the situation where $\\alpha = 0.5$. The fairness of this comparison needs further verification. \n8. There is a lack of ablation experiments, and many of the designs are assumed rather than experimentally supported. For example, why did the authors manipulate exact half of the coordinates of the hidden representations? What will happen if we manipulate more? Less?\n9. If I understand correctly, the proposed method is implemented with two feed-forward-networks (FFN), mentioned in line 360-361, while the baseline (a scaled-down version of GPT-2) still consists of one FFN each layer. This introduces siginificant parameter advantage and makes the comparison unfair. Please correct me if I understood wrong. \n10. line 448, the authors mentioned that the learnable convolution layers only introduce 0.02M extra parameters. However, I believe a 10-layer Transformer with a hidden dimension of 128 inherently contains fewer parameters, so an absolute number is meaningless. What is the proportion of newly introduced parameters? What is the proportion of newly introduced FLOPs?\n11. There are also countless grammatical errors and typos in the paper, such as:\n\n    a. line 48, \"Hinton et al. (2015)\" should be \"(Hinton et al., 2015)\"\n\n    b. line 53-79, repeating sentences.\n\n    c. line 127, \"Large Language models\" -> \"Large Language Models\" (or just LLM, since mentioned before)\n\n    Most of the grammatical errors are too minor to list individually here. I know I shouldn't be overly demanding about writing standards, as the idea is what matters most, but the writing errors in this paper is so much that I can't help but question the author's rigor."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No concern."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel approach to Large Language Model (LLM) pre-training by embedding wavelet-based multi-scale structures into a GPT-style architecture. This method enables the model to access intermediate embeddings at different temporal resolutions without adding extra parameters, resulting in significant speedups (40-60%) in training time across text, raw audio, and symbolic music modalities. By structuring embeddings in a multi-scale manner, the authors achieve performance comparable to larger models, highlighting a new direction for improving model performance through internal structural modifications rather than sheer scale. The results suggest promising potential for incorporating signal processing techniques, such as wavelets, into LLM pre-training."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "The proposed method is highly original, combining traditional signal processing concepts with contemporary LLM pre-training. The research methodology is robust, and the work addresses an important problem in LLM development, particularly in optimizing efficiency for multi-modal data without expanding model parameters."
+            },
+            "weaknesses": {
+                "value": "* The paper lacks explicit details about model parameters; assuming a GPT-2 scale (~120M parameters), an exploration of 300M-1B parameters could be feasible given the authors\u2019 computational resources. Such scaling would be valuable to determine if results hold at larger model sizes. \n* Although the approach aims to address long-sequence modeling, experiments are limited to sequences of length 512.\n* The paper lacks detailed downstream task results and analysis, limiting the assessment of its practical impact.  You may test on tasks like text summarization, question answering, or machine translation etc. to demonstrate the model's effectiveness in real-world applications"
+            },
+            "questions": {
+                "value": "The following questions are easier to solve under limited computational resources. I would change the decision to marginal accept if the answer to the following questions are intuitive.\n* What implications arise from the significant loss reduction observed after applying wavelet transforms? For instance, could case studies illustrate improved sentence generation quality during inference? You can compare generated text samples from the baseline and wavelet-enhanced models on specific prompts or analyzing perplexity improvements on different types of text (e.g., formal vs. informal language).\n* While the authors achieve better performance with learnable wavelet transforms, analyzing the learned wavelet parameters compared to traditional Haar wavelets would add valuable insights. It would be most interesting to visualize the learned wavelet shapes, compare their frequency responses to Haar wavelets, or analyze how they evolve during training.\n* In Section 4, various experimental data are mentioned without tabular representation or inclusion in the appendix. Could the authors clarify the reasoning behind this omission?\n* The paper includes two figures detailing Haar wavelet definitions yet lacks visual representation for the more critical learnable wavelet transform defined in Section 3.3.\n* Many paragraphs, particularly in the introduction, are quite lengthy, with the introduction itself comprising only 1-2 dense paragraphs, making the paper somewhat difficult to read. Would breaking these up improve readability?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes WaveletGPT, which encompasses incorporating wavelet transform within the intermediate representations to impose multi-scale learning. Instead of going for SOTA, the paper focuses on demonstrating how the new WaveletGPT stands compared to standard Transformer based approaches, albeit on reduced scales."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is sufficiently original in ideation, but the quality and clarity are not. Which is a shame, since the subject matter itself had the potential to have a significant impact if investigated well.\n\nSome pros of the paper are:\n\n- Several domains are covered: text, raw audio and music, which is great, since the approach has the potential for impacting multiple domains.  \n- The approach sounds interesting and demonstrates faster convergence to same NLL score compared to standard transformer based baseline."
+            },
+            "weaknesses": {
+                "value": "Unfortunately, that's where the pros end, and the following shortcomings are revealed.\n\n1. The paper is tremendously hard to read. The introduction reads like statements stitched together and is incoherent. Sections of the introduction are repeated, for instance: lines 76-79 about clockwork RNN. Related works are explained rather poorly. This paper needs to be proofread and phrased better: writing alone is unfit for an ICLR publication.\n2. The datasets used are rather arbitrary and their usage is motivated well enough. Why not use a standard verifiable audio task such as speech?\n3. Dataset scale. Even if we let the choice of \"text-8\" slide, Youtube-Mix-8 and Maestro are not exactly large datasets, with fewer than 10k samples each. \n4. The inclusion of LRA tasks is great, but there is simply not enough evaluation done in the paper. WaveletGPT should be investigated on more mainstream, even if smaller scale, datasets and benchmarks. The choice of architecture is fine, but more evaluations are needed.\n5. Table 2 states that \"non-transformer based or modified attention based hybrid architectures are not reported\", however, FNET and WavSPA makes the cut. The choice of what models were benchmarked/reported is not justified enough.\n\nThe idea is interesting, but simply not executed well enough. More empirical evaluations are warranted, and a significant overhaul in the writing department is needed as well. Which is a shame, since I got excited when I read the paper's abstract."
+            },
+            "questions": {
+                "value": "N/A"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

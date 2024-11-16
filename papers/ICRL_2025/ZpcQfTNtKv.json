@@ -1,0 +1,187 @@
+{
+    "id": "ZpcQfTNtKv",
+    "title": "Quantile Activation: Correcting a failure mode of ML models",
+    "abstract": "An established failure mode for machine learning models occurs when the same features are equally likely to belong to class $0$ and class $1$.. In such cases, any ML model cannot to correctly classify the sample. However, a solvable case emerges when the probabilities of class $0$ and $1$ vary with the \"context distribution\". To the best of our knowledge, standard neural network architectures like MLPs or CNNs are not equipped to handle this.\n\nIn this article, we propose a simple activation function, quantile activation (QACT), that addresses this problem without significantly increasing computational costs. The core idea is to \"adapt\" the outputs of each neuron to its *context distribution*. The proposed quantile activation, QACT, produces the \"relative quantile\" of the sample in its context distribution, rather than the actual values, as in traditional networks.\n\nA practical example where the same sample can have different labels arises in cases of inherent distribution shift. We validate the proposed activation function under such shifts, using datasets designed to test robustness against distortions\u2014CIFAR10C, CIFAR100C, MNISTC, TinyImagenetC. Our results demonstrate significantly better generalization across distortions compared to conventional classifiers, across various architectures. Although this paper presents a proof of concept, we find that this approach unexpectedly outperforms DINOv2 (small) under large distortions, despite DINOv2 being trained with a much larger network and dataset.",
+    "keywords": [
+        "Machine Learning Foundations",
+        "Quantiles",
+        "Distribution Shift"
+    ],
+    "primary_area": "learning theory",
+    "TLDR": "Current NN models cannot infer context and make an inference. We correct it using quantile activation.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ZpcQfTNtKv",
+    "pdf_link": "https://openreview.net/pdf?id=ZpcQfTNtKv",
+    "comments": [
+        {
+            "comment": {
+                "value": "We thank the reviewer for the comments, and hope that the response below clarifies the key misunderstanding about our article\n\n**(Q1) and (Q2) -- What exactly is the failure mode? Can we define it?**\n\nThe failure mode is described in lines 40-90 including figure 1. In simple words -- This is the inability of the usual ML models to \"adapt\" to the input distribution, even when it is possible. This inability is a consequence of *ignoring the context* of the classification problems. To illustrate this, we use the example in figure 1. \n\n1. negative examples (class 0) are *not* the distribution shifted version of positive examples (class 1). Rather, class 0 and class 1 together form a distribution (as described by equation 1). \n2. And because $\\mu_1$ and $\\mu_2$ belong to the circle, these overlap and hence the problem is difficult.\n\nBasically, *failure mode refers to a set of examples (such as the toy example above) where machine learning models fail*. While we can explain it and give examples, to our knowledge there is no unifying feature which allows us to define the term *failure mode* explicitly.\n\n**(Q2)  why quantile activation function can address this?**\n\nWe do provide a strong empirical evidence in figure 1(b) where we show that histogram of accuracies for quantile activation is skewed towards $1$ while for ReLU it is evenly distributed around $0.5$. This shows that quantile activation can learn the patterns even if contradictory evidence is provided. (Please do refer to lines 52,53,90,91,92). \n\nRegarding theoretical evidence, as stated above -- The failure mode is nothing but a set of examples where ML models fail. Since there is no unifying feature here, one cannot objectively prove that quantile activation would solve the failure mode. \n\n**(Q3) Meaning of $S$**\n\nSorry the misunderstanding caused due to notation issues (changing $N$ with $S$). Lines 268 and 269 are supposed to read --\n```\n We, (i) First sample $S$ points with weights $w_{+},w_{-}$, and (ii) then estimate the density at all the input points $[z_i]$. This is point-wise multiplied with the backward gradient to get the gradient for the input. In this article we use $S=1000$, which we observe gets reasonable estimates. \n```\nSo, the size of the sample $S$ is in our control and this does not change with the dataset size. So the complexity does not increase with the dataset size. Hence the method is scalable.\n\n**(Q4)(1) Experiments:  few and narrow datasets**\n\nWe would like to reiterate that the aim of the article is to identify *a* failure mode, and fix it using the quantile activation. Since we see that this failure mode is related to distribution shift, we verify the proposed activation in this context. Hence, within this context we believe that experiments on CIFAR10C/100C and TinyImagenetC offer sufficient evidence for what we claim -- Quantile activation can adapt better than the competing activations. \n\nThe performance of QACT on original version of CIFAR-10/100 and TinyImageNet can be inferred from low distortion accuracy. Below are the exact values we obtain for the base networks at distortion $0$. We would like to reiterate here that -- The main aim is to observe the trend as severity increase rather than obtaining state-of-the-art results. Hence, we have also not considered large scale experiments such as Imagenet-sketch or Imagenet-A. \n\nDataset  | QACT | ReLU\n- | - | - \nCIFAR10 | 88.02 | 90.48 \nCIFAR100 | 60.02 | 63.02\nTinyimagenet | 34.01| 37.86\n\n**(Q4)(2) Experiments:  unsatisfied performance: even on the basic CIFAR-10/100-C,**\n\nIn figure 4(a) we actually outperform ReLU activation even at distortion 2 and *outperform significantly* at distortion 5. Moreover, we also outperform DinoV2(s) at distortion 5. We actually see the same behaviour in figure 6(a) as well. \n\nWe believe the misunderstanding regarding the experiments arises from the following aspects:\n1. To our knowledge, there is **no comparative method** existing in literature to quantile activation. Essentially, we are not aware of any approach which can learn under the toy example described in eq(1).\n2. So, for empirical evidence we compared with the widely used activation functions (Relu/pRelu/selu) and also compared with current state-of-the-art DinoV2(s).  Although, DinoV2(s) is trained under a very different training regime than what we consider here.\n3. Moreover, the important thing to notice isn't the actual values but the trend - We see that the competing curves drop much faster than quantile activation in the figures - fig 4(a), 5(b), 6(a)."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank the reviewer for the comments and hope that the following response clarifies the terms better.\n\n**Definitions of context, context distribution and failure mode and relation to distribution shift**\n\nWe defined *context* (lines 93-99) as the batch of samples based on which we process the sample. In figure 1, this refers to a specific value of $(\\mu_1, \\mu_2)$ which is used to generate the batches (lines 52-53,90-91). \n\n*context* does not refer to the distribution shift, but is related to it. Specifically, we claim (and show) that few issues of distribution shift can be addressed using the *context* for inference. We verify this with experiments on CIFAR10C/100C and TinyimagenetC in section 4.\n\n*context distribution* refers to the set of all pre-activations for a single batch at each neuron (lines 100-105).\n\n*failure mode* in general refers to the set of examples where usual ML models fail. While, one cannot explicitly define this, we can still explain it and give examples (as in toy example of figure 1).\n\n**(Q1) Do the indices in $z_i$, $q_i$ and $\\tau_i$ refer to same index?**\n\nIn short, the answer is yes.\n\nAs is usually the convention we use $i$ as in $*_i$ as a generic index. So, $\\lbrace z_i \\rbrace$ would refer to the set of pre-activations where $i$ changes over the index set, $[z_i]$ would refer to the same set, but arranged as a vector.\n\nPlease do let us know in case the notation can be improved for better clarity and we shall make the suitable changes.\n\n**(Q2) Watershed with other activations**\n\nFor lack of space, we include this experiment in the appendix section. Please see figure 9 for comparison watershed with cross-entropy."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank the reviewer for the comments and truly appreciate the positive feedback on the intuitive explanations we offer in the article.\n\n**1. Generalizing the approach to more complex neural networks architecture**\n\nWe do not foresee any problems with generalizing to complex architectures. In the case of transformers we shall use the quantile activation in the MLP portion of the network where GeLU or ReLU is traditionally used. The key thing to note here is that - While (self-)attention is basically aimed at attention within a sample, quantile activation uses the distribution across the samples. So, we consider the self-attention and quantile activation as complementary.\n\n**2. idea is quite simple (almost naive), such that I\u2019m surprised that this idea hasn\u2019t been explored yet.**\n\nWe agree with the reviewer the fundamental idea is indeed very simple, especially the way it was presented here. However, few things of note here -- (i) The quantile methods have not really seen much traction within the ML community recently and (ii) in general simple ideas which are not in line with popular approaches are usually difficult to discover. We too were pleasantly surprised at this discovery.\n\n**3. toy examples would be more convincing if it described situations that are likely to be seen in practice.**\n\nThe key intuition behind the construction of the toy examples is obtained from asking and answering the question -- If one wants to simulate a distribution shift in 2 dimensions, what is the most appropriate  class of functions?.\n\nOur answer is that -- The class of linear transforms are best suited, considering that neural networks essentially learn piecewise linear functions [1]. Within this, we have chosen rotation since, rotating the samples by 180 degrees essentially reverse the boundary. Thus, we believe that the toy examples do illustrate the essential aspects and problems caused by distribution shift.\n\n\n**Q1:  isn\u2019t Challa et al. 2023 and the other related works addressing this issue?**\n\nTo our knowledge, no. Challa et al. 2023 do not show that the accuracies improve. They only show how to correct the calibration error of a pre-trained model $f_{\\theta}$.  \n\n**Q2: Do you think the approach could be used in the context of meta-learning? And if so, how would the quantile activation be used to gather information about a new context?**\n\nWe believe that quantile activation can indeed be useful for meta-learning. Although, this lies outside the scope of the present article. \n\nOne view of quantile activation is -- It offers a new *approach to the control of NN models* by specifying the context distribution. In meta learning, one can (in theory) update this context distribution using standard statistical techniques such as simple Bayes updates etc. The main thing to note is -- This can be done entirely in an unsupervised fashion. \n\n**Q3: Would the quantile approach be robust enough to handle unbalanced tasks?**\n\nHere too, we believe the statement to be true. A evidence for this is in the paragraph titled - **Quantile Classifier**, where we adjust the grounding factor (which is set to $0$ for internal neurons) to take into account the imbalanced aspect of one-vs-rest classification. Note that if we view multi-class classification (with same number of samples per class) as one-vs-rest, then the problem becomes imbalanced.\n\n[1] Balestriero, R. (2018, July). A spline theory of deep learning. In International Conference on Machine Learning (pp. 374-383). PMLR."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank the reviewer for the comments and the references.\n\n**Overall Response:** The primary objective of this article is to identify and address a failure mode in classic machine learning models. The use of toy examples is intentional, as they serve as essential datasets to illustrate this issue clearly. However, to address the question, 'Do these toy examples have practical implications?' we substantiate our findings with empirical evaluations on more complex, real-world datasets, including CIFAR10-C, CIFAR100-C, and TinyImageNet-C.\n\n**1. The motivation and the experiments do not align:**\n\nWe agree with the reviewer that we use CIFAR10C/100C and TinyImagenetC for empirical evaluation where the datasets are created using specific functions such as gaussian-blur, glass, fog etc. And we indeed obtain results in these datasets than comparative approaches.\n\nHowever, The key intuition is that -- if we have to design or simulate covariate shifts in 2 dimensions, linear transforms forms the best approximate class. Since, linear transforms cover the usual rotation, translation, scaling etc. Further, in high dimensions a class of linear transforms also include the usual convolution and de-convolution operators as well. In figure 1(a) we use the rotation matrix since it has a good symmetry property -- Rotating by 180 actually reverses the boundary!. In figure 3(a) we use the rotation matrix, but this analysis holds true for any linear transformation. \n\n**2. Does your proposed method perform well on datasets with other distribution shifts?**\n\nAs in [2] we also only consider the covariate shift. There are several approaches to deal with semantic shift which are complementary to the approach here and can be used in conjunction with quantile activation. We would like to reiterate that the main aim of the article is to address the failure mode which we observe in the introduction.\n\n**3. Obtaining weighted quantiles $q_i$**\n\nThe latter is true -- *... grounding the neuron is the weighting process...*\n\nBy the term *grounding*, we refer to the procedure by which *we force the median to be $0$*. The exact procedure is to weigh the positive and negative samples inversely with their respective counts such that the median is $0$."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel activation function called Quantile Activation (QAct) to enhance model robustness against context distribution shift. Specifically, it adapts the outputs from each neuron to its context distribution by considering the relative quantile of the sample in its context distribution. Experiments demonstrate the superiority of QAct compared with other activation functions."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper is well-written and easy to follow.\n2. This paper considers an interesting scenario: existing ML models cannot correctly classify when several classes have the same probability."
+            },
+            "weaknesses": {
+                "value": "1. The motivation and the experiments do not align. In Figure 1(a) and Figure 3(a), the authors emphasize the case where one class is the rotation version of the other. However, the datasets in the experiments are not the rotation version of each class, but the compression version[1]. \n2. In your experiments, the datasets (i.e., CIFAR-10C, CIFAR-100C, TinyImageNet-C, and MNISTC) are also considered by some papers [2, 3] as the covariate shift. Does your proposed method perform well on datasets with other distribution shifts?\n3. Could you please re-explain how to obtain the weighted quantiles $\\{q_i\\}$? Do you augment $z_i$ by grounding the neuron and then re-wright them to obtain $q_i$, or grounding the neuron is the weighting process?\n\n[1] Xie R, Odonnat A, Feofanov V, et al. MANO: Exploiting Matrix Norm for Unsupervised Accuracy Estimation Under Distribution Shifts[J]. arXiv preprint arXiv:2405.18979, 2024.\n\n[2] Viviers C, Valiuddin A, Caetano F, et al. Can Your Generative Model Detect Out-of-Distribution Covariate Shift?[J]. arXiv preprint arXiv:2409.03043, 2024.\n\n[3] Mallinar N, Zane A, Frei S, et al. Minimum-Norm Interpolation Under Covariate Shift[J]. arXiv preprint arXiv:2404.00522, 2024."
+            },
+            "questions": {
+                "value": "Please see the weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a approach for dealing with a specific failure mode in machine learning\u00a0: when the same features are equally likely to belonging to various classes. This occurs especially when context or distribution shifts occur. In order to do so, the authors propose using Quantile activation function, which act as \u00ab\u00a0normalizers\u00a0\u00bb to generalize through distribution shifts."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "-Simplicity of the approach\n-Thorough analysis (ex. computational complexity) and explanations of the approach\n-Many explanations are provided as to why the idea makes sense in practice; think it is generally overlooked in machine learning, yet is key to grasping the inner workings of the approach.\n-I don\u2019t have much to say in the following sections: the work is straightforward, clearly explained, and well-supported by empirical evidence."
+            },
+            "weaknesses": {
+                "value": "1. There might be a problem in the possibility to generalize the approach to more complex neural networks architecture. For instance, how would quantile activation be used in architecture involving transformers?\n\n2. This isn\u2019t quite a weakness in itself, but the idea is quite simple (almost naive), such that I\u2019m surprised that this idea hasn\u2019t been explored yet.\n\n3. I find the toy examples quite interesting to understand the logic behind the approach, yet they describe quite unique situations that are unlikely to be met in practice. I think the toy examples would be more convincing if it described situations that are likely to be seen in practice."
+            },
+            "questions": {
+                "value": "-Line 149\u00a0: \u00ab\u00a0This work aims to address the failure mode described earlier. To the best of our knowledge, no existing literature specifically addresses this issue\u00a0\u00bb But isn\u2019t Challa et al. 2023 and the other related works addressing this issue?\n\n-Do you think the approach could be used in the context of meta-learning? And if so, how would the quantile activation be used to gather information about a new context?\n\n-Would the quantile approach be robust enough to handle unbalanced tasks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This manuscirpt reveals a failure mode cased by distribution shift in machine learning. Then the authors correspondingly propose a novel quantile activation fucntion of QACT to replace ReLU for addressing the failure model. The proposed QACT has a good performance on image datasets with distortions including CIFAR-10/100-C and TinyImageNet-C."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Reveal a failure mode in machine learning\n\n- Propose a novel activation fucntion of QACT to deal with classifcation with distribution shift\n\n- The proposed QACT has a good performance on CIFAR-10/100-C and TinyImageNet-C"
+            },
+            "weaknesses": {
+                "value": "This paper does not have a good organization which makes the motivation unclear. The rationale of proposed quantile activation is also not well presented. In addition, only the small image datasets with distortion are not enough to demonstrate the effectiveness of QACT. Please see the details as below:\n\n- **Q1:** This manuscript starts by showing a failure example in binary classification. For me, negative examples are distribution-shifted version of positive examples, thereby making this classification difficult. A formal definition should be provided to show this \"failure\" or \"unlearnability\". \n\n- **Q2:** What causes the \"failure mode\" and why quantile activation function can address this? Only some intuitive explanations are provided.  It will be much better to provide rigorous empirical or theoretically analysis w.r.t. these two questions.\n\n- **Q3:** According to the manuscript, the computational complexity of QACT is $\\mathcal{O} (n\\log(n) +Sn_\\eta)$, which means the method is hardly scalable to large datasets with significant sample size $S$.\n\n- **Q4:** The experiments are not convincing for me: (1) few and narrow datasets: only the distorted image datasets are used. The proposed QACT should be at least verified on the original version of CIFAR-10/100 and TinyImageNet. Moreover, some other datasets with distirbution shift like ImageNet-Sketch [1] or ImageNet-A [2] can be used to make the results more convincing. (2) unsatisfied performance: even on the basic CIFAR-10/100-C, the proposed QACT does not show the superority when the severity is small (Figure 4(a) and 6(a)).\n\n\n\n\n[1] Wang, Haohan, et al. \"Learning robust global representations by penalizing local predictive power.\" Advances in Neural Information Processing Systems 32 (2019).\n\n[2] Hendrycks, Dan, et al. \"Natural adversarial examples.\" Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2021."
+            },
+            "questions": {
+                "value": "See Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel activation function, QACT, which computes its output based on the cumulative distribution function (CDF) of the pre-activation values within a minibatch. In the backward computation of QACT, the probability density function (PDF) of the CDF is estimated using kernel density estimation because the gradient of the CDF is given by the PDF.\nThe proposed activation function is evaluated using existing datasets with controlled levels of corruption, such as CIFAR-10C, demonstrating that DNN models with QACT achieve better classification accuracy and lower calibration error under strong distortion."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* Computing activation values based on the relative relationships between pre-activation values within a minibatch is interesting. This approach is somewhat similar to batch normalization (batchnorm) but does not include the trained coefficient and bias terms that batchnorm employs. I believe this is a key feature of the proposed activation function, enabling it to adapt to distribution shifts during inference."
+            },
+            "weaknesses": {
+                "value": "* Terms such as \"context,\" \"context distribution,\" and \"failure mode\" are used in the manuscript, but their definitions are unclear. Specifically, I could not understand what \"context\" refers to in the toy example presented in Section 1. The authors should provide clear definitions for these terms, especially for \"context,\" which is a key term in the paper.\n\n* The concept of \"context\" in the paper appears to be similar to \"distribution shift\" as described in machine learning literature. Does it relate to distribution shift? If \"context\" in this paper is related to distribution shift, it should be compared with additional baseline methods developed for distribution shift, in addition to Dino-v2."
+            },
+            "questions": {
+                "value": "* In Algorithm 1, do the indices in $z_i$, $q_i$, and $\\tau_i$ refer to the same index? It seems that $z_i$ and $(q_i, \\tau_i)$ should have different indices, if I understand correctly.\n\n* In the experiments, why is the watershed loss used only with QACT models? Is there a reason why the watershed loss might not be suitable for non-QACT models? If there is no such reason, non-QACT models trained with the watershed loss should be included as baselines."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

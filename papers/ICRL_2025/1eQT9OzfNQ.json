@@ -1,0 +1,167 @@
+{
+    "id": "1eQT9OzfNQ",
+    "title": "Long Context Compression with Activation Beacon",
+    "abstract": "Long context compression is a critical research problem due to its significance in reducing the high computational and memory costs associated with LLMs. In this paper, we propose Activation Beacon, a plug-in module for transformer-based LLMs that targets effective, efficient, and flexible compression of long contexts. To achieve this, our method introduces the following technical designs. \n1) We directly compress the activations (i.e. keys and values at every layer), rather than leveraging soft prompts to relay information (which constitute a major bottleneck to encapsulate the complex information within long contexts).\n2) We tailor the compression workflow, where each fine-grained input unit is progressively compressed, enabling high-quality compression and efficient computation during both training and inference. \n3) We train the model through compression-based auto-regression, making full use of plain texts and instructional data to optimize the model's compression performance.\n4) During training, we randomly sample a compression ratio at each step, teaching the model to support a wide range of compression configurations. \n\nExtensive evaluations are conducted on various long-context tasks whose lengths (e.g., 128K) may far exceed the maximum training length (20K), such as document understanding, few-shot learning, and Needle-in-a-Haystack. Whilst existing methods struggle to handle these challenging tasks, Activation Beacon maintains a comparable performance to the uncompressed baseline across various scenarios, \nachieving a 2x acceleration in inference time and an 8x reduction of memory costs for KV cache.",
+    "keywords": [
+        "Context Compression",
+        "Long Context LLMs",
+        "LLM Memory"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=1eQT9OzfNQ",
+    "pdf_link": "https://openreview.net/pdf?id=1eQT9OzfNQ",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces \u201cActivation Beacon,\u201d a plug-in module to conduct long-context compression for LLMs. The proposed approach progressively compresses the activations at each layer and can be trained in the conventional auto-regressive way of language modeling. The authors demonstrate the benefits of this approach through evaluations on various long-context tasks for compression quality and inference efficiency."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Compressing by chunks at each layer avoids the need for recomputation and addresses gradient back-propagation challenges present in some prior baselines that rely on recursive dependencies from final-layer outputs. This design enhances both training and inference efficiency.\n- The chunking approach and the interleaved insertion of beacon tokens are straightforward and intuitive.\n- Evaluations on various benchmarks indicate that the proposed approach generally outperforms the KV cache compression and \u201csoft-prompt\u201d compression baselines, achieving notable reductions in both inference time and memory usage.\n- Training with randomly sampled compression ratios enables flexible compression ratios during testing."
+            },
+            "weaknesses": {
+                "value": "- In addition to LongBench and NIAH, it is essential to evaluate the proposed approach on newer, more challenging benchmarks, such as RULER [1].\n- Some recent context compression baselines, including CEPE [2] and LLoCO [3], are not discussed in the paper and should be included for a more comprehensive discussion or comparison.\n\n[1] Hsieh et al. RULER: What's the Real Context Size of Your Long-Context Language Models? COLM 2024.  \n[2] Yen et al. Long-Context Language Modeling with Parallel Context Encoding. ACL 2024.  \n[3] Tan et al. LLoCO: Learning Long Contexts Offline. EMNLP 2024."
+            },
+            "questions": {
+                "value": "- How are rotary embeddings managed for the beacon tokens? Although the LLM processes a fixed chunk at a time, the relative positions of the beacon tokens vary across chunks. How are positional embeddings applied in these cases?\n- Additional parameters are added and fine-tuned for self-attention projections specific to the beacon tokens. What is the impact of these added parameters on VRAM usage and latency? If the cost is significant, could LoRA fine-tuning be effective for the proposed activation beacons approach?\n- What portion of time is allocated to prefilling and decoding? While the proposed method reduces some recomputation, it may require customized attention masks or iterative context processing, which could lack efficient kernel implementation or result in extra kernel calls. Please provide a latency breakdown of prefilling and decoding for specific workloads (e.g., 32/128k context, 128 decoded tokens) and compare it with the flash attention full-context baseline.\n- How does the proposed approach affect fine-tuning throughput? Please compare its performance with Full-FT.\n\nI am open to adjusting my ratings if all concerns and questions are adequately addressed."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces \"Activation Beacon\", a compression method designed to enhance long-context processing efficiency in LLMs. The approach compresses the activations of keys and values in transformer layers, avoiding bottlenecks associated with traditional soft prompt methods. Additionally, a progressive compression workflow compresses each context unit in chunks, allowing the model to handle longer contexts than the original LLM's window. Experimental results show Activation Beacon achieves significant memory and computation savings, with minimal loss in performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Activation Beacon reduces inference time by 2x and KV cache memory costs by 8x compared to the uncompressed baseline.\n\n2. The method supports adaptive compression ratios, allowing flexibility for different tasks and contexts.\n\n3. The proposed model maintains short-context capabilities, preserving the performance of the original LLM."
+            },
+            "weaknesses": {
+                "value": "1. The performance of this method may vary with model size. Current evaluations focus on medium-sized models, lacking validation on larger-scale models, leaving its effectiveness and applicability in very large models underexplored.\n\n2. The added complexity of managing beacon tokens and compression ratios increases implementation overhead for end-users, particularly when adapting to different tasks. In addition to actual inference latency, specific memory usage data across implementations would help clarify practical resource requirements."
+            },
+            "questions": {
+                "value": "See weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper compresses activations (keys and values) rather than using soft prompts, facilitating a progressive, fine-grained compression process. Specifically, it first partition input into small chunks, interleaving special beacon tokens that accumulate contextual activations."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper presents an efficient method to compress long contexts, reducing memory usage by up to 8x and speeding up inference by 2x.\n- Its progressive, fine-grained compression approach maintains high compression quality, allowing the model to handle longer inputs than its built-in context window.\n-It supports flexible compression ratios, preserving model performance across various long-context tasks without degrading short-context capabilities."
+            },
+            "weaknesses": {
+                "value": "- Lack of Comparison with KIVI: The paper does not provide a direct comparison with KIVI, a relevant compression method that could offer insights into the performance trade-offs.\n- GPU Time Omission: The paper does not report GPU training or inference time, leaving uncertainty around the practical computational cost and efficiency of the proposed method.\n- Scalability Concerns: The method requires 8 A800 GPUs to train a 7B parameter model, raising concerns about its scalability to larger models like 70B, where computational demands could become prohibitive.\n- Limited Comparative Analysis: The paper would benefit from including more baseline methods, particularly compression-based approaches like KIVI, KV-layer shared compression methods such as CacheGen, and relative-position encoding strategies like LM-Infinite.\nAdditional References Needed: Incorporating comparisons with relevant works, such as LM-Infinite [1] for dynamic context management, CacheGen [2] for efficient context loading, and KIVI [3] for asymmetric quantization of KV caches, would strengthen the evaluation and highlight the advantages and limitations of the proposed approach.\n\n[1] LM-Infinite: Simple On-the-Fly Length Generalization for Large Language Models\n[2] CacheGen: Fast Context Loading for Language Model Applications\n[3] KIVI: A Tuning-Free Asymmetric 2bit Quantization for KV Cache"
+            },
+            "questions": {
+                "value": "overall, this paper is novel and idea is well presented. please add more techniques for comparison so that users can choose different method."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a method called Activation Beacon for efficient long-context processing. The method adds learned \"beacon\" tokens at regular intervals in the input query. These tokens are expected to learn \"summaries\" of the text. At inference time, when processing long contexts, the beacon tokens are retained and the other context tokens are discarded. Thus, the beacon tokens essentially provide a summary of the context. The authors evaluate their method in comparison with a few other recent methods for efficient long context processing. Their method significantly improves results on LongBench and Multi-Needle-in-a-Haystack. The authors also provide ablations for various design choices."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper focuses on an impactful area (long-context efficiency for LLMs).\n- The paper provides a relatively simple idea that is well-explained. I view simplicity as a plus - if a simple idea can give strong accuracy improvements, it's far better than an unnecessarily complicated idea.\n- The paper demonstrates strong results. Table 2 demonstrates strong accuracy at good latency on standard benchmarks for long context. Their method is competitive with full fine-tuning and better than baselines. Table 1 provides strong accuracy as well (though latency is missing).\n- The figures do a good job of explaining what's going on. Figure 1 and Figure 2 give nice overviews of the method.\n- The method is computationally efficient compared to fine-tuning. Their \"pretraining\" (starting from an already-pretrained model) only requires 1B tokens which is very few.\n- The paper ablates design choices (Table 4).\n- The paper is generally well written."
+            },
+            "weaknesses": {
+                "value": "- In Table 1, it's not obvious whether the latencies are comparable. The compression ratio isn't mentioned.\n- line 368: why do you use adaptive compression for llama-2 and uniform compression for qwen?\n\nMy main perceived weaknesses are regarding differences with previous works, and understanding why this method is performing so well:\n- line 135: \"ICAE and AutoCompressor... segment the long context into chunks and compress each chunk. However, both of them compress the context into soft tokens\" <- how are these soft tokens different than beacon tokens? (similarly, on line 373-374, you mention soft tokens being a drawback)\n- line 137: \"Their compression workflow also lacks fine-grained handling of the chunked inputs, resulting in inferior compression quality\" <- it seems like all they would need to do to allow \"fine-grained handling of the chunked inputs\" is just choose a smaller chunk size, so that the soft tokens appear more frequently. Is that right?\n- - If this is true, it seems like your main contribution is the insight that soft tokens should be distributed evenly through the context. Would doing this massively improve the accuracy of ICAE and AutoCompressor? It seems like this is the main discovery, but I'm left wondering if I'm missing some more fundamental difference.\n\n[Minor]:\nline 47: \"it it\" -> \"it\"\nline 53: \"alternamtive\" -> alternative\nline 371: \"highligh\" -> \"highlight\"\nline 483: \"scope\" -> score\nTable 2: give units of \"latency\""
+            },
+            "questions": {
+                "value": "My main question is in the \"regarding differences with previous works\" above. I want to understand if the results are improved mainly from decreasing chunk size, or if there's another difference between soft tokens and beacon tokens that explains the difference.\n\nAlso, what window size do you use? From Table 1, your model has a context length of 32k. I'm guessing you use this window size, but I don't see it explicitly stated, and line 184 suggests that 1024 would be a common window size, so I'm not sure. Since LongBench has only a few examples above 32k, I'm guessing the window logic isn't really used much (unlike for Needle In a Haystack)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

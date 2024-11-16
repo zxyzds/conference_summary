@@ -1,0 +1,172 @@
+{
+    "id": "GRMfXcAAFh",
+    "title": "Oscillatory State-Space Models",
+    "abstract": "We propose Linear Oscillatory State-Space models (LinOSS) for efficiently learning on long sequences. Inspired by cortical dynamics of biological neural networks, we base our proposed LinOSS model on a system of forced harmonic oscillators. A stable discretization, integrated over time using fast associative parallel scans, yields the proposed state-space model. We prove that LinOSS produces stable dynamics only requiring nonnegative diagonal state matrix. This is in stark contrast to many previous state-space models relying heavily on restrictive parameterizations. Moreover, we rigorously show that LinOSS is universal, i.e., it can approximate any continuous and causal operator mapping between time-varying functions, to desired accuracy. In addition, we show that an implicit-explicit discretization of LinOSS perfectly conserves the symmetry of time reversibility of the underlying dynamics. Together, these properties enable efficient modeling of long-range interactions, while ensuring stable and accurate long-horizon forecasting. Finally, our empirical results, spanning a wide range of time-series tasks from mid-range to very long-range classification and regression, as well as long-horizon forecasting, demonstrate that our proposed LinOSS model consistently outperforms state-of-the-art sequence models. Notably, LinOSS outperforms Mamba by nearly 2x and LRU by 2.5x on a sequence modeling task with sequences of length 50k.",
+    "keywords": [
+        "state-space models",
+        "sequence models",
+        "long-range interactions",
+        "oscillators",
+        "time-series"
+    ],
+    "primary_area": "learning on time series and dynamical systems",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=GRMfXcAAFh",
+    "pdf_link": "https://openreview.net/pdf?id=GRMfXcAAFh",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces a new continuous time recurrent network in the family of state space models. The architecture is proposed as an ODE that is discretized in two ways using first order implicit and implicit-explicit integrators. The terms of the ODE are further constrained to induce two different computational tricks to speed up computation; fast matrix inversion to make the implicit methods tractable, and parallel scans for faster sequence processing. The LinOSS architecture is empirically compared to other Neural ODEs and state-space models, and to transformers, on three different time domain problems for time series classification and prediction."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper demonstrates a cross cutting expertise from dynamical systems analysis through implementation optimization. The design of the ODE is crafting three advantages at three different levels of abstraction simultaneously: enforce theoretically proven stabilization, allow for efficient matrix inversion, and allow for parallel scans of the sequence recurrence. The experiments on time series problems are a good set of problems, and the results of LinOSS stand out against the broad set of comparisons. The proofs are sound, however, it is not clear if they apply to what actually is going on: see below."
+            },
+            "weaknesses": {
+                "value": "One issue with the paper is highlighted in the core claim of pre hoc controlling for \u201cforgetting\u201d versus stability by choosing between LinOSS-IM and IMEX (Line 298).  Line 205 claims to demonstrate different advantages between the two methods, but this is not actually evident in the experiments. What characteristics of the problems in Table 1 lead to IM vs. IMEX performing differently? If anything, there is no difference between IM and IMEX in all examples but Worms. Is there something special about Worms, or is it a fluke? The result of Table 2 seems to contradict the claim that IMEX is better at long ranges and IM is better at forgetting: why does IM perform better on a problem where memory over a long sequence should be important? \n\nIt is odd to rely on the integrator choice to enforce stability vs. forgetting. Using an ODE framework, it would seem more natural to change the ODE with dissipative terms, for example, instead of changing the integrator. By relying on the integrator choice, it is unclear if those properties would actually hold after training, if the discretization is thought to add new properties that the ODE did not have. Given the unclear results of the experiments, is it possible that results of the theoretical analysis do not apply after the model is trained? Did you try inspecting if the parameters of A and S still hold the assumptions / initializations assumed in Section 3, after training?\n\n\nConsider the case where the system being learned is actually stable, but the backward euler IM formula is applied. Backward Euler is dissipative even when the dynamical system does not want to dissipate. What happens when you try to learn a model that should be energy conserving using  the LinOSS-IM architecture? The authors could try this by just trying to learn to forecast a simple oscillatory system with LinOSS-IM. I would expect that the model would learn \u201cthrough\u201d the IM discretization, and converge to an parameterization of an \u201cunstable\u201d ODE that is stable after being discretized by IM. See Krishnapriyan, \u201cLearning continuous models for continuous physics\u201d for a discussion on overfitting on learning through ODE discretizations. \n\nOne idea to start to tackle this problem: Try LinOSS-FE \u201cforward euler\u201d. The architecture would be similar and the tricks in parallel scans would still work. This would be an ablation that would illustrate why stabilization of the implicit and imex integrators is important. If there is no performance difference with the Forward euler discretization in the experiments, or if the IM method can forecast a stable system, then perhaps the theoretical results do not represent what actually happens after training."
+            },
+            "questions": {
+                "value": "- What are the runtimes of the different methods in the experiments? While the accuracy metrics are strong, one of the purported examples of SSMs is the efficiency. What are run times when enabling and disabling different introduced optimizations:\n  - Run time when not using the equation for matrix inversion?\n  - Run time when not using the parallel scan?\n- Line 74: Why is A diagonal? Is it only to induce the matrix inversion trick later?\n- Some aspects of the architecture are unclear. How exactly are the LinOSS layers stacked into each other and within the network? \n  - In Figure 1, which parts of  the figure are u, y, z?\n  - What effect do the nonlinearities have on the stability analysis?\n  - How is the nonlinear layer in the figure a part of the model?\n- In the experiments in Section 4, what are the exact hyperparameters and model graphs?\n- The exploitation of Formula 3 to speed up the matrix is clever. How does this differentiate during training, though? Did you pass this formula through autodiff, or define a special differentiation rule?\n- Does the parallel scans apply to only using first-order IM or IMEX integrators? Or does the ODE formula in general allow for the parallel scans with other integrators, such as a simple forward Euler, or a higher order IMEX?\n- Table 1: s/UAE/UEA/g.\n- Table 1: What does UEA stand for? Define abbreviations and add citations. (Is Walker 2024 supposed to be the citation?)\n- Color highlighting in the tables is not colorblind friendly, nor BW printer/ereader friendly. Use symbols instead.\n- Equation 7: Why is it important that equation 2 is a Hamiltonian system in this section? If the underlying ODE is indeed Hamiltonian, doesn\u2019t that suggest that the IM discretization is not appropriate?\n- Line 222: What are a, b supposed to be? Describe the specific case of operator & tuple shown here.\n- Line 280: Why is it possible to assume that A_kk>0? Couldn\u2019t they diverge from that assumption during training? What initialization is required?\n- Line 289: s/constraint/constrained/\n- Line 292: The steps in the proof are not obvious. More steps of proof should be presented. In the appendix would be sufficient.\n- Just a remark: The title of section 4.2 is overly extravagant for the claims. These days, \u201cextreme long ranges\u201d would be context lengths of millions of tokens :)\n- Appendix A: What are the parameter counts? What is the architecture of the \u201cnonlinear layers\u201d? What are the hyperparameters for the forecasting problem?\n- Why does the PPG model have higher memory demands, when the models actually seem small?\n- Appendix A: What ML library was used?\n- Could you describe the loss functions and the complete architecture for the 3 different types of problems? How is time series classification grafted onto the LinOSS network?\n- The importance of section 3.2 is unclear to me. It is nice to prove universality of a model, but what is special about LinOSS that other more general proofs of universality would not apply? I would not have questioned it. Is any aspect of the proof specific to LinOSS, or could it apply more broadly to more SSMs?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper provides a novel state-space model. They have two different versions of it, in which they rigorously show the power of their algorithms and also experimentally verify it. The method outperforms SOTA methods in many tasks."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "Provides strong theoretical together with intuitive explanations.\nContrasts their two proposed methods mathematically and also experimentally.\nThe experimental results are excellent and definitely contributes to the field significantly.\nSupplementary material is comprehensive."
+            },
+            "weaknesses": {
+                "value": "I think section 3.2 can be written more accessible.\n\nI believe Figure 1 is very important but can be made more explanatory."
+            },
+            "questions": {
+                "value": "To the best of my understanding, the model cannot produce chaotic dynamics. What if the task in hand requires this? How does this contrast (if there is a contrast) with section 3.2?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Linear Oscillatory State-Space models (LinOSS), a novel approach to sequence modeling based on forced harmonic oscillators. The model comes in two variants: LinOSS-IM (implicit) and LinOSS-IMEX (implicit-explicit). The key innovation is using second-order ODEs with diagonal state matrices, offering stable dynamics while only requiring non-negative diagonal elements. The paper provides theoretical guarantees for stability and universal approximation, along with empirical validation showing significant improvements over state-of-the-art models like Mamba and LRU on long sequences."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper demonstrates strong theoretical foundations by providing rigorous mathematical analysis of stability conditions, proving universal approximation capability, and establishing clear connections to Hamiltonian systems and symplectic integration. Implementation-wise, it offers a remarkably simple parameterization requiring only non-negative diagonal elements, achieves efficient computation through parallel scans, and presents two complementary variants with different preservation properties. The empirical results are great, showing strong performance on diverse tasks."
+            },
+            "weaknesses": {
+                "value": "1. Limited Analysis of Model Interpretability:\n\nWhile based on oscillatory dynamics, lacks discussion of learned frequencies\n\nNo analysis of how the model captures different timescales\n\n2. Experiment:\n\nNo ablation studies on the impact of different initialization schemes\n\nThe implementation details are unclear. For instance, how does it compare to Mamba or S5 in terms of speed, training time, FLOPs, and memory usage? Discussing these aspects could enhance its practical utility."
+            },
+            "questions": {
+                "value": "1. Could the model be extended to incorporate coupled oscillations while maintaining stability guarantees?\n\n2. What is the impact of the time step parameter \u0394t on model performance and stability?\n\n3. How does the choice between IM and IMEX variants affect training dynamics and convergence?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this work, the authors propose a state-space model (SSM) architecture, Linear-Oscillatory SSM, derived from the discretization of second-order linear ODEs that models a network of forced harmonic oscillators. They develop two discretization schemes for the approach, study the stability properties of the parametrization and show universal approximation of LinOSS for approximating general continuous, causal input-output mapping. Through empirical evaluations, they demonstrate that their approach outperforms other Linear SSMs on time series classification, prediction and long-horizon forecasting."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The work is well motivated and the writing is clear and concise. The recurrence matrix afforded by the proposed approach has desirable stability properties and is less constrained compared to the typical SSM parametrizations. The expressivity is further supported by the theoretical analysis on universality of the proposed parametrization. The experimental results are thorough and demonstrate the efficacy of the proposed approach relative to baselines."
+            },
+            "weaknesses": {
+                "value": "Given that the parametrization has been introduced in Rusch & Mishra (2021) and the universality results for the non-linear counterpart to this work have been shown in Lanthaler et al., 2024, the novelty of this work is somewhat limited. Still, I think that this is a useful contribution overall as it improves the ability of SSMs for learning long-range dependencies."
+            },
+            "questions": {
+                "value": "* L116-118. Since the oscillators are independent, can the proposed architecture model transient synchronization/desynchronization?\n* L250. `Assuming M is diagonalizable [...]`. If $M$ has real eigenvalues with algebraic multiplicity $ > 1$, would that make the system unstable? Admittedly, norm growth would be sub-exponential, so perhaps in practice it's fine.\n* L289 `constraint` $=>$ constrained"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

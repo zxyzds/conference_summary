@@ -1,0 +1,197 @@
+{
+    "id": "DJw1JBTmuk",
+    "title": "Pre-Training Robo-Centric World Models For Efficient Visual Control",
+    "abstract": "Humans can accurately anticipate their movements to behave as expected in various manipulation tasks. We are inspired to propose that integrating prior knowledge of robot dynamics into world models can effectively improve the sample efficiency of model-based reinforcement learning (MBRL) in visual robot control tasks. In this paper, we introduce the Robo-Centric World Model (RCWM), which explicitly decouples the robot dynamics from the environment and enables pre-training to learn generalized and robust robot dynamics as prior knowledge to accelerate learning new tasks. Specifically, we construct respective dynamics models for the robot and the environment and learn their interactions through cross-attention mechanism. With the mask-guided reconfiguration mechanism, we only need a few prior robot segmentation masks to guide the RCWM to disentangle the robot and environment features and learn their respective dynamics. Our approach enables independent inference of robot dynamics from the environment, allowing accurate prediction of robot movement across various unseen tasks without being distracted by environmental variations. Our results in Meta-world demonstrate that RCWM is able to efficiently learn robot dynamics, improving sample efficiency for downstream tasks and enhancing policy robustness against environmental disturbances compared to the vanilla world model in DreamerV3. Code and visualizations are available on the project website: https://robo-centric-wm.github.io.",
+    "keywords": [
+        "Pretraining World Models",
+        "Model-based Reinforcement Learning",
+        "Visual Robot Control"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=DJw1JBTmuk",
+    "pdf_link": "https://openreview.net/pdf?id=DJw1JBTmuk",
+    "comments": [
+        {
+            "comment": {
+                "value": "We sincerely hope that the reviewers will re-evaluate our approach in light of our responses. We greatly value any feedback on our responses. Once again, thank you for your valuable suggestions despite your busy schedule!"
+            }
+        },
+        {
+            "comment": {
+                "value": "We hope that the following responses will help reviewers better evaluate our approach:\n\n* **Q1**: We use SAM2 to obtain robot segmentation masks, a technique that is well established and works well. We describe it in detail in A.4. Only manual labeling of the first frame of each trajectory is required to automatically obtain masks for subsequent frames, which results in lower manual costs. Furthermore, it is important to emphasize that our approach requires only a few data with robot masks to effectively decouple the dynamics of the robot and the environment, and doesn't require additional mask data for subsequent fine-tuning. In the paper, we only used 16 trajectories with a total of 4000 steps with masks for warm-up, which means that even if each trajectory needs to be manually labeled in order to obtain masks using SAM2, only 16 images need to be manually labeled. And further reducing the amount of data the model may still be able to function properly. In fact, even without mask data, our model still exhibits the ability to decouple structured information. We illustrate this in A5.1 as well as in Figure 12. Nevertheless, it is still difficult to stably decouple robot and environment dynamics without prior masks. It is not clear to us if there is a way to do so.\n\n* **Q2**: Learning world models in dynamic stochastic environments is still an open problem. For DreamerV3, its ability to model random parts of the environment, such as random walks of monsters in Atari games, through stochastic representations is still limited. It is quite difficult to accurately model the physical interactions of unpredictable objects. Existing world models are all data-driven in nature and are deficient in modeling dynamic stochastic environments. However, for simple physical interactions such as pushing a cube, opening a door, etc., our approach can effectively learn this interaction and generate realistic imaginary trajectories.\n\n* **Q3**: If only the replay buffer from a single task is used as the dataset for pre-training, it may lead to insufficient learning of the robot dynamics, as the covered state space might not be comprehensive enough. This could prevent the learned robot model from providing accurate dynamic predictions for new tasks. We focus on enabling the same robot to learn a variety of tasks and aim to better utilize the data collected from previous tasks to pre-train the world model. This is useful in real applications.  In fact, as long as the state and action spaces of the robot in the pre-training dataset are sufficiently covered, even data collected through unsupervised exploration rewards in a single task can lead to a good learning of robot dynamics."
+            }
+        },
+        {
+            "comment": {
+                "value": "We sincerely thank the reviewers for their valuable comments to make this paper better!\n\nWe hope that the following responses will help reviewers better evaluate our approach:\n* **W1**: TD-MPC2 is currently a leading model-based RL algorithm and has garnered significant attention from the community. However, it is primarily focused on locomotion control tasks that rely on state inputs, rather than on visual robot manipulation tasks that depend on image inputs. Additionally, we believe that directly comparing our method with TD-MPC2 would not provide a valid assessment of our approach, as our method is an enhancement based on DreamerV3, and performance differences between TD-MPC2 and DreamerV3 could obscure our method's effectiveness. While our approach could theoretically be adapted to build world models in TD-MPC2, doing so would require substantial modifications. We chose DreamerV3 as the foundation for our algorithm because it demonstrates exceptional potential in visual robot manipulation tasks. Our goal is to investigate whether there exists a more suitable method for constructing world models specifically for visual robot manipulation tasks, while using TD-MPC or Actor-Critic for policy learning simply represents an alternative way to leverage this world model. And for some model-free methods that focus on sample efficiency, the same can be disruptive in evaluating our methods. DrM, for example, uses neural network perturbations to enhance exploration, which is important in Meta-world tasks. There also exist Model-based rl methods for studying efficient exploration that could be combined with our approach to improve exploration efficiency, but this is not the dimension we wish to evaluate. We believe that our comparison with the vanilla world model in DreamerV3 is sufficient to illustrate the effectiveness of our approach and is in the dimension of world model construction.\n\n* **W2**: For dexterous manipulation tasks in Adroit, we believe that state-based control algorithms such as TD-MPC2 are more suitable. While visual model-based rl methods may have difficulty in effectively learning high-dimensional hand dynamics from only images, which remains a current area of endeavor. And the interaction between the dexterous hand and external objects is more complex compared to the gripper, and it is quite difficult to make the world model learn this complex interaction accurately. We believe that our chosen tasks are also challenging, which typically require more than a million interactions to learn effective policies and can sufficiently validate the effectiveness of our approach. To the best of our knowledge, we are the first to separate robot dynamics and environment dynamics and simultaneously model their interactions, which we believe is a valuable and successful attempt. However, for learning more complex robot dynamics and interactions, we will try it in our future work.\n\n* **W3**: RL training in the real world is often costly, and although the method is already sample efficient, it still requires a significant amount of environment interaction. We believe that experiments in simulated environments have sufficiently demonstrated the effectiveness of our approach. We will try real-world experiments in future work if conditions permit."
+            }
+        },
+        {
+            "comment": {
+                "value": "We sincerely hope that the reviewers will re-evaluate our approach in light of our responses. We greatly value any feedback on our responses. Once again, thank you for your valuable suggestions despite your busy schedule!"
+            }
+        },
+        {
+            "comment": {
+                "value": "We hope that the following responses will help reviewers better evaluate our approach:\n* **Q1**: Our approach is not an improvement for TD-MPC2, nor does it address the problem of multi-task offline learning. We focus on online training for visual robot manipulation. And, to the best of our knowledge, TD-MPC2 does not perform multi-task learning with images as input either. This remains a difficult problem for the current research and we believe it is beyond the scope of this paper.\n* **Q2**: We detailed the computation of the attention map in A.5.3 and supplemented the visualization results in Figures 15 and 16. The attention map consists of two parts, one for $\\hat{z}_t^{R}$ and $z _ {t-1}^E$ with a shape of 32*32 and one for $\\hat{h}_t^R$ and $z _ {t-1}^E$ with a shape of 8*32. We concatenate both as 40*32 attention maps and resize to 80*64 to align the size of the image observations for visualization. The parts of the attentional map without significant activation are the attentional maps of $\\hat{z}_t^{R}$ and $z _ {t-1}^E$, and the parts showing significant activation are the attentional maps of $\\hat{h}_t^R$ and $z _ {t-1}^E$. This is because $\\hat{z}_t^{R}$ is a stochastic representation generated by $\\hat{h}_t^R$, which contains richer information, such as action information. Although the attention maps for $\\hat{z}_t^{R}$ and $z _ {t-1}^E$ are not significant, they are still computed to ensure consistency between the robot and environment representations. The activations are not meaningless either. We observe significant activation when the robot touches an object, suggesting that the interaction model is capable of learning the interaction relationship between the robot and the object.\n* **Q3**: The gripper may lose some details when reconstructed due to its small size, but the opening and closing state of the gripper can also be clearly represented, which does not affect the imagination of the operation. In Figure 5, in the case of occlusion of the gripper, it may appear to disappear due to its small size, but it still does not affect the operation of the door. Methods based on reconstruction usually lose some details when reconstructing, which is due to the nature of the autoencoder. Even though the reconstructed image may be missing some details, the hidden state may not ignore this information. We think reconstruction is just a way to better help us understand what's going on in our world model, because state transitions and decisions happen in the latent space."
+            }
+        },
+        {
+            "comment": {
+                "value": "We sincerely thank the reviewers for their valuable comments to make this paper better!\n\nWe hope that the following responses will help reviewers better evaluate our approach:\n* **W1**: We considered the potential performance gains that could result from the use of robot masks, so we added the same mask-guided decoder as RCWM when training DreamerV3 and used the same amount of mask data for pre-training to eliminate the interference. We explain this in line 417 of the paper. For the interaction model, which is an integral part of RCWM, the same is part of the proposed improvements. Our RCWM, by decoupling robot dynamics from environment dynamics, is able to allow us to model the interaction between the two more explicitly, which is one of the advantages of RCWM over the vanilla world model. \n\n* **W2**: Our approach is not an improvement aimed at improving generalization.  The improvement in generalization for environment disturbances is a result of our separation of predictions for robot dynamics and environment dynamics. When the environment changes, our robot branch is able to provide accurate robot representations and dynamics predictions almost unaffected. Thus even if the environment representation changes, the policy can still generate reasonable actions based on the robot representation.  Figure 8 shows that our approach is more robust to environment disturbances compared to DreamerV3, which strongly supports our idea.  As to why both our approach and DreamerV3 produce significant performance degradation on the sweep-into task, we believe that it is because the sweep-into task needs to determine where the holes and objects are by the desktop texture, and thus is very sensitive to the desktop texture. For a description and visualization of the sweep-into task check out https://meta-world.github.io/. Furthermore, since we focus on using the same robot for multiple tasks, there is no need to be robust to robot appearance. And when position and viewpoint change, the dynamics in the 2d image-based world model will be severely affected, which is still lacking research.\n\n* **W3**: The tasks we chose are very challenging tasks in the Meta-world benchmark, which usually require more than a million steps of interaction with the environment to learn effective policy.  And these tasks mostly involve interactions with objects in the environment, which can effectively evaluate whether our method is able to learn such complex interactions.  Our focus is on visual robot manipulation tasks rather than locomotion control tasks. As for the dexterous hand in MyoSuite evaluated in TD-MPC2 or the humanoid robot control task in Humanoidbench, it is very difficult to use visual inputs for control, and the current approach is still attempting on state inputs. Moreover, it is also very difficult to accurately learn the complex dynamics of the dexterous hand from vision, which we believe is beyond the scope of this paper.\n\n* **W4**: Since every component of RCWM is indispensable, we think that ablation experiments are not necessary. For example, without the warm-up phase, it is difficult for our model to stably disentangle representations of the robot and the environment without prior robot masks.  For the choice of warm-up data, which is not critical for this method, it is sufficient that the data covers the operational space relatively adequately and thus allows our model to learn the robot dynamics, or even trajectories collected with unsupervised stochastic exploration. As for the components in RCWM, such as mask-guided decoder, interaction model, etc., RCWM does not work properly after removal.\n\n* **W5**: Although reconstruction error is not a good metric to measure the ability to model robot dynamics, it also reflects the ability to some extent. In order to avoid the influence of environment on evaluating robot dynamics modeling, we multiply the imagined reconstructed image with the ground-truth robot mask and compute the mean square error with the ground-truth robot image to serve as the robot dynamics prediction error. We mentioned in line 447 of the paper. With this evaluation method, we were able to consider only the reconstruction results for the robot part. We perform a full evaluation in Figure 13 in Appendix A.5.2.\n\n* **W6**: TD-MPC2 mainly focuses on locomotion control tasks using state as input rather than images, and does not use reconstruction loss to learn representations. In contrast, our approach focuses on visual robot manipulation tasks and uses reconstruction loss to learn representations. Applying RCWM to TD-MPC2 would require large modifications, which may be beyond the scope of this paper and may lead to new approaches. We believe that the performance improvement over the vanilla world model is sufficient to illustrate the effectiveness of our approach."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper considers the problem of world model pre-training in robotics applications. Different from previous approaches that use a single model to train the scene evolution, the key idea of this paper is to decouple world dynamics into robot dynamics and environment dynamics. The proposed model uses a dedicated robot branch to predict the future images of the robot, an environment branch to predict the future images of the environment, and an interaction module to inject the information from the robot branch to the environment branch."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper is well-written and the logic is clear. The idea of decupling robot dynamics and environment dynamics is interesting. The claim is supported by promising experiment results."
+            },
+            "weaknesses": {
+                "value": "It is unclear if the gains are from the additional capacity introduced by the additional branch. (2x model capacity?) To verify this, the authors could expand the dreamer model capacity and compare the results.\n\nIt is strange that the robot branch can learn effects of the environment on the robot, even there is no information exchange from environment branch to the robot branch.\nThis makes me wonder if the true technical idea is simply using two models to predict the evolution of the robot and the rest of the scenes separately. This can be validated by disabling the interaction part and compare with the proposed model in terms of dynamics prediction and policy learning."
+            },
+            "questions": {
+                "value": "See my questions above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents robot-centric world models that distinctively model robot and environmental dynamics to enhance visual model-based reinforcement learning. Results from eight MetaWorld tasks demonstrate improved learning efficiency compared to the vanilla baseline, DreamerV3."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is well-organized, featuring visualizations that aid in understanding the proposed robot-centric world models.\n- The approach appears to effectively learn robot-centric dynamics, though I have some questions about it.\n- Experimental results show performance gains over the state-of-the-art DreamerV3 across 8 MetaWorld tasks."
+            },
+            "weaknesses": {
+                "value": "- A primary concern is that the performance improvement may not solely be attributed to the proposed idea. Several additional implementations, such as the transformer in the interaction model, mask-guided encoder, and predictor head, confuse the attribution of improvements.\n- The generalization ability of the proposed model seems limited. Significant performance drops occur under environmental disturbances, particularly in the Sweep-Into task (Figure 8(b)). Additionally, the focus on disturbance testing should extend to other variables like robot arm appearance, base position, and camera view.\n- The selected tasks appear relatively simple. It would be beneficial to evaluate the modeling effectiveness on more complex embodiments, such as dexterous hands or humanoids, as evaluated in [1].\n- The absence of ablation studies. An analysis of each design's impact\u2014such as the warm-up stage, warm-up data choice, or removal of components\u2014would assist the understanding.\n- Construction error may not be a good metric to measure the ability to model robot dynamics, because the error may mainly caused by the environmental dynamics error. As an extreme case, the vanilla world model may be good at robot dynamics but very poor at environmental modeling. The authors should address this concern.\n- Testing the extension capability of the proposed method on other state-of-the-art algorithms, like TD-MPC2 [1], would significantly strengthen this paper."
+            },
+            "questions": {
+                "value": "- What is the performance in a multi-task setup, following [1]?\n- What do the attention maps signify in all figures? The highlighted regions seem meaningless.\n- The gripper reconstruction in Figure 5 appears inadequate. Could the authors clarify this?\n\n[1] Hansen, N., Su, H., & Wang, X. TD-MPC2: Scalable, Robust World Models for Continuous Control. In\u00a0*The Twelfth International Conference on Learning Representations*.\n\n[2] Sferrazza, C., Huang, D. M., Lin, X., Lee, Y., & Abbeel, P. (2024). Humanoidbench: Simulated humanoid benchmark for whole-body locomotion and manipulation.\u00a0*arXiv preprint arXiv:2403.10506*."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces the Robo-Centric World Model (RCWM), designed to improve sample efficiency and robustness in model-based reinforcement learning (MBRL) for visual robot control. RCWM achieves this by decoupling robot dynamics from environment dynamics, allowing each component to be modeled independently while an interaction model, based on cross-attention, captures the effect of robot actions on the environment. The model\u2019s training pipeline includes a mask-guided warmup using robot segmentation masks, followed by mask-free pre-training and fine-tuning, ensuring RCWM can robustly handle novel tasks and disturbances."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The paper is well-written and well-organized.\n* The idea of decoupling robot and environment dynamics is very novel and holds potential value for improving the efficiency and robustness of learning algorithms.\n* The proposed method demonstrates resilience against visual disturbances and changing backgrounds."
+            },
+            "weaknesses": {
+                "value": "* More baselines should be included, such as a leading model-based RL algorithm TD-MPC2 (https://arxiv.org/abs/2310.16828). Meanwhile, it is important to report the sample-efficiency comparison with leading model-free algorithms like DrM (https://arxiv.org/pdf/2310.19668).\n* More experiments should be conducted in more challenging tasks such as dexterous manipulations in Adroit (https://arxiv.org/pdf/1709.10087) to validate the effectiveness of the proposed method.\n* It is also essential to validate the proposed method in real-world experiment (such as Box Close task)."
+            },
+            "questions": {
+                "value": "* How might RCWM handle scenarios where prior robot segmentation masks are unavailable or difficult to obtain? Could an alternative approach to disentangling robot and environment dynamics be feasible in these cases?\n* Given RCWM's reliance on cross-attention for modeling interactions, how well would it handle environments with more unpredictable or dynamic elements, such as deformable objects or non-static obstacles?\n* What will happen if we only use the replay buffer from 1 task trained by DreamerV3 as the dataset?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces the Robo-Centric World Model (RCWM), which decouples robot dynamics from environmental dynamics, and employs an interaction model to evaluate the impact of the robot's actions on the environment. The authors use SAM2 to create segment masks for the robot, which are then used to warmup the mask reconstruction process. The subsequent pre-training is conducted without mask usage. Experiments are conducted in the Meta-world domain, demonstrating through quantitative and visual results that RCWM can learn distinct dynamics and show robustness against disturbances."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The decomposition of robot and environmental dynamics is a straightforward method that enables transfer of shared knowledge.\n- The distillation of SAM into world models that enables the agent to distinguish robot and background is an interesting practice.\n- The experimental results show improvement over the base model, with the rich visualization results offering valuable insights."
+            },
+            "weaknesses": {
+                "value": "- Discussion and comparison to related works are missing. The authors state that action-free pre-training methods \"are of limited help when confronted with robot manipulation tasks that require accurate predictions\". However, the paper only carries out experiments in the Meta-world domain, where other action-free pre-training methods also demonstrate good performance.\n- Limitations are not addressed adequately. RCWM limits the interaction between the robot and the environment from two-way to one-way, which is acceptable for Meta-world since pre-training and fine-tuning are carried out on the same platform. However, RCWM may encounter difficulties when applied to certain types of real-world visual robotics tasks, such as dealing with a different friction coefficient or a different tilting angle for the table."
+            },
+            "questions": {
+                "value": "- In Figure 7(a), do RCWM and vanilla WM use the same set of trajectories for evaluation, or are the trajectories sampled independently for each model? If the models share the same trajectories, how are they sampled?\n- In Figure 7(b), a sharp turn can be observed between 10 and 20 rollout steps for the stick-push task. Why would this happen?\n- A discussion section comparing RCWM to previous action-free pre-training methods should be added. The authors should compare RCWM to previous action-free pre-training methods specifically on robot manipulation tasks that requires accurate predictions.\n- A limitation section about the applicability and generality scope of RCWM should be added. The authors should explicitly discuss the potential limitations in applying RCWM to real-world scenarios with varying physical properties.\n\nMinor comments:\n- The notation for the baseline method is a bit inconsistent. I suggest changing all \"vanilla WM\" notations to \"DreamerV3\" or vice versa for better readability.\n- Typo: \"dynamic model\" should be \"dynamics model\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,171 @@
+{
+    "id": "IEul1M5pyk",
+    "title": "HGM\u00b3: Hierarchical Generative Masked Motion Modeling with Hard Token Mining",
+    "abstract": "Text-to-motion generation has significant potential in a wide range of applications including animation, robotics, and AR/VR. While recent works on masked motion models are promising, the task remains challenging due to the inherent ambiguity in text and the complexity of human motion dynamics. To overcome the issues, we propose a novel text-to-motion generation framework that integrates two key components: Hard Token Mining (HTM) and a Hierarchical Generative Masked Motion Model (HGM\u00b3). Our HTM identifies and masks challenging regions in motion sequences and directs the model to focus on hard-to-learn components for efficacy. Concurrently, the hierarchical model uses a semantic graph to represent sentences at different granularity, allowing the model to learn contextually feasible motions. By leveraging a shared-weight masked motion model, it reconstructs the same sequence under different conditioning levels and facilitates comprehensive learning of complex motion patterns. During inference, the model progressively generates motions by incrementally building up coarse-to-fine details. Extensive experiments on benchmark datasets, including HumanML3D and KIT-ML, demonstrate that our method outperforms existing methods in both qualitative and quantitative measures for generating context-aware motions.",
+    "keywords": [
+        "text-to-motion generation",
+        "generative masked model",
+        "hard token mining",
+        "hierarchical semantic graph"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=IEul1M5pyk",
+    "pdf_link": "https://openreview.net/pdf?id=IEul1M5pyk",
+    "comments": [
+        {
+            "summary": {
+                "value": "This work suggests a text-to-motion generation model, using the combination of three existing techniques:\n1. Masked VQ-VAE in the motion domain:\n    1. Hierarchical (MoMask by Guo et al., 2024)\n    2. Masking based on confidence (Pinyoanuntapong et al. 2024b)\n2. Hard token mining (HTM) in the imaging domain (Wang et al., 2023a)\n3. hierarchical semantic graph representation in the language domain (Shi & Lin, 2019) + Graph Attention Network (GAT) (Velickovic et al., 2018)"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Impressive and thoughtful choice of SOTA works.\n- Clear writing (mostly).\n- Reproducibility: implementation details are given and, more importantly, the authors plan to release their full code and setup."
+            },
+            "weaknesses": {
+                "value": "**Major weaknesses**\n\n- Novelty: This work combines existing SOTA works (see \"Summary\" above). While this work demonstrates solid engineering execution in integrating existing techniques, its novel contribution to the field is questionable. Please discuss any new theoretical insights or algorithmic innovations beyond the integration of existing techniques. \n- Technical soundness: How is the loss of the residual transformer (L_res) incorporated into the overall network loss? Can you clarify the summation range in Eq. 1 of Sec. A.2? I believe it should be from i=1 to V. Could you provide a diagram showing the architectural flow between the masked and residual transformers?\"\n- Qualitative results: To fully assess the quality and naturalness of the generated motions, I recommend including a supplementary video. While the paper includes qualitative figures, they cannot be validated for dynamic motion artifacts such as jitteriness and foot sliding.\n- Quantitative results: For most metrics, results are only marginally better and sometimes marginally worse. I would call that comparable. There is, however, a notable improvement for HML3D FID. \n\n**More weaknesses**\n\n- Some technical descriptions need more clarification or need to be corrected (see \"Questions\" below).\n- I suggest concatenating the supp to the main paper to allow mutual references and better reader experience. This is allowed in ICLR."
+            },
+            "questions": {
+                "value": "Questions and Comments:\n\n- Masked and residual transformers: Do they predict all tokens together (i.e., predict $\\mathcal{M}$ tokens for the masked transformer and $n$ tokens for the residual one)? Or, are they causal? (by causal I mean that for the residual transformer, predict tokens according to their temporal order where each prediction is conditioned on the previously predicted tokens; for the masked transformer it probably means conditioning masked tokens on those already predicted). If the prediction is causal, then a prediction of an $n$ length motion requires an n-step loop, hence each iteration in Sec. 3.4 has an internal loop within it. Please explain.\n- L209.5 Eq. 4): Rephrase. it seems you wanted to describe k and M, but described M only.\n- L220 (Eq. 5):  The L_pred objective focuses on ranking losses by relative magnitude rather than exact values. Therefore, $\\hat{\\ell}$ (and G) should be interpreted as predicting the values with the topological ordering of token losses, not as estimating the precise reconstruction loss. \n- L249: \"At each step\": do you mean \"at each epoch\"? The index k is related to epochs (L242), not to steps.\n- L 249: Does it mean $\\mathcal{M} = \\gamma(\\tau_k)\\cdot n$ ? I don't see anywhere in the paper how $\\mathcal{M}$ is defined.\n- L339: where is the probability distribution taken from?\n- Sec. A.2, A.3: Fig. 2 depicts the residual transformer in one block, in blue Fig. 3 depicts the same blue block multiple times, but relates to it as sub-blocks of the residual transformer from Fig. 2. This is misleading. Please clarify the differences and similarities between the sub-blocks and make their notation more consistent."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors investigate the hard token learning challenge within MoMask's native training scheme and enhance the model's text comprehension by integrating hierarchical textual conditions. Experiments and ablations demonstrate that this implementation improves MoMask's performance."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "This paper has the following strengths:\n\n- Introduce the Hard Token Mining (HTM) into the motion generation task for the first time and prove its effectiveness.\n- Design a Hierarchical Generative Masked Motion Model (HGM$^3$) and use the text conditions with different granularity to enhance the text-motion matching performance.\n- Qualitative and quantitative results demonstrate the effectiveness of the proposed method."
+            },
+            "weaknesses": {
+                "value": "For weaknesses, I have the following comments:\n\n- From an innovation perspective, it\u2019s quite limited. The overall pipeline of the paper is essentially a **replica** of Hard Patches Mining (Wang et al., CVPR 23), merely validated for effectiveness in motion generation.\n- As for the proposed Hierarchical Text Graph, while providing more textual information obviously enhances the model's text-motion alignment, a more straightforward approach like using CLIP token-level features would likely be more effective and simpler than this **complex** method (parsing, CLIP, graph, etc.). If the performance of using CLIP token-level features is inferior to the Hierarchical Text Graph, please provide a comparative experiment to demonstrate this.\n-  This paper is a well-executed A+B **technical report** with clear and complete experiments, but it offers limited practical value for real-world applications."
+            },
+            "questions": {
+                "value": "Could Figure 4 show more examples and include **heatmaps of the distribution of the predicted reconstruction loss**, like in Hard Patches Mining (Wang et al., CVPR 23)?\n\nMissing cites:\n- MotionGPT: Human Motion as a Foreign Language\n- MotionLCM: Real-time Controllable Motion Generation via Latent Consistency Model\n- StableMoFusion: Towards Robust and Efficient Diffusion-based Motion Generation Framework\n- Mofusion: A framework for denoising-diffusion-based motion synthesis"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper works on the text-to-motion task and proposes two modules to specifically enhance the generative masked modeling-based motion generation. The first contribution is to apply a hard-mining training strategy to replace random masking when training the masked transformer, which facilitates the model to better generate the hard motions. Another contribution is using a graph-based hierarchical text embedding to replace the CLIP text embedding, which provides a better semantic understanding and leads to improved generation quality. Experiments show that the proposed two modules lead to better quantitative and qualitative results compared to the baselines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper proposes a hard-token mining training strategy that uses additional networks to predict masks of the hard-to-predict tokens. Compared to the random masking strategy used in previous generative masked modeling-based motion generation works, this hard-mining strategy effectively facilitates the models to learn the hard motions.\n\n2. The proposed hierarchical graph-based semantic embedding provides an enhanced text embedding compared to the CLIP text encoder embedding used in previous works. The proposed hierarchical semantic embedding well captures both the fin-grained and global semantics, leading to improved generation results.\n\n3. Experiments show that the proposed two components can effectively enhance the generation quality of generative masked modeling-based methods, and outperforms the baselines both qualitatively and quantitatively."
+            },
+            "weaknesses": {
+                "value": "1. This paper proposes two components that can specifically enhance generative masked modeling-based motion generation. Although the proposed components are effective, there is not much new knowledge from this paper.  Hard mining is used in the cited reference Hard Patch Mining (HPM) (Wang et al., 2023a) for the image domain and it employs a teacher-student model that transitions from completely random masking to focusing on difficult image patches, in the same spirit as this paper. The hierarchical graph-based embedding is proposed in the reference Act As You Wish, Jin et al. (2024) and proved effective for diffusion-based text-to-motion. This paper applies these two methods to the niche problem of masked modeling-based text-to-motion and achieves enhanced performance.\n\n2. As a motion generation work, this submission does not include any video or animation visualization of motion results. I would strongly suggest including some video results, at least for the sequences presented in Figures 3, 4, and Appendix C.\n\n3. Some technical details regarding text conditioning require further explanation. Line 205 states that the text embedding is from CLIP,  but from other sections I infer that it should be the proposed hierarchical semantic embedding. Moreover, Appendix Figure 2 indicates that the residual transformer uses the text embedding directly from CLIP instead of the hierarchical embedding. What is the reason for not using the hierarchical semantic embedding? I would appreciate additional explanations of the text conditioning used in this work.\n\nI'm on the borderline with this paper given the currently presented manuscript."
+            },
+            "questions": {
+                "value": "1. The citations in the text of the submitted PDF do not contain clickable links, which makes it hard to match the in-context citation with the reference works. This is not a factor for grading but can make the life of reviewers easier."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a novel framework with two main components: Hard Token Mining (HTM) and a Hierarchical Generative Masked Motion Model (HGM3). HTM focuses on difficult-to-learn motion areas, while HGM3 represents sentences with different levels of granularity, enabling contextually accurate motion generation by decomposing motion descriptions into hierarchical semantic graphs with three levels: motions, actions, and specifics. This global-to-local structure enables a deep understanding of motion descriptions and provides fine-grained control over motion generation. Experiments show that the propose method out perform state of the art methods for both HumanML3D and KIT dataset."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This work is the first to integrate hierarchical semantic graphs into a masked motion model, offering an innovative approach in this area.\n- The literature review effectively outlines the background on text-to-motion, masked motion models, and the challenges in existing methods.\n- Comprehensive experiments with detailed comparisons.\n- The experiments demonstrate that the proposed method achieves state-of-the-art (SoTA) performance across multiple datasets."
+            },
+            "weaknesses": {
+                "value": "- It is a bit confusing that $HGM^3$ is used both as the name of a component and as the name of the whole model ($HGM^3 + HTM$).\n- $HGM^3$ component:\n  - Since the main idea of $HGM^3$ is inspired by GraphMotion [1], it would strengthen the contribution if the authors could demonstrate the differences in applying GAT to a masked model.\n  - The $HGM^3$ component is not well described. It is unclear how 1) motions, 2) actions, and 3) specific elements work within the Graph Attention Network.\n  - There are no details provided on the \"twelve types of edges representing various relationships between nodes\" mentioned in Section 3.3.\n- The visualization in Figure 4 is unclear. A few more samples (or a video supplement, if easier) may help clarify the results.\n- It is unclear if the model truly requires a student-teacher architecture. (I don\u2019t fully understand this part\u2014I\u2019ve also addressed this in the questions section.)\n\n\n[1] Peng Jin, Yang Wu, Yanbo Fan, Zhongqian Sun, Wei Yang, and Li Yuan. Act as you wish: Finegrained control of motion diffusion model with hierarchical semantic graphs. Neural Information\nProcessing Systems, 2024."
+            },
+            "questions": {
+                "value": "- HTM?\n  - What is the output of HTM? What is the different between G(student) and F(student) models?\n  - What is the motivation of student-teacher architecture? To prevent model collapse? If yes, I think it's better to have ablation study on this.\n- $HGM^3$\n  - How the integration of Graph Reasoning to masked model is different from GraphMotion?\n  - Does Motion-Action-Specific embeddings applied to Residual layers?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

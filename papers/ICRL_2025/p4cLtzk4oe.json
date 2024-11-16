@@ -1,0 +1,130 @@
+{
+    "id": "p4cLtzk4oe",
+    "title": "Exploring Local Memorization in Diffusion Models via Bright Ending Attention",
+    "abstract": "In this paper, we identify and leverage a novel `bright ending' (BE) anomaly in diffusion models prone to memorizing training images to address a new task: locating localized memorization regions within these models. BE refers to a distinct cross-attention pattern observed in text-to-image generations using diffusion models. Specifically, memorized image patches exhibit significantly greater attention to the end token during the final inference step compared to non-memorized patches. This attention map effectively highlights regions where the generated image replicates training data. Furthermore, driven by our observation that local memorization significantly underperforms in existing tasks of measuring, detecting, and mitigating memorization in diffusion models compared to global memorization, we propose a simple yet effective method to integrate BE and the results of the new localization task into these existing frameworks. This integration effectively improves their performances by narrowing the performance gap caused by local memorization. Our results not only demonstrate the successful execution of the new localization task but also establish new state-of-the-art performance across all existing tasks, underscoring the significance of the BE phenomenon.",
+    "keywords": [
+        "Diffusion Models",
+        "Local Memorization",
+        "Bright Ending Attention"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=p4cLtzk4oe",
+    "pdf_link": "https://openreview.net/pdf?id=p4cLtzk4oe",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper is a followup work of Wen et al. (2024), which discovered interesting patterns that \"abnormally high predicted noise magnitude\" indicate \"global memorization\". This work finds similar patterns between \"abnormally high cross-attention values\" of the EOS token in the prompt with the image tokens indicate \"local memorization\". The experiments validate such patterns can indeed be used to find local memorization."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed idea is simple and is a natural extension of Wen et al. (2024).\n2. The occurrence of \"local memorization\" has important practical values but is under-explored."
+            },
+            "weaknesses": {
+                "value": "1. In multiple places, the authors state that the \"bright ending\" is obvious at the final denoising step. However, in the experimental results presented in Table 1, the 3 designs were using \"First Step\", \"First 10 Steps\", and \"All Steps\", respectively. Only \"All steps\" include \"the final denoising step\", but apparently \"the final denoising step\" plays only a minor role in \"All steps\". Why this discrepancy?\n2. In section 5.1, \"we propose element-wise multiplication of the magnitude by our memorization mask extracted via BE\". However, the authors didn't give details about how to extract a memorization mask from BE in Section 4. Is this done using a fixed threshold? a dynamic threshold? Or a threshold predicted by a dedicated NN?"
+            },
+            "questions": {
+                "value": "1. AFAIK there's no dedicated EOS token used by stable diffusion. Instead, there are only 77-N padding tokens which are almost identical to each other (except for being added with different positional encodings). Suppose the prompt contains 15 tokens, then there will be 77-15=62 padding tokens which have identical token embeddings. I believe the cross-attention maps of these tokens are highly similar to each other. Do you compute the cross-attention map by averaging these 77-N attention maps? Or do you choose the last padding token to extract the cross-attention map?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a problem with existing techniques to detect memorization in diffusion models in their lack to detect instances of memorization localized to specific subsections of generated images. To resolve this problem, they propose a new technique that creates a memorization mask for a generation.  The technique is based on a correlation between high attention values and memorization that the authors observe at the end of the diffusion process."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. The problem presented by the authors is compelling, and they demonstrate failure cases of existing techniques in the literature\n2. The authors propose a novel and effective method to address the problem\n3. The proposed method seems to solve this problem while also maintaining the success cases of earlier techniques"
+            },
+            "weaknesses": {
+                "value": "1. Some of the figures and text are somewhat difficult to understand, especially relating to the method itself. For example, Table 1 and Figs 6/7 are not explained thoroughly enough, even though they seem to be central results for the paper. Section 5.1 could also benefit from further elaboration to ensure that the method and its formulation are clear.\n2. The evaluation is not well explained in my opinion. For example, more details about the manual labelling process will make the results more reproducible.\n3. Sharing the code and the dataset will help making the method more reproducible"
+            },
+            "questions": {
+                "value": "1. What is the motivation for incorporating SSCD similarity into the metric? Why not just use some function of the mask itself to generate a score?\n2. Could you please share more details about the manual labeling process and the dataset itself?\n3. Will you share the code implementing your method?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel perspective on memorization in text-to-image diffusion models by focusing on local memorization, where specific regions of a training image are memorized rather than the entire image. It identifies a unique \"bright ending\" (BE) anomaly in cross-attention patterns, where memorized regions show higher attention to the end token during the final denoising step. This insight enables the extraction of localized memorization regions without access to training data. The paper proposes a new task\u2014locating these localized memorization regions\u2014and integrates this approach with existing evaluation, detection, and mitigation strategies. The paper demonstrate that incorporating BE significantly improves performance in existing tasks, particularly in narrowing the gap caused by local memorization, achieving state-of-the-art results."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper introduces the concept of \"bright ending\" as a novel phenomenon in diffusion models, which has not been explored in prior research. This unique observation enables a new task of localized memorization detection, which broadens the scope of understanding memorization in generative models.\n\nThe paper is good written. The paper clearly differentiates between global and local memorization, offering detailed explanations of how BE is used for local region detection. Figures and visualizations of attention maps provide clarity on how the BE mechanism operates in practice, enhancing understanding of the proposed method.\n\nThe motivation of the paper is sound. It has implications for legal and ethical considerations, especially in cases where models might unintentionally replicate copyrighted content. The findings are particularly relevant for improving privacy-preserving techniques in model training and inference."
+            },
+            "weaknesses": {
+                "value": "The efficiency of the proposed approach needs to be further demonstrated. The BE-based approach requires analysis at the end of the inference process, making it slower compared to some existing global methods that might detect memorization earlier in the process. \n\nWhile the BE phenomenon is well-documented for text-to-image diffusion models, it is not clear how well this method would generalize to other types of diffusion models, like recently the flow-matching based models.\n\nMore evaluation metrics for local memorization could be explored for a comprehensive study."
+            },
+            "questions": {
+                "value": "How does the proposed BE method perform in scenarios where memorization is more subtle or occurs in highly abstract image regions? Is there a threshold of memorization size or intensity where BE becomes less effective?\n\nIs it possible for the method to be generalized to other types of generative models? Can the BE-based method be generalized to generative models that do not rely on text conditioning, such as unconditional image generation models? Can it be applied to video generation?\n\nGiven the increased inference time due to analysis at the final denoising step, do the authors have suggestions for optimizing the process to make it more efficient for real-time applications?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

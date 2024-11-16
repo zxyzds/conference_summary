@@ -1,0 +1,181 @@
+{
+    "id": "gXV84CnMUm",
+    "title": "Outward Odyssey: Improving Reward Models with Proximal Policy Exploration for Preference-Based Reinforcement Learning",
+    "abstract": "Reinforcement learning (RL) heavily depends on well-designed reward functions, which can be challenging to create and may introduce biases, especially for complex behaviors. Preference-based RL (PbRL) addresses this by using human feedback to construct a reward model that reflects human preferences, yet requiring considerable human involvement. To alleviate this, several PbRL methods aim to select queries that need minimal feedback. However, these methods do not directly enhance the data coverage within the preference buffer. In this paper, to emphasize the critical role of preference buffer coverage in determining the quality of the reward model, we first investigate and find that a reward model's evaluative accuracy is the highest for trajectories within the preference buffer's distribution and significantly decreases for out-of-distribution trajectories. Against this phenomenon, we introduce the **Proximal Policy Exploration (PPE)** algorithm, which consists of a *proximal-policy extension* method and a *mixture distribution query* method.\nTo achieve higher preference buffer coverage, the *proximal-policy extension* method encourages active exploration of data within near-policy regions that fall outside the preference buffer's distribution. To balance the inclusion of in-distribution and out-of-distribution data, the *mixture distribution query* method proactively selects a mix of data from both outside and within the preference buffer's distribution for querying. PPE not only expands the preference buffer's coverage but also ensures the reward model's evaluative capability for in-distribution data. Our comprehensive experiments demonstrate that PPE achieves significant improvement in both human feedback efficiency and RL sample efficiency, underscoring the importance of preference buffer coverage in PbRL tasks.",
+    "keywords": [
+        "Preference-based Reinforcement Learning; Reinforcement Learning; Human Feedback"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "To enhance the reliability of the reward model for current policy improvement, we have developed the Proximal Policy Exploration (PPE) algorithm to increase the coverage of the preference buffer in areas close to the near-policy distribution.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=gXV84CnMUm",
+    "pdf_link": "https://openreview.net/pdf?id=gXV84CnMUm",
+    "comments": [
+        {
+            "title": {
+                "value": "Reply to Reviewer 7kxy - Part 2"
+            },
+            "comment": {
+                "value": ">**Q1.** Why is PPE being integrated with QPA and not PEBBLE?\n\n**A:** Firstly, QPA is the latest state-of-the-art algorithm, and we wanted to test whether our method could provide further improvements on top of it. Our experimental results demonstrate that our approach indeed achieves this.\n\nSecondly, when the goal is to enhance the current policy, a reward model that evaluates more accurately around the current policy is undoubtedly a better choice than one that is globally better. QPA naturally reduces the number of queryable trajectory pairs\u00a0$(\\tau_0, \\tau_1)$, as referenced by the \"policy-aligned buffer size of\u00a0*N*=10\" in Section 6 of [1]. Therefore, integrating PPE with QPA allows for a more reliable reward model when evaluating the trajectories around the current policy.\n\nThis is why we integrated PPE with QPA.\n\nIt's also worth noting that in Appendix C.1 of [1], specifically in Algorithm 1, Lines 8-9, QPA already incorporates the SURF trick in its implementation. Therefore, we focused on evaluating the effectiveness of PPE with RUNE.\n\n[1]* QPA: QUERY-POLICY MISALIGNMENT IN PREFERENCE BASED REINFORCEMENT LEARNING\u00a0https://arxiv.org/pdf/2305.17400*\n\n>**Q2.** PPE added on PEBBLE.\n\n**A:** Thank you for highlighting this issue. We agree that the relevant validation is important. The table below presents our validation results, demonstrating that integrating PPE with PEBBLE leads to performance improvements. We also highlight the differences in impact between PPE and RUNE's exploration strategies when applied to PEBBLE.\n\nTo convert your LaTeX table into a format suitable for OpenReview, you need to ensure that it is compatible with the Markdown-like syntax used by OpenReview. OpenReview supports a limited subset of Markdown for tables, so you will need to simplify the formatting and remove any LaTeX-specific commands. Here's how you can represent your table in a format that OpenReview can display:\n\n| Task                | PEBBLE           | PEBBLE+RUNE      | PEBBLE+PPE       |\n|---------------------|------------------|------------------|------------------|\n| Walker-walk\\_1e2    | 453.43 \u00b1 159.43  | 414.62 \u00b1 182.16  | **499.73 \u00b1 82.75** |\n| Walker-run\\_1e2     | 188.21 \u00b1 79.86   | 251.48 \u00b1 104.98  | **257.64 \u00b1 58.59** |\n| Quadruped-walk\\_1e3 | 369.51 \u00b1 134.22  | 440.30 \u00b1 296.02  | **451.06 \u00b1 223.27** |\n| Quadruped-run\\_1e3  | 314.91 \u00b1 120.87  | 231.85 \u00b1 60.14   | **373.09 \u00b1 149.10** |\n| Cheetah-run\\_1e2    | 545.77 \u00b1 130.00  | 508.60 \u00b1 186.06  | **569.54 \u00b1 84.27**  |\n| Humanoid-stand\\_1e4 | 306.08 \u00b1 171.92  | 351.10 \u00b1 197.75  | **357.13 \u00b1 76.15**  |\n\n\nFurthermore, as we mentioned earlier in Section 3.1, Figure 1(b), and lines 179-181 of the text, RUNE's approach, which is based on the variance of the reward model output, does not effectively identify data that is out-of-preference distribution. PPE, on the other hand, aims to explore more out-of-distribution (OOD) data. This differs from RUNE, which uses an additional extrinsic reward to guide policy exploration, representing two distinct phases. PPE primarily influences exploration by introducing data around the policy that is out-of-preference distribution through the target policy\u00a0$\\pi_T$, whereas RUNE's extrinsic reward alters the target policy\u00a0$\\pi_T$\u00a0itself."
+            }
+        },
+        {
+            "title": {
+                "value": "Reply to Reviewer 7kxy - Part 1"
+            },
+            "comment": {
+                "value": "We sincerely appreciate your valuable insights and the diligent effort you have invested in the review. In response to the concerns you have raised, please find our replies below:\n\n>**W1.** Similar to prior work\n\n>>**1).** PPE seems similar to QPA\n\n**A:** The QPA method addresses the issue of 'Query-Policy Misalignment' by adjusting the query selection method to align with the current policy's distribution.\n\nIn contrast, PPE focuses not on the query selection phase but on the exploration phase during the interaction between the policy and the environment. PPE identifies that the reward model's reliability is compromised when the coverage of the preference buffer is insufficient. Therefore, PPE aims to enhance data coverage used for training the reward model, ensuring more reliable results.\n\nThe issue that PPE addresses is also present in QPA, as QPA does not actively expand the data coverage for training the reward model, according to the paper.\n\nSince the query phase and data exploration are implemented at different stages, we believe that the motivations and implementations of these two works are fundamentally different.\n\n>> **2).** Problem has been heavily studied before\n\n**A:** Fortunately, we have not found research similar to ours in previous online PBRL papers. We agree with you that \u2018reward models are trained via supervised learning, therefore this seems like an overfitting/generalization issue\u2019, but we would like to clarify that the impact of this issue in online Pbrl settings has not been thoroughly considered or discussed in prior work. \n\nMoreover, there is no established solution available for reference. We would appreciate it if you could point out any relevant papers, and we will actively engage in discussing them.\n\n> **W2.** Lack of Experimental Details\n\nThank you for pointing out this issue. We will include the relevant content in the revised version of the paper.\n\n>>**1).** How were preferences elicited?\n\n**A:** We used the same approach as PEBBLE, SURF, RUNE, and QPA, utilizing the B-pref framework [1] to script access to the ground truth reward, thereby simulating human preference labels.\n\n[1]  *Lee, Kimin, et al. \"B-pref: Benchmarking preference-based reinforcement learning.\"\u00a0arXiv preprint arXiv:2111.03026 (2021).*\n\n>>**2).** How many seeds were run?\n\n**A:** 5 seed for each experiment.\n\n>>**3).** What are the error bars being visualized in Figures 2 and 3?\n\n**A:** The error bars in Figures 2 and 3 represent the 95% confidence intervals derived from the experimental results of methods using five different seeds.\n\n> **W3.** Lack of Supporting Evidence\n\n>> **1).** About performance\n\n**A:** We observed that the mean performance of the policy improved noticeably with the use of PPE. As for the \"overlaps in error bars,\" this is indeed challenging to avoid. PBRL is inherently influenced by the preference buffer, which is generated online, resulting in significant variance in the results. This issue is also common in prior works such as SURF, PEBBLE, RUNE, and QPA.\n\n>>**2).** In addition, the authors did not perform statistical analysis on any evaluation metrics such as final performance or area under the curve\n\n**A:** You can refer to Appendix D, where we have documented the final performance and the variance of the experimental results.\n\n>>**3).** About actual human preferences\n\n**A:** Thank you for your insightful comment. You are absolutely correct, and we will replace \"human feedback\" with \"preference feedback\" in the text.\n\n>**W4.** Minor comments\n\n**A:** Thank you for your feedback. We will remove the word \"distinct\" from the text."
+            }
+        },
+        {
+            "summary": {
+                "value": "To address the issue of significant human involvement in preference-based reinforcement learning (PbRL), this work proposes the Proximal Policy Exploration (PPE) method, which is designed to purposefully explore and extend the coverage of the preference buffer, thereby enhancing the evaluation ability of the reward model and the subsequent value function in PbRL. This improvement aims to promote an unbiased transmission of human intentions to the agent's behavior. Specifically, this work first employs a Morse Neural Network to identify the distributional properties of interactive transition samples, jointly constructing a policy regularization objective that encourages the agent to explore targeted transitions. Finally, PPE introduces the mixture distribution query to balance the inclusion of both in-distribution and out-of-distribution data. The experiments demonstrate that PPE achieves significant improvements in both human feedback efficiency and sample efficiency."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This work addresses the accuracy of the reward model in preference-based reinforcement learning from a different perspective\u2014by expanding the coverage of the preference buffer, which is a compelling and meaningful direction. The work specifically designs the proximal policy extension and mixture distribution query methods to explore policy behaviors outside the preference distribution but near the policy distribution, enabling the agent to effectively leverage both the existing preference distribution data and the unexplored state-action space beyond the preference buffer. Experimentally, compared to the state-of-the-art method QPA, PPE achieves significant performance improvements across DMC tasks of varying difficulty levels and includes extensive ablation studies on components and key parameters. Overall, the method in this work is highly reproducible, well-developed, and provides theoretical guarantees for certain conclusions, with a comprehensive experimental setup."
+            },
+            "weaknesses": {
+                "value": "The overall originality and novelty of the specific methodology in this paper are relatively limited. The problem addressed here essentially relates to a common issue of OOD detection and balanced utilization. The distinguishing factor is its application to the preference-based reinforcement learning (PbRL) setting, specifically aiming to address inaccuracies in the learned reward model due to insufficient coverage in the preference buffer. Unfortunately, the methods adopted do not introduce particularly novel approaches to solve this challenge.\nIn detail, i\uff09The paper applies a morse network to assess the distribution of each transition; however, this approach was previously introduced in \"Offline Reinforcement Learning with Behavioral Supervisor Tuning.\"\uff1bii\uff09Secondly, the authors incorporate this network within a regularized policy objective, which encourages the agent to purposefully explore targeted transitions. However, the initial objective form is heavily based on prior work. The main contribution here is the proposal to tighten the constraints, enabling a more effective closed-form approximation of the original objective. iii\uff09Lastly, the authors introduce a Mixture Distribution Query method that queries both in-distribution and out-of-distribution data, which is the main but limited contribution of this work.\n\nExperimentally, the performance on the MetaWorld tasks is suboptimal, failing to achieve consistent performance improvements. Also, there are some deficiencies in the writing of this paper. For example, there is excessive verbosity, and some problem statements are not clearly expressed."
+            },
+            "questions": {
+                "value": "1) In Section 3.1, some descriptions lack clarity. For instance, in Figure 1b, it is unclear why the variance of the reward model can be used to identify whether a transition sample belongs to the training region. Therefore, it is essential to provide additional explain or experimental evidence demonstrating the discriminative ability of the reward model variance with respect to the training data distribution before using the conclusion.\n\n2) The mixture distribution query process focuses on enhancing the coverage of the preference buffer and improving the evaluation capability of the reward model by combining in-distribution and out-of-distribution data. However, it remains unclear how the preference labels for newly explored trajectory pairs {\u03c40, \u03c41, y}^b_i=1 are generated. Does this process still require human involvement? This aspect is not addressed in the paper. If similarity metrics-based automatic labeling is used, there may be issues with accuracy, while if human intervention is still needed, this approach does not effectively solve the initial problem.\n\n3) There is a potential but possibly flawed doubt here. In the mixture distribution query method, if there is a computationally intensive query operation, the prior policy regularization setup may seem less essential, as the agent would still have the capability to explore targeted transitions without any policy regularization. Distributed query on such naive policy exploration can also achieve similar effects. Hence, why is a mixture distribution query still necessary? Can similar functions or effects be achieved by coordinating the previous parameter \u03bb or other possible adjustments?\n\n4) Some descriptions and causal relationships in the manuscript are unclear. For example, in lines 180-181, \"Therefore, the method proposed by Liang et al. (2022)...\", what method has been proposed in the existing work? If so, it is difficult for us to understand the subsequent results based on the previous sentence. Finally, there are some repeated descriptions, such as lines 243-247, 275-278, etc., which can be appropriately simplified to express accurately and concisely.\n\n5) Although the problem solved in this paper falls within the scope of PbRL, PbRL-related preliminaries are rarely involved in the method section, so this part can be simplified. In terms of formal description, the manuscript can focus more on the problem itself."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes the Proximal Policy Exploration (PPE) algorithm to improve the quality of reward models in preference-based reinforcement learning (PbRL) by expanding the coverage of the preference buffer used to train the reward model. To achieve this, PPE has two components: a proximal-policy extension approach to encourage exploration in out-of-distribution transitions near the current policy and a mixture distribution query method for balancing in-distribution and out-of-distribution data in the buffer. The authors evaluate PPE on DMControl and MetaWorld benchmarks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- **Novel Approach.** The proximal-policy extension and mixture distribution query methods decompose exploration and exploitation on learning the preference model for PbRL.\n- **Empirical Results.**  The experimental results show some improvement over previous methods and the authors ablate some design choices.\n- **Compatibility with Existing Frameworks.** PPE is compatible with previous PbRL methods."
+            },
+            "weaknesses": {
+                "value": "1. Line 48 states that PbRL \"addresses these challenges.\" However, PbRL is also prone to human biases. It would be better to phrase it as \"PbRL addresses some of these challenges.\"\n2. Line 84 should read \"summary\" instead of \"summery\"\n3. Figure 1(b) is missing one point for a training region of size 9.\n4. While the OOD detection can be useful to encourage the agent to explore more informative (s,a) pairs, learning the function $f_\\phi$ can be computationally expensive. The paper would benefit from a discussion on how training $f_\\phi$ impacts wall-clock time and necessary computational resources compared to previous methods.\n5. The paper does not discuss how the stopping time for feedback collection is decided. The manuscript would benefit from a further discussion on this and its impact on the training. For example, what happens in Figure 3(c) if one stops collecting feedback after 50% of training similarly to (a) and (b)? Alternatively, does RUNE outperform PPE the training is continued to $2 \\times 10^6$ steps similarly to (a) and (b)?\n6. Moreover, what does it mean to stop feedback collection after $1 \\times 10^6$ steps in terms of number of preference queries?\n7. In Algorithm 1 and 2, trajectory pairs $\\tau_0, \\tau_1$ are sampled from $P^{in/out}(\\tau)$, however the latter is not a distribution, but rather just a real number. Could the authors clarify how the sampling is performed?\n8. The paper claims that the proposed method learns better reward models because it has a larger coverage over the state-action spaces, however, there is no discussion on how the coverage differs between different algorithms. It would be interesting to have a measure of how much more of the state-action space is indeed covered.\n9. Line 296 should state \"the cardinality of\" or \"the size of\" instead of \"the quantity of\".\n10. PPE needs to maintain 4 buffers $\\mathcal D, \\mathcal D^{cp}, \\mathcal D^p, \\mathcal D^m$. This can be quite expensive in terms of memory. Moreover, what is $\\mathcal D^{cp}$ exactly? How does it differ from other buffers? In Algorithm 2, line 5, in which buffer is the transition stored? What is the $\\mathcal D$ buffer?\n11. The plots are not properly explained. Are the authors plotting the average success rate over how many seeds? Are the shaded areas the standard deviation, standard error, or some other uncertainty measure?\nOverall, the paper proposes an interesting approach to learning better reward models. However, it could benefit from more clarity in presentation, more thorough discussion of computational costs, and more detailed experimental insights."
+            },
+            "questions": {
+                "value": "See **Weaknesses**. Additionally:\n1. In line 237, if $\\mathcal{A}_{uni}$ simply the action space of the MDP? It might be clearer to write $a_u \\sim \\mathrm{Uniform}(\\mathcal A)$ instead.\n2. I am not sure the Equation 5 captures the desideratum in the preceding paragraph. From my understanding, the objective of $\\pi_E$ is to take actions that take the agent to unexplored areas, i.e., areas that are classified as 0 by $M_\\phi$, which can be achieved by minimizing $M_\\phi$, maintaining the constraints of staying close to $\\pi_T$. However, Equation 5 is a maximization problem. Could the authors clarify this?\n3. In lines 285 - 287, the authors state that the query selection method should actively select OOD data to increase coverage while also selecting OOD data for query. Should it instead say that it should select in-distribution data for query? If not, why?\n4. During training, what it means for data to be in and out-of distribution changes. Are the elements in $\\mathcal D^M$ relabeled? In line 14 and 15 of Algorithm 2, the data in $\\mathcal D$ and $\\mathcal D^{cp}$ is relabeled but not $\\mathcal D^M$.\n5. Could the authors clarify why the SAC algorithm has been chosen in Algorithm 2?\n6. In line 7 of Algorithm 2, what is $\\tau$?\n7. What is the difference between \"iteration\" and \"interaction\" in Algorithm 2?\n8. How often is $M_\\phi$ updated? For how many gradient steps? How does this impact wall-clock time?\n9. What are the similarities and differences of the exploration mechanism of PPE compared to the exploration induced by model-based PbRL (e.g., \"HIP-RL: Hallucinated Inputs for Preference-based Reinforcement Learning in Continuous Domains\" or \"Efficient Preference-Based Reinforcement Learning Using Learned Dynamics Models\")? Is learning an exploration policy similar to learning a model of the dynamics and exploring optimistically in the learned dynamical model?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce a novel PbRL method, that is based on the idea, that it is important to increase the OOD error of the reward model. Therefore, they introduce a query method that considers a mixture of OOD and ID samples. Futhermore, they employ a Morse network for obtaining well calibrated uncertainty estimates that allow for efficient OOD detection. The algorithm is evaluated on several locomation and robotics benchmark tasks and compared to 4 existing PbRL algorithm. The authors also included a ablation study wrt. two of the hyper parameters and the distinct modules of their algorithm."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors try to tackle a known problem with a new perspective. It is known, that PbRL is subject to a dual exploration problem: The policy space and the reward space. However, exploring the reward space via an explicit OOD detection is novel, as far as the reviewer knows. Furthermore, they utilize novel Morse networks, not applied in PbRL before. With a good benchmark set of test domains and algorithms, they establish the usefulness of the approach. Resultingly originality and impact are good. However, significance is limited due to clarity issues and some remaining research questions."
+            },
+            "weaknesses": {
+                "value": "The most impactful weakness of the paper are issues of clarity. It seems, that the authors are not using a form of reward-based PbRL, but a variant of direct policy learning. (see A Survey of Preference-Based Reinforcement Learning Methods, Wirth, 2017) $M_\\phi$ approximates an action distribution, according to Eq. 3, not a reward distribution, which is then used to modify a policy $\\pi_T$ (Eq.6). However, the origin of $\\pi_T$ is never discussed. Section 2 indicates that this may be a reward-based PbRL policy, but this is not clear. In case it is, this should be clarified and also explained which method is used to derive a policy from the learned reward. The according updates should be added to Alg.2. These issues also impacts the claim \"Our method, as outlined in Section 3.2, is designed to be orthogonal and highly compatible with existing strategies\", because the orthogonality is not visible. These clarity issues are probably not difficult to resolve, but are quite impactful. There are also some clarity issues wrt. the motivating example (see questions).\n\nA second problem is, that this is difficult to attribute the performance gains to the coverage improvement. The coverage idea implicitly assumes that all parts of the trajectory space are equally important, which is usually not true. It is sufficient to obtain a reward function that induces the same optimal policy as the true reward and guides the policy learning process towards that policy. Therefore, methods combining expected reward and uncertainty are usually used (like RUNE). That it is better to \"only\" consider coverage would be a very interesting insight, but the algorithm deviates from conventional PbRL methods in two other aspects: The preference exploration is defined as a policy, not a reward scheme and the uncertainties are modelled using an RBF-kernel based method. Kernel methods are known to be better wrt. ODD uncertainty (as compared to e.g. ensembles, like used in RUNE). Therefore, the ablation studies using ensembles instead of Morse or defining the coverage bonus in the reward space are of major interest. However, the problem of unclear effect attribution is not substantial enough to prevent acceptance, as the benefit of the full method is sufficiently established. Although, it would greatly improve the contribution.\n\nA further improvement can be achieved by a bit more extensive discussion of Morse networks, as they should not be considered an established method (there seems to be only an arxiv short paper, nothing peer reviewed). Foremost is the question, how scalable Morse networks are. Most PbRL methods abstain from using Kernel-based approaches, despite their advantages, due to the costly scaling wrt. number training data points. \n\nLastly, the structure of the paper could be improved a bit moving the related work discussion in the introduction to the related work section and the OOD detection from preliminaries to method."
+            },
+            "questions": {
+                "value": "- Preliminaries: $y_p$ is not defined, but seems to be restricted to strict preference?\n- Motivation Example: Are region 1-9 sizes (as indicated by line 171) or an index?\n- Motivating Example: What is the is the evaluation region for used for 1d?\n- This implies that $\\hat{a} = a$ only when the pair (s, a) originates from the preference buffer. This claim depend on the form of $f$, e.g. a linear approximator may not ensure this. Is this ensured by the Morse network?\n- Some baseline results deviate from reported literature (e.g. SURF, QPA drawer-open). Is the statement \"we also made use of the official code repositories\" true for all baselines or are some re-implemented?\n- The method seems quite sensitive against hyperparameter changes (4.2). Is there a set of reasonable hyperparameters for unseen tasks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper focuses on developing a preference-based RL algorithm that increases the data coverage with a preference buffer. More specifically, it is found that the reward model cannot accurately predict rewards for trajectories that are out of distribution from the original training set. Therefore, the authors propose the Proximal Policy Exploration (PPE) algorithm that encourages the agent to explore data that falls outside of the preference data distribution, but close to the agent\u2019s current policy."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The motivating example in Section 3 helps demonstrate the OOD issue. \n2. I think it was interesting to evaluate the reward model by comparing the ground truth return and the learned return via the Spearman correlation coefficient in Section 3.1. \n3. Performing OOD Dection seems like a novel addition to the PbRL algorithm."
+            },
+            "weaknesses": {
+                "value": "Similar to prior work/findings:\n\n1. PPE seems extremely similar to QPA [1]. Both methods seem to be focused on selecting queries that are close to the agent\u2019s current policy. However, the authors only briefly mention this work in the related works. For example, lines 249-251 from this paper state,\u201cWe have designed the [PPE] method, to actively encourage the agent to explore data that falls outside of the preference buffer distribution but within the vicinity of the current policy\u2019s distribution\u201d. \nSnippet taken from [1] \u201cIn particular, it is crucial to ensure that the pairs of segments (\u03c30, \u03c31 ) selected for preference queries stay close to the current policy\u2019s visitation distribution\u201d. \nThe authors need to more clearly outline how their work is different from QPA.\n2. The authors\u2019 third contribution is about the reward model\u2019s accuracy on out-of-distribution data. In particular, the reward model can only output accurate values for trajectories it has previously trained on. However, I\u2019m not convinced this is a new finding. The reward models are trained via supervised learning, therefore this seems like an overfitting/generalization issue, which has been heavily studied before. \n\n\nLack of Experimental Details:\n\nThe authors refer the readers to Appendix G for a complete understanding of the experimental details, but Appendix G only contains hyperparameter details. There is no mention of:\n\n1. How were preferences elicited? I\u2019m assuming preferences were obtained through a scripted teacher but it does not mention it anywhere in the text.\n\n2. How many seeds were run?\n\n3. What are the error bars being visualized in Figures 2 and 3?\n\n\nLack of Supporting Evidence for the Effectiveness of the Proposed Algorithm:\n\n1. PPE was evaluated in 9 environments, however, PPE only appeared to have distinctly higher performance in Humanioid-stand. There are significant overlaps in error bars in all other environments.  \n\n2. In addition, the authors did not perform statistical analysis on any evaluation metrics such as final performance or area under the curve. \n\n3. Did any experiments involve actual human preferences? The authors note that PPE achieves significant improvement in human feedback efficiency, however, I\u2019m not sure if any humans were involved. I don\u2019t think any claims can be made about human teachers if only simulated/scripted teachers were used. \n\n4. Unclear why PPE was integrated with QPA. See Question 1. \n\nMinor comments:\n\nThe authors note \u201cWe selected six distinct complex tasks from DMControl\u201d, however, I would argue that (Walker-walk and Walker-run), and (Quadruped-walk and Quadruped-run) are not distinct. I think this claim is a bit too strong. \n\n\n[1] QPA: QUERY-POLICY MISALIGNMENT IN PREFERENCE BASED REINFORCEMENT LEARNING \nhttps://arxiv.org/pdf/2305.17400"
+            },
+            "questions": {
+                "value": "1. Why is PPE being integrated with QPA and not PEBBLE? Both RUNE and SURF are integrated on top of PEBBLE. Therefore, it seems like an unfair advantage to PPE if it is being added on top of a more advanced PbRL algorithm. Or put differently, why did the authors not integrate the other PbRL baselines on top of QPA? In the QPA paper, the authors note that it can be integrated on top of any off-policy PbRL algorithm, including SURF and RUNE. \n\n2. Does PPE improve performance if it is added on top of other PbRL algorithms, as the authors mention it is highly compatible with existing strategies and frameworks."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

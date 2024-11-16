@@ -1,0 +1,270 @@
+{
+    "id": "q5lJxCXjiY",
+    "title": "GEOMETRIC SIGNATURES OF COMPOSITIONALITY ACROSS A LANGUAGE MODEL\u2019S LIFETIME",
+    "abstract": "Compositionality, the notion that the meaning of an expression is constructed from the meaning of its parts and syntactic rules, permits the infinite productivity of human language. For the first time, artificial language models (LMs) are able to match human performance in a number of compositional generalization tasks. However, much remains to be understood about the representational mechanisms underlying these abilities. We take a high-level geometric approach to this problem by relating the degree of compositionality in a dataset to the intrinsic dimensionality of its representations under an LM, a measure of feature complexity. We find not only that the degree of dataset compositionality is reflected in representations' intrinsic dimensionality, but that the relationship between compositionality and geometric complexity arises due to learned linguistic features over training. Finally, our analyses reveal a striking contrast between linear and nonlinear dimensionality, showing that they respectively encode formal and semantic aspects of linguistic composition.",
+    "keywords": [
+        "geometry",
+        "compositionality",
+        "representation learning"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "Investigating intrinsic dimensionality of LM's representations on compositional linguistic dataset and its evolution over pre-training",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=q5lJxCXjiY",
+    "pdf_link": "https://openreview.net/pdf?id=q5lJxCXjiY",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Comment 5 (Why use the transformer's residual stream)"
+            },
+            "comment": {
+                "value": "__Why did you prioritize the transformer\u2019s residual stream for your analysis? How does it align with or diverge from the representational basis recommended in mechanistic interpretability literature? Have you considered incorporating other components, such as Attention or MLP layers, into your analysis?__\n\nLooking at the contribution of attention to ID and MLP could be an exciting and novel direction for follow-up work. But, due to several reasons detailed below (one of them being compute), we did not prioritize it in this project.\n\nAnalyzing the residual stream (Elhage, 2021) is a very common paradigm in the interpretability literature. It has a lot of nice interpretations, such as an iterative refinement of vocabulary distributions (Geva et al, 2022; Belrose et al, 2023; Dar et al, 2022) until the next-token prediction; or a communication channel onto which individual layers write (Elhage et al., 2021; Merullo et al., 2024). We prioritize the residual stream over more fine-grained components in this work for several reasons. In particular, mechanistic interpretability, which would analyze individual neurons and circuits, up to attention heads and MLP layers, is not our goal. As we\u2019re looking at dataset-level properties, we are interested in representations that are coarse-grained: this makes the residual stream an ideal candidate compared to, e.g.,  individual attention heads. We also care about comparability to the existing literature on ID estimation in LMs. The vast majority of existing works (Valeriani et al. 2023; Cheng et al. 2023; Cai et al. 2021; Chen et al. 2020; Antonello et al., 2024; Doimo et al., 2024; Tulchinskii et al, 2023; Yin et al, 2024) compute geometric measures such as ID at the level of the residual stream, and specifically on the last token representation. As such, our work is in line with existing literature."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Comment 4 (Why link semantic complexity to ID)"
+            },
+            "comment": {
+                "value": "__Could you elaborate on the reasoning behind linking semantic complexity to ID in models, particularly in the absence of a clear semantic complexity metric? Is there a way to quantitatively define or approximate semantic complexity to strengthen claims about its relationship with model representation?__\n\nQuantifying semantic complexity is highly nontrivial, as for general text datasets, it cannot be directly inferred from the complexity of the strings, see e.g. the provided example [cat, puma, lion] in line 224. In particular, semantic complexity must be quantified on some meaning representation of the input strings, which would require, e.g., embedding the sentence using a large language model. As we are comparing semantic complexity to dimensionality computed on LM embeddings, this would unfortunately be circular. \n\nInstead, we constructed our grammar such that sentences\u2019 meanings are literal compositions of the meanings of their parts. This guarantees that a dataset with a larger variety of word combinations (smaller $k$) has a larger variety of meanings. That is, semantic complexity, where we consider semantics to be at the sentence-level, monotonically decreases in $k$ for normal text; this is enough as we only care about the relative complexity between datasets. On the other hand, sentence-level semantic complexity should collapse when shuffling sequences, as by construction, destroying syntax removes the possibility of composing phrase-level meaning."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Comment 3 (Why Kolmogorov Complexity)"
+            },
+            "comment": {
+                "value": "__Why did you choose Kolmogorov complexity as a metric for form compositionality? What specific advantages does it offer for assessing compositionality, and how does it relate to the core concept of structure discovery?__\n\nKolmogorov complexity (KC), coming from algorithmic information theory, is the length of the shortest program (in bits) needed to produce the dataset. If a dataset is structured, such as in our case, then the program length will be shorter than for a dataset that appears random (without structure). In other words, all else being equal, a less combinatorially complex (in our case \u201cformally compositional\u201d) dataset is more compressible. \n\nUsing KC to relate linguistic structure to compression is not that new. Along these lines, recent work has proposed Kolmogorov complexity as a representation-agnostic measure of compositionality (Elmoznino et al., 2024); others have related information-theoretic compression more broadly to language learning in machines (e.g. Deletang et al., 2023) and learning and comprehension in humans (Mollica and Piantadosi, 2019; Levy, 2008), as well as system-level compositionality of languages (Sathe et al., 2024). The throughline in all of these works is that the compositional structure of language permits compression, making KC highly suited to quantify formal compositionality."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Comment 2 (Distinction between compositionality of form and meaning)"
+            },
+            "comment": {
+                "value": "__Could you clarify and justify the distinction you make between compositionality of form and meaning? What theoretical or empirical motivation supports this separation? Could you explain why tracking form (e.g., type-token ratio) should be considered a component of compositionality rather than a separate linguistic metric?__\n\nWe will be careful to clarify these two notions of compositionality in the manuscript. \n\nOur \u201cmeaning compositionality\u201d is the one of Frege, Partee, etc. The familiar definition by Szabo is \u201cthe meaning of a complex expression is fully determined by its structure and the meanings of its constituents\u201d or the \u201cbottom-up concatenative notion of compositionality\u201d you refer to. This has been referred to as semantic compositionality in the literature [(Baroni, 2019)](https://royalsocietypublishing.org/doi/full/10.1098/rstb.2019.0307), [(Pelletier, 1994)](https://link.springer.com/article/10.1007/BF00763644) among others.\n\nOur \u201cformal compositionality\u201d is the system-level compositionality described in \u201cLanguage Use is Only Sparsely Compositional\u201d, [(Sathe, Federenko and Zaslavsky, 2024)](https://escholarship.org/uc/item/0qd3662b) as well as [(Elmoznino et al., 2024)](https://arxiv.org/abs/2410.14817). It refers to the extent to which a language realizes its combinatorial possibilities, and is what we control with $k$. The type-token ratio of $k$-grams, in this case, is related. A lower type-token ratio indicates the dataset is \u201cless compositional\u201d according to the system-level definition. We\u2019ll add this interpretation to the manuscript.\n\nWe recognize that the more familiar definition of compositionality to readers is semantic compositionality. To avoid confusion, we\u2019d appreciate your feedback on the following changes to the manuscript:\n\n- Either we change the terms \u201cformal compositionality\u201d to \u201ccombinatorial complexity\u201d, and \u201csemantic compositionality\u201d -> \u201csemantic complexity\u201d to avoid terminology confusion, adding the above citations and motivation to the Background, or \n- Keep the terms as-is, adding the above citations and discussions to Background, around line 084."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Comment 1 (link to connectionist models)"
+            },
+            "comment": {
+                "value": "__Could you provide a more thorough characterization of compositionality as it pertains to connectionist models? How does your understanding align with or diverge from foundational perspectives (e.g., Smolensky, Van Gelder, Chalmers) on compositionality in connectionist architectures? How does the definition of compositionality you use set the foundation for your investigation and analyses throughout the paper?__\n\nThanks for this question. The specific perspectives of Smolensky etc on meaning composition in connectionism prescribe how meaning composition and binding occur in distributed representations.\n\nIn brief, our work is somewhat unrelated to composition in the connectionist sense; we do not investigate the composition function mapping representations of parts to the meaning representation of the whole. Our question is more simple: does the geometric complexity of representations correlate to the (formal, semantic) compositional complexity of inputs? As a result, we only consider compositionality on inputs, with representational dimension as a dependent variable; the link to connectionism would instead have to consider compositional structure of representations."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to reviewer"
+            },
+            "comment": {
+                "value": "Thanks for your valuable feedback! We\u2019ve responded in detail to each of your comments below."
+            }
+        },
+        {
+            "comment": {
+                "value": "__Then, a parsimonious explanation of the results could just be that lower k for unshuffled sentences increases nonlinear intrinsic dimensionality due to broader in-distribution semantic diversity__\n\nReally interesting hypothesis. According to your suggestion we looked at the ID of the controlled grammar inputs, which is more OOD compared to The Pile. The ID of the inputs is actually higher for k=1, which suggests that the lower-ID effect for shuffled sequences isn't simply due to it being out-of-distribution. In future work, it would be interesting to explicitly relate the degree of distribution shift to geometric properties of representations."
+            }
+        },
+        {
+            "comment": {
+                "value": "__\u2026These assumptions still seem safe for the conclusions in the paper, but the assumption of this specific definition of semantic complexity should be noted.__\n\nThanks for this comment. We agree that our conclusions hold in the absence of figurative language / paraphrases as you pointed out. The grammar was constructed to preclude this possibility, and we will point this out explicitly in \u201cMeasuring formal and semantic compositionality\u201d in Section 3.2.1.\n\n__In linguistics, nonce sentences usually refer to grammatical but semantically incoherent sentences__\n\nThanks for the pointer! We have removed it."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to reviewer"
+            },
+            "comment": {
+                "value": "Thanks so much for your comments, especially recommendations on the framing. We'll respond to your suggestions below in more detail:\n\n__It might be more intuitive to simply refer to \"form compositionality\" consistently as \"combinatorial complexity\". The paper focuses on the intrinsic dimensionality in the models for combinatorial complexity (form, e.g. shuffled sentences) and semantic complexity (meaning, in the unshuffled sentences). The paper doesn't seem to focus much on compositionality itself, i.e. how meaning is constructed from form. Thus, the consistent use of the word \"compositionality\" could be misleading.__\n\nThanks for the suggestion. The combinatorial complexity of forms is indeed not the type of compositionality put forth by Frege and in the Szabo chapter. Instead, it refers to the extent to which a language realizes its combinatorial possibilities at the system level, which does have precedence in the literature; see for instance the definition for \u201csystem-level compositionality\u201d in \u201cLanguage Use is Only Sparsely Compositional\u201d, ([Sathe, Federenko and Zaslavsky, 2024](https://escholarship.org/uc/item/0qd3662b)) as well as in Section 3.1 of \"A Complexity Theory-Based Definition of Compositionality\", ([Elmoznino et al. 2024](https://arxiv.org/abs/2410.14817)).\n\nStill, we think it\u2019d be prudent to change \u201cform compositionality\u201d to \u201ccombinatorial complexity\u201d as suggested, and \u201cmeaning compositionality\u201d, which is a binary variable (presence/absence of phrase-level semantic composition), to \u201csemantic complexity\u201d.\n\nWe propose to change the framing as follows:\n1. Clearly distinguish between phrase-level semantic composition (Frege, Szabo) and system-level compositionality (Sathe et al., 2024) around line 084. Name these terms respectively semantic complexity and combinatorial complexity.\n\n2. Make the appropriate changes to the text throughout.\n\nAs we don\u2019t want terminology to distract from the contribution of our paper, we\u2019d greatly appreciate your feedback on the current proposal (or if it suffices to keep the current terms while better defining them and motivating them in the literature)."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper analyses the representations of the last token in sentences from a pidgin language constructed by the authors. \n\nSpecifically the authors vary three things on the network side and two things in the input:\n\n1. network training progress: Networks trained for longer are supposed to be better/sophisticated\n2. network layer: Later network layers are supposed to be more important for \"semantics\" compared to \"form\"\n3. Network size: Representations from bigger networks are supposed to be \"better\"\n4. sentence word order: This is quantified as a binary variable, whether sentences are shuffled therefore destroying \"semantics\" or not\n5. inter-word coupling: The variation in input sentence's complexity due to coupling adjacent words is quantified by using gzip compressed size to estimate the Kolmogrov complexity.\n\nThey randomly sample sentences from their pidgin language and they measure two statistics for the last token's embedding vector \n1. Two nearest neighbor estimator for manifold dimension: An estimate of the dimensionality of the non-linear manifold under some assumptions.\n2. PCA dimensionality for 99% variance: The dimensionality of the linear subspace\n\nSo we can now imagine a 7-column dataframe with 5-dimensions and 2-measures and the paper presents various interesting observations. \n\nThe main claim from the authors are that: 1) \"PCA dimension\" of final token representation is a good estimate of kolmogrov/combinatorial complexity, 2) \"TwoNN dimension\" is a good estimate of \"semantic\" complexity. 3) The TwoNN complexity vs layer curve is a good predictor of how well the network is trained. If TwoNN complexity is higher for later layers then the model is trained well otherwise not."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The experiments in this paper are quite interesting, novel and certainly thought provoking. This paper presents correlates statistics of LLM representations to input complexity, and it disentangles input complexity into \"form\" and \"meaning\" which is a very neat idea. The paper is well-written and clearly organized. The introduction provides a strong motivation for the research and effectively sets the stage for the key questions addressed."
+            },
+            "weaknesses": {
+                "value": "This is a tough paper to assess because the connection between the conclusions and claims in the paper , and the actual experimental observations is a bit speculative. \n\nFor example, one of the claims is that shuffling words destorys any semantic information and therefore the TwoNN dimensionality is lower when we shuffle words, compared to when we do not. But this phenomenon is observed for 3 out of 4 settings, and the red curves in figure 2 where words coupled are 4 do not show that behavior. \n\nThe main issue is that this is a highly empirical paper and there is a danger that the results come from \"data fishing\" by slicing and dicing a fairly complex dataframe. The overall story is plausible and definitely thought provoking but I am not sure how conclusive the evidence in the paper is.\n\nDespite these weaknesses, I think the ideas in the paper are certainly very interesting, even though"
+            },
+            "questions": {
+                "value": "The phase transition in figure three seems to explain performance for only a few tasks such as SciQ, ArcEasy, Lambada, and PIQA but not for other tasks. Why do you think that is?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors empirically explore compositional language model representations, and how these representations change during training by using stored checkpoints from the Pythia models; outcomes are measured using three different model sizes.\n\nThe authors rely on two datasets to measure this. The first is a completely synthetic dataset with unspecified distributional properties from an artificially limited grammar of fixed length. The second consists of randomly selected passages from the Pile, selected without consideration of any reasonable boundaries, and again of a fixed length.\n\nUsing the representation of the last token as a proxy for the whole token sequence, the authors try to measure the dimensionality of these datasets, both linearly using PCA and in a non-linear fashion using TwoNN to estimate intrinsic dimension.\n\nThe authors then compare model dimension vs empirical data dimension, intrinsic dimension during training, and dimension by layer, drawing some conclusions from these empirical experiments."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The exploration of changing dimension across checkpoints was interesting; that felt original.\n\nSome explanation of dimension was relatively clear.\n\nFigure 3 \u2013 the change in iD is interesting over epochs; there are phase transitions at points that seem to occur at similar points in training."
+            },
+            "weaknesses": {
+                "value": "Ostensibly the paper explores compositionality, but the definition of compositionality and its experimental setup were unusual and not well connected to linguistic notions of compositionality. Given datasets that feel unrepresentative of real language distributions, any conclusions drawn from this dataset are unlikely to apply to any real NL data. Furthermore, it was not clear to me how the experiments attempted to measure compositionality.\n\nI had quite a few clarity issues about how the data was constructed, and I felt the authors leapt to conclusions about from relatively scarce data.\n\nIn detail:\n* The first dataset is a very limited Controlled Grammar \u2013 much weaker than even a probabilistic context free grammar. As such, it feels like a very limited exploration into actual linguistic phenomena. I would have expected that a study of compositionality would relate the representation of parts (e.g. words or phrases) to larger constructions (e.g. sentences or paragraphs).\n* The authors describe briefly \u201ccomposition of forms\u201d vs \u201ccomposition of meaning\u201d \u2013 I found these notions unclear, not well connected to any linguistic or ML definition of compositionality. This should either be explained more fully or a citation should be provided.\n* The authors say that k contiguous words are coupled during sampling, but they do not describe the sampling distribution.\n* Also, I\u2019m not sure how this is supposed to measure compositionality. I could imagine an experiment to evaluate whether changes in nationality or in job led to systematic and predictable differences in the constructed representation, but that was not present.\n* From a linguistic standpoint, sampling 16 contiguous tokens is strange. The 16 contiguous tokens might span sentences, paragraphs, etc. Hence even the real data felt unclean and not representative.\n* I was concerned about using the last token as a choice to represent the entire sequence. Although it is true that is the only token that can attend to all positions, there is nothing in the training objective that encourages it to represent the complete sequence. Subsequent tokens can attend to any position.\n* Figure 2 \u2013 it\u2019s odd to me that shuffled distributions have lower intrinsic dimensionality, even in the unigram case. I would have expected the dimensionality would be higher in the case of shuffling, as the data has fewer constraints."
+            },
+            "questions": {
+                "value": "* What is the sampling distribution and process for generating data? Is an n-gram language model used? Or a neural model with a given window?\n* Why not sample utterances from The Pile that are whole sentences instead?\n* Why use the last token as the representation? Did the authors evaluate how well that reflects the earlier tokens in the string? Could, for instance, the original string be reconstructed with reasonable likelihood given this representation?\n* Figure 2 \u2013 is this mostly telling us something about the dimension from which the data was sampled? What happens to these numbers if the number of categories is changed?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The goal of the paper is to relate compositionality to high-level dimensionality heuristics. For that the authors create a dataset with sentences syntactically identical sentences using a simple grammar. They extend such dataset by modifying its combinatorial complexity by correlating different numbers of words within the sentences. The authors also create a shuffled version of the dataset also with different combinatorial complexity levels which they use as control throughout the paper.\n\nThe paper finds that linear dimensionality is a proxy for form whereas nonlinear dimensionality encodes meaning. This is supported by a large set of experiments on models from the Pythia family, evaluated on both the controlled dataset and The Pile."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. **Clarity and Organization**: The motivations, research questions, and methodologies are presented clearly\n2. **Comprehensive Literature Review**: The literature is thoroughly reviewed, framing the research well in the context of existing work on compositionality and intrinsic dimensionality.\n3. **Extensive and Organized Results**: The paper includes a large set of results, which are mostly well presented."
+            },
+            "weaknesses": {
+                "value": "1. **Model Choice**: \n   - The paper uses Pythia, which is not state-of-the-art (SOTA), though it does have the advantage of available checkpoints.\n   - It would strengthen the paper to include SOTA models, such as those from the Llama or Mistral families, to see if the findings generalize to the most current models.\n   - **Suggestions**: Run experiments on a final checkpoint for the SOTA models. Observing differences across layers in shuffled versus unshuffled data, along with gzip correlation results.\n\n\n2. **Dataset Limitations**: \n   - The controlled dataset is restricted to a single syntactic structure, which may limit the generality of the findings.\n   - To explore the effects on a more diverse linguistic structure, it would be useful to introduce additional syntactic forms, where compositionality varies by grammar rather than by word correlations.\n   - **Suggestions**: Extend the dataset to include varied syntactic structures that capture additional linguistic features, such as syntactic depth, constituent length, and sentence length, and observe how linear and nonlinear dimensionality metrics respond to these variations.\n\n\n3. **Literature Integration**: \n   - The paper does not adequately address previous work on linear probing and syntactic encoding in linear subspaces (such as Hewitt and Manning, 2019).\n   - **Suggestions**: Discuss the relevance of linear probing work, which demonstrates that syntax is encoded in a linear subspace, to the findings here."
+            },
+            "questions": {
+                "value": "1. **Interpretation of Dimensionality Collapse (Figure G.4)**:\n   - There is a collapse for \\(d\\) around checkpoint \\(10^4\\) in models with 1.4b and 6.9b parameters, but not for \u201cThe Pile.\u201d\n   - **Question**: What does this collapse represent? Does it indicate that the phase transition for encoding meaning occurs earlier than for encoding structure?\n\n2. **Choice of Aggregation Over the Last Token**:\n   - The paper states, \u201cWe aggregate over the sequence by taking the last token representation, as, due to causal attention, it is the only to attend to the entire context.\u201d\n   - **Question**: Why did you choose this aggregation method instead of tracking dimensionality metrics (Id and d) incrementally for all tokens within the sentence?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigates the relationship between compositionality and the geometric complexity of language model (LM) representations as a function of the data. Using a controlled dataset with varying levels of compositionality and the Pythia models, the authors explore how intrinsic dimensionality and linear effective dimensionality \u00a0change with input compositionality."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The premise is novel and investigates the impact of the degree of compositionality in linguistic input to the intrinsic dimensionality of its representation manifold in LMs.\n    \n- Comprehensive analysis of dimensionality measures: The study examines both linear (d) and non-linear (Id) dimensionality measures and how they change with input.\n    \n- The study employs a well-defined experimental setup with a custom dataset designed to control compositionality and investigates multiple Pythia model sizes."
+            },
+            "weaknesses": {
+                "value": "- The discussion of the core concept of compositionality, on which the paper is based, is quite shallow and scattered. Both the introduction and background sections talk about a bottom-up concatenative notion of compositionality (Frege, Chomsky etc) which has been considered unsuitable for discussing compositionality for connectionist architectures (Smolensky 1987, Van Gelder 1990, Chalmers 1993). The investigation of compositionality would require proper characterization of the concept itself.\n    \n- The distinction between form vs meaning compositionality needs to be motivated better. Compositionality is about discovering the underlying structure of data (and bottom-up concatenation is just a mere product of this process) so the distinction between compositionality of form and meaning doesn\u2019t make sense in this context since the former is not a representation of compositionality in any sense but rather some kind of a type-token ratio/word statistic tracker.\n    \n- On line 107, it mentions \u201ccompositionality of inputs\u201d but this phrase is somewhat vague. Different kinds of syntactic and semantic characteristics of inputs are manipulated in the input, but how do these features relate to compositionality?\n    \n- For form compositionality, Kolmogorov complexity is used, but why? The decision needs to be justified.\n    \n- In lines 227-229, the claim seems like a leap. If we cannot define or quantify semantic complexity (line 226), how do we ascertain a link to ID in models just by a comparative measure? Meaning complexity can and should be quantified to make claims based on what aspects of model representations track form vs. meaning complexity.\n    \n- The use of the transformer\u2019s residual stream for analysis is common but it is also one of the most non-privileged in terms of basis according to a lot of mechanistic interpretability literature (Elhage et al 2021 etc). Other representations of different components (Attention, MLP) could be used here instead."
+            },
+            "questions": {
+                "value": "- Could you provide a more thorough characterization of compositionality as it pertains to connectionist models? How does your understanding align with or diverge from foundational perspectives (e.g., Smolensky, Van Gelder, Chalmers) on compositionality in connectionist architectures? How does the definition of compositionality you use set the foundation for your investigation and analyses throughout the paper?\n\n- Could you clarify and justify the distinction you make between compositionality of form and meaning? What theoretical or empirical motivation supports this separation? Could you explain why tracking form (e.g., type-token ratio) should be considered a component of compositionality rather than a separate linguistic metric?\n\n- Why did you choose Kolmogorov complexity as a metric for form compositionality? What specific advantages does it offer for assessing compositionality, and how does it relate to the core concept of structure discovery?\n\n- Could you elaborate on the reasoning behind linking semantic complexity to Identification (ID) in models, particularly in the absence of a clear semantic complexity metric? Is there a way to quantitatively define or approximate semantic complexity to strengthen claims about its relationship with model representation?\n\n- Why did you prioritize the transformer\u2019s residual stream for your analysis? How does it align with or diverge from the representational basis recommended in mechanistic interpretability literature? Have you considered incorporating other components, such as Attention or MLP layers, into your analysis?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper evaluates the intrinsic dimensionality (linear and nonlinear) of causal language model representations throughout pretraining, for datasets including form composition (combinatorial complexity) and meaning composition (semantic complexity). The models exhibit similar nonlinear intrinsic dimensionalities across model sizes, although linear intrinsic dimensionalities increase for larger models. There is a phase change in nonlinear intrinsic dimensionality around when the models start increasing in performance on several downstream tasks. Linear intrinsic dimensionality is generally larger for shuffled sentences (indexing combinatorial complexity), while nonlinear intrinsic dimensionality is larger for unshuffled sentences (indexing semantic complexity)."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The methods used to measure linear and nonlinear intrinsic dimensionality are well motivated by previous work.\n2. The results are interesting, demonstrating the dichotomy between linear intrinsic dimensionality and nonlinear intrinsic dimensionality, where the former indexes combinatorial complexity and the latter indexes semantic complexity."
+            },
+            "weaknesses": {
+                "value": "Overall, the results are quite interesting, but some of the framing and terminology could be slightly misleading:\n1. The paper distinguishes between \"form compositionality\" and \"meaning compositionality\". Most existing work on compositionality (https://plato.stanford.edu/entries/compositionality/) defines compositionality as what this paper calls \"meaning compositionality\" (constituent meanings combine systematically to produce sentence meaning). \"Form compositionality\" in the paper, measured by the number of unique word combinations, might not be considered \"compositionality\" by standard definitions. It might be more intuitive to simply refer to \"form compositionality\" consistently as \"combinatorial complexity\".\n2. The paper focuses on the intrinsic dimensionality in the models for combinatorial complexity (form, e.g. shuffled sentences) and semantic complexity (meaning, in the unshuffled sentences). The paper doesn't seem to focus much on compositionality itself, i.e. how meaning is constructed from form. Thus, the consistent use of the word \"compositionality\" could be misleading.\n3. \"But, as sane sequences are grammatical and semantically coherent, it is guaranteed for sane datasets that meaning complexity is monotonic in form complexity. In addition, as shuffling removes sequence-level semantics, meaning complexity is guaranteed to be lower on shuffled compared to sane text, by definition\" (p. 5). These sentences implicitly assume a definition of \"meaning complexity\". E.g. increasing form complexity does not necessarily guarantee an increase in meaning complexity (e.g. \"It is possible that rain will occur today\" vs. \"It might rain today\"), and defining shuffled sentences to be \"low meaning complexity\" is up to the definition of meaning complexity. These assumptions still seem safe for the conclusions in the paper, but the assumption of this specific definition of semantic complexity should be noted.\n4. Minor point: \"Our stimulus dataset consists of grammatical nonce sentences from the grammar illustrated in Figure 1\" (p. 3). In linguistics, nonce sentences usually refer to grammatical but semantically incoherent sentences, rather than semantically coherent sentences as in this dataset. Removing the word \"nonce\" might be more clear.\n5. Minor note on terminology: calling the unshuffled sentences \"coherent sentences\" or \"original sentences\" would be more in line with existing work than \"sane sentences\" (e.g. https://arxiv.org/pdf/1803.11138)."
+            },
+            "questions": {
+                "value": "1. Rather than an effect of lower semantic complexity, could the low nonlinear intrinsic dimensionality of shuffled sentences simply be because they're out of distribution? E.g. the model would likely allocate more \"representation space\" to in-distribution data (i.e. the unshuffled/coherent sentences). Then, a parsimonious explanation of the results could just be that lower k for unshuffled sentences increases nonlinear intrinsic dimensionality due to broader in-distribution semantic diversity, but the effect is not seen for shuffled sentences because those sentences are out-of-distribution (i.e. not allocated space in the model anyways)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

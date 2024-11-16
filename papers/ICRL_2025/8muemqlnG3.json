@@ -1,0 +1,215 @@
+{
+    "id": "8muemqlnG3",
+    "title": "Causal Discovery via Bayesian Optimization",
+    "abstract": "Existing score-based methods for directed acyclic graph (DAG) learning from observational data struggle to recover the causal graph accurately and sample-efficiently. To overcome this, in this study, we propose DrBO (DAG recovery via Bayesian Optimization)\u2014a novel DAG learning framework leveraging Bayesian optimization (BO) to find high-scoring DAGs. We show that, by sophisticatedly choosing the promising DAGs to explore, we can find higher-scoring ones much more efficiently. To address the scalability issues of conventional BO in DAG learning, we replace Gaussian Processes commonly employed in BO with dropout neural networks, trained in a continual manner, which allows for (i) flexibly modeling the DAG scores without overfitting, (ii) incorporation of uncertainty into the estimated scores, and (iii) scaling with the number of evaluations. As a result, DrBO is computationally efficient and can find the accurate DAG in fewer trials and less time than existing state-of-the-art methods. This is demonstrated through an extensive set of empirical evaluations on many challenging settings with both synthetic and real data.",
+    "keywords": [
+        "causal discovery",
+        "causal structure learning",
+        "bayesian optimization"
+    ],
+    "primary_area": "causal reasoning",
+    "TLDR": "We propose a novel score-based causal discovery method based on Bayesian optimization, allowing us to reach higher-scoring DAGs with fewer trials and less time.",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=8muemqlnG3",
+    "pdf_link": "https://openreview.net/pdf?id=8muemqlnG3",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Reviewer ZehJ (3/3)"
+            },
+            "comment": {
+                "value": "**In Figure 1, several methods being compared fail to converge. For the tabulated results, have you ensured that all comparison methods have converged?**\n\nWe would like to clarify that, to demonstrate the sample-efficiency of our approach, it is our deliberate choice to show that the baselines fail to converge before our method. This is because the number of optimization steps, or more generally, the computational budget, is an important hyperparameter in score-based methods that strongly influences the causal discovery performance, but is usually overlooked. Therefore, our empirical study aims to control for this factor, and thus our Figure 1 is intended to show that our method can converge to low SHDs using fewer steps than other baselines, when they have not converged and their SHDs are still high.  \n\nTo further show that other methods can indeed converge when given more optimization steps, the Table below contains the converged performance of all methods for the case of linear data with 10 nodes (mean\u00b1std over 10 simulations), in which 5/6 baselines can converge to a near-zero SHD. COSMO converges to a non-zero SHD, which is in accordance with the reported results in their paper.\n\n| Graph | Method       | SHD     | FDR     | TPR     | F1      |\n| :---- | :----------- | :------ | :------ | :------ | :------ |\n| ER-1  | ALIAS        | 0.0\u00b10.0 | 0.0\u00b10.0 | 1.0\u00b10.0 | 1.0\u00b10.0 |\n| ER-1  | CORL         | 0.0\u00b10.0 | 0.0\u00b10.0 | 1.0\u00b10.0 | 1.0\u00b10.0 |\n| ER-1  | COSMO        | 1.7\u00b11.8 | 0.1\u00b10.1 | 0.9\u00b10.1 | 0.9\u00b10.1 |\n| ER-1  | DAGMA        | 0.5\u00b11.1 | 0.0\u00b10.0 | 0.9\u00b10.3 | 1.0\u00b10.0 |\n| ER-1  | NOTEARS+TMPI | 0.5\u00b11.6 | 0.0\u00b10.1 | 1.0\u00b10.1 | 1.0\u00b10.1 |\n| ER-1  | GOLEM        | 0.0\u00b10.0 | 0.0\u00b10.0 | 1.0\u00b10.0 | 1.0\u00b10.0 |\n| ER-2  | ALIAS        | 0.1\u00b10.3 | 0.0\u00b10.0 | 1.0\u00b10.0 | 1.0\u00b10.0 |\n| ER-2  | CORL         | 0.1\u00b10.3 | 0.0\u00b10.0 | 1.0\u00b10.0 | 1.0\u00b10.0 |\n| ER-2  | COSMO        | 5.0\u00b13.3 | 0.2\u00b10.1 | 0.9\u00b10.1 | 0.8\u00b10.1 |\n| ER-2  | DAGMA        | 0.8\u00b11.5 | 0.0\u00b10.0 | 1.0\u00b10.1 | 1.0\u00b10.0 |\n| ER-2  | NOTEARS+TMPI | 0.6\u00b11.9 | 0.0\u00b10.1 | 1.0\u00b10.0 | 1.0\u00b10.0 |\n| ER-2  | GOLEM        | 0.2\u00b10.6 | 0.0\u00b10.0 | 1.0\u00b10.0 | 1.0\u00b10.0 |\n\n**Additionally, consider moving the running time details from the appendix to the main content, as the high time complexity is a notable limitation of the proposed method.**\n\nRegarding runtime, in the main paper we already have the runtime analysis wrt. performance (last column of Figure 1), showing that our method can arrive at near-zero SHD with less time than other methods. The runtime details in Appendix H are merely numerical supplementary. In addition, it should be noted that running time should not be mentioned without a performance metric like SHD, since a method can be very fast and still achieve poor performance. Our results in Figure 1 have demonstrated that within a given budget (either number of DAG evaluation or runtime), our method usually achieves better performance than other methods, and given more budget, our method can arrive at very accurate DAGs, while many methods still struggle.\n\n**Please provide results for nonlinear functions with datasets of 50 and 100 nodes, detailing both performance metrics and running time.**\n\nWe are conducting these experiments and will update once they are completed.\n\nIn the meantime, we look forward to further discussions with you to resolve any outstanding issues."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer ZehJ (2/3)"
+            },
+            "comment": {
+                "value": "**In Section 4.1, the authors mention that their method incorporates a low-rank adaptation of Vec2DAG. Does this imply an assumption about the data\u2019s structure, as discussed in On Low Rank Directed Acyclic Graphs and Causal Structure Learning?**\n\nYes, our study also assumes the low-rank structure, but implicitly. More particularly, our experiments did not enforce the low-rank assumption on the synthetic data, showing that our method is not restricted to low-rank structures. The high empirical performance of our method on general graphs of different types (ER, SF, dense, large, and real structures) suggests that our low-rank representation is robust to many kinds of graphs.\n\n**What would occur if ( k < d )?**\n\nWhen $k<d$, the search space is much lower dimensional, allowing us to potentially reach higher-scoring DAGs faster, as shown in Figure 3a. At the same time, the set of DAGs representable by the low-rank representation is reduced from the set of all DAGs, potentially excluding the ground truth DAG. However, our experiments using only rank $k=8$ have shown that our method can still attain a very low SHD even for much larger $d\\in\\\\{30,100\\\\}$ (see our Figure 1a and 1b). In addition, in Figure 3a, we have empirically analyzed the effect of different ranks and found that even a low rank $k=2$ can still result in a near-zero SHD for complex 30ER8 graphs that have dense connections.\n\nFurthermore, lower ranks allow for generating more unique candidates compared with higher ranks, so we can more likely meet the higher-scoring DAGs earlier during exploration. We empirically test this by calculating the number of unique DAGs among 1000 random DAGs generated using different ranks in the Table below (the numbers are mean\u00b1std over 10 simulations).\n\n|Rank|Number of unique 30-node DAGs over 1000 random DAGs|\n|:-:|:-:|\n|k=2 (90 dims)|926.7\u00b17.0|\n|k=4 (150 dims)|779.2\u00b112.7|\n|k=8 (270 dims)|493.5\u00b112.3|\n|k=12 (390 dims)|332.4\u00b110.8|\n|k=32 (990 dims)|90.7\u00b19.5|\n\nThis shows that the lower the rank, the more unique DAGs we can consider for exploration. For $k=2$, almost every DAG among 1000 generated DAGs is unique, whereas the lowest number of unique DAGs of less than 10% of all DAGs is obtained using the $k=32$.\n\n**Replacing the Gaussian Process in Bayesian Optimization with Dropout is not uncommon, so it may not warrant being highlighted as a novel contribution in this paper.**\n\nWe would like to clarify that, as outlined in the \"Contributions\" part of the Introduction, we did not highlight replacing GPs with dropout networks as a novelty in our paper. Rather, we mentioned it as one of the \"key design choices\", highlighting it as a neccessary leverage to enable BO in causal discovery, which is our novel contribution in the context of causal discovery.\n\n**While many prior works employ CAM as a pruning method, I believe this approach may lack justification here. Why would score-based search methods, including this paper, attempt to prune under nonlinear conditions? It's unusual for newly proposed methods to rely on post-processing from an older method.**\n\nWe would like to clarify that we employed only the *pruning step* from CAM, not the whole \"CAM as pruning method\". In CAM pruning, each variable is regressed against it parents in the raw estimated DAG, which may contain many extra edges due to overfitting, by using generalized additive model regression, then non-significant parents are removed. This is itself a reasonable method for pruning extra edges, and thus is widely employed in not just score-based methods (RL-BIC, CORL, etc.), but also ordering-based methods (e.g., SCORE, DiffAN, etc.), where pruning is required to remove extra edges in the fully-connected DAGs induced by the returned causal orderings.\n\n**Please compare this baseline method, Truncated Matrix Power Iteration for Differentiable DAG Learning, to your approach.**\n\nFollowing your suggestion, we have added this baseline to the main experiments in our revision. We used NOTEARS's implementation combined with TMPI DAG constraint and call the method 'NOTEARS+TMPI' in our experiments. This method's performance is relatively strong to some other baselines, especially in sparse graphs (Figure 1b and Table 1 of the revised manuscript) and nonlinear data (Figure 1c and 2 of the revised manuscript), however, it is still surpassed by our method in all cases."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer ZehJ (1/3)"
+            },
+            "comment": {
+                "value": "We are greatful for Reviewer ZehJ's invaluable comments. We try our best to address your concerns and we look forward to your responses.\n\n**To my knowledge, the CBO series of papers assumes that the DAG structure is known and primarily focuses on optimizing policies with this prior knowledge. Therefore, these papers may not be directly relevant to the active causal discovery literature. Please revise this in the introduction to reflect the distinction.**\n\nThank you for your kind suggestion. We would like to clarify that we mentioned them to highlight that our application of BO is entirely different from existing causal discovery studies, since it is easily mistaken that our method is another CBO method, and we have revised our manuscript to be more precise.  \n\n**The synthetic dataset, as first used in NOTEARS, is known to be relatively easy to learn, making pursuit of very low SHD scores less meaningful in recent research, especially the very simple linear gaussian case.**\n\nThis is not neccessarily the case. We would like to clarify that our dataset involves much denser graphs, and achieving a low SHD in this case is very challenging for existing methods. Specifically, for dense graphs 30ER8, most baselines, especially the *sortnregress* approach introduced in *Beware of the Simulated DAG*, obtains a very high SHD of 100+, while our method's SHD is only 1.6\u00b11.5 (see our Figure 1a and Table 5).\n\nIndeed, this can be confirmed by calculating the Varsortability from *Beware of Simulated DAG*. If Varsortability=1 then the causal structure can be recovered simply by sorting the nodes by increasing variances, i.e., using *sortnregress*. Below, we show the Varsortability (mean\u00b1std over 100 simulations) for 30-node graphs with varying densities. The results suggest that while *sortnregress* may be useful for very sparse graphs, it becomes invalid very quickly for denser graph.\n\n| Graph | Varsortability |\n| :---: | :------------: |\n| 30ER1 |   0.95\u00b10.04    |\n| 30ER2 |   0.80\u00b10.11    |\n| 30ER4 |   0.21\u00b10.10    |\n| 30ER6 |   0.03\u00b10.02    |\n| 30ER8 |   0.00\u00b10.00    |\n\nIn addition, since Varsortability=0 for 30ER8 graphs, it may be tempting to think that sorting the nodes by decreasing variance can help. To test this, we again apply *sortnregress* with both sorting directions in the Table below (mean\u00b1std over 100 simulations).\n\n|               Method               |     SHD      |    Extra    |   Missing   |   Reverse    |\n| :--------------------------------: | :----------: | :---------: | :---------: | :----------: |\n| sortnregress (increasing variance) | 107.09\u00b133.36 | 79.62\u00b124.73 | 15.73\u00b16.98  |  11.74\u00b14.07  |\n| sortnregress (decreasing variance) | 333.78\u00b19.26  | 102.39\u00b18.49 | 106.47\u00b18.37 | 124.92\u00b111.31 |\n\nThis result indicates that our synthetic data is not easy and our method's ability to reach low SHDs in such cases is significant.\n\n**How does your method perform on this dataset after standardization, as described in the paper Beware of the Simulated DAG?**\n\nFollowing your suggestion, we are conducting experiments with standardized data and will update you once they are completed.\n\n**The proposed method appears to be limited to ANMs in causal discovery, which restricts the scope of the paper. It may be more accurate to frame the task as DAG structure learning or Bayesian structure learning rather than causal discovery.**\n\nWe would like to clarify that our method is not limited to ANMs. We have demonstrated in Appendix F.1.4 that our method can also handle logistic nonlinearity. In general, our method can be applied to other causal models, as long as a suitable scoring function is provided."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer VYj5"
+            },
+            "comment": {
+                "value": "We thank Reviewer VYj5 for the valuable insights. We address your concerns in the rebuttal below.\n\n**Some of the baselines considered are not adequate**\n\nFollowing your suggestion, we have enhanced the baselines considerably. Our revised manuscript has incorporated several additional baselines, including GOLEM and NOTEARS with TMPI constraint (see Figure 1, 2, and Table 1). These gain better performance than other baselines in several cases, e.g., they both achieve slightly better performance than DAGMA for large graphs (Figure 1b), and much lower SHDs compared with other baselines for real-world structures (Table 1). In addition, NOTEARS+TMPI also obtains the third-best performance with SHD\u22487.2 for nonlinear data with GPs (Figure 1c), and we have also improved DAGMA's performance significantly in this setting, from SHD\u224828 to SHD\u224817 (Figure 1c).\n\n**Some of the results may seem too good to be true. For example, achieving a SHD of 1.6 with only 1000 samples across 30 nodes and 240 edges seems highly challenging due to finite sample error. This concern is especially relevant when dealing with nonlinear data. (I look forward to the authors' clarification/explanation on this, and please correct me if I misunderstood anything.)**\n\nThank you for recognizing the hardness of our data setting. We firmly assure you that this accuracy is possible with our method, thanks to BO's ability to effectively optimize the DAG score. Additionally, this level of accuracy has also been achieved in ALIAS, even though with far many more DAG evaluations than ours. To further prove this, we have attached our source code in the Supplementary, so that you can reproduce our results.\n\n**Is there a reason why the paper considers only identifiable models? That is, why general linear Gaussian model cannot be learned by the BIC-NV score?**\n\nWe would like to clarify that we considered both identifiable and unidentifiable models in our experiments. While we examined identifiable models in the main paper, we have also studied two unidentifiable causal models in the Appendix, namely the general linear models (without equal noise variance) in Appendix F.1.3 and logistic models in Appendix F.1.4, where our method still works well and can find the highest scores with lowest structural errors most of the time.\n\n**Although BIC-NV is given, it seems that the experiments focus on equal variances. I would suggest adding experiments for different variances as well.**\n\nWe would like to clarify that our experiments examined both equal and non-equal variances settings. Specifically, our non-linear experiments (Figure 1c and 2) are for non-equal variances, in which BIC-NV is used for scoring and optimization. We have mentioned in Section 5.1.2 that the noise variances for GP data are sampled uniformly in $[0.4, 0.8]$, and for the real Sachs dataset, the noises are unlikely to have equal variances. Our revised Section 5.1.2 has further clarified this.\n\n**Baselines: For linear case, GOLEM may also be included. Also, adding the results for more conventional search methods, such as GES/FGES, may also be helpful.**\n\nThank you for your kind recommendation. We have incorporated GOLEM results for linear data in Figure 1 and Table 1 of the revised manuscript. Regarding conventional search methods like GES/FGES, since they are usually shown to perform poorly in many recent studies, and to avoid cluttering the presentation with too many baselines, we did not include them. However, following your suggestion, we will add them in the next revision.\n\n**Why does DAGMA-MLP performs so poorly for nonlinear data? The TPR is close to 0. If the reason is due to instability in optimization, the paper may consider adding NOTEARS-MLP that may be more stable.**\n\nThank you for your kind suggestion. We have run NOTEARS-MLP for nonlinear data and obtained an SHD of 11.8\u00b12.59. We found that NOTEARS-MLP set the $\\ell_1$ and $\\ell_2$ weights to zero, while DAGMA-MLP used $\\ell_1=0.02$ and $\\ell_2=0.005$, leading it to predict very sparse graphs and thus resulting in low TPR. Therefore, we have updated our Figure 1c with $\\ell_1=\\ell_2=0$ for DAGMA, in which it achieves a significantly higher performance with SHD\u224817. Nevertheless, we have also included NOTEARS-MLP in conjunction with TMPI constraint to achieve an SHD\u22487 (see our Figure 1c of the revised manuscript).\n\n**For Section 5.2, specifically Sachs data, did the paper use linear or nonlinear version of the method?**\n\nAs mentioned in our Appendix E, we used the nonlinear version of our method with GP regression and BIC-NV scoring for the Sachs data, as with all considered baselines.\n\nWe hope this rebuttal sufficiently addresses your concerns, and we look forward to further discussions to resolve any outstanding issues."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer UyS6"
+            },
+            "comment": {
+                "value": "We thank Reviewer UyS6 for your positive evaluation. Your concerns are addressed in the rebuttal below.\n\n**While there exist some causal discovery algorithms with Bayesian optimization, it seems not proper to state \u201cTo our knowledge, this is the first score-based causal discovery method based on BO \u201d. I think it should be corrected.**\n\nThank you for your kind comment. We have revised the manuscript to highlight that our study is the first score-based causal discovery method based on BO *for purely observational data*.\n\n**Throughout the paper, from the experiments, it is demonstrated that the proposed method can give better performances in both accuracy, sample-efficiency, and scalability, compared with other SOTA baselines. Generally, such a great method needs more assumptions or conditions to be satisfied. But intuitively, I cannot find these assumptions or conditions. Did this method have some other implied assumptions or conditions (like more hyperparameters)?**\n\nWe would like to clarify that our method does not require any additional assumptions compared with existing ones. Specifically, our assumptions outlined in Section 3.2 include causal sufficiency, causal minimality, and identifiable models. These assumptions are standard and are similar to many studies, e.g., NOTEARS, DAGMA, RL-BIC, CORL, etc. Our scoring functions and evaluation data are also the same as RL-BIC, CORL, ALIAS, etc.\n\nOur method is better than the baselines thanks to the effectiveness of BO, in which we predict the scores of DAG candidates to prioritize the DAGs that are most likely to have higher scores, before actually exploring/evaluating them. This helps us avoid examining non-informative DAGs, e.g., DAGs that we are certain to have low scores, and at the same time reveals higher-scoring DAGs earlier. Meanwhile, most existing methods do not effectively take into account past exploration data to make an informed candidate selection, thus resulting in more unneccessary trials than our method. \n\nIn addition, our code is now available in the Supplementary material, which can be used to confirm our strong performance.\n\n**In experiments, it would be good to compare some Bayesian causal discovery methods (Deleu et al., 2022: Tranet al., 2023; Annadani et al., 2023), since they are all causal discovery methods. Or explain the reasons why not comparing with them.**\n\nWe would like to explain that we did not compare with them for several reasons. Firstly, our study focuses on score-based causal discovery with an emphasis on sequential optimization, which revolves around solving the optimization problem in Eq. (1), so Bayesian causal discovery methods do not directly fall into the same setting as ours. Secondly, it is not very common in the literature for a point-estimate causal discovery study to compare with Bayesian causal discovery studies, so we simply followed common practice. However, following your suggestion, we will certainly add them in the next revision.\n\n**The code is not available for reproduction.**\n\nWe have made our code available for reproduction in the Supplementary material.\n\n**In Eq.(4), is the $R$ matrix strictly upper-triangular?**\n\nNo, $R$ does not need to be strictly upper-triangular.\n\n**In Figure 1(b), did the authors still use 1000 samples for the large-graph experiments? $n=1000$ for the graph with 100 nodes?**\n\nYes, we used 1000 samples for all main experiments. We hope this clarification helps you find the performance of our method significant. You can confirm our results with the code provided.\n\n**In Figure 3(a), why in general smaller $k$ could obtain higher performances, compared with the full-rank cases?**\n\nIn short, this is because it is much more challenging to search in a very high-dimensional space compared to a lower-dim one. Specifically, for full-rank cases, the search space is much larger and sparser than the low-rank ones. Due to the curse of dimensionality, sampling the same number of random DAG candidates in the full-rank search space tends to lead to fewer unique candidates compared with a low-dim one, reducing the chance to meet the optimal solution earlier.\n\nTo empirically verify this, we calculate the number of unique DAGs among 1000 random 30-node DAGs generated with different ranks in the Table below (the numbers are mean\u00b1std over 10 simulations).\n\n|Rank|Number of unique DAGs over 1000 random DAGs|\n|:-:|:-:|\n|k=2 (90 dims)|926.7\u00b17.0|\n|k=4 (150 dims)|779.2\u00b112.7|\n|k=8 (270 dims)|493.5\u00b112.3|\n|k=12 (390 dims)|332.4\u00b110.8|\n|k=32 (990 dims)|90.7\u00b19.5|\n|Full-rank (465 dims)|85.1\u00b19.4|\n\nIt can be seen very clearly that the lower the rank, the more unique DAGs we can consider for exploration. For k=2, almost every DAG among 1000 generated DAGs is unique, whereas the lowest number of unique DAGs of less than 10% of all DAGs is obtained using the full-rank representation.\n\nWe hope this rebuttal addresses your concerns, and are open for further discussions to resolve your remaining concerns."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer gMGJ by Authors"
+            },
+            "comment": {
+                "value": "We wholeheartedly thank Reviewer gMGJ for the positive assessment. Below we try our best to address your question.\n\n**Could the authors give more details on how to ensure the binary adjacent matrix is a DAG in the optimization steps?**\n\nLet us first recall our DAG representation:\n\n$$\\tau(\\bf{p},\\bf{R})=H(\\mathrm{grad}(\\bf{p}))\\odot H(\\bf{R}\\cdot \\bf{R}^\\top)$$\n\nThe acyclicity of this binary matrix is enforced through the first term $H(\\mathrm{grad}(\\bf{p}))$. This term is an adjacency matrix of a directed graph where there is an edge $i\\rightarrow j$ if and only if $p_i < p_j$. By contradiction, assuming there is a directed cycle $i_1\\rightarrow i_2\\rightarrow\\ldots\\rightarrow i_1$ in this graph, then it must be that $p_1 < p_1$, which is always impossible. Therefore, there cannot be any directed cycle in this graph, rendering it a DAG. The second term in the equation above, $H(\\bf{R}\\cdot \\bf{R}^\\top)$, plays the role of a selection matrix that chooses some edges in the DAG induced by the first term to include in the final result, so there is no new directed cycle and thus the obtained binary matrix is a DAG."
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose DrBO (DAG recovery via Bayesian Optimization)\u2014a novel DAG learning framework leveraging Bayesian optimization (BO) to find high-scoring DAGs.  To address the scalability issues of conventional BO in DAG learning,  the authors replace Gaussian Processes commonly employed in BO with dropout neural networks, trained in a continual manner. DrBO is computationally efficient and can find the accurate DAG in fewer trials and less time than existing state-of-the-art methods. This is demonstrated through an extensive set of empirical evaluations on many challenging settings with both synthetic and real data."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Learning DAG from data using BO is novel and interesting.  The authors overcome the scalability issue of conventional BO by leveraging dropout in neural networks. Experimental results show that the proposed method is effective and can achieve improved results. The paper was written with technical details."
+            },
+            "weaknesses": {
+                "value": "N/A"
+            },
+            "questions": {
+                "value": "Could the authors give more details on how to ensure the binary adjacent matrix is a DAG in the optimization steps?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes an efficient causal discovery algorithm with Bayesian optimization. In particular, the authors consider a variant of Vec2DAG (Duong et al., 2024) for the DAG constraint, and use dropout neural networks and continual training scheme to optimize the adjacency matrix. Experiments show the efficiency and effectiveness of their method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper is written clearly, with clear and detailed descriptions of their method and experiments.\n\n- They performed extensive experiments for validation."
+            },
+            "weaknesses": {
+                "value": "- While there exist some causal discovery algorithms with Bayesian optimization, it seems not proper to state \u201cTo our knowledge, this is the first score-based causal discovery method based on BO \u201d. I think it should be corrected.\n\n- Throughout the paper, from the experiments, it is demonstrated that the proposed method can give better performances in both accuracy, sample-efficiency, and scalability, compared with other SOTA baselines. Generally, such a great method needs more assumptions or conditions to be satisfied. But intuitively, I cannot find these assumptions or conditions. Did this method have some other implied assumptions or conditions (like more hyperparameters)? \n\n- In experiments, it would be good to compare some Bayesian causal discovery methods (Deleu et al., 2022: Tranet al., 2023; Annadani et al., 2023), since they are all causal discovery methods. Or explain the reasons why not comparing with them.\n\n- The code is not available for reproduction."
+            },
+            "questions": {
+                "value": "- In Eq.(4), is the matrix $R$ strictly upper-triangular?\n- In Figure 1(b), did the authors still use 1000 samples for the large-graph experiments? $n=1000$ for the graph with 100 nodes?\n- In Figure 3(a), why in general smaller $k$ could obtain higher performances, compared with the full-rank cases?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper develops a Bayesian optimization method for score-based causal discovery. Several design choices are adopted, which include (1) developing a low-rank DAG representation, (2) replacing Gaussian process in conventional Bayesian optimization with dropout neural networks, (3) learning the DAG score indirectly via node-wise local scores, and (4) training in a continual way. Empirical studies are provided."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is well written and easy to follow.\n- Developing effective search procedure for score-based causal discovery is an interesting and important topic. The proposed method adopts various design choices and is practical.\n- The search method is reasonable.\n- The empirical studies demonstrate that the proposed method considerably outperforms existing methods."
+            },
+            "weaknesses": {
+                "value": "- Some of the baselines considered are not adequate.\n- Some of the results may seem too good to be true. For example, achieving a SHD of 1.6 with only 1000 samples across 30 nodes and 240 edges seems highly challenging due to finite sample error. This concern is especially relevant when dealing with nonlinear data. (I look forward to the authors' clarification/explanation on this, and please correct me if I misunderstood anything.)"
+            },
+            "questions": {
+                "value": "- Is there a reason why the paper considers only identifiable models? That is, why general linear Gaussian model cannot be learned by the BIC-NV score?\n- Although BIC-NV is given, it seems that the experiments focus on equal variances. I would suggest adding experiments for different variances as well.\n- Baselines: For linear case, GOLEM may also be included. Also, adding the results for more conventional search methods, such as GES/FGES, may also be helpful.\n- Why does DAGMA-MLP performs so poorly for nonlinear data? The TPR is close to 0. If the reason is due to instability in optimization, the paper may consider adding NOTEARS-MLP that may be more stable.\n- For Section 5.2, specifically Sachs data, did the paper use linear or nonlinear version of the method?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces DrBO, a Bayesian Optimization-based framework for efficient and accurate DAG learning from observational data. By leveraging dropout neural networks instead of Gaussian Processes, DrBO addresses scalability issues while integrating uncertainty in score estimation. Empirical results demonstrate DrBO's improved efficiency and accuracy over existing methods across synthetic and real datasets."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Using BO in causal discovery is interesting and novel. \n- The paper is very well written."
+            },
+            "weaknesses": {
+                "value": "see questions."
+            },
+            "questions": {
+                "value": "1. To my knowledge, the CBO series of papers assumes that the DAG structure is known and primarily focuses on optimizing policies with this prior knowledge. Therefore, these papers may not be directly relevant to the active causal discovery literature. Please revise this in the introduction to reflect the distinction.\n\n2. The synthetic dataset, as first used in NOTEARS, is known to be relatively easy to learn, making pursuit of very low SHD scores less meaningful in recent research, especially the very simple linear gaussian case. How does your method perform on this dataset after standardization, as described in the paper *Beware of the Simulated DAG*?\n\n3. The proposed method appears to be limited to ANMs in causal discovery, which restricts the scope of the paper. It may be more accurate to frame the task as DAG structure learning or Bayesian structure learning rather than causal discovery.\n\n4. In Section 4.1, the authors mention that their method incorporates a low-rank adaptation of Vec2DAG. Does this imply an assumption about the data\u2019s structure, as discussed in *On Low Rank Directed Acyclic Graphs and Causal Structure Learning*? Additionally, what would occur if \\( k < d \\)?\n\n5. Replacing the Gaussian Process in Bayesian Optimization with Dropout is not uncommon, so it may not warrant being highlighted as a novel contribution in this paper.\n\n6. While many prior works employ CAM as a pruning method, I believe this approach may lack justification here. Why would score-based search methods, including this paper, attempt to prune under nonlinear conditions? It's unusual for newly proposed methods to rely on post-processing from an older method.\n\n7. Please compare this baseline method, *Truncated Matrix Power Iteration for Differentiable DAG Learning*, to your approach.\n\n8. In Figure 1, several methods being compared fail to converge. For the tabulated results, have you ensured that all comparison methods have converged? Additionally, consider moving the running time details from the appendix to the main content, as the high time complexity is a notable limitation of the proposed method.\n\n9. Please provide results for nonlinear functions with datasets of 50 and 100 nodes, detailing both performance metrics and running time."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

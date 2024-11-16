@@ -1,0 +1,208 @@
+{
+    "id": "iWSl5Zyjjw",
+    "title": "DeciMamba: Exploring the Length Extrapolation Potential of Mamba",
+    "abstract": "Long-range sequence processing poses a significant challenge for Transformers due to their quadratic complexity in input length. A promising alternative is Mamba, which demonstrates high performance and achieves Transformer-level capabilities while requiring substantially fewer computational resources. In this paper we explore the length-generalization capabilities of Mamba, which we find to be relatively limited. Through a series of visualizations and analyses we identify that the limitations arise from a restricted effective receptive field, dictated by the sequence length used during training. To address this constraint, we introduce DeciMamba, a context-extension method specifically designed for Mamba. This mechanism, built on top of a hidden filtering mechanism embedded within the S6 layer, enables the trained model to extrapolate well even without additional training. Empirical experiments over real-world long-range NLP tasks show that DeciMamba can extrapolate to context lengths that are significantly longer than the ones seen during training, while enjoying faster inference. We will release our code and models.",
+    "keywords": [
+        "Mamba",
+        "Long context",
+        "Context extension",
+        "Long-range language modeling"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "We explore Mamba's length extrapolation potential, identifying its limitation due to a restricted effective receptive field, and introduce DeciMamba, the first context-extension method specifically designed for Mamba.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=iWSl5Zyjjw",
+    "pdf_link": "https://openreview.net/pdf?id=iWSl5Zyjjw",
+    "comments": [
+        {
+            "title": {
+                "value": "R4 Rebuttal"
+            },
+            "comment": {
+                "value": "We thank the reviewer for their comments, and provide responses to the raised concerns below.\n\n\\\n**Concern 1:**\n____________________________________________________________________________________________________________\n> Most of the related work on length generalization is for transformers. Is there any work on this for SSMs? I'm not sure exactly where this falls in the literature.\n____________________________________________________________________________________________________________\nTo the best of our knowledge, our work is the first to investigate length generalization in Mamba. We note, however, that several recent follow-up studies [1,2,3] have also explored this topic and were submitted to ICLR 2025.\n\n\\\n**Concern 2:**\n____________________________________________________________________________________________________________\n> How does the DeciMamba architecture compare to Mamba at short context length tasks? Ie, is there a tradeoff between performance on short and long context tasks?\n____________________________________________________________________________________________________________\nThe operation of DeciMamba is identical to that of Mamba in short-context tasks. By definition, DeciMamba pools L_base tokens in the decimation layer. If the sequence length is already shorter than L_base\u200b, it will pool all the tokens, leaving the sequence unchanged.\n\n\\\n**References:** \\\n[1] LongMamba: Enhancing Mamba's Long-Context Capabilities via Training-Free Receptive Field Enlargement. Anonymous, Submitted to ICLR 2025. \\\n[2] MambaExtend: A Training-Free Approach to Improve Long Context Extension of Mamba. Anonymous, Submitted to ICLR 2025. \\\n[3] Stuffed Mamba: State Collapse and State Capacity of RNN-Based Long-Context Modeling, Anonymous, Submitted to ICLR 2025."
+            }
+        },
+        {
+            "title": {
+                "value": "R3 Rebuttal (2/2)"
+            },
+            "comment": {
+                "value": "**Concern 3:**\n________________________________________________________________________________________________________________\n> ... for simpler long-context tasks like Passkey, the authors mention that DeciMamba requires fine-tuning to handle them effectively.\n________________________________________________________________________________________________________________\n\nFirst, we note that it is common to perform fine tuning in the passkey retrieval tasks when evaluating context extension methods [6,7].\n\nSecond, the released Mamba models are not able to perform passkey retrieval without additional finetuning. **This has nothing to do with our method**, as the baseline model requires fine-tuning as well (for all context lengths, even for 1000 and 2000 tokens).\n\n\\\n**Concern 4:**\n________________________________________________________________________________________________________________\n> The presentation of the paper could be improved. proper citation formats (\\citep and \\citet) should be used; table captions should appear above the tables; and in Table 1, the DeciMamba entry is missing the LB score for the LCC dataset.\n________________________________________________________________________________________________________________\n\nThanks for this comment. In the next few days, we will provide a revised manuscript that addresses these issues.\n\nRegarding the LCC Dataset results, we apologize for the typo. All of the information is present in the table, but one cell was accidentally shifted to the left (the average length was merged with the benchmark's name). The correct line is as follows (\u2018M\u2019 for Mamba, \u2018D\u2019 For Decimamba):\n\n| Benchmark | Avg Len | M. 0-4k | M. 4-8k | M. 8k+ | M. LB | D. 0-4k | D. 4-8k | D. 8k+ | D. LB |\n|---------|---------|-------------|------|-----|----|------|------|-----|----|\n| LCC | 1235 | 8.12 | 5.61 | 4.17 | 8.13 | **9.4** | **14.25** | **7.63** | **8.67** |\n\n\n\n\\\n**References:** \\\n[1] Long Context Compression with Activation Beacon, Zhang et. al 2024 \\\n[2] Extending Context Window of Large Language Models via Positional Interpolation, Chen et. al 2023 \\\n[3] Language Models are Few-Shot Learners, Brown et. al 2022 \\\n[4] LongMamba: Enhancing Mamba's Long-Context Capabilities via Training-Free Receptive Field Enlargement. Anonymous, Submitted to ICLR 2025. \\\n[5] MambaExtend: A Training-Free Approach to Improve Long Context Extension of Mamba. Anonymous, Submitted to ICLR 2025. \\\n[6] Extending Context Window of Large Language Models via Positional Interpolation, S. Chen et. al 2023 \\\n[7] LongLoRA: Efficient Fine-tuning of Long-Context Large Language Models, Y. Chen et. al 2023"
+            }
+        },
+        {
+            "title": {
+                "value": "R3 Rebuttal (1/2)"
+            },
+            "comment": {
+                "value": "We appreciate the reviewer\u2019s feedback and provide responses to the raised concerns below.\n\n\\\n**Concern 1:**\n______________________________________________________________________________________________________\n> The experimental results are limited. The authors only combine the method with the Mamba model and verify the effectiveness of their method. It would be more convincing if the method can be validated on a broader range of SSM-based and linear-attention-based models.\n______________________________________________________________________________________________________\n\nWe respectfully disagree with the assertion that the experimental results are limited, as they include multiple model sizes (130M, 1.4B, and 2.8B) across several datasets (PG-19, 16 datasets in LongBench, Passkey-Retrieval, and SQuAD v2) and tasks (language modeling, retrieval, question answering with or without fine-tuning, and summarization), as well as efficiency benchmarking. All of these findings support our claims.\n\nRegarding other models (\"...can be validated on a broader range of SSM-based and linear-attention-based models\"), we would like to note that Mamba has recently gained significant attention in the field, receiving over 1,000 citations in less than a year, with more than 100 ICLR submissions focused solely on this architecture. We therefore consider our scope to be sufficiently broad and kindly ask the reviewer to reassess this point. Additionally, please note that similar concerns did not arise in the reviews of follow-up studies [4, 5] (also submitted to ICLR '25) that have explored length generalization in Mamba models.\n\nIn terms of application to other models, our method is based on the selective, data-dependent delta_t parameter within the selective state-space layers (S6) to measure token importance. Consequently, it cannot be directly applied to models that lack a per-token selective delta_t parameter (though it could be generalized to any data-dependent recurrent gate). Thus, our method cannot be applied to previous SSMs, such as S4, DSS, GSS, S5, Liquid SSMs, and others, which do not incorporate selective mechanisms. Please note that non-selective layers perform significantly worse than Mamba in NLP tasks, making them less relevant for context extension.\n\nRegarding other linear attention models, our method relies on a data-dependent recurrent gate, making it infeasible for non-recurrent models. While some linear attention models could theoretically accommodate our approach (e.g., Griffin, via the r_t parameter in Eq. 1), this is outside the scope of our current work, as we consider Mamba to be broad enough.\n\nTo address the reviewer\u2019s concerns, we will add a new technical subsection titled \"Extensions to Other Models,\" detailing how insights from our work can be generalized to other models, such as Griffin, HGRN, RWKV, and others.\n\n\\\n**Concern 2:**\n________________________________________________________________________________________________________________\n> The experimental results are not satisfactory. As shown in Table 1, DeciMamba fails to achieve more than a 10% LongBench score on most datasets. In contrast, models with a context window size of only 4k, as reported in the original LongBench paper, often perform better (e.g., Llama-2-7B-chat has an average score of 31 on English tasks).\n________________________________________________________________________________________________________________\nLike many other context extension methods [1,2], DeciMamba does not aim to enhance the base model's capabilities (e.g., reasoning). Instead, it primarily helps the model maintain performance on longer sequences.\n\nDeciMamba\u2019s context extension capabilities are clearly demonstrated in the LongBench results. To highlight this, for every benchmark with a score higher than 10% (for either Mamba or DeciMamba), we compute the percentage improvement of DeciMamba:\n\n| Benchmark | 0-4k | 4-8k |\n|---------|---------|-------------|\n| TriviaQA | +24% | +150% |\n| GovReport | +11% | +78% |\n| LCC             | +16% | +154% |\n| MultifieldQA | +43% | +139% |\n| MultinewsQA | +4% | +76% |\n| RepoBench-p | +34% | +82% |\n|**Average**| **+22%** | **+113%** |\n\nIn the 0-4k length range (non-long context), DeciMamba improves Mamba by an average of 22%. In sharp contrast, in the 4-8k range (long context), DeciMamba significantly enhances Mamba with an average improvement of 113%.\n\nIn the other tasks (e.g. HotpotQA, Qasper, TREC, etc.) Mamba underperforms even in the 0-4k range. Therefore, we do not expect the context extension method to achieve significant performance in these tasks as well.\n\nFinally, Llama-2-7b was trained on 2 trillion tokens and has 7 billion parameters, whereas Mamba-2.8b was trained on 50 billion tokens and has 2.8 billion parameters. Given that in many cases the gap between 2.8b and 7b models holds emerging properties that are crucial for tasks such as LongBench [3], we find this comparison somewhat unfair."
+            }
+        },
+        {
+            "title": {
+                "value": "R2 Rebuttal (2/2)"
+            },
+            "comment": {
+                "value": "**Concern 3:**\n________________________________________________________________________________________________________________________\n> Incomplete solution to fundamental limitations: While the approach provides a practical workaround, it doesn't address the underlying limitations of Mamba in processing long sequences. \n________________________________________________________________________________________________________________________\nWe acknowledge that our approach does not fully resolve all ERF-related limitations regarding long-sequence processing and length generalization within the Mamba architecture. However, our work is intended as a first step in this direction. Solving this problem directly is notably challenging and, in some cases, may be theoretically or practically infeasible (e.g. due to the finite size of the state). \n\nAdditionally, several follow-up studies submitted to ICLR 2025 [13,14] have explored length generalization in Mamba models within a similar regime to ours, and none of them were considered incomplete by reviewers.\n\nFinally, as scientific progress is often gradual, we view our contribution, which introduces the following important aspects, as a meaningful advancement in addressing this challenge: (i) shedding light on the limited ERF problem, (ii) supplying an importance-based global pooling solution that has inspired multiple follow-up research efforts [13,14], and (iii) providing a practical method that can be immediately applied to existing Mamba models.\n\nFor these reasons, we would highly appreciate it if you would consider changing the raised concern from a major weakness to a minor limitation.\n\n\\\n**Concern 4:**\n________________________________________________________________________________________________________________________\n> A more thorough analysis of the Mamba Mean Distance metric could potentially lead to more fundamental solutions\n________________________________________________________________________________________________________________________\nThank you for this suggestion. We will incorporate it into the conclusion of the revised manuscript as an interesting direction for future work.\n\n\\\n**References:** \\\n[1] MInference 1.0: Accelerating Pre-filling for Long-Context LLMs via Dynamic Sparse Attention. Jiang et al. NeurIPS 2024 \\\n[2] In-context Autoencoder for Context Compression in a Large Language Model. Ge et al. ICLR 2024. \\\n[3] LongLLMLingua: Accelerating and Enhancing LLMs in Long Context Scenarios via Prompt Compression. Jiang et al. ACL 2024. \\\n[4] Compressing Context to Enhance Inference Efficiency of Large Language Models. Li et al. EMNLP 2023 \\\n[5] LLMLingua: Compressing Prompts for Accelerated Inference of Large Language Models. Jiang et al. EMNLP 23 \\\n[6] CacheGen: KV Cache Compression and Streaming for Fast Large Language Model Serving. Liu et al. SIGCOMM 2024 \\\n[7] Prompt Compression and Contrastive Conditioning for Controllability and Toxicity Reduction in Language Models. Wingate et al. EMNLP 2022 \\\n[8] Learning to Compress Prompts with Gist Tokens. Mu et al. NeurIPS 2023 \\\n[9] Adapting Language Models to Compress Contexts. Chevalier et al. EMNLP 2023. \\\n[10] Extending Context Window of Large Language Models via Semantic Compression. Fei et al. ACL 2024 \\\n[11] In-Context Former: Lightning-fast Compressing Context for Large Language Model. Wang et al. EMNLP 2024. \\\n[12] Just read twice: closing the recall gap for recurrent language models. Arora et al. ICML 2024 (Workshop) \\\n[13] LongMamba: Enhancing Mamba's Long-Context Capabilities via Training-Free Receptive Field Enlargement. Anonymous, Submitted to ICLR 2025. \\\n[14] MambaExtend: A Training-Free Approach to Improve Long Context Extension of Mamba. Anonymous, Submitted to ICLR 2025."
+            }
+        },
+        {
+            "title": {
+                "value": "R2 Rebuttal (1/2)"
+            },
+            "comment": {
+                "value": "We appreciate the reviewer\u2019s feedback and provide responses to the raised concerns below.\n\n\\\n**Concern 1:**\n _________________________________________________________________________________________________________\n>Limited scope of application: The method's restriction to the prefilling phase significantly limits its practical impact, especially considering the increasing demand for both long-text prefilling and generation in modern applications\n_________________________________________________________________________________________________________\nWe respectfully disagree with the assessment that focusing exclusively on improving the prefilling phase significantly limits the practical impact of our method. **There is a substantial body of work [1-12] published in top-tier conferences such as ICLR, NeurIPS, and ACL that focuses solely on enhancing the prefill stage** of transformers without modifying the decoding process. Long-context handling during prefilling is a crucial area of research with significant applications, enabling, for instance, domain-specific LLM-based chatbots that can process entire books as context.   \n\nMoreover, adapting our method to the decoding phase is straightforward. There are two simple extensions:\n1. **Threshold-Based Pooling Strategy** \\\nInstead of using a top-K approach, we can select tokens individually based on whether their \\delta_t norms exceed a certain threshold.\n2. **Combination of Prefill and Decode in a Repetitive Manner for Each Generated Chunk** \\\nDuring the decoding of long sequences, DeciMamba can be applied using the parallel view of Mamba on both the previous history and the newly generated chunk. This allows us to update the current state with the state from DeciMamba. This approach incurs less than twice the computational resources compared to standard decoding, which is negligible [12], but it can enhance long-context capabilities.\n\nA follow-up study [13], which builds on our findings and is also submitted to ICLR '25, employs the threshold-based pooling strategy. Their empirical results suggest that this approach, which extends DeciMamba to decoding, achieves performance similar to that of DeciMamba.\n\n\\\n**Concern 2:**\n_________________________________________________________________________________________________________\n> Potential information loss: The token discarding approach may have unintended consequences in scenarios requiring comprehensive context understanding. This is particularly problematic in tasks like document question-answering, where discarded tokens during prefilling might be crucial for subsequent generation phases\n_________________________________________________________________________________________________________\nThis isn\u2019t a bug, it\u2019s a feature :)\\\nThe token discarding approach in our method isn\u2019t about losing information; rather, it\u2019s about selectively focusing on the most relevant context. By design, DeciMamba minimally intervenes in Mamba's operation: it discards tokens with low delta_t values, which the model tries to neglect anyway. The issue is that while the model flags these tokens as unimportant, it does not discard them, so when aggregated, they contribute to an early collapse of the state (Figure 2).\n\nIn addition, neural processing naturally emphasizes certain features over others. This is particularly true for state-based models like Mamba, which are designed to compress the context into a fixed-size recurrent state. Given that the number of tokens can vary, modern methods employ data-dependent compression that, by definition, filters out less relevant information in order to prioritize essential content. \n\nPlease consider that numerous context-compression techniques for transformers [1-11], published at top-tier venues, demonstrate that this is a robust approach rather than a limitation.\n\nRegarding information loss: while the reviewer raises potential concerns with our method, it is important to clarify that Mamba naturally experiences severe information loss when processing sequences that are longer than those it was trained on, due to its limited ERF (see Section 3). In practice, DeciMamba mitigates this by reintroducing information that may have been forgotten by the model, effectively helping to recover the most important parts of the lost context.\n\nMoreover, as demonstrated in Appendix B.1, DeciMamba maintains performance in tasks with complex inference demands, such as multi-turn dialogue.\n\nLastly, it is essential to note that DeciMamba is applied only to a subset of layers, excluding those at the beginning of the model, allowing information from unselected tokens to propagate through earlier layers via the remaining tokens.\n\nFor all of these reasons, we kindly request that you reconsider this point."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new method to extend the context length of Mamba. The authors start with an explanation of why Mamba in its original form cannot extend the context length. They propose viewing the S6 block as applying an \u201cattention operation\u201d (Section 2) and based on these attention weights, they compute the Mamba mean distance to measure the effective receptive field of Mamba (Section 3). They basically show that the ERF decreases as the context length at inference time increases and that the main culprit is the fast decrease of the sum of discretization steps. To tackle this issue, they introduce Decimamba, a filtering mechanism that discards tokens of lesser importance (Section 4). They finally show on multiple information retrieval benchmarks that the method better performs on long contexts than Mamba."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Overall, I like this paper, I think that Mamba is a very appealing method due to its low inference cost and getting methods that allow extending the context length for Mamba is a very important question. I appreciate the fact that the authors considered diverse benchmarks and the gap between Mamba and Decimamba is pretty consistent in some cases. I also appreciated the scientific approach in the paper that consists in isolating  the problematic component in Mamba and proposing a method to alleviate the issue."
+            },
+            "weaknesses": {
+                "value": "I have a few concerns regarding this paper that I list below: \n\n- **Hyperparameter choices**: I agree with the fact that the fast decay of the sum of the discrete time steps may explain the lack of length generalization. However, the approach looks a bit hacky in that it introduces multiple novel hyperparameters: the decay factor, the maximal length of the sequence after the first decimating later and the number of layers to decimate. And it does not seem very clear how to make these choices without a gridsearch?\n- **Ablations**: have you tried to do an ablation with respect to the number of layers to be decimated or with respect to the decay rate? \nWriting should be improved: I found the decimation strategy in Decimamba (Section 4) pretty hard to follow. I think that this should be better explained. \n- **Tasks where Decimamba offers much higher gains?**: we see that Decimamba leads sometimes to big improvements (Squad and Passkey retrieval) but on Multi-Document QA, the decay of Mamba seems to also be important. Do you have an explanation/intuition of the type of tasks where Decimamba leads to substantial improvements?\n\n\n\nMinor points:\n\n**Improving the introduction**: I think the author should maybe better explain the Decimamba method in the introduction (and maybe add Figure 5 to the introduction?). \n- **Lack of length generalization of Mamba**: I was a bit confused about the fact that the authors were surprised by the lack of length generalization of Mamba. I agree with the authors that compared to Transformers, the context cache (the hidden states) do not grow with the context length and thus Mamba can scale the context length to infinity. However, this state is **bounded** and thus the model cannot store all the information it may need . In an information retrieval setting, when the number of documents is large, it is easy to imagine that Mamba has trouble deciding which tokens to store. Anyway, this all to say that the authors should maybe highlight that one of the factors explaining the poor length generalization is the small state space size. I think that this is aligned with the method proposed by the authors in that it looks to decimate some non-important tokens that may be captured in the hidden state.\n- **Influence of hidden state size on length generalization**: one thing that i am curious about is: have you tried to study the length generalization of models of similar scale but with one of the models having a bigger state space?\n- **Comparison with Transformers**: have you tried to run Transformers in the benchmarks of Section 5? Just curious to see the gap of DeciMamba with Transformers.\n- **Out of memory**: Maybe I would add a comment saying that the OOM happens in Figure 6 because the complexity at **training time** is O(L). Most people may have in mind the complexity of Mamba at inference time, that is independent of the context length and may be confused by the OOM you encounter. \n- **Typo**: In equation (8), i think the letters \"j\" and \"L\" were swapped. It should be $d(L,j)$."
+            },
+            "questions": {
+                "value": "I asked my questions in the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigates Mamba's length extrapolation capabilities through a systematic analysis approach. The authors introduce the Mamba Mean Distance metric as a novel way to quantify and analyze Mamba's ability to model long-range dependencies. Their findings reveal inherent limitations in Mamba's capacity to handle longer sequences effectively. To address this challenge, they propose a selective token processing mechanism leveraging the delta t parameter from the Mamba formula. This approach intelligently filters tokens by retaining those with larger delta t values, effectively aligning the input complexity with Mamba's modeling capacity. The method is specifically designed for the prefilling phase and demonstrates promising improvements in Mamba's long-text processing capabilities."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The investigation of token importance scoring in the context of Mamba represents a valuable contribution to the field, especially given the growing interest in alternatives to attention-based mechanisms\n- The method achieves substantial improvements while maintaining implementation simplicity, making it readily applicable in practical scenarios"
+            },
+            "weaknesses": {
+                "value": "- Limited scope of application: The method's restriction to the prefilling phase significantly limits its practical impact, especially considering the increasing demand for both long-text prefilling and generation in modern applications\n- Potential information loss: The token discarding approach may have unintended consequences in scenarios requiring comprehensive context understanding. This is particularly problematic in tasks like document question-answering, where discarded tokens during prefilling might be crucial for subsequent generation phases\n- Incomplete solution to fundamental limitations: While the approach provides a practical workaround, it doesn't address the underlying limitations of Mamba in processing long sequences. A more thorough analysis of the Mamba Mean Distance metric could potentially lead to more fundamental solutions"
+            },
+            "questions": {
+                "value": "- The relationship between distance and performance shown in Fig 1 appears counterintuitive. If Mamba struggles with long-distance relationships, why does the performance degradation manifest primarily in middle lengths rather than showing a clear diagonal boundary from top-left to bottom-right between the red and green regions? Could this suggest a more complex underlying mechanism?\n- Given the increasing importance of long-text generation in applications like complex reasoning and creative writing, have the authors explored possibilities of extending this method beyond prefilling to support long-text generation scenarios? It would be benefitial to discuss any challenges the authors foresee in extending the approach to generation tasks.\n- The experimental setup shows variations in model selection across different figures and analyses (e.g. Fig 3 and Fig 4). Could the authors provide more detailed justification for these choices and discuss how they might impact the generalizability of the findings?\n- Regarding the Mamba Mean Distance results in Fig 4, the findings don't definitively prove that Mamba's long-text capability decreases with length, as this metric wouldn't necessarily scale linearly with sequence length. Are there similar studies for attention-based architectures?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents the limitations of Mamba in terms of length generalization and proposes an algorithm that combines token dropping with the Mamba architecture to effectively enhance its length generalization capabilities."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed method is straightforward and can be directly combined with Mamba to improve the length generalization abilities.\n2. The authors analyze the shortcomings of Mamba in terms of its length generalization abilities."
+            },
+            "weaknesses": {
+                "value": "1. The experimental results are limited. The authors only combine the method with the Mamba model and verify the effectiveness of their method. It would be more convincing if the method can be validated on a broader range of SSM-based and linear-attention-based models.\n2. The experimental results are not satisfactory. As shown in Table 1, DeciMamba fails to achieve more than a 10% LongBench score on most datasets. In contrast, models with a context window size of only 4k, as reported in the original LongBench paper, often perform better (e.g., Llama-2-7B-chat has an average score of 31 on English tasks). Additionally, for simpler long-context tasks like Passkey, the authors mention that DeciMamba requires fine-tuning to handle them effectively.\n3. The presentation of the paper could be improved. For instance, proper citation formats (\\citep and \\citet) should be used; table captions should appear above the tables; and in Table 1, the DeciMamba entry is missing the LB score for the LCC dataset."
+            },
+            "questions": {
+                "value": "Please refer to the Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the question of how to understand and address the limitations of length generalization capabilities of the Mamba architecture. The paper introduces ERF, the effective receptive field, and shows that Mamba is biased towards sequence lengths seen during training. The authors then introduce DeciMamba to extend length generalization capabilities by limiting the number of tokens that the S6 layer processes."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- The paper introduces the phenomenon of \"limited effective receptive field\" which could be useful for future work studying the Mamba architecture\n- The proposed design is well motivated by the identified ERF phenomenon\n- The proposed architecture shows consistent improvement over Mamba in long context range experiments\n- The paper includes effective visualizations, especially Figure 2"
+            },
+            "weaknesses": {
+                "value": "- Most of the related work on length generalization is for transformers. Is there any work on this for SSMs? I'm not sure exactly where this falls in the literature."
+            },
+            "questions": {
+                "value": "- How does the DeciMamba architecture compare to Mamba at short context length tasks? Ie, is there a tradeoff between performance on short and long context tasks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

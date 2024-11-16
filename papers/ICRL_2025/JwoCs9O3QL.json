@@ -1,0 +1,165 @@
+{
+    "id": "JwoCs9O3QL",
+    "title": "VLMGuard: Defending VLMs against Malicious Prompts via Unlabeled Data",
+    "abstract": "Vision-language models (VLMs) are essential for contextual understanding of both visual and textual information. However, their vulnerability to adversarially manipulated inputs presents significant risks, leading to compromised outputs and raising concerns about the reliability in VLM-integrated applications.  Detecting these malicious prompts is thus crucial for maintaining trust in VLM generations. A major challenge in developing a safeguarding prompt classifier is the lack of a large amount of labeled benign and malicious data.  To\n address the issue, we introduce VLMGuard, a novel learning framework that leverages the unlabeled user prompts in the wild for malicious prompt detection. These unlabeled prompts, which naturally arise when VLMs are deployed in the open world, consist of both benign and malicious information. To harness the unlabeled data, we present an automated maliciousness estimation score for distinguishing between benign and malicious samples within this unlabeled mixture, thereby enabling the training of a binary prompt classifier on top. Notably, our framework does not require extra human annotations, offering strong flexibility and practicality for real-world applications. Extensive experiment shows VLMGuard achieves superior detection results, significantly outperforming state-of-the-art methods.  Disclaimer: This paper may contain offensive examples; reader discretion is advised.",
+    "keywords": [
+        "Malicious prompt detection"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "",
+    "creation_date": "2024-09-24",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=JwoCs9O3QL",
+    "pdf_link": "https://openreview.net/pdf?id=JwoCs9O3QL",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper addresses a challenge in VLM security in VLM security - detecting malicious prompts without requiring labeled data. The key innovation lies in analyzing unlabeled user data through subspace analysis of VLM representations. While the approach shows promising results, several fundamental questions about its theoretical foundation and practical applicability need to be addressed."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- New Problem Definition:\n  - The paper presents a practical solution to reduce dependency on labeled data, which is particularly valuable because manually labeling malicious prompts is time-consuming and expensive.\n\n- Technical Approach:\n  - The proposed maliciousness scoring mechanism uses VLM's internal representations, which is computationally efficient as it requires only a single forward pass.\n  - The scoring function $\\kappa_i = \\frac{1}{k} \\sum \\left( \\lambda_j \\cdot \\langle f_i, v_j \\rangle^2 \\right)$  combines information from multiple principal directions, making it more robust than single-direction approaches.\n  - The framework can be easily integrated into existing VLM systems since it doesn't require architectural modifications."
+            },
+            "weaknesses": {
+                "value": "- The authors offer some geometric intuition and empirical validation, but the theoretical foundation could be clearer in a few areas:\n  - The choice of SVD subspace analysis, while effective empirically, lacks a solid theoretical basis to confirm its effectiveness in detecting malicious patterns.\n  - The current geometric explanation would be stronger with a formal analysis showing why this property holds across different types of attacks.\n\n\n- The authors use the common approach of last-token embeddings, but there are still a few questions:\n  - How does information from earlier tokens affect detection?\n  - What properties of the last token make it particularly suitable?\n  - How robust is this choice across different prompt structures?"
+            },
+            "questions": {
+                "value": "- Given your geometric intuition about malicious samples \"malicious samples may occupy a small subspace within the activation space\":\n  - Could you provide formal conditions under which this property is guaranteed?\n  - How does this property relate to the VLM's training objectives?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a defensive framework called VLMGuard, designed to safeguard Vision-Language Models (VLMs) from malicious user inputs. VLMGuard approaches malicious prompt detection as a binary classification task, operating within the VLM's latent space. It identifies prompts that fall into a subspace defined by the latent vectors of known malicious prompts, effectively flagging them as toxic or jailbreaking attempts."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper focuses on a critical safety issue: the misuse of VLMs through malicious or adversarial user inputs. This topic is increasingly important due to the growing popularity and widespread deployment of VLMs.\n\n- VLMGuard introduces an interesting approach by utilizing unlabeled user inputs to enhance the detection of malicious content. This method presents a promising and effective solution to the problem."
+            },
+            "weaknesses": {
+                "value": "1. **The motivation behind VLMGuard is unclear.** While it is purportedly designed for VLMs, the integration of VLM concepts into the method is not evident. VLMGuard appears to function as a general binary classifier using extracted latent features applicable to any deep neural network. The lack of a clear rationale and organized presentation diminishes the method's potential significance.\n\n2. **The presentation is wordy and lacks informativeness.** The introduction fails to provide an overarching view of the method. Additionally, Figure 1 lacks annotations necessary for reader comprehension.\n\n3. **There is insufficient discussion of novelty and technical contributions.** Although the authors highlight that VLMGuard requires no labeled data, it seems to rely on latent vectors of known malicious prompts. Furthermore, as indicated by Eqs 5, 6, and Figure 2, the solution resembles an SVM approach [a1]. The authors should clarify the novelty and contributions compared to existing methods.\n\n[a1] M. A. Hearst, S. T. Dumais, E. Osuna, J. Platt, and B. Scholkopf, \"Support vector machines,\" IEEE Intelligent Systems, vol. 13, no. 4, pp. 18-28, July-Aug. 1998, doi: 10.1109/5254.708428.\n\n4. **There is a lack of comparison with closely related baselines.** The authors should compare their method with state-of-the-art content moderation solutions, such as Aegis [a2], LlamaGuard [a3], LlamaGuard2 [a3], LlamaGuard3 [a4], and OpenAI-Moderation [a5].\n\n\n[a2] https://arxiv.org/abs/2404.05993\n[a3] https://arxiv.org/abs/2312.06674 \n[a4] https://arxiv.org/abs/2407.21783  \n[a5] https://arxiv.org/pdf/2208.03274\n\n5. **(minor) Figure 1 is misleading.** While the paper does not evaluate any of OpenAI's VLMs, it uses the OpenAI logo, potentially confusing readers. This should be corrected to accurately reflect the VLMs used in the evaluation."
+            },
+            "questions": {
+                "value": "Please refer to the weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Vision-language models (VLMs) are crucial for understanding visual and textual information but are vulnerable to adversarial inputs, which can compromise their reliability in applications. Detecting these malicious prompts is essential to maintain trust in VLM outputs. A significant challenge is the limited availability of labeled benign and malicious data for developing effective classifiers.\n\nTo tackle this, the paper introduces VLMGUARD, a novel framework that utilizes unlabeled user prompts from real-world deployments for malicious prompt detection. These prompts contain both benign and malicious information. The approach includes an automated maliciousness estimation score to differentiate between benign and malicious samples within this unlabeled dataset, allowing for the training of a binary prompt classifier without requiring additional human annotations.\n\nExtensive experiments demonstrate that VLMGUARD achieves superior detection performance, significantly surpassing existing state-of-the-art methods, thus offering a flexible and practical solution for real-world applications."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This paper explores the defense in VLM malicious generations, giving a good reference to the research on this aspect.\n\n- The proposed method VLMGUARD is simple but effective to achieve the defense, and the good performance obtained by the experiments strongly supports this point.\n\n- The ablation study is organized well to clearly demonstrate the whole proposed method. And it makes the paper easy to follow."
+            },
+            "weaknesses": {
+                "value": "- I am curious about why the binary classifier outperforms the direct use of the maliciousness score for detection, as illustrated in Fig. 4. The training dataset is based on an unlabeled dataset that has been annotated with maliciousness scores. Consequently, the accuracy of the binary classifier relies on the quality of these annotations, which in turn depends on the effectiveness of the maliciousness score detection. This raises the question: **is the upper bound of the binary classifier's performance essentially limited by the accuracy of the maliciousness score detection?** However, the results in Fig. 4 contrasts this view.\n\n- I noticed that the values for $\\pi$ are chosen from the set {0.001, 0.005, 0.01, 0.05, 0.1} as stated in Section 4.1. Is it possible for the proportion of malicious prompts to be higher, perhaps 0.5 or more? I am interested in understanding whether the proposed defense mechanism remains effective when faced with such a higher rate of malicious prompts."
+            },
+            "questions": {
+                "value": "Listed in the weakness of the paper. \n\nScore can be improved if concerns listed above are resolved."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Privacy, security and safety"
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a novel approach to defending Vision-Language Models (VLMs) against malicious prompts. The proposed method leverages the intrinsic capabilities of VLMs to assign pseudo-labels to unlabeled data, and subsequently trains a binary classifier to detect malicious prompts using this pseudo-labeled dataset. By doing so, the method significantly enhances the robustness of VLMs in detecting and mitigating malicious prompts."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Clarity and Simplicity of the Approach:\nThe overall idea and methodology presented in this paper are highly intuitive and easy to follow. The process of feeding inputs into the model to obtain embeddings, followed by performing SVD, and finally identifying outliers, is clear and logically structured. This clarity allows for smooth comprehension of the workflow, making the contributions more accessible to both researchers and practitioners.\n\nSignificance in Addressing a Critical Problem:\nThe paper addresses a critical issue in trustworthy AI: the detection and defense against malicious prompts in VLMs. The significance of this contribution cannot be overstated, as enhancing VLMs' robustness to malicious inputs is a crucial step toward ensuring reliable deployment of AI systems in real-world applications. The focus on using pseudo-labeled, unlabeled data is particularly valuable in reducing the dependency on manually labeled datasets, which is often a bottleneck in scaling robust AI solutions.\n\nSubstantial Performance Improvement:\nThe experimental results demonstrate considerable improvements over existing baselines, showcasing the practical impact of the proposed method. The enhancements in robustness against malicious prompts, as reflected by the increased AUROC scores in the experiments, highlight the effectiveness of the approach. This strong empirical performance further strengthens the paper's contribution."
+            },
+            "weaknesses": {
+                "value": "Limited Novelty in Core Contribution:\nThe core contribution of this work\u2014applying SVD to detect malicious prompts\u2014while effective, does not appear to be particularly novel. SVD has been extensively used in anomaly detection tasks across various domains, and its direct application here may lack the originality expected in top-tier conference submissions. The paper could benefit from further emphasizing any unique insights or enhancements introduced in the specific context of VLMs and malicious prompt detection, beyond the straightforward use of SVD.\n\nUnclear Necessity of Training the Protective Prompt Classifier:\nA significant question arises regarding the necessity of the protective prompt classifier. Given that the proposed \u201cmaliciousness estimation in the latent subspace\u201d seems capable of distinguishing malicious samples effectively, the added step of pseudo-labeling and training a binary classifier may seem redundant. The paper could have provided stronger justification for why the classifier is needed, beyond simply determining the decision threshold \\tau. It would strengthen the contribution if the authors could clarify whether the classifier introduces additional benefits in terms of generalization or robustness that are not achieved by the latent subspace estimation alone. Without this clarification, the added complexity might appear unnecessary."
+            },
+            "questions": {
+                "value": "The biggest issue I see is related to Weakness 2.\n\nRelation to Adversarial Images:The relationship between this work and adversarial images needs further clarification. While malicious prompts are discussed, there seems to be some overlap with the concept of adversarial examples, especially when dealing with adversarial attacks on the visual input. Could the authors elaborate on how their approach relates to or differs from traditional adversarial attack detection.\n\nApplicability Beyond Multimodal Models:The method proposed in this paper does not seem inherently restricted to multimodal models. Would the authors agree that this approach could also be applied to unimodal models, such as those in CV or NLP? For instance, could this method be adapted for adversarial attack detection in CV models, where the \"jailbreak\" prompts are replaced by adversarial attacks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

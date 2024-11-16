@@ -1,0 +1,169 @@
+{
+    "id": "v9GwGQoOG5",
+    "title": "Beyond Markov Assumption: Improving Sample Efficiency in MDPs by Historical Augmentation",
+    "abstract": "Under the Markov assumption of Markov Decision Processes (MDPs), an optimal stationary policy does not need to consider history and is no worse than any non-stationary or history-dependent policy. Therefore, existing Deep Reinforcement Learning (DRL) algorithms usually model sequential decision-making as an MDP and then try to optimize a stationary policy by single-step state transitions. However, such optimization is often faced with sample inefficiency when the causal relationships of state transitions are complex. To address the above problem, this paper investigates if augmenting the states with their historical information can simplify the complex causal relationships in MDPs and thus improve the sample efficiency of DRL. First, we demonstrate that a complex causal relationship of single-step state transitions may be inferred by a simple causal function of the historically augmented states. Then, we propose a convolutional neural network architecture to learn the representation of the current state and its historical trajectory. The main idea of this representation learning is to compress the high-dimensional historical trajectories into a low-dimensional space. In this way, we can extract the simple causal relationships from historical information and avoid the overfitting caused by high-dimensional data. Finally, we formulate Historical Augmentation Aided Actor-Critic (HA3C) algorithm by adding the learned representations to the actor-critic method. The experiment on standard MDP tasks demonstrates that HA3C outperforms current state-of-the-art methods in terms of both sample efficiency and performance.",
+    "keywords": [
+        "Deep reinforcement learning",
+        "Sample efficiency",
+        "State representation",
+        "Historical augmentation",
+        "Markov decision processes"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "This paper investigates if augmenting the states with their historical information can simplify the complex causal relationships in MDPs and thus improve the sample efficiency of DRL.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=v9GwGQoOG5",
+    "pdf_link": "https://openreview.net/pdf?id=v9GwGQoOG5",
+    "comments": [
+        {
+            "summary": {
+                "value": "For deep reinforcement learning, the paper proposes to augment the state with compressed historical to improve sample efficiency and performance. Some theoretical analysis provides optimality and convergence properties for the proposed state augmentation when certain conditions are satisfied. Numerical experiments show decent performance for the proposed method compared to some existing methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Having an appropriate representation is important for RL agents. For problems with the Markov property, it is typically for a RL agent to consider only the current state as the state is known to be sufficient to make optimal decisions. The proposed idea to augment history to help the agent to improve its representation learning is an very interesting ideas and sounds promising from simple examples as discussed.\n\n- The proposed method shows decent performance in numerical experiments, and the effectiveness of history augmentation is numerically illustrated in the ablation study."
+            },
+            "weaknesses": {
+                "value": "- Although the paper provides some analysis for optimality and convergence properties of the proposed provided, these properties do not provide any insight into why the history augmentation helps representation learning. And there is no analysis on potential sample complexity reduction. Since it is assumed that the state is kept and completely uncompressed in the encoder output, most of the results are expected. It is likely that simpler arguments may be available by arguing that the original state-dependent optimal policy is also a feasible policy with the augmentation.\n\n- In both the analysis of Section 4.1 and the algorithm design in Section 4.2, it is not clear whether we non trivial augmentation is needed. For example, the analysis seems to completely go through when $f(s_{k, t}) = s_t$ in Section 4.1, and nothing seems to prevent the HA3C algorithm to ignore the history and ending up getting $z^{s^{k, t}_\\alpha} = s_t$.\n\n- Although the ablation study shows better performance with the proposed history augmentation, the improvement does not seem significant given those largely overlapping confidence areas. Additional experiments like showing how performance varies by varying the length of the history augmentation may provide some trends that could be more convincing.\n\n- Comparing to existing methods, the proposed seem to perform decently in the numerical experiments, but the improvement is not that significant especially compared with TD7. Without additional analysis on the quality of the learned representation, it is not clear if the performance benefits indeed come from the proposed history augmentation."
+            },
+            "questions": {
+                "value": "- Beyond the simple examples, are there theoretical or numerical analysis showing sample complexity benefits with history augmentation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper provides an interesting viewpoint on learning a policy that not only depends on the current state but also on the history in Markov decision processes. The key motivation is that, by conditioning on the history, the underlying pattern may be simpler than only conditioning on the current state. The Fibonacci example nicely demonstrates this point. Later, the authors identified two challenges when we want to learn a policy depending on the history: 1) How to ensure we learn a simple pattern based on the history? 2) How to avoid overfitting to the high-dimensional historical data? The core solution proposed by this paper is to learn two encoders - one is used to compress the history into a low-dimensional embedding and the other serves as a latent world model to predict the embedding of the next state based on the action."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The overall idea is novel but sound. The proposed method is reasonable from an intuitive perspective."
+            },
+            "weaknesses": {
+                "value": "- While the Fibonacci example is persuasive, I do not quite understand the example provided in Figure 1. Why the causal function in Figure 1 (b) is simpler than the causal function in Figure 1 (a)? Or this is just a illustrative figure for historical augmentation but not for providing a solid sample? If this is the case, I would like to see a less artificial example to demonstrate on this point (depending on the history can lead to a simpler causal relationship).\n- After I go through the algorithmic design of HA3C, I feel this algorithm is closer to \u201crepresentation learning for RL\u201d such as Dreamer. (By the way, Dreamer lacks citation in L128.) HA3C essentially learns encoders that can compress the state (plus history) in to a latent space and learns an additional latent world model (g) that can predict the dynamics in this latent space. From this perspective, HA3C would better to also compare with other \u201crepresentation learning for RL\u201d baselines.\n- On the experimental results, the improvement of HA3C is marginal over the baseline algorithms on MuJoCo control tasks. From my point of view, this does not indicate that HA3C is ineffective. I think the benefit of HA3C relies on the structure of the problem: the causal relationship based on only the current state is complex but the causal relationship based on the history can be simple. MuJoCo tasks may not be good environment for HA3C. I strongly suggest the authors to find other tasks (or even artificial tasks to demonstrate the effectiveness of HA3C)."
+            },
+            "questions": {
+                "value": "- I do not quite understand the significance of the point demonstrated in Figure 5. Do I understand correctly? HA3C has more points in the red circle. This indicates that HA3C can reach the high-rewarding states more often (or robustly). This information seems a little  duplicated to the training curves demonstrated in Figure 6 or Table 1.\n- In L171, should the formula depend on $s_t$ but not $t$ since we are talking about predicting $s_{t+1}$ from $s_t$ but not $t$.\n- The citation format is incorrect."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a new algorithm to improve sample efficiency in reinforcement learning by integrating historically augmented states, and presents a series of experiments conducted to validate the effectiveness of this algorithm."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The examples given in the Section 3 and Appendix B help readers understand the motivation of using historical information.\n2. The paper is generally well-organized, making it easy for readers to follow.\n3. The proposed method is shown to have strong empirical performance on Mujoco and DMC."
+            },
+            "weaknesses": {
+                "value": "1. To improve reproducibility, it would be beneficial to supplement the implementation details about the inputs and the parameters of networks such as CNNs used in the encoder.\n2. I believe the paper would read more easily after reorganizing the Appendix A and Appendix D, as abbreviations like SkD and MkD may be confusing for those unfamiliar with them.\n3. An in-depth analysis of the parameters k and N in the ablation study would greatly enhance readers' understanding of the algorithm. Additionally, I believe more analysis of the running time or the complexity would be helpful, for example, the impact of the parameters k and N on the running time.\n\nMinor comments\n1. Is there a mismatch between the Figure 2 and the corresponding description \u201cthe dimensionality reduction is only performed on $s_{k\u22121,t\u22121}$\u201d?\n2. Is there a typo in the results for TD7 on HalfCheetah shown in Table 1 (the reward of 156325)? Additionally, the reward of 45074 for TD3+OFE on Walker2d should also be checked.\n3. Formatting: \n         a) When the authors or the publication are not part of the sentence, the citation should be in parenthesis by using \u2018\\citep{}\u2019.\n         b) The format for referencing figures should be consistent in the Section 3."
+            },
+            "questions": {
+                "value": "1. While the proposed historically augmented states can theoretically improve actor-critic methods, could you provide more evidence that demonstrates their applicability to other existing RL methods, aside from the current used TD3?\n2. Is the input to HA3C images while the authors mention high-dimensional historical trajectories frequently?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper posits that, even when operating under the Markov assumption, it is beneficial for policy formulation to take into account not only current states but also historical information. This is based on the assumption that single-step state transitions might have complex causal relationships. Introducing historical data could potentially simplify these causal relationships, making them easier for neural networks to learn. On this basis, a novel Reinforcement Learning (RL) algorithm named HA3C is proposed, which has demonstrated superior performance over other advanced algorithms, such as TD3 and TD7, in five MuJoCo control tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The perspective of causal relationships is interesting to understand why one should use historical information as additional inputs.\n2. The theoretical formulation is precise and comprehensive."
+            },
+            "weaknesses": {
+                "value": "1. The improvement of HA3C over baselines on the five Mujoco tasks appears to be subtle rather than significant.\n2. It would be beneficial to devise a demonstrative environment and characterize the causal relationships, thereby facilitating a clear comparison between the two options."
+            },
+            "questions": {
+                "value": "See above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

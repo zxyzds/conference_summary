@@ -1,0 +1,240 @@
+{
+    "id": "W6hzM9DMMU",
+    "title": "The Benefit of Being Bayesian in Online Conformal Prediction",
+    "abstract": "Based on the framework of Conformal Prediction (CP), we study the online construction of valid confidence sets given a black-box machine learning model. By converting the target confidence levels into quantile levels, the problem can be reduced to predicting the quantiles (in hindsight) of a sequentially revealed data sequence. Two very different approaches have been studied previously:\n- *Direct approach.* Assuming the data sequence is iid or exchangeable, one could maintain the empirical distribution of the observed data as an algorithmic belief, and directly predict its quantiles. \n- *Indirect approach.* As statistical assumptions often do not hold in practice, a recent trend is to consider the adversarial setting and apply first-order online optimization to moving quantile losses (Gibbs and Candes, 2021). It requires knowing the target quantile level beforehand, and suffers from certain validity issues on the obtained confidence sets, due to the associated loss linearization.\n\nThis paper presents a novel Bayesian CP framework that combines their strengths. Without any statistical assumption, it is able to both\n- answer multiple arbitrary confidence level queries online, with provably low regret; and \n- overcome the validity issues suffered by first-order optimization baselines, due to being \"data-centric\" rather than \"iterate-centric\". \n\nFrom a technical perspective, our key idea is to regularize the algorithmic belief of the above direct approach by a Bayesian prior, which \"robustifies\" it by simulating a non-linearized *Follow the Regularized Leader* (FTRL) algorithm on the output. For statisticians, this can be regarded as an online adversarial view of Bayesian inference. Importantly, the proposed belief update backbone is shared by prediction heads targeting different confidence levels, bringing practical benefits analogous to the recently proposed concept of *U-calibration* (Kleinberg et al., 2023).",
+    "keywords": [
+        "conformal prediction",
+        "online learning",
+        "adversarial Bayes"
+    ],
+    "primary_area": "probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",
+    "TLDR": "We propose a Bayesian approach to adversarial online conformal prediction, which, due to its \"data-centric\" nature, improves upon existing \"iterate-centric\" first-order optimization baselines.",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=W6hzM9DMMU",
+    "pdf_link": "https://openreview.net/pdf?id=W6hzM9DMMU",
+    "comments": [
+        {
+            "comment": {
+                "value": "Thank you very much for your review! \n\nUpdating the prior online is indeed an interesting idea worth looking into in the future. As for unifying the regimes of decaying step sizes and constant step sizes, one might consider characterizing the *dynamic regret* (Zinkevich, 2003), which is another common performance metric in online learning. Algorithms targeting this performance metric usually have a \"meta-learning\" type of structure, where a number of \"base algorithms\" (like our Algorithm 1) with different learning rates are aggregated by a meta-algorithm on top (which in some sense \"selects\" the best learning rate). It's quite likely that extending our approach towards this direction would yield new theoretical results, but that would typically sacrifice the practicality (while not necessarily leading to new insights), which is why we did't pursue this direction in the present work."
+            }
+        },
+        {
+            "title": {
+                "value": "Response 2/2"
+            },
+            "comment": {
+                "value": "As for experiments on real datasets, we'll try to do more within the rebuttal period. To make this more effective, since you are asking for more datasets and baselines (and unfortunately, there are infinite many...), could you please let us know the specific datasets and baselines you have in mind such that testing on those will improve your evaluation of our paper? We'd like to kindly note that in our experiments (Line 468-478), our algorithm cannot benefit from any extra hyperparameter tuning compared to ACI, which is not the case for some of the baselines suggested in your review (AgACI, Conformal PID). Bellman CP and Copula CP are proposed for the setting of multi-step forecasting, which is different from our focus. We find it quite hard to fairly compare to these baselines in order to obtain scientifically meaningful conclusions. \n\nRegarding the results of our experiments, we are not claiming our algorithm beats the baselines in all settings. **What we can confidently say is that it offers concrete improvement when multiple $\\alpha$ are queried (Figure 2), while performing similarly as ACI in the conventional setting of a single fixed $\\alpha$ (Figure 4 and 5).** So the practitioners of CP are given one more option in their toolbox. \n\nThanks again, and we are looking forward to hearing your thoughts!"
+            }
+        },
+        {
+            "title": {
+                "value": "Response 1/2"
+            },
+            "comment": {
+                "value": "Thank you very much for your constructive feedback. We will try to run more experiments on real datasets during the rebuttal phase and update here. Meanwhile we'd like to respond to the rest of your major criticisms. \n\n1. **Invariance to permutation is not a benefit**\n\nYou are right, we will remove this \"paradox\" and only argue about the other one (inconsistency between different $\\alpha$). Indeed, we agree that only when the data stream is iid can we confidently say the invariance to permutation is a desirable property. \n\n2. **Compatibility of performance guarantees with distribution shifts**\n\nWe'd like to clarify two possible confusions from your review. The first is on the performance guarantee of Discounted (Theorem 6). Quoting your review, \n\n> And Theorem 6 does not seem to agree with the text surrounding it; the 'optimal' predictions considered for the regret bound seems to be constant over the course of the whole time (since the min over $r$ is outside the sum over time), which is deeply uninteresting. Any minimally decent predictor in the continual distribution shift setting should have predictions that change over time. \n\nOur Theorem 6 bounds the **discounted regret**, which is one of the standard performance measures for \"nonstaionary online learning\". The intuition is that given a discount factor, it characterizes the performance of the algorithm over a **sliding time window** whose length is determined by the discount factor. Over any time window, the algorithm is compared to the best fixed action specifically for this time window. Importantly, **over different time windows the algorithm will compare to different fixed actions,** which is naturally compatible with the essence of \"learning under distribution shifts\". \n\nRegarding the example you made: \n\n> A simple case where these things really matter is when your are in an adversarial setting with increasing conformity scores over time. No single prediction is going to be enough, you must increase your intervals over time!\n\nOur discounted algorithm can indeed increase its prediction interval over time. We'll include an experiment to show this. \n\nThe second possible confusion is on the utility of the static regret bound (Theorem 2). We'd like to note that **bounding the static regret doesn't mean that we assume the data is IID or exchangeable.** In the learning-theoretic language, the static regret characterizes our algorithm's ability to learn the hypothesis class of time-invariant functions, which is independent of the data generation mechanism. This is also the key motivation for the field of adversarial online learning to focus on the static regret. \n\n3. **Significance our theoretical results**\n\nQuoting your review,\n\n> The paper's theoretical contributions aren't notable enough nor are any new things possible with the proposed method, \n\nWith all due respect, we'd like to push back against this evaluation. Most notably, **our algorithm achieves an adaptive, best-of-both-worlds guarantee that prior works couldn't.** In addition, in the adversarial setting, our algorithm is **the first one to support multiple $\\alpha$ queries with monotonicity.** \n\nTo be more concrete on the first point, we argue that in many practical applications of CP one has to apply the algorithm without knowing the nature of environment in advance. In such cases it's impossible to say something like \"we'll apply Split CP if the data sequence is exchangeable, and ACI otherwise\"; instead, **an ideal algorithm needs to work well under all data-generation mechanisms,** which aligns with the statistical concept of *adaptivity*. \n\nOur algorithm does this. Without knowing the nature of the environment beforehand, the same algorithm guarantees that\n- if the data sequence is iid, then the dataset conditional coverage probability is as good as Split CP; \n- over any data sequence, the regret bound of our algorithm is optimal (as good as gradient descent). \n\nWe are not aware of any prior work that achieves this. \n\nBesides, we establish the equivalence between a Bayesian algorithm (with uniform prior) and a full-loss FTRL algorithm (with quadratic regularizer), which we see as a substantial technical contribution.\n\n4. **Experiment**\n\nFinally, the focus of this paper is theoretical, and with our synthetic data experiments (Figure 2 and 3) clearly showing the improvement of our approach over representative baselines, we thought the paper is already quite complete. In addition, we see CP as a particular aspect of \"trustworthy computing\", where theoretical guarantees are themselves among the key elements that determine the usefulness of an algorithm."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you very much for your constructive review. Regarding your comments,\n\n1. **Reason to call our algorithm Bayesian**\n\nTo begin with, we thought it's quite important to note that **we only call our algorithm Bayesian, rather than the problem setting and the analysis.** \n\n**From only the algorithmic perspective,** as discussed in Section 5, our belief update backbone is the same as the standard *Bayesian distribution estimator*. This estimator doesn't seem have a separate fancy name from the Bayesian statistics literature, but it should be a fairly standard textbook-level concept as covered by (Chapter 23, Gelman et al., Bayesian Data Analysis, 2021). We see a major novelty of our work as showing the **equivalence** of a *Bayesian algorithm* from statistics and a *full-loss FTRL algorithm* from adversarial online learning, which is significant but hasn't been concretely explored in the past. \n\n**As for the problem setting and the analysis,** ours are indeed very different from Bayesian statistics, as also pointed out by your review: \n\n> Note in particular that a Bayesian would consider the observations forming the empirical distribution to be iid draws from a multinomial, quite out of the spirit of the \"no statistical assumptions\" statement that the authors make. \n\nIndeed, traditional Bayesian statistics doesn't consider the \"adversarial settings\" like in our work. This leads to the main **operational value of the above algorithmic equivalence:** we could give certain performance guarantees of the proposed Bayesian algorithm, without statistical assumptions at all. We call such analytical framework **\"adversarial Bayes\"**. \n\n2. **Importance of multiple confidence level queries**\n\nSupporting multiple $\\alpha$ queries can be useful in plenty of applications. \n\n- Imagine a \"central\" CP algorithm predicting confidence sets on the stock prices, and different downstream users apply those sets for their respective investment activities. Each user has a different risk preference, which determines a different $\\alpha$ to be queried from the CP algorithm. \n- Another case is when a single downstream user applies the confidence sets in an iterative subroutine, which requires multiple queries in the same round. For example, the user first queries $\\alpha=90\\%$ and gets the algorithm's prediction set. If the set is deemed \"too large\" then the user might consider lowering $\\alpha$ to 80% and query again (in the same round). So on and so forth. \n\n3. **Invariance to permutation is not a benefit**\n\nThis is a good point! We will remove this \"paradox\" and only argue about the other one (inconsistency between different $\\alpha$). Indeed, we agree that only when the data stream is iid can we confidently say the invariance to permutation is a desirable property. \n\n4. **Why not a pure and simple FTRL story?**\n\nCompared to a pure FTRL story, there are two benefits of the Bayesian statistical perspective: \n- **Computation.** It's worth-noting that we use the \"full-loss\" FTRL rather than the linearized version of FTRL more commonly found in the generic online learning literature. Such unpopularity of full-loss FTRL has been mainly due to computational reasons, as the online learning algorithm needs to solve a convex program in each round, similar to the RHS of Eq.(6).  \nIn contrast, our paper uses the Bayesian interpretation to **avoid the need of convex programs** (the special structure of CP is important here), and the algorithm admits a backbone-head decomposition which **enables multiple $\\alpha$ queries in a computationally efficient manner.** \n- **Probabilistic bound under IID assumption.** CP is conventionally a statistics problem, and the Bayesian perspective allows us to obtain a **coverage probability bound** assuming IID (Section 3.2), which is beyond the scope of typical regret analyses on FTRL. In particular, the proofs of Theorem 4 and 5 are essentially built on this Bayesian perspective. \n\nBesides these concrete operational benefits, we would argue that connecting full-loss FTRL with Bayesian statistics is itself quite interesting from a technical perspective. It requires exploiting the structure of the quantile losses, which hasn't been considered in the generic online learning literature. At least we found it surprising that the quadratic regularizer shows up when the prior is uniform. Section 1.2 summarizes the conceptual takeaway of our paper and the associated quantitative benefits. \n\nPlease let us know if you have any remaining concern."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your careful review that found our paper's strengths. We really appreciate that! \n\nRegarding your suggestions, we will try to add additional clarifying text to Section 3 in the revision. As for the MultiOGD baseline: \n\n- First, recall that OGD itself has Eq.(3) in our paper as its update rule, which requires a fixed confidence level $\\alpha$ throughout its operation (notice that $\\alpha$ is used to define the quantile loss functions). \n- MultiOGD is perhaps the simplest extension of OGD that doesn't require fixing $\\alpha$ beforehand. To do that, MultiOGD maintains a bunch of *independent* OGD algorithms (called base algorithms), each targeting a different confidence level $\\tilde \\alpha$. At the beginning of each round, all these base algorithms (with different $\\tilde \\alpha$) would have their predictions ready. If a user queries a specific confidence level $\\alpha$, then MultiOGD will output the prediciton of the base algorithm whose $\\tilde \\alpha$ value is the closest to $\\alpha$. \n- Particularly in Section 2, we only consider two different users in the experiments, each querying a fixed $\\alpha$ value. In this case MultiOGD just becomes OGD itself, and our experiments essentially show that \"two copies of OGD with different $\\alpha$ can be inconsistent with each other\". \n\nThanks again, and please let us know any remaining question!"
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you very much for your review. Regarding your questions: \n\n1. **\"what about the size of the prediction sets (in the experiment)?\"**\n\nFigure 5 in the paper shows the score thresholds predicted by our algorithm and the baselines, which essentially determines the sizes of the prediction sets. It could be visually seen that all three algorithms perform similarly in terms of the set sizes. \n\n2. **\"the $O(\\sqrt{T})$ memory usage seems redhibitory at first glance, but is not evaluated in practice in the experiments.\"**\n\nIn principle, our algorithm needs to maintain a histogram of the past true scores, and the memory usage is determined by the number of bins the histogram contains. We need $O(\\sqrt{T})$ bins for theoretical purposes, but in practice it's natural to keep the number of bins constant (in our experiment we pick 40, which induces negligible approximation error). This is the same reasoning as in (Bastani et al., 2022) which is also built on binning. \n\n3. **The role of prior**\n\nTheoretically speaking the uniform prior is the \"minimax optimal\" choice: for any other prior, there exists an environment where it's worse than the uniform. But in practice we would expect better performance using suitable non-uniform priors, just like typical Bayesian algorithms. Appendix A contains a comparison of our approach to Bayesian UQ. \n\nWe hope the above answers your questions!"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces an algorithm to compute prediction sets in the context of online conformal prediction : given a sequence of previous input and labels, the goal is to compute (for a new observed input) a score threshold leading to a prediction set. \nThe main idea of their algorithm is to define, at each step, a mixture of a prior distribution P_0 and the empirical distribution of the previous scores, and to use the quantile of this mixture as score thresholds. This approach is similar to the Follow The Regularized Leader (FTRL) in the bandits literature. From this similarity, the authors compute a regret bound for their algorithm and show that for a simple choice of prior (uniform distribution), their algorithm has a regret of O(\\sqrt{T}). In the case of distribution shift, a variant of their algorithm reaches constant discounted regret.\nMoreover, contrary to other existing approaches, the authors claim that the prediction intervals computed using their method satisfy a form of monoticity (meaning that the score thresholds for a higher coverage will be higher than those  for a lower coverage). \nNumerical experiments show that the method performs competitively with other approaches (online gradient descent, ERM, etc.)"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is overall clearly written (I did not check carefully the math in Appendix B) and the proposed method is both simple and seems to have good guarantees."
+            },
+            "weaknesses": {
+                "value": "I would have like more details on the numerical experiments. From what I understand, the figures only show that the method reaches the target coverage, but what about the size of the prediction sets that it produces ? How does it compare to other methods ? Also, the memory usage of the method ( O(\\sqrt(T}) for the quantized version) seems redhibitory at first glance, but is not evaluated in practice in the experiments."
+            },
+            "questions": {
+                "value": "- In general in Bayesian methods for UQ, the role of the prior is very important to have good performance. So I would be curious to know if other reasonable choices of priors for the score thresholds would improve the regret compared to the uniform prior (apart from the one mentioned in line 320). Is this something that you have explored ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper  presents a  novel approach to online conformal prediction (CP) that uses Bayesian regularization to overcome the limitations of previous direct and indirect CP methods. Conventional methods rely either on empirical quantile predictions (direct approach) or on adversarial optimization (indirect approach).  The Bayesian approach presented here addresses these issues by introducing a regularized Bayesian framework that combines empirical and prior-based distributions, thereby enabling more robust predictions without statistical assumptions about the data distribution.\n\nKey contributions include:\n- by implementing Bayesian regularization, the model provides reliable confidence sets that avoid the validity problems of purely adversarial CP methods, such as non-monotonicity across confidence levels.\n- The Bayesian CP model achieves an optimal regret boundary, maintains competitive performance across different confidence levels, and provides stable results in both iid and adversarial contexts.\n- Unlike traditional methods that require a single preset confidence level, the Bayesian approach supports online responses to arbitrary confidence queries - a critical improvement for dynamic, real-world applications.\n\nThe framework is theoretically validated with regret bounds and empirically demonstrated on both synthetic and real-world datasets, showing superior adaptability and efficiency compared to existing CP methods."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- The paper is clearly written and comprehensively explains its novel Bayesian approach to online conformal prediction. It effectively outlines the limitations of existing methods and clearly presents its contributions. The theoretical foundations are well-developed, and the empirical results are presented to complement the theory, making the concepts accessible to readers. The structure allows for an easy understanding of the core ideas, technical details, and the practical advantages of the proposed method.\n- The paper contains many interesting results, which are novel to my best knowledge\n    - Theorem 2 establishes the regret bound for the Bayesian CP algorithm, showing that it achieves \\( O(R\\sqrt{T}) \\) regret for any sequence length \\( T \\) and confidence level \\( \\alpha \\) in adversarial settings.\n    - Theorem 3 introduces the quantized version of the algorithm, demonstrating that it achieves the same \\( O(R\\sqrt{T}) \\) regret bound with reduced memory requirements of \\( O(\\sqrt{T}) \\).\n   -  Theorem 4 shows, under the iid assumption,  that the Bayesian CP algorithm achieves probabilistic coverage guarantees similar to ERM-based CP in iid contexts.\n   - Theorem 5  addresses the excess quantile risk under the iid assumption, demonstrating that the Bayesian CP algorithm achieves similar performance as traditional ERM approaches in iid environments.\n   - Theorem 6 provides a discounted regret bound for the variant of the Bayesian CP algorithm designed to handle continual distribution shifts. This bound matches minimax optimality, indicating the algorithm\u2019s resilience in non-stationary environments."
+            },
+            "weaknesses": {
+                "value": "I do not see serious weak points."
+            },
+            "questions": {
+                "value": "- Can you provide more details on MultiOGD [in Section 2]. The current version is so sketchy that it is difficult to read.\n- Provide more details in Section 3 [I know that the paper is short, you could provide more details in the appendix for example]"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors aim to contribute to the burgeoning literature on conformal prediction, in particular the approach based on quantile tracking.  The main goal of the paper is to develop a method that treats a set of alpha values, and not a single alpha value that has been fixed a priori.  The technical approach is essentially follow-the-regularized leader (FTRL) on the pinball loss, with an interpretation of the regularization in FTRL as a (nonparametric) Bayesian prior."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "It is true, and perhaps helpful, to point out that quantile-tracking algorithms can be incoherent in terms of the confidence sets that they deliver for different values of alpha.  It is also useful to point out that FTRL can address this issue.  Some of the other detailed critiques of Gibbs & Candes (e.g., the overshooting) are reasonable."
+            },
+            "weaknesses": {
+                "value": "I'm not entirely sure what I've learned from the paper, other than being reminded of some of the virtues of FTRL.\n\nIndeed, I want to emphasize that as best I can tell, this is a FTRL paper.  The connection to Bayesian inference is weak at best, and not very helpful.  There's a regularizer, but that alone doesn't make for Bayesian inference.  At the end of the paper, there's a suggestion that when regularization involves adding a uniform distribution to an empirical distribution we can interpret this as the (posterior mean) of a Dirichlet process, but I'm at a loss as to why that kind of Bayesian nonparametric terminology is called for here.  Note in particular that a Bayesian would consider the observations forming the empirical distribution to be iid draws from a multinomial, quite out of the spirit of the \"no statistical assumptions\" statement that the authors make.  Moreover, if one is really wanting to be Bayesian here, then it's the entire quantile process that should be the object of inference.\n\nThe main motivation of the paper doesn't seem to be Bayesian at all, but rather simply online learning, in a setting in which quantiles corresponding to multiple alpha values are desired.  Now, I'm not sure exactly when and how multiple alpha values might be desired by a downstream user.  Is there a decision-theoretic justification for asking for this?  The authors don't go much beyond simply suggesting that it's desirable in some intuitive sense.\n\nThere are frameworks in statistics for making repeated tentative decisions over time, e.g., the nonnegative supermartingale\napproach, and such decision-theoretic frameworks are clearer (to me) ways of getting at the issue being hinted at here.\n\nThe other motivation for pursuing this approach is the \"paradox\" (lack of invariance to permutations) associated with quantile tracking. \nBut this critique seems to lose its punch when one remembers that one of the main motivations for the quantile tracking approaches\nis that of handling nonstationarity."
+            },
+            "questions": {
+                "value": "My main suggestion is to be clearer on what exactly a downstream user might be asking for, in specific inferential use cases, to support the goal of tracking with respect to multiple alpha values simultaneously.  A secondary suggestion is to clarify in what sense this is really Bayesian inference, beyond simply having a sum-of-distributions interpretation.  Why isn't this just an FTRL story pure and simple."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a method for online conformal prediction leveraging a Follow-the-Regularized-Leader approach, where the regularization is derived from a prior. Theoretical justification for the method is provided by the means of regret bounds. The method is empirically evaluated on synthetic data as well as financial time series."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The key idea of having an online conformal prediction method mimic online bayesian inference methods is interesting, and, as far as I am aware, original. The text is reasonably clear, and the authors provide a substantial number of theoretical guarantees, substantiating their method's strength. The inclusion of analyses in the IID case (i.e., not just an arbitrarily adversarial case) is appreciated."
+            },
+            "weaknesses": {
+                "value": "The paper has a number of significant weaknesses.\n\n- Line 117: The first paradox does not seem paradoxical at all. We are in a setting where, in principle, exchangeability does not hold. That precisely means that the order in which we have observed our data carries information. So our method *should not* be invariant to this order!\n- The paper is about online conformal prediction, and thus for settings where exchangeability & IID do not hold. However, the paper focuses excessively on the IID setting, except for a single section (Section 3.3), which introduces a separate algorithm (dubbed 'Discounted') and a corresponding theorem (Theorem 6), and Theorem 2. And Theorem 6 does not seem to agree with the text surrounding it; the 'optimal' predictions considered for the regret bound seems to be constant over the course of the whole time (since the min over $r$ is outside the sum over time), which is deeply uninteresting. Any minimally decent predictor in the continual distribution shift setting should have predictions that change over time. Theorem 2 suffers from the same issue. (A simple case where these things really matter is when your are in an adversarial setting with increasing conformity scores over time. No single prediction is going to be enough, you must increase your intervals over time!)\n- The experimental evaluation is very weak. Online conformal prediction is a topic that requires significant experimental evaluation. The paper's theoretical contributions aren't notable enough nor are any new things possible with the proposed method, so an advantage of the method validated through experiments (e.g., that the coverage would be more robust, or that the intervals would be smaller) is essential.\n    - The only data considered was one synthetic dataset and stock market data. The main problem is, of course, with the real data; only stock market data was considered. Data coming from the stock market (and especially price time series) have very particular structure. The authors should consider many other time series. Moreover, considering all the attention that the authors laid on the IID setting, there was no dataset considering it (but, to be clear, I would rather the authors deemphasize the IID setting than an additional focus of experiments on IID data).\n    - The baselines being considered are severly lacking. The authors consider ACI (Gibbs & Cand\u00e8s, 2021) and MVP (Bastani et al., 2022). While I wholeheartedly agree that these two methods should be present, they are already a bit dated, and considering only them brings a misleading comparison, as they are not quite the state-of-the-art anymore. Here are some other methods I suggest comparing against:\n        - AgACI (https://arxiv.org/abs/2202.07282)\n        - Bellman CP (https://arxiv.org/abs/2402.05203)\n        - Copula CP (https://arxiv.org/abs/2212.03281)\n        - Conformal PID control (https://arxiv.org/abs/2307.16895)\n    - Finally, I must note that even with the lacking experimental comparison, I don't exactly see an advantage of the proposed method compared to the baselines.\n\nAdditionally, a number of nitpicks (which do not impact my score, but should probably be improved upon):\n\n- Line 073: \"without any statistical assumption at all\" -- that's not right. While the assumptions are indeed quite lax, there _are_ statistical assumptions: namely, that the protocol described in lines 054-063 is followed (which implies, e.g., that confidence level chosen for a time step is independent of the outcome conditional on the past along with the new covariates).\n- On the definition of the quantile in equation (2), you should consider the infimum rather than the minimum to ensure that the quantile is well-defined.\n- Line 096: I'd expect a reader of this paper to be familiar with exchangeability. \" a relaxation of iid called exchangeability\" sounds like talking down. Also, consider citing https://arxiv.org/abs/2005.06095, which is an excellent reference on exchangeability and CP.\n- Section 2 should probably be moved to the experiments section, or even the supplementary material. The experiment and the fact that it is embasing has already been mentioned in the introduction; additional motivation is not needed.\n- Calling the proposed method 'Bayesian' feels a bit like a misnormer. There is no statistical model being used for Bayesian inference, no likelihood and no Bayes update. It is only related to Bayesian inference by the analogy of regularization being typically equivalent to some form of Bayesian inference and the specification of a 'prior' distribution. That said, again, this is a nitpick and has not weighted into my decision."
+            },
+            "questions": {
+                "value": "My main gripes with the paper are:\n\n- Too much focus on the IID setting (which is not what online conformal prediction is about)\n- Theoretical results for non-IID data being lacking;\n- Lacking experimental analysis;\n- From the existing experimental analysis, I see no clear advantage of the method, and the theoretical contributions are not notable enough to compensate for it.\n\n(All of them are better described in the 'Weaknesses' section.)\n\nAny clarification or improvement on these points are appreciated.\n\nI believe that, in its current form, the paper is not ready for acceptance, due to the issues raised above, and have thus opted for rejection.\nThat said, I would be willing to increase my score (and perhaps substantially) should my concerns above be resolved."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a Bayesian frame work for comformal prediction, bridging the two scenarios of \"data-centric\" approach where usually iid/exchangibility assumption is required, and the \"iterate-centric\" approach which is more robust towards distributional shift.\n\nThe Bayescian CP method has a few desired properties: the confidence sets are montone in the nominal confidence level $\\alpha$ for the online prediction; the $O(\\sqrt{T})$ regret bound is achieved; the method adapts to both the iid case and distributional shift case with properly chosen step size."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper is well-written and clear to its points. The Bayesian method proposed is easy to understand and implement. The theoretical guarantees of a tight regret bound is provided, and the CIs are monotone in the nominal level $\\alpha$. The method enjoys both desired properties for \"data-centric\" and \"iterate-centric\" approaches, and is able to recover previous known bounds under properly chosen learning rate. Numerical experiments comparing to previous benchmarks were provided."
+            },
+            "weaknesses": {
+                "value": "1. The uniform prior is robust, but as the authors had mentioned, if certain knowledge is known a tighter bound could be achieved potentially. I would be interested to see more fine-grained analysis in this scenario, and whether there is a way to update the regularized belief instead of using the same one upon observing more data.\n2. For the continual distribution shift case, the learning rate is constant for the discounted regret. There seems to be a gap of choosing diminising ($O(1/\\sqrt{t})$) step size and $O(1)$ step size, and how to choose this adaptively."
+            },
+            "questions": {
+                "value": "1. Is it possible to achieve lower regret by adpatively choosing the regularized belief?\n2. Is there a way to detect distributional shift such that the step size can be chosen adaptively? Is there a uniform way to measure the performance/regret for both the iid/exchangeable case and the distribution shift case?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

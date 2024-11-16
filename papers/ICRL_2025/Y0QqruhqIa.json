@@ -1,0 +1,165 @@
+{
+    "id": "Y0QqruhqIa",
+    "title": "Efficient Neuron Segmentation in Electron Microscopy by Affinity-Guided Queries",
+    "abstract": "Accurate segmentation of neurons in electron microscopy (EM) images plays a crucial role in understanding the intricate wiring patterns of the brain. Existing automatic neuron segmentation methods rely on traditional clustering algorithms, where affinities are predicted first, and then watershed and post-processing algorithms are applied to yield segmentation results. Due to the nature of watershed algorithm, this paradigm has deficiency in both prediction quality and speed. Inspired by recent advances in natural image segmentation, we propose to use query-based methods to address the problem because they do not necessitate watershed algorithms. However, we find that directly applying existing query-based methods faces great challenges due to the large memory requirement of the 3D data and considerably different morphology of neurons. To tackle these challenges, we introduce affinity-guided queries and integrate them into a lightweight query-based framework. Specifically, we first predict affinities with a lightweight branch, which provides coarse neuron structure information. The affinities are then used to construct affinity-guided queries, facilitating segmentation with bottom-up cues. These queries, along with additional learnable queries, interact with the image features to directly predict the final segmentation results. Experiments on benchmark datasets demonstrated that our method achieved better results over state-of-the-art methods with a 2$\\sim$3$\\times$ speedup in inference. Code will be released.",
+    "keywords": [
+        "Neuron Segmentation; Biomedical Image Segmentation; Electron Microscopy Image"
+    ],
+    "primary_area": "applications to neuroscience & cognitive science",
+    "TLDR": "This paper propose a query-based model for neuron segmentation in 3D volume EM images and achieved superior results as well as a 2-3x speedup.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Y0QqruhqIa",
+    "pdf_link": "https://openreview.net/pdf?id=Y0QqruhqIa",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper presents a novel method for neuron segmentation in electron microscopy (EM) images using affinity-guided queries within a query-based framework. The approach aims to overcome the limitations of traditional methods that rely on watershed algorithms by directly predicting segmentation results, achieving improved accuracy and efficiency. The method is evaluated on benchmark datasets, showing competitive performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The use of affinity-guided queries in a query-based framework is a novel contribution to the field of neuron segmentation.\n2. The method demonstrates a significant speedup (2-3x) over traditional methods, a notable advantage for large-scale data processing.\n3. The query-based framework directly predicts the final segmentation results, avoiding the inaccuracy and inefficiency associated with the watershed algorithm used in traditional methods."
+            },
+            "weaknesses": {
+                "value": "1. The comparison with state-of-the-art methods is limited to a few selected approaches. A more extensive comparison with a broader range of recent methods would strengthen the paper's contributions, such as [1]. \n2. The paper does not provide a strong theoretical foundation for why affinity-guided queries outperform other query-based methods, especially in terms of handling neuron morphology.  It is better to give a more detailed explanation or analysis of the mechanisms by which affinity-guided queries better capture neuron morphology compared to other query-based approaches.\n\n[1] Zhang, Yanchao, et al. \"SegNeuron: 3D Neuron Instance Segmentation in Any EM Volume with a Generalist Model.\" International Conference on Medical Image Computing and Computer-Assisted Intervention. Cham: Springer Nature Switzerland, 2024."
+            },
+            "questions": {
+                "value": "1. How does the method handle variations in image quality or noise levels in EM datasets?\n2. What are the specific computational requirements for training and inference, and how do these scale with larger volumes?\n3. How do affinity-guided queries compare with other forms of guided queries in terms of performance and efficiency?\n4. The paper mentions that the proposed method does not require overlap prediction to address border effects. However, it is unclear how the method handles the continuity and consistency of segmentation results across block boundaries. Can the authors elaborate on this aspect and provide visual examples?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Affinity-Guided Queries (AGQ) as a way to apply query-based instance segmentation to the field of connectomics. AGQ predicts the segments directly, bypassing postprocessing steps such as watershed used in some other approaches. The method is evaluated on two small-scale datasets, showing good results in terms of efficiency and accuracy."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Evaluation on two datasets acquired with different EM techniques.\n- Novel approach to segmentation of 3d EM data (query-based model).\n- Good results in terms of efficiency and promising accuracy (but see comments about metrics below).\n- Ablations showing the impact of the various modules.\n- The paper is clearly written and well-organized."
+            },
+            "weaknesses": {
+                "value": "- Evaluation is performed on a very small scale (tens of um^3). Experience in the field of connectomics shows that such results are often not predictive of reconstruction quality over larger volumes. One of the datasets (ZEBRAFINCH) provides full volume (1M um^3 -scale) skeleton tracings that make it possible to compute topological metrics, which can then be compared to those reported https://doi.org/10.1038/s41592-022-01711-z and https://doi.org/10.1038/s41592-018-0049-4. Having these available, would make it much clearer how the proposed method compares to the state of the art in a practical setting.\n- VOI advantage seems to be driven by VOI_split reduction at the cost of VOI_merge. If the mergers happen at the level of supervoxels, the results are in practice less useful for proofreading, where many systems do not make it possible to manually fix this type of error.\n- The model is quite architecturally complex, with different losses, modules, and an explicit affinity modeling branch."
+            },
+            "questions": {
+                "value": "- Please include VOI_split and VOI_merge breakdown in the main text instead of only in the appendices.\n- The intro, abstract and Fig. 1 make it sound as if all currently used neuron reconstruction methods rely on watershed. This is not true (the authors are aware of at least https://doi.org/10.1038/s41592-018-0049-4, which they cite later; there also exist other approaches such as https://openaccess.thecvf.com/content_CVPR_2019/html/Meirovitch_Cross-Classification_Clustering_An_Efficient_Multi-Object_Tracking_Technique_for_3-D_Instance_CVPR_2019_paper.html) and should be more clearly discussed earlier in the paper. The proposed model is far from from the first approach that directly converts 3d EM images into a segmentation.\n- 0.08 mm^3 is a fairly specific number to quote as a \"typical size of studied volume\", and quotes a 6y old paper. It would be best to cite more works here, or just refrain from making statements about what is typical altogether. I would also suggest reformulating the comment about processing requiring \"130 days of runtime\", as this is highly specific to your specific cluster/hardware configuration.\n- How often does your algorithm generate disconnected components for the same predicted object? (Eq. 3 does not guarantee connectivity)\n- What's the motivation for predicting affinities and then immediately averaging them in Eq. 7? Why not predict a boundary map?\n- Does N_a in Eq. 8 vary between passes through the network? If so, how does that interact the number of learned queries -- is N_l or N kept constant? How is N_l chosen in your work?\n- Your method does not require block overlaps to generate consistent results. But wouldn't the additional spatial context help in making the predictions better? Have you explored this?\n- What are the error bars for your results in Tab. 1?\n- How does your network capacity (parameter count, FLOPS) compare with your baselines?\n- Your examples in Fig. 5 focus on dendrites with broken off spines. Could you please also provide a representative figure for axons? (perhaps in the supplement)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents an approach for neuron segmentation in electron microscopy images by a query-based segmentation framework. Traditional methods often rely on predicting affinities followed by watershed algorithms, which can introduce artifacts and inefficiencies. The proposed method predicts affinities using a lightweight branch to obtain coarse neuron structure information, which is then used to construct Affinity-Guided Queries (AGQs). These queries, along with learnable queries, interact with image features to directly predict the final segmentation results, eliminating the need for watershed algorithms. The method achieves better accuracy and a 2\u20133\u00d7 speedup in inference time."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. Novel and intersting idea that uses a query-based framework to eliminate the need for watershed algorithms used in traditional methods. The proposed method greatly improves efficiency.\n2. Very well written manuscript. The paper clearly articulates the shortcomings of existing methods and motivates the need for the query based approach.\n3. Comprehensive ablation studies show the contributions of different modules."
+            },
+            "weaknesses": {
+                "value": "1. Despite the successful and interesting use of AGQs, I have difficulties to see why similar results couldn't be achieved by inputting image features, predicted affinities, and learnable queries directly into the neuron decoder (with modified architecture). While I understand that predicted affinities are used to create AGQ, I wonder if the LQ could \"attend\" to the predicted affinity map to construct the necessary queries themselves. It appears that the current neuron decoder is attempting to \"rescue\" the low-quality segmentation by AGQ in $M_{coarse}$. \n2. The choice of $a$ in ConnectedComponent algorithm in eq 8 is not reported and discussed.\n3. The computational efficiency is evaluated in terms of inference latency. It would be great if the manuscript could educate the readers about the model's memory consumption, which is important for deployment."
+            },
+            "questions": {
+                "value": "1. There are, in fact, parallel/CUDA implementations of watershed algorithms. How would the proposed method compare to these optimized implementations in terms of efficiency?\n2. For the Transformer Decoder implementation in Table 3, how do you input the image features and queries?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents an innovative approach to neuron segmentation in electron microscopy (EM) images, a critical task in connectomics research that aims to reconstruct neural connections in the brain. The authors propose an affinity-guided query (AGQ) method, which introduces a lightweight query-based framework to address the limitations of traditional clustering algorithms."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors introduce AGQ to incorporate coarse neuron structure information into the query generation process, reducing the learning difficulty and improving segmentation accuracy."
+            },
+            "weaknesses": {
+                "value": "While the work is commendable and addresses significant challenges in the field, there are areas where further development and clarification could enhance the contribution and impact of the research. Here are some specific points for consideration:\n\n1. The paper could benefit from a more comprehensive comparison with the latest state-of-the-art (SOTA) methods, such as those referenced in [1][2]. Including these comparisons will provide a clearer picture of how the AGQ method stacks up against the most recent advancements in the field.\n2. Figure 1 (b) suggests that the proposed method relies on agglomeration operations from 'waterz' post-processing. This seems to contradict the claim of directly predicting segmentation results. The authors should clarify whether the proposed method truly bypasses the need for watershed-based post-processing or if it still relies on some aspects of it.\n3. The experiments presented in Table 2, while informative, may not be based on benchmarks that are widely recognized in the community. Utilizing more established benchmarks would strengthen the paper's findings and allow for better comparisons with other methods.\n4. The motivation behind the proposed affinity-guided queries appears to have similarities with modules found in other works, such as [3]. The authors should elaborate on the novel aspects of their approach and how it differs from or improves upon existing techniques.\n5. 'typically the neuron gap' in line168 is not unprofessional\n\n[1]Sheridan A, Nguyen T M, Deb D, et al. Local shape descriptors for neuron segmentation[J]. Nature methods, 2023, 20(2): 295-303.\n[2]Liu X, Cai M, Chen Y, et al. Cross-dimension affinity distillation for 3d em neuron segmentation[C]//2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR). IEEE Computer Society, 2024: 11104-11113.\n[3]Sun R, Luo N, Pan Y, et al. Appearance Prompt Vision Transformer for Connectome Reconstruction[C]//IJCAI. 2023: 1423-1431."
+            },
+            "questions": {
+                "value": "Comparison with State-of-the-Art Baselines\n\nClarification on the Use of Agglomerations\n\nUse of Well-Established Benchmarks\n\n\nOriginality of Affinity-Guided Queries"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

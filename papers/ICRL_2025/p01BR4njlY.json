@@ -1,0 +1,172 @@
+{
+    "id": "p01BR4njlY",
+    "title": "Solving New Tasks by Adapting Internet Video Knowledge",
+    "abstract": "Video generative models, beyond enabling the production of astounding visual creations, offer a promising pathway for unlocking novel, text-conditioned robotic behaviors, whether utilized as a video planner or as a policy supervisor.  When pretrained on internet-scale datasets, such video models intimately understand alignment with natural language, and can thus facilitate novel text-conditioned behavior generalization.  At the same time, however, they may not be sensitive to the specificities of the particular environment in which a policy of interest is to be learned.  On the other hand, video modeling over in-domain examples of robotic behavior naturally encode environment-specific intricacies, but the scale of available demonstrations may not be sufficient to support generalization to unseen tasks via natural language specification.  In this work, we investigate different adaptation techniques that integrate in-domain information into large-scale pretrained video models, and explore the extent to which they enable novel text-conditioned generalization for robotic tasks.  Furthermore, we highlight the individual data and training requirements of each approach, which range from utilizing only a few still frames illustrating the subject of interest, to direct finetuning over videos labelled with text descriptions.  We successfully demonstrate across robotic environments that adapting powerful video models with small scales of example data can successfully facilitate generalization to novel behaviors, both when utilized as policy supervisors, and as visual planners.",
+    "keywords": [
+        "Text-Conditioned Generalization",
+        "Video Diffusion",
+        "Adaptation",
+        "Planning",
+        "Policy Learning"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "We compare techniques for adapting large-scale video generative models to in-domain robotic data, and demonstrate that it facilitates text-conditioned generalization to novel tasks.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=p01BR4njlY",
+    "pdf_link": "https://openreview.net/pdf?id=p01BR4njlY",
+    "comments": [
+        {
+            "summary": {
+                "value": "This work investigates how to adapt large-scale, pre-trained video models to solve novel, text-conditioned robotic tasks in specific environments. The authors explore three adaptation techniques: direct ft, subject customization, and probabilistic adaptation. It further introduces inverse probabilistic adaptation. The model is evaluated on metaworld and deepmind control suite."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1) The motivation is straightforward. \n2) The paper is well written, it does lots of controlled experiments to discuss which adaption techniques are better."
+            },
+            "weaknesses": {
+                "value": "The scope of this paper is limited. While visual planning and goal-conditioned imitation/reinforcement learning (IL/RL) are indeed significant topics in robotics, the approach to generating visual targets appears straightforward.\n\nThe experimental results lack novelty, as it is unsurprising that a web-scale, pre-trained text-to-image (T2I) or video generator would produce superior images or videos.\n\nFurthermore, this work does not directly address whether improvements in image quality contribute to enhanced performance or generalization in control tasks. For example, while Table 2 shows that inverse probability achieves the highest success rate, its FVD score in Table 3 is higher than others, raising questions about the relationship between quality and control success. Additionally, the study does not include generalization tests for control tasks. Although the paper aims to address new tasks, no genuinely novel tasks are explored."
+            },
+            "questions": {
+                "value": "My suggestion is to conduct more experiments, such as testing model generalization ability."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a study on how to incorporate pre-trained, language conditioned video generation models into robot learning. The paper considers three adaptation strategies for using video generation towards policy learning: finetuning the majority of the video generation model on expert demonstrations (most expensive for data and compute), subject customization using a few static images from the target domain, and probabilistic adaptation which trains a small in-domain model supervised by the large-scale video generation model. The paper further considers two options for downstream robotic task evaluation: video planning by predicted a plan to follow into the future and policy supervision by using the adapted video model to synthesize rewards for the policy. The different adaptation and evaluation techniques are benchmarked on the MetaWorld-v2 and DeepMind Control Suite simulations. Probabilistic adaptation and subject customization show promise in this domain when combined with the AnimatedDiff video generation model."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The general problem of incorporating large-scale video generation into robot policy learning is of high interest to the robotics community. Particularly, with the rise in popularity of World Models in robotics, this paper's study is quite timely.\n* The paper is well written and fairly easy to follow.\n* I found the discussion of positives and negatives of the policy supervision evaluation approach to be insightful in Sec. 3.2.2.\n* The experiments are fairly extensive in the simulated environments and transparent regarding underperformance in certain domains.\n* The limitation section is thoughtfully constructed."
+            },
+            "weaknesses": {
+                "value": "* The majority of the assumption in the paper seems to be that video models provide strong motion priors and just require adaptation to the downstream domain visually (please correct me if I'm wrong) e.g., through static images in subject customization. However, from my experience large-scale video generation models still really struggle with the dynamics of the environment. This even seems to come across in the MetaWorld-v2 benchmark where a lot of the tasks achieve 0% or very low success rate.\n* All the results are based on a single video generation model: AnimateDiff. It would have been more compelling to show results on a few models, in case the findings are particular to the specific chosen model.\n* Some of the language is quite repetitive throughout the paper (e.g., last sentence of 3.1.1 and first sentence of 3.1.2).\n* I am not sure I entirely agree with the premise that it is impossible/highly challenging to obtain in-domain video demonstrations for a task. ~100 demonstrations are often assumed for imitation learning papers like Diffusion Policy [1], particularly if high success rates are desired on dexterous tasks. This relates to the low success numbers seen in the MetaWorld-v2 tables, particularly for tasks unseen during adaptation. Optimization compute cost seems like potentially a bigger concern.\n* Since a large focus of the paper is evaluating video generation adaptation in robotics tasks, it feels like real-world robot experiments should be included in the analysis. In simulation, adaptation may be more focused on the appearence of the simulated environment than the physics modeling of the language-specified task. In the real-world, modeling the physics of the interactions between the robot and the environment in real-time is the challenge.\n* The data budgets for the expert demonstrations is quite low and appears rather arbitrary (25 for MetaWorld-v2 and 6 and 17 for the DeepMind Control Suite). It would be helpful to ground these design choices in recent literature. \n* Standard error is only present for the first column of Table 1. It should be included across the considered methods.\n* The very poor performance of probabilistic adaptation in Table 1 is attributed to the small capacity of the in-domain model used. However, this should have been explored to understand the potential of this method in the DeepMind domain.\n* The results in Figure 3 were not particularly convincing to me for the dog jumping case. It seems the video generation model was able to generate a partially reasonable but not entirely accurate jumping dog sequence. The resulting simulated behavior appears to be a degenerated version of that suboptimal supervision. Although I do see that there is potential there for simulating unseen behaviors zero-shot.\n* Showcasing results where all methods get 0% (or close to 0^%) success rate for about half the tasks is not very meaningful as a takeaway. It seems like these experiments should have been iterated on futher. Likely including additional expert demonstrations would help the success rate.\n\nSome typos and points of confusion are listed below:\n1. Line 018 - video modeling ... [encodes].\n2. The score in Sec. 3.1.3 should be formally defined.\n3. The FVD acronym should be defined once in line 239.\n\n[1] Chi, Cheng, et al. \"Diffusion policy: Visuomotor policy learning via action diffusion.\" The International Journal of Robotics Research, 2023."
+            },
+            "questions": {
+                "value": "1. Is there a reason batch-balanced co-training was not studied as an alternative adaptation technique? Co-training has seen decent success in robot learning in recent years [2]? \n2. Why is inverse probabilistic adaptation good fro MetaWorld-v2 but so much worse for the DeepMind Control Suite?\n\n[2] Khazatsky, Alexander, et al. \"DROID: A large-scale in-the-wild robot manipulation dataset.\" RSS, 2024."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigates three adaptation techniques for generative video models, and proposes two evaluation metrics that go beyond traditional visual similarity scores in an attempt to more precisely test the effect of different adaptation techniques of video models on downstream performance for robotic tasks. The proposed adaptation techniques require small amounts of training data, and in some cases (subject customization) only static paired data. The proposed evaluation methods are by using the adapted video model as either a visual planner or policy supervisor, each with its own strengths as noted at the end of the methods section. Experiments are performed on a dog/humanoid and robot arm dataset 2 tasks and 16 tasks respectively. The authors finally observe that domain specific fine-tuning (for the dog/humanoid) and inverse probabilistic adaptation (for the robot arm) achieve the best performance. \n\nOverall this paper explores an important topic that will have many implications when using generative video models for robotic tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Several robot arm tasks in MetaWorld environment and an additional environment are proposed as an evaluation scheme\n2. The work is well motivated and tackles a nuanced but important question that is often glossed over in other policy-focused works.\n3. Implementation details are very clearly stated and discussed so readers have a full picture\n4. The subject customization technique is unique and novel, and I think the inverse probabilistic adaptation method is original (but please clarify this too (ask mentioned in Question #1 below) \n5. Very interesting observations regarding visual appearance vs task success rate are made, motivating the need to perform real world experiments such as those done in this paper to really understand what the right way to train/fine-tune/adapt video models for robotic tasks."
+            },
+            "weaknesses": {
+                "value": "1. Quantitative results are not presented for the out-of-domain Humanoid and Dog environments. Table 1 seems to be for in-domain dataset, and Figure 3 shows qualitative results, but quantitative results for the jump task would be good to include in Table 1. \n\n2. Two different adaptation techniques are concluded to work the best for the two different environments. (fine tuning for the dog/human environment, and inverse probabilistic adaptation for the robotic manipulation environment). This raises 2 questions: first, why do the \u2018best methods\u2019 differ in these two environments? And second, what are readers supposed to take away when working with a new different environment? A discussion, about knowing what technique to use based on the environment and why, would be good to include.  \n\n3. Why do many adaptation methods completely fail for several tasks when using Video Planning (Table 4)? Especially the Soccer task? Is this due to poor inverse dynamics model or the inability to perform good video adaptation? There should be an explanation of why this is happening, otherwise it's hard to be convinced this is a valid experiment since the point of failure is unclear. \n\n4. Subject customization is interesting, but it is unclear if motion dynamics in a new environment can be learned. The training data only includes static images paired with text, so when the dynamics vary greatly, will this method fail in comparison to direct fine-tuning/probabilistic adaptation? A good test of this would be to change the dynamics in an out-of-domain environment (something like the gravity constant if you can control that in the dog/humanoid world) and compare the 3 adaptation methods. I expect that static transfer cannot capture dynamics differences. If this is a tough experiment to run but there is a different way to prove the soundness of this adaptation method given different dynamics, please go ahead and present that, this was just one possible idea."
+            },
+            "questions": {
+                "value": "Questions that should be addressed:\n1. I am unsure if (inverse) probabilistic adaptation has been explored before at all in the robotics tasks context. Maybe make this more explicit in the \u2018adaptation techniques for diffusion models\u2019 related works section. \n2. Eq 1 & 2 introduces notation but many of the variables (theta, t, tao) are not defined. Please state what each variable means.\n3. Also, please clarify what e_theta is in Eq 1&2. Is this indicating the denoising unet for the AnimatedDiff model?  \n4. It would be good to clarify what \u2018out of domain\u2019 means in these adaptation experiments. It seems the robot arm and its dynamics must stay fixed for subject customization since the visual token is encoding this specific robot arm right? What about for (inverse) probabilistic adaptation, are there any such constraints on the domain you are adapting to? \n5. Sec 3.2 does not have details about how the reward is calculated using the adapted video model, all details are in Appendix B. Maybe it is because VideoTADPoLe is unknown to me, but I expect this to be the case for many readers. So please give atleast a brief description in the main paper and then you can point the readers to Appendix B.  \n6. Please include the exact details of the \u2018small dataset\u2019 mentioned in line 312. I believe is important and should not just be kept in supplemental because the paper focuses on how to adapt with small # of examples. \n7. Please show a qualitative example from the Subject Customization for Figure 3 so that the readers  can see the qualitative comparisons as described in the paragraphs in Sec 4.2. \n8. What is \u2018high variance\u2019 referring to in L285? Variance in the output of a video model planner?\n9. AnimateDiff produces very short horizon videos (in terms of time into the future). Therefore, completing a task seems to require lots of closed-loop rollouts. A mention of the number of steps to complete the task might be good to include in each type of experiment.\n\nMinor Comments:\n1. It is unclear whether AnimateDiff is the right model for this work. Why did the authors not choose to just use a video-model itself such as StableDiffusionVideo which has stronger priors about long-term motions? Some mention of this would be good to include.\n2. The \u2018Studying Data Quality\u2019 section is interesting, but very few details are mentioned in the main paper, with most left to the supplementary section. If you would like to keep this section in the main paper, I would suggest at least including what a \u2018suboptimal dataset\u2019 means. Otherwise there is very little a reader can take away from this section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "n/a"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper explores a range of domain adaptation techniques and incorporates them into large-scale, pre-trained video models for domain-specific robotic tasks. Notably, the authors extend the motion module, originally introduced in AnimateDiff, to enhance the animation capabilities of the video model for these specific tasks. Building on a vanilla video model, the authors examine various domain adaptation strategies, including direct fine-tuning, subject-specific customization, and probabilistic adaptation. A key innovation in this work is the redesign of the probabilistic adaptation approach to an inverse version, which demonstrates superior performance across both visual planning and policy learning tasks. The inverse approach yields significant improvements, achieving a success rate of 52.6% in policy learning and 28.4% in video planning, along with enhanced visual quality in the MetaWorld environment."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This work explores an efficient strategy for adapting internet video knowledge to in-domain simulation environments.\n2. The experimental design is thorough, encompassing evaluations of policy learning and video planning across both seen and unseen tasks. \n3. Part of the experimental results look convincing, effectively demonstrating the performance of the proposed adaptation strategies."
+            },
+            "weaknesses": {
+                "value": "1. The results in Table 1 show that subject customization achieves significant improvement over both the direct fine-tuning approach and vanilla AnimateDiff. However, probabilistic adaptation underperforms compared to the other three settings, exhibiting a notable discrepancy in return values. Although the authors assert that probabilistic adaptation focuses on in-domain estimation and struggles to learn effective policies in the Humanoid and Dog environments, I am concerned that the evaluation protocol may not be optimal when using policy discrimination for this setting. To my knowledge, probabilistic adaptation adopts score composition from both the pre-trained model and the domain-specific model, introducing a distribution shift during sampling. I recommend that the authors tune hyper-parameters for probabilistic adaptation methods by re-evaluating policy discrimination to minimize model prediction biases. Additionally, it would be helpful to see a case study that further examines the return values for probabilistic adaptation/inverse probabilistic adaptation, similar to the results presented in the Policy Discrimination section of the project website.\n\n\n2. The results in Table 2 show that the inverse probabilistic adaptation model outperforms other adaptation methods in policy learning success rate on MetaWorld. Could the authors also provide the average returns for each baseline method?\n\n3. Evaluation of Video Quality: The quantitative results in Table 3 are not entirely convincing, as only two evaluation tasks (coffee push and button press) are considered, which may lead to evaluation bias. Please provide additional video quality analysis across all tasks to present a more comprehensive assessment of the overall results.  \n \n4. Based on the qualitative results from both the project website and the paper, it does not appear that the in-domain-only model performs worse than probabilistic adaptation or inverse probabilistic adaptation in task-level motion; the primary differences seem to be at the pixel-level generation. Another concern is that the reproduced results of the in-domain-only model exhibit lower video quality compared to the qualitative results presented in the AVDC paper (synthesized videos in MetaWorld). This discrepancy could lead to an unfair comparison. Could the authors explain their implementation process in detail, noting any deviations from the AVDC paper that might account for this discrepancy in video quality? A thorough review of the reproduction process would help ensure an accurate assessment of the model's performance."
+            },
+            "questions": {
+                "value": "While the authors provide a comparative analysis with baseline methods, the paper still lacks some thorough examination of adaptation techniques to demonstrate the significant improvement of video adaption to in-domain video generation and robot manipulation tasks. Additionally, some baseline methods were not accurately reproduced during the evaluation, raising concerns about the validity of the results.\n\nGiven these issues, I am inclined to give the rating below the acceptance threshold. However, I will reassess my rating after reviewing feedback from other reviewers and the authors' responses. I am willing to raise my score if the authors address these concerns."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

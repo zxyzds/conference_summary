@@ -1,0 +1,221 @@
+{
+    "id": "8K36RkrI7N",
+    "title": "Classifier-Free Guidance is a Predictor-Corrector",
+    "abstract": "We investigate the theoretical foundations of classifier-free guidance (CFG). CFG is the dominant method of conditional sampling for text-to-image diffusion models, yet unlike other aspects of diffusion, it remains on shaky theoretical footing. In this paper, we disprove common misconceptions, by showing that CFG interacts differently with DDPM and DDIM, and neither sampler with CFG generates the gamma-powered distribution $p(x|c)^\\gamma p(x)^{1\u2212\\gamma}$. Then, we clarify the behavior of CFG by showing that it is a kind of predictor-corrector method (Song et al., 2020) that alternates between denoising and sharpening, which we call predictor-corrector guidance (PCG). We prove that in the SDE limit, CFG is actually equivalent to combining a DDIM predictor for the conditional distribution together with a Langevin dynamics corrector for a gamma-powered distribution (with a carefully chosen gamma). Our work thus provides a lens to theoretically understand CFG by embedding it in a broader design space of principled sampling methods.",
+    "keywords": [
+        "diffusion",
+        "guidance",
+        "theory",
+        "SDE"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We prove that classifier-free guidance is equivalent to interlacing a diffusion denoiser with Langevin dynamics, thus giving a more principled interpretation to CFG.",
+    "creation_date": "2024-09-17",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-15",
+    "forum_link": "https://openreview.net/forum?id=8K36RkrI7N",
+    "pdf_link": "https://openreview.net/pdf?id=8K36RkrI7N",
+    "comments": [
+        {
+            "title": {
+                "value": "Responses to Questions (Part 3)"
+            },
+            "comment": {
+                "value": "* **Algorithm 2 states that the noise prediction model uses the same timestep for both the DDIM step and the Langevin dynamics step. Is this correct?**\n    * Thank you for noticing this. We had a typo and an unclear comment In Algorithm 2, which we have fixed in the updated pdf. We actually do update the timestep between DDIM and LD (and then it remains fixed within the LD loop). For $\\gamma=1$, the DDIM step denoises from $p_{t+dt}$ to $p_t$, and then LD runs on the distribution $p_t$.  Our code implementation follows the algorithm as stated. Please let us know if the updated pdf is still unclear.\n\n* **Minor comments**\n    * **I believe that Eq. 2 should be expressed as a proportional relationship.**\n        * Yes, thanks!\n    * **In Line 131, the paper states that it primarily considers the VP diffusion process, but the counterexamples seem to primarily focus on the VE diffusion process.**\n        * Good point; we edited line 131 to remove the misleading statement. The counterexamples do indeed use the VE process."
+            }
+        },
+        {
+            "title": {
+                "value": "Responses to Weaknesses (Part 2)"
+            },
+            "comment": {
+                "value": "* **While the relationship between CFG and PCG is explained, the reasons why CFG works are not adequately addressed.**\n    * **There is a lack of sufficient analysis regarding PCG. As the authors themselves note, unlike the conventional PC algorithm, PCG operates with different annealing distributions for the predictor and corrector. Thus, the effectiveness of PCG should be explained with an analysis based on these different annealing distributions. For example, the effect of different annealing distributions on the final sampled distribution is not discussed. I believe this analysis is crucial because it ties into the argument that CFG works with a sampling distribution that deviates from the conventional intuition.**\n        * Good question; we added several Remarks in Section 4 to clarify this (Remarks 1, 2, and 3). Essentially, PCG can be thought of as an annealed Langevin dynamics, which in general does not requires the annealing and LD distributions to \u201cmatch\u201d. In fact, annealing simply by reducing the temperature without changing the distribution at all can work, as long as it allows the LD to mix. The main insight we borrow from Song\u2019s predictor-corrector method is that the reverse diffusion process offers a natural and effective annealing schedule which can enable successful mixing (even if the annealed distributions do not exactly match the distribution LD attempts to sample from).\n    * **In explaining CFG in terms of PCG, the authors assume that the difference in timesteps between the predictor and corrector tends to zero, but the implications of this assumption are not sufficiently discussed or analyzed.**\n        * In our theoretical analysis, we show the equivalence between CFG and PCG in the SDE limit as $dt \\to 0$. In that case, the difference in timesteps between the predictor and corrector does tend to zero. It is analogous to the previously-known equivalence between DDPM and DDIM+LD, which only holds in the continuous-time limit.\n        * Of course, as you point out, discretization choices are important in practice. Algorithm 1 is one possible discretization of the PCG SDE, in which the predictor step takes us from time $t + dt$ to time $t$, and the corrector step acts at time $t$. However, other discretizations are also possible and may be beneficial (please see next question).\n        * In case it\u2019s helpful, here is another way to think about the PCG algorithm. If you consider the entire sequence $\\ldots \\text{Predictor}(t+dt) \\to \\text{Corrector}(t) \\to \\text{Predictor}(t) \\to \\text{Corrector}(t - dt) \\ldots$, then whether you think of this as steps of $(C_t, P_t)$ or $(P_{t+dt}, C_t)$ is just an analysis detail, i.e. the following two yield the same overall sequence:\n            * Corrector, then Predictor, using the same timestep $t$\n            * Predictor at $t+dt$, then Corrector at $t$\n    * **In Line 465, the paper mentions that CFG and PCG are qualitatively similar and claims that the results are consistent with the theory. However, looking at the quantitative metrics in Table 1, there appears to be a difference, so I question whether this statement is valid.**\n        * While we have proven that CFG and PCG are equivalent in the SDE limit, discretization choices are known to be very important in practice for diffusion in general. For example, even standard DDPM without CFG improves by increasing the number of steps, and popular solvers like DPM++ (Lu, 2023) rely on careful discretization. Carefully tuning the discretization and other practical parameters of PCG was outside the scope of this work; we only aimed to show the equivalence theoretically and provide empirical evidence of its plausibility.\n        * That said, we appreciate your concern about the gap in metrics between PCG and DDPM-CFG, particularly for small $\\gamma$. We wondered about this too and suspected it was due to discretization. To explore this, we have added another set of experiments with an alternative choice of discretization of the PCG SDE (Table 4). With the alternative discretization, the metrics generally improve for small $\\gamma$ (1 or 1.1), and more closely match DDPM-CFG (especially for $\\gamma=1$, where there was a significant gap with the original discretization).  However, for larger $\\gamma$ the original discretization still yields better metrics \u2014 we are not sure why this is, but it highlights the sensitivity of the results to discretization and other implementation choices.\n\n* **CFG is known to be effective for image-condition alignment. It would be beneficial to include experimental results, such as quantitative metrics for image-text alignment in text-to-image diffusion models such as Stable Diffusion.**\n    * Thank you, we agree this is a good idea. For example, we could measure CLIP-scores for CFG vs PCG. We will consider adding these experiments for the camera-ready."
+            }
+        },
+        {},
+        {},
+        {},
+        {
+            "title": {
+                "value": "Responses to Weaknesses (Part 1)"
+            },
+            "comment": {
+                "value": "(Original questions in **bold**)\n\n* **The paper provides only informal theorems, so it is unclear what specific statements the authors intend to make within the scope of their work.**\n    * **The theorems are incomplete and difficult to fully understand. In particular, the notation used in the statements is not well-defined (e.g., what is meant by c=0?), and the assumptions necessary to satisfy these theorems are not properly discussed.**\n        * Thanks for identifying this source of confusion. We initially stated these theorems informally in order to convey the main intuitions. However, we have now added Theorem 4 in the Appendix with a formal and mathematically-self-contained statement and proof. We also edited Theorems 1 and 2 and the surrounding text to clarify the claims, and avoid misunderstanding these as formal claims.\n    * **Specifically, in my opinion, the additional claim in Theorem 1 that the DDIM variant is exponentially sharper than the DDPM variant is based solely on the counterexamples, which may lead to an overstatement in its current form.**\n        * Apologies, we did not intend to claim that DDIM-CFG is always exponentially sharper than DDPM; only that this is so for our particular counterexample (hence our theorem statement that \u201cthere exists...\u201d). Our edits aim to clarify this.\n    * **For Theorem 3, the analysis only covers CFG with DDPM, so a clearer statement regarding this limitation is needed.**\n        * We do mention the limitation that our analysis only applies to CFG with DDPM near the beginning of section 5.2, but we also added some extra clarifying text around Theorem 3 to emphasize this."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank the reviewer for their careful review of our paper and helpful feedback. The reviewer clearly put significant effort into a detailed reading and thoughtful questions and comments, and we truly appreciate this.\n\nWe will address each point that was raised individually. We also updated the PDF based on your feedback; briefly, the main changes are:\n\n* We added a fully formal statement and proof of our claims, as Theorem 4 in the Appendix. We also edited the wording around Theorems 1 and 2 in the body, to clarify that they are informal statements (meant to convey the main intuitions of our formal claims).\n* We added three remarks in Section 4.1, discussing the relations between PCG and annealed Langevin dynamics more explicitly.\n* We fixed typos in Algorithms 1 & 2 which cause misunderstanding.\n* We added several exploratory experiments considering the effect of different discretization choices (Appendix D, Table 4). \n\nPlease let us know if you have additional questions or concerns; we are happy to elaborate further."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to all reviewers"
+            },
+            "comment": {
+                "value": "We thank all reviewers for their time. We have updated the PDF; the main changes are summarized here:\n\n* We added a fully formal statement and proof of our claims, as Theorem 4 in the Appendix. We also edited the wording around Theorems 1 and 2 in the body.\n* We added three remarks in Section 4.1, discussing the relationship between PCG and annealed Langevin dynamics more explicitly.\n* We fixed typos in Algorithms 1 & 2 which cause misunderstanding.\n* We added several exploratory experiments considering the effect of different discretization choices (Appendix D, Table 4). \n* We added discussion of some related works pointed out by reviewers [Chidambaram et al. 24], [Wu et al. 24].\n\nWe will respond to each reviewer individually in the thread."
+            }
+        },
+        {
+            "comment": {
+                "value": "Hey, thanks for the question and sorry for the confusion. First, yes you\u2019re right, we use VP for the PCG algorithm but the counterexamples use a VE schedule (we'll edit the next draft to clarify this). And secondly there is a typo (which I just fixed): the VE SDE should simply read $dx = dw$! (which just corresponds to $\\sigma_t^2 = t$). Sorry about that and thanks for noticing!"
+            }
+        },
+        {
+            "title": {
+                "value": "A question about VE and VP"
+            },
+            "comment": {
+                "value": "Hi, I come across this paper today, and it is really inspiring and has huge contribution to the understanding of CFG. I really like the constructed counter examples. I have a quick/minor question which would like to seek the authors' feedback. In the main text, e.g., above Eq (3), the authors mentioned **they will mainly focus on VP setting. I read A.1 and it seems the proofs are done under the VE setting.** I wonder if the statement that the target distribution is not the titled one when using CFG still holds under the VP setting? Can we have a formal proof in those counter examples?\n\nAfter reading the equation, I am also confused about the derivations. I hope the authors can correct me if I am wrong. Specifically, according to the forward and reverse denoising expression of VE:\n\nForward: $dx_t=\\sqrt{\\frac{d\\sigma_t^2}{dt}}dw$, and Reverse: $dx_t=-\\frac{d\\sigma_t^2}{dt}\\nabla logp_t(x_t)dt$ from https://arxiv.org/pdf/2405.21059.\n\nThe case shown in Appendix A.1 should correspond to $\\sigma_t^2=0.5t^2$, so that the forward can reduce to $dx_t=\\sqrt{t}dw$ as stated in A.1. When substituting $\\sigma_t^2=0.5t^2$ into the reverse formula, we should have: $dx_t=-t\\nabla logp_t(x_tdt)$, but the authors wrote $dx_t=-0.5\\nabla logp_t(x_tdt)$ in Appendix A.1. Namely, **the term $t$ is missing.** Could the authors help me understand where I did wrong?"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper attempts to understand classifier-free guidance from a theoretical perspective. A special characteristic of classifier-free guidance is that it introduces a strength parameter $\\gamma$ so that the plug-in score function is not precisely $\\nabla \\log p_t(x | y)$. Although practical results demonstrate promises of this methodology, its theoretical analysis is still largely missing. This paper presents new understanding of classifier-free guidance by first pointing out that the terminal distribution is hard to find. From my reading, this result is relatively a minor contribution. More interesting results come when connecting classifier-free guidance to predictor-corrector algorithm."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This paper is well written and the results appear to be correct and sound.\n\nI am particularly appreciative of the discussions in Section 5, not only introduces relevant literature, but also touches on limitations and future directions.\n\nUnderstanding classifier-free guidance from a theoretical perspective is an important direction."
+            },
+            "weaknesses": {
+                "value": "Practical implication of the study may be limited."
+            },
+            "questions": {
+                "value": "The following two recent works are related to guidance in diffusion models; they focus on mixture models. \"What does guidance do? A fine-grained analysis in a simple setting\" and \"Theoretical Insights for Diffusion Guidance: A Case Study for Gaussian Mixture Models\".\n\nAlgorithm 1 states that Line 4 is a DDIM step. From my understanding, DDIM (as well as DDPM) uses an exponential integrator to discretize the backward ODE (SDE). Line 4 is a Euler discretization. Some discussion might be needed.\n\nWhat do we gain from writing out the SDE limit of PCG?\n\nAre there practical reasons to sample from the gamma-powered distribution? I believe the gamma-powered distribution comes from the classifier-free guidance. In practice, people only aim to promote label alignment and keep high sample fidelity. Is it possible to go beyond the gamma-powered distribution?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper provides a comprehensive, well-founded exploration of classifier-free guidance, establishing it as a viable, efficient alternative to classifier-based guidance methods. By grounding CFG in a predictor-corrector framework, the paper not only enhances understanding of diffusion models but also opens new paths for controlling generative models with minimal complexity."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "### 1. Theoretical Foundation: By framing CFG within a mathematical context, the paper provides a rigorous basis for understanding its behavior and optimizing its use in diffusion models.\n\n### 2. Experiment Validation: The paper provides the experiments to support its methodology."
+            },
+            "weaknesses": {
+                "value": "### 1. The paper explains the classifier-free guidance, but I did not see whether your method can boost the performance of the diffusion model compared to DDPM, DDIM, or the consistency model.\n\n### 2. I do not see the benefit of your understanding of CFG. Whether your understanding of CFG can benefit the theory results of CFG?"
+            },
+            "questions": {
+                "value": "### 1. Whether your method can boost the performance of the diffusion model compared to DDPM, DDIM, or the consistency model.\n\n### 2. What's the benefit of your understanding of CFG? Whether your understanding of CFG can benefit the theory results of CFG in [Fu24]?\n\n[Fu24] Unveil Conditional Diffusion Models with Classifier-free Guidance: A Sharp Statistical Theory"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper aims to investigate the theoretical foundations of classifier-free guidance (CFG). It disproves common misconcepts by  using counterexamples to show that CFG does not generate gamma-powered distribution, and CFG interacts differently with DDPM and DDIM. The  paper shows that CFG is equivalent to a particular kind of predictor-corrector that combines one step of DDIM denoiser with one step of Langevin dynamics in the gamma-powered distribution."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper disproves the misconcepts about CFG using counterexamples.\n2. The paper provides a new understanding of CFG from the perspective of predictor-corrector guidance."
+            },
+            "weaknesses": {
+                "value": "1. In page 3, the authors state that `` This gives a principled way to interpret CFG: it is implicitly an annealed\nLangevin dynamics''.  What is the exact annealing path of the associated annealed Langevin dynamics? It seems not clear to me that CFG can be directly associated with  annealed Langevin dynamics as the predictor and corrector correspond to different limiting distributions and the corrector take only one Langevin dynamics. \n\n2. The interpretations of Theorem 1 and 2 are not clear stated. Is CFG-DDIM always tends to be sharper than CFG-DDPM, or it just because the special construction used in Theorem 1 and 2?\n\n3. What is the potential usefulness of the derived results in further theoretical analysis of diffusion model?"
+            },
+            "questions": {
+                "value": "Is it always true that  a larger $\\gamma$ and more Langevin dynamic steps in the corrector can lead to sharper distribution?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper focuses on the theoretical understanding of classifier-free guidance (CFG), a widely used technique in conditional sampling with diffusion models. The authors argue that the theory of CFG has been somewhat misunderstood, presenting counterexamples using 1D toy models to support their claim. They show that CFG can be explained by a predictor-corrector (PC) sampling algorithm with different annealing distributions. In particular, they introduce the predictor-corrector guidance (PCG) and suggest that CFG with DDPM sampling is equivalent to PCG with DDIM sampling. In this framework, the predictor is set as DDIM and the corrector is set as Langevin dynamics with a gamma-powered distribution."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "* The paper points out that the theoretical understanding of CFG is lacking, considering its widespread practical use. The analysis of how different distributions correspond to different guidance scales could be helpful for practical applications.\n\n* The statement of CFG with DDPM through predictor-corrector sampling, where Langevin dynamics serve as the corrector, is intuitive and reasonable."
+            },
+            "weaknesses": {
+                "value": "* The paper provides only informal theorems, so it is unclear what specific statements the authors intend to make within the scope of their work.\n  * The theorems are incomplete and difficult to fully understand. In particular, the notation used in the statements is not well-defined (e.g., what is meant by c=0?), and the assumptions necessary to satisfy these theorems are not properly discussed.\n  * Specifically, in my opinion, the additional claim in Theorem 1 that the DDIM variant is exponentially sharper than the DDPM variant is based solely on the counterexamples, which may lead to an overstatement in its current form.\n  * For Theorem 3, the analysis only covers CFG with DDPM, so a clearer statement regarding this limitation is needed.\n\n* While the relationship between CFG and PCG is explained, the reasons why CFG works are not adequately addressed.\n  * There is a lack of sufficient analysis regarding PCG. As the authors themselves note, unlike the conventional PC algorithm, PCG operates with different annealing distributions for the predictor and corrector. Thus, the effectiveness of PCG should be explained with an analysis based on these different annealing distributions. For example, the effect of different annealing distributions on the final sampled distribution is not discussed. I believe this analysis is crucial because it ties into the argument that CFG works with a sampling distribution that deviates from the conventional intuition.\n  * In explaining CFG in terms of PCG, the authors assume that the difference in timesteps between the predictor and corrector tends to zero, but the implications of this assumption are not sufficiently discussed or analyzed.\n  * In Line 465, the paper mentions that CFG and PCG are qualitatively similar and claims that the results are consistent with the theory. However, looking at the quantitative metrics in Table 1, there appears to be a difference, so I question whether this statement is valid.\n\n* CFG is known to be effective for image-condition alignment. It would be beneficial to include experimental results, such as quantitative metrics for image-text alignment in text-to-image diffusion models such as Stable Diffusion."
+            },
+            "questions": {
+                "value": "* Please provide the authors' responses to the points listed under \"Weaknesses\".\n* Algorithm 2 states that the noise prediction model uses the same timestep for both the DDIM step and the Langevin dynamics step. Is this correct?\n* Minor comments\n  * I believe that Eq. 2 should be expressed as a proportional relationship.\n  * In Line 131, the paper states that it primarily considers the VP diffusion process, but the counterexamples seem to primarily focus on the VE diffusion process."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

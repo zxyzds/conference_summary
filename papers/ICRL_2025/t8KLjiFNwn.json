@@ -1,0 +1,167 @@
+{
+    "id": "t8KLjiFNwn",
+    "title": "Sparse Learning for State Space Models on Mobile",
+    "abstract": "Transformer models have been widely investigated in different domains by providing long-range dependency handling and global contextual awareness, driving the development of popular AI applications such as ChatGPT, Gemini, and Alexa.\nState Space Models (SSMs) have emerged as strong contenders in the field of sequential modeling, challenging the dominance of Transformers. SSMs incorporate a selective mechanism that allows for dynamic parameter adjustment based on input data, enhancing their performance.\nHowever, this mechanism also comes with increasing computational complexity and bandwidth demands, posing challenges for deployment on resource-constraint mobile devices.\nTo address these challenges without sacrificing the accuracy of the selective mechanism, we propose a sparse learning framework that integrates architecture-aware compiler optimizations. We introduce an end-to-end solution--$\\mathbf{C}_4^n$ kernel sparsity, which prunes $n$ elements from every four contiguous weights, and develop a compiler-based acceleration solution to ensure execution efficiency for this sparsity on mobile devices.\nBased on the kernel sparsity, our framework generates optimized sparse models targeting specific sparsity or latency requirements for various model sizes. We further leverage pruned weights to compensate for the remaining weights,  enhancing downstream task performance.\nFor practical hardware acceleration, we propose $\\mathbf{C}_4^n$-specific optimizations combined with a layout transformation elimination strategy. \nThis approach mitigates inefficiencies arising from fine-grained pruning in linear layers and improves performance across other operations. \nExperimental results demonstrate that our method achieves superior task performance compared to other semi-structured pruning methods and achieves up-to 7$\\times$  speedup compared to llama.cpp framework on mobile devices.",
+    "keywords": [
+        "Mamba",
+        "Pruning",
+        "Mobile"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=t8KLjiFNwn",
+    "pdf_link": "https://openreview.net/pdf?id=t8KLjiFNwn",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces a mobile-friendly solution for SSMs, targeted for on-device inference. Specifically, the authors propose a sparsification & pruning method of contiguous weights along with a reordering operator for efficient on-device execution. Last, they introduce a sample-efficient compensation algorithm that recovers any lost accuracy. Results showcase gains of from 3.2x to 7x without gradual accuracy degradation as a function of sparsity."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "* The paper contributes both an algorithmic/architectural change and a system hardware component implementation for efficient on-device execution, across CPU and GPU backends, which is evaluated on device.\n* There has been great effort put in the evaluation and comparing against various baseline methods and models.\n* The proposed method, albeit involved, is straightforward and through the ablation we witness the importance of each component in the resulting accuracy."
+            },
+            "weaknesses": {
+                "value": "* The proposed technique has only been applied to one SSM architecture (Mamba) and evaluated on a single high-tier device.\n* The on-device ML literature is quite old and there have been various contributions from 2018 onwards, also focusing on LLMs (see [a,b]).\n* The advertised gains are not quoted over the same accuracy threshold."
+            },
+            "questions": {
+                "value": "### Evaluation\n\n* In the introduction, the authors quote that \"llama.cpp takes over 5.8s to generate a single token with Mamba-2.8B\", However, in table 3 of the evaluation, a similar setup is quoted at 0.4 tokens/sec = 2.5s per token. Could the authors clarify the source of this discrepancy?\n* Although the performance benefits seem impressive at first sight, the 7x gains quote is quite misleading, as it comes with significant accuracy degradation. For a sub-1% degradation, the speedup gain is not quoted on Table 3.\n* Why does Table 3 miss GPU execution for llama.cpp?\n* In Section 6.2, the average column seems to represent an non-weighted average across the datasets, thus not taking into consideration the size of each task. Is this correct?\n\n### Omissions / Extensions\n\n* Results have only been benchmarked on a single high-tier device with 16GB of memory. I am wondering how the proposed solutions work on lower-end devices that do not have these level of resources. At the same time, it would be very interesting to quantify the energy requirements of running such workloads on device.\n* A comparison with a similarly-sized Transformer-based LM would greatly enhance the evaluation and put the gains into perspective. Table A3 partly accomplished this, but there is no quantification of on-device performance.\n* Furthermore, it would be valuable to see how these gains compare with different compression methods, such as quantization for example.\n* Would there be any limitations of the method being applied to other modalities, such as vision (see Vision Mamba [c])\n* Since SSMs come with memory benefits, as quoted in \u00a73, it would be important to highlight the peak memory consumption of the pruned models during inference.\n* It would be very insightful to visualise the sparsity per block in the resulting model to see if there is some kind or pattern in the pruning dynamics.\n\n### Questions\n\n* How does the compiler select the best layout per operator for different target devices?\n* What is the overhead during training of the models with the proposed method? Are there gains from pruning during training?\n\n[a] Xu, J., Li, Z., Chen, W., Wang, Q., Gao, X., Cai, Q., & Ling, Z. (2024). On-device language models: A comprehensive review. arXiv preprint arXiv:2409.00088.  \n[b] Liu, Z., Zhao, C., Iandola, F., Lai, C., Tian, Y., Fedorov, I., ... & Chandra, V. (2024). Mobilellm: Optimizing sub-billion parameter language models for on-device use cases. arXiv preprint arXiv:2402.14905.  \n[c] Zhu, L., Liao, B., Zhang, Q., Wang, X., Liu, W., & Wang, X. (2024). Vision mamba: Efficient visual representation learning with bidirectional state space model. Forty-First International Conference on Machine Learning (ICML).\n\n### Nitpicking\n\n* Table 1: sparsity typo\n* Numbering issue on remarks (i.e. missing remark 5.1)\n* Section 6.4: LAMBDA -> LAMBADA"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Recently, State Space Models (SSMs) are gaining attention in sequential modeling problems. However it comes with increasing computational complexity and bandwidth demands. This paper proposes a sparse learning framework with architecture-aware compiler optimizations. This proposal includes 1. optimized kernels, 2. sparsity or latency oriented learning framework that uses 1.\n\nThe paper is too abstract to provide sufficient insight to readers. It seems that the framework and the algorithm provided seems to be a reasonable contribution. hence the score of 5: marginally below the acceptance threshold."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "As the on-device AI is an important topic w.r.t privacy issues, it is an important direction to explore.\n\nThe paper seems to build a framework that reduces the computational intensity of the SSMs (which already is lower computational complexity than currently dominant Attention) seems to be a good direction.\n\nIt seems that the paper is claiming to have combined a number of compiler optimizations making it an end-to-end solution over simply exploring an algorithm-only or compiler-only or HW-only solution."
+            },
+            "weaknesses": {
+                "value": "The paper is very difficult to understand. It seems that there are a lot of abstract explanations without concreteness that makes it difficult. Maybe adding some figures of what is really happening might help. For example, the paper states \"our kernel is designed as Cn4 , which removes n elements from every group with four adjacent weights.\" There may be multiple ways by which this could happen and the paper does not dive into details."
+            },
+            "questions": {
+                "value": "* Is there any performance impact associated with Remark 5.2.\n\n* How long does this \"sparse learning take\" it seems like the computation seems to be quite complicated and may prolong the \"learning\" by a big factor. Can you provide some data?\n\n* It seems that the work includes some compiler optimization that itself could be large enough to account for a separate paper. Can you provide more details to the infrastructure used? Is this some open-source work? Is this published anywhere?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a novel learning framework for state space models (SSMs) that emphasizes kernel sparsity to enhance performance on mobile devices. The approach optimizes for an ideal balance between sparsity, latency, and accuracy, enabling an efficient pruning strategy suited for mobile hardware. With a robust theoretical foundation, the framework accounts for sparsity levels and latency impact on accuracy. Further, the authors incorporate hardware efficiency through architecture-aware compiler optimizations, including weight reordering, sparse weight storage, and eliminating layout transformations, achieving state-of-the-art (SOTA) results in accuracy at comparable or higher sparsity levels."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* Focus on Mobile Efficiency: The paper addresses a critical need for efficient execution of SSMs on mobile devices by optimizing for kernel sparsity without sacrificing accuracy, a valuable contribution to resource-constrained deep learning.\n* Strong Theoretical Foundation: The proposed framework\u2019s theoretical backing adds credibility, ensuring that the optimizations in sparsity and latency are rigorously derived, rather than heuristically implemented.\n* Effective Hardware-Aware Optimization: Integrating architecture-aware compiler optimizations to handle sparse weight storage and reordering is a practical enhancement, boosting hardware efficiency while maintaining performance. This integration yields improved results over SOTA methods, showcasing either better accuracy for the same sparsity or higher sparsity for the same accuracy.* * Performance Presentation: The authors provide strong quantitative support,"
+            },
+            "weaknesses": {
+                "value": "* More discussion of latency trade-offs relative to different levels of accuracy and sparsity on the same model would be valuable for considering real-world deployment.\n* A minor improvement could be made by bolding or highlighting the best results in each column of Table 2 for easy reference."
+            },
+            "questions": {
+                "value": "* Could additional metrics be included for deployment feasibility? Metrics like power consumption and memory consumption could provide more insights for real-world deployment on mobile devices."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a solution for accelerating inference using the Mamba SSM on mobile devices. The solution includes a framework for pruning the model\u2019s weights and an assortment of optimizations to improve inference execution, such as weight reordering, operator fusion, and layout transformation elimination. Experiments using different sizes of the Mamba model show that the presented sparsification method achieves better accuracy than other semi-structure pruning methods, namely SparseGPT and Wanda. The authors\u2019 solution outperforms llama.cpp when running inference with Mamba on the CPU of a Snapdragon 8 Gen2 SoC, and exhibits further speedup on the GPU."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Overall, the sparse-learning framework for exploring pruning strategies for Mamba\u2019s weights is promising. Furthermore, experimental results show an improvement in accuracy compared to other semi-structure pruning methods, SparseGPT and Wanda."
+            },
+            "weaknesses": {
+                "value": "The paper presents an end-to-end solution, starting from a specific model, Mamba, pruning its weights, applying optimizations, and executing inference on a mobile SoC. Although such work must involve considerable engineering to implement the different stacks comprising the solution and gluing them together, it does not automatically produce any interesting results for the research-oriented community. Were there any particular challenges that had to be overcome, driving the development of specific innovations in the process? I do not see any such discussion in this submission. Although there can be innovations in the individual components, the full-stack presentation fails to sufficiently highlight them as, inevitably, we only get a rather shallow look into each one, both qualitatively and quantitatively. I am elaborating on that for every main component below.\n\nThe sparse-learning framework is very interesting, and the authors present improvements compared to other state-of-the-art pruning methods. However, the presentation is lacking. Are there other similar approaches to the Cn4 kernels? What is the related work here? SparseGPT and Wanda were initially developed for transformer-based models. Can the presented kernels tackle such models? If yes, how do they compare against the state of the art? If we are only looking at SSMs, why only Mamba? What about, e.g., S4 and H3?\n\nThe optimization workflow presented supposedly targets mobile devices. However, there is no explanation for why these optimizations are particularly good just for mobile devices and not all computational devices. The cited lack of \u201chigh throughput memory\u201d (HBM?) on mobile devices is weak. All modern CPU and GPU architectures, both mobile and desktop/server, suffer from expensive data movement. Therefore, optimizations that reduce it are of general benefit. They may not offer equal benefit to all devices, but we cannot tell because there are no such comparisons in the paper. Maybe the optimizations take advantage of specific aspects of mobile architectures? There is no clear indication. There is a short discussion on SIMD units, but these are not fundamentally different between mobile and desktop/server devices.\n\nThere is a high-level description of the optimization workflow, but it is difficult to tell if any interesting innovations exist. Much prior work exists on optimizing sparse operations by reordering the non-zeros and introducing custom hierarchical sparse formats, such as the ParTI! Library (https://github.com/hpcgarage/ParTI). Other examples of prior work are DNNFusion (https://dl.acm.org/doi/10.1145/3453483.3454083) for operator fusion and SmartMem (https://dl.acm.org/doi/10.1145/3620666.3651384), which specifically addresses layout transformation elimination for mobile DNN execution. I am not saying that any of the above works are necessarily super relevant to the authors\u2019 submission or that they need to be addressed, but if you are going to claim \u201ca set of comprehensive compiler optimizations, including Cn4-specific optimizations and layout transformation elimination strategy on mobile devices\u201d as a significant contribution, it will help to put your work into a better context.\n\nThe paper compares performance against llama.cpp. The authors provide an insight into why their solution is faster. Paraphrasing from their supplemental material, llama.cpp relies on a fixed pattern matching strategy to identify and fuse operation combinations, an approach that fails to recognize new combinations. Although llama.cpp is popular for executing transformer-based models, is it decent with SSMs? Aren\u2019t there any better ways to execute Mamba and compare against them? If we are currently limited to llama.cpp because it is the only inference engine out there that currently supports Mamba and mobile, I would question if it is a \u201cbad\u201d baseline and how interesting the results are in the first place."
+            },
+            "questions": {
+                "value": "- Is your sparse kernel design and sparse learning approach unique, or is there prior related work?\n- Can your approach work for transformer-based models? If yes, have you done any accuracy comparisons?\n- Have you tested your approach with other SSMs? If yes, do you have any accuracy comparisons?\n- Why are your optimizations particularly good for mobile devices? Do you have any comparisons of the effects of your optimizations on mobile and desktop/server devices?\n- Can you comment on the novelty of your optimizations compared to related work?\n- Can you run your solution on non-mobile devices? If yes, do you have any results?\n- How can your approach be extended to NPUs?\n- You state in the paper that Mamba-370M achieves in your tests an average accuracy of 50.0%, while your 30%-sparse version achieves 50.6%. However, if one looks at the individual tests, there is no test where your version achieves higher accuracy than the original. Is there a typo?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

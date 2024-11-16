@@ -1,0 +1,205 @@
+{
+    "id": "XGFfFKqy3Y",
+    "title": "Step-wise Triple-Consistent Diffusion Sampling for Inverse Problems",
+    "abstract": "Diffusion models (DMs) are a class of generative models that allow sampling from a distribution learned over a training set. When applied to solving inverse imaging problems (IPs), the reverse sampling steps of DMs are typically modified to approximately sample from a measurement-conditioned distribution in the image space. However, these modifications may be unsuitable for certain settings (such as in the presence of measurement noise) and non-linear tasks, as they often struggle to correct errors from earlier sampling steps and generally require a large number of optimization and/or sampling steps. To address these challenges, we state three conditions for achieving measurement-consistent diffusion trajectories. Building on these conditions, we propose a new optimization-based sampling method that not only enforces the standard data manifold measurement consistency and forward diffusion consistency, as seen in previous studies, but also incorporates backward diffusion consistency that maintains a diffusion trajectory by optimizing over the input of the pre-trained model at every sampling step. By enforcing these conditions, either implicitly or explicitly, our sampler requires significantly fewer reverse steps. Therefore, we refer to our accelerated method as **S**tep-w**i**se **T**riple-**Co**nsistent Sa**m**pling (SITCOM). Compared to existing state-of-the-art baseline methods, under different levels of measurement noise, our extensive experiments across five linear and three non-linear image restoration tasks demonstrate that SITCOM achieves competitive or superior results in terms of standard image similarity metrics while requiring a significantly reduced run-time across all considered tasks.",
+    "keywords": [
+        "Diffusion Model; Inverse Problems; Image Restoration"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=XGFfFKqy3Y",
+    "pdf_link": "https://openreview.net/pdf?id=XGFfFKqy3Y",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper addresses inverse problems using a plug-and-play approach with diffusion models, focusing on reducing the low sampling speeds that are characteristic of iterative diffusion models in these settings. To this end, the authors propose a \"triple consistency\" framework, adding a backward consistency component to the already established data and forward consistencies. The backward consistency aims to ensure that the solution obtained after data-consistency remains a valid diffusion model solution, essentially acting as a projection onto the intersection of data-consistent and diffusion model-consistent solutions.\n\nThe paper provides experimental results on both linear and nonlinear tasks and compares the proposed method with other existing techniques, showing performance improvements for certain tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper addresses a timely and important problem in inverse problem-solving using diffusion models.\n\n- Experiments cover a variety of linear and nonlinear tasks, giving a broad perspective on the method's applicability."
+            },
+            "weaknesses": {
+                "value": "Modeling of Backward Consistency: The concept of backward consistency is interesting, but its implementation feels somewhat ad hoc. While it resembles a projection onto the intersection of data and prior-consistent solutions, this usually requires multiple iterations to reach a meaningful intersection. Here, however, only a single iteration is employed, which may be insufficient.\n\nAlternative Approach: The backward consistency term could potentially be better represented as a fixed-point condition for the denoiser. This approach might be more systematic, aligning with methods like RED-diff, which regularize through denoising consistency.\nSufficiency of Eq. (4): Additionally, it's unclear if enforcing Eq. (4) (the Tweetie consistency) is sufficient to ensure backward consistency. This claim requires more justification.\n\nExperimental Limitations:\n- Comparison Scope: Tables 1 and 2 lack comparisons with key existing methods. Notably, the absence of comparisons with RED-diff and PGDM in Table 2 weakens the empirical analysis.\n\n- Unfair Comparison: Simply reusing the hyperparameters from existing methods without adjusting them for the current dataset results in an unfair comparison. This could particularly impact performance for methods like DPS, RED-diff, and PGDM, which may not perform optimally without parameter tuning.\n\n- Sampling Efficiency: A central claim of this work is the reduced number of iterations required by the proposed method. However, the paper lacks concrete experimental evidence to substantiate this, such as timing results that would demonstrate faster sampling speeds in seconds. Given the emphasis on efficiency, readers would expect clear evidence supporting this claim.\n\n[PGDM] Song, J., Vahdat, A., Mardani, M., & Kautz, J. (2023, May). Pseudoinverse-guided diffusion models for inverse problems. In International Conference on Learning Representations."
+            },
+            "questions": {
+                "value": "- How sensitive is the performance with respect to the parameter \u03bb?\n\nsee the weakness part for more comments"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents an optimization-based algorithm, SITCOM, to solve inverse problems with a pretrained diffusion model. The authors state three conditions to hold at each sampling step of the diffusion model. SITCOM optimizes measurement consistency on $x_t$ and uses a resampling procedure to enforce the consistency conditions. Experiments show that SITCOM performs better than existing methods in several image restoration tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is well-presented, with a clear and structured approach.\n- The proposed algorithm introduces \"forward consistency\" and \"backward consistency,\" which is a novel framework that may interest a broader research community.\n- Experimental results on image restoration tasks are promising."
+            },
+            "weaknesses": {
+                "value": "- The paper does not provide rigorous guarantees for the output of SITCOM, whereas several prior methods offer assurances on correct sampling from the desired posterior distribution [2,3,4,7].\n- The technical novelty appears limited. The optimization of $x_t$ for measurement consistency using Tweedie\u2019s approximation directly resembles DPS, while the resampling technique is derived from ReSample. The resulting algorithm appears to be a straightforward combination of existing methods.\n- This paper lacks a comparison to many relevant works [1~8]. Some of them provide asymptotic exact posterior sampling [2,3,4,7], while [1] appears to achieve the proposed \"backward consistency\" as well. It seems strange that SITCOM is only compared with DPS, DDNM, and two closely related algorithms (DAPS, DCDP), which seemingly have not undergone peer review.\n- The stopping criterion for preventing noise overfitting needs further justification. Given that the actual noise level $\\sigma_y$ is typically unknown in practice, an ablation study on the algorithm's sensitivity to $\\delta$ would be valuable.\n\n### Reference\n[1] Wang et al. \"A Plug-in Method for Solving Inverse Problems with Diffusion Model.\" In NeurIPS 2024.\n\n[2] Dou et al. \"Diffusion Posterior Sampling for Linear Inverse Problem Solving: A Filtering Perspective.\" ICLR 2023.\n\n[3] Gabriel et al. \"Monte Carlo guided Denoising Diffusion models for Bayesian linear inverse problems.\" ICLR 2023.\n\n[4] Wu et al. \"Principled Probabilistic Imaging using Diffusion Models as Plug-and-Play Priors.\" In NeurIPS 2024.\n\n[5] Rout et al. \"Solving linear inverse problems provably via posterior sampling with latent diffusion models.\" In NeurIPS 2023.\n\n[6] Song et al. \"Solving Inverse Problems with Latent Diffusion Models via Hard Data Consistency.\" In ICLR 2024.\n\n[7] Wu et al. \"Practical and Asymptotically Exact Conditional Sampling in Diffusion Models.\" In NeurIPS 2023.\n\n[8] Rout et al. \"Beyond first-order Tweedie: Solving inverse problems using latent diffusion.\" In CVPR 2024."
+            },
+            "questions": {
+                "value": "- How is the stopping criterion determined in practice? Does different $\\delta$ influence the final output of SITCOM?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors identify limitations in current diffusion model-based inverse solvers, noting that the measurement-guidance term often pushes the trajectory toward inconsistency, leading to artifacts in intermediate samples and requiring a large number of correction steps.\n\nTo address these issues, they propose three conditions for achieving measurement-consistent diffusion trajectories: (1) standard data manifold measurement consistency, (2) forward diffusion consistency, and (3) backward diffusion consistency.\n\n1. Measurement-consistent: Reconstruction is consistent with the measurements.\n2. Forward-consistent: Intermediate samples during the diffusion trajectory should resemble in-distribution samples produced by forward diffusion.\n3. Backward-consistent: The measurement-guided output, followed by Tweedie\u2019s denoising, should also be the Tweedie-denoised output of some noisy data.\n\nThe authors introduce an algorithm that ensures all three consistencies, called Step-wise Triple-Consistent Sampling (SITCOM). The proposed method outperforms existing approaches in various image inverse problems."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is well-written and easy to follow.\n- It clearly motivates the issue of inconsistency in current models and provides an intuitive solution to address these inconsistencies.\n- The proposed algorithm, which integrates these solutions, demonstrates improved performance over existing methods.\n\nThe authors showcase the applicability of their method across various image inverse problems."
+            },
+            "weaknesses": {
+                "value": "The claims about consistency are not fully substantiated. It remains unclear if the proposed method genuinely addresses all three inconsistencies.\n- Experimental validation is needed to quantify how effectively the method mitigates these inconsistencies. For example, could experiments be designed to measure the degree to which each inconsistency is reduced?\n\nThe impact of each individual component in the method is not verified.\n- How would the results change if one component were removed?\n- Additionally, could similar components be added to other algorithms, such as DPS or DDNM, to reduce inconsistencies in those methods as well? Would this approach similarly alleviate inconsistencies?"
+            },
+            "questions": {
+                "value": "The questions are integrated in the section above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper identifies the key limitations in previous DMs for IPs and summaries, referred to as the triple-consistency conditions. The newly designed optimization-based method, SITCOM, achieves comparable or even superior restoration results with significantly reduced computational time. The paper demonstrates the superiority of the proposed method across commonly used benchmarks, including five linear tasks and three nonlinear tasks."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The intuitive explanation of the triple-consistency conditions is clear and reasonable. The paper identifies the potential factors that prevent existing methods from balancing quality and efficiency, summarizing as the triple-consistency conditions.\n\n2. The paper consistently achieves comparable or superior empirical results across commonly used linear and nonlinear tasks as shown in Table 1."
+            },
+            "weaknesses": {
+                "value": "1. **Incremental Modification and Unfair Comparisons**  \n   The major issue with the paper is that it presents only an incremental modification over existing work and makes unfair comparisons.\n\n   1. *Theoretical and Motivational Perspective*  \n      Although the paper is the first to propose and formulate the triple-consistency conditions formally, each has already been individually adopted and utilized in other works. Specifically, measurement consistency is used in [4, 5, 6, 7], backward consistency in [1, 2, 3], and forward consistency in [4, 7]. The paper provides only intuitive explanations for each condition in Sections 3.1, 3.2, and 3.3, lacking clear evidence of how each contributes to the final restoration performance. A straightforward ablation study\u2014removing each consistency condition from the proposed algorithm, SITCOM, and comparing performance with the full SITCOM while keeping other parameters\u2014would give clearer hints of the significance of each condition. Unfortunately, the experiments fail to control variables, causing the conclusions of the paper potentially misleading.\n\n   2. *Technical Perspective*  \n      The proposed method, SITCOM (Algorithm 1 in the paper), differs from DCDP only in two aspects:\n      * (1) Changing the optimization variable from $\\hat{x}_0$ to $\\hat{v}_i$, where these variables are connected by the Tweedie-network denoiser $\\hat{x}_0' = f(\\hat{v}_i; t, \\theta)$.\n      * (2) Adding an early stopping criterion (line 5 in Algorithm 1).\n\n      My main concern is with (1). The paper claims this change is introduced to achieve backward consistency but comes at the cost of computing backward gradients through the Tweedie-network denoiser $f$. Consequently, when keeping other parameters the same (e.g., diffusion steps $N$, number of gradient updates $K$, stopping criterion $\\delta$), SITCOM is significantly slower than DCDP due to the additional backward pass through $f$. However, the paper compares SITCOM with smaller $N$ and $K$ to DCDP with much larger $N$ and $N$ and concludes that SITCOM is more efficient in achieving comparable results. I strongly suggest that the authors conduct a detailed and fair comparison between SITCOM and DCDP by fixing all other parameters and only changing the optimization variables. Otherwise, it is unclear whether the observed efficiency gains are due to backward consistency or simply fewer diffusion and gradient steps.\n\n2. **Other Minor Issues**\n   1. The paper lacks comparison and discussion of several recently proposed methods [5, 6, 8].\n   2. There is no formulation or experimentation on solving inverse problems with latent diffusion models, which are included in the baseline papers used [4, 7].\n3. **Non-anonymous issue.** Files in the given code link [https://anonymous.4open.science/r/SITCOM-7539/README.md](https://anonymous.4open.science/r/SITCOM-7539/README.md) (`SITCOM.py`, `SITCOM_with_noise.py` and `SITCOM_with_noise_imagenet.py`, etc.)  contain non-anonymous information.\n\n**References**\n\n[1] Chung, Hyungjin, et al. \"Diffusion Posterior Sampling for General Noisy Inverse Problems.\" *ICLR 2023*.\n\n[2] Song, Jiaming, et al. \"Pseudoinverse-Guided Diffusion Models for Inverse Problems.\" *ICLR 2023*.\n\n[3] Song, Jiaming, et al. \"Loss-Guided Diffusion Models for Plug-and-Play Controllable Generation.\" *ICML 2023*.\n\n[4] Li, Xiang, et al. \"Decoupled Data Consistency with Diffusion Purification for Image Restoration.\" arXiv preprint arXiv:2403.06054 (2024).\n\n[5] Wu, Zihui, et al. \"Principled Probabilistic Imaging using Diffusion Models as Plug-and-Play Priors.\" arXiv preprint arXiv:2405.18782 (2024).\n\n[6] Xu, Xingyu, et al. \"Provably Robust Score-Based Diffusion Posterior Sampling for Plug-and-Play Image Reconstruction.\" arXiv preprint arXiv:2403.17042 (2024).\n\n[7] Zhang, Bingliang, et al. \"Improving Diffusion Inverse Problem Solving with Decoupled Noise Annealing.\" arXiv preprint arXiv:2407.01521 (2024).\n\n[8] Dou, Zehao, et al. \"Diffusion Posterior Sampling for Linear Inverse Problem Solving: A Filtering Perspective.\" *ICLR 2024*."
+            },
+            "questions": {
+                "value": "Please address my concerns in the Weaknesses part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No Ethics Concerns"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces SITCOM (Step-wise Triple-Consistent Sampling), a new framework for solving inverse problems using diffusion models. SITCOM enforces three consistency conditions\u2014measurement, backward, and forward consistency\u2014to guide the sampling process and improve the fidelity of reconstructions. The approach is validated through comprehensive experiments on tasks such as deblurring, super resolution, and in-painting, with results showing competitive performance and reduced run-time compared to baseline methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "nnovative Theoretical Contributions: The concept of backward consistency (Definition 1) is an original addition that, along with measurement and forward consistency, forms a robust framework for inverse problem solvers using diffusion models. This mathematical insight is well-formulated and adds depth to the field (lines 216\u2013269).\nOptimization-Based Sampling: The detailed explanation of the optimization problem in Equation (S1) and the associated algorithm (lines 324\u2013431) shows a strong command of integrating theoretical principles with practical implementation.\nComprehensive Experiments: The paper includes results on various tasks and datasets, demonstrating the robustness of the proposed approach (Table 1).\nEfficiency Improvements: The reported reduction in run-time, while maintaining or improving performance, is a notable practical advantage (lines 486\u2013539)."
+            },
+            "weaknesses": {
+                "value": "Clarity in Backward Consistency: Definition 1 (lines 216\u2013269) could benefit from more intuitive explanations or examples to make the concept clearer to a broader audience.\nAbsence of Mathematical Justifications: While the theoretical contributions are solid, the paper lacks formal mathematical justifications for key aspects:\nChoice of Optimization Parameters: There is no in-depth analysis on the selection of K (number of optimization steps) or \u03bb (regularization parameter). Providing this would strengthen the confidence in the method's robustness (lines 324\u2013431).\nNecessity of Triple Consistency: The paper argues for the simultaneous use of measurement, backward, and forward consistency but does not include formal proof or theoretical analysis justifying why all three are essential for the claimed performance (lines 216\u2013377).\nConvergence Analysis: A formal convergence analysis is missing, which could help clarify the reliability and scalability of the SITCOM sampler. While the algorithm shows empirical success, having mathematical insights into its convergence properties and error bounds would offer more confidence in its reliability and scalability.\nMixed Results in Some Tasks: The improvements in tasks like ImageNet Gaussian Deblurring and Phase Retrieval are less significant compared to other baselines (Table 1), which may raise questions about the trade-offs in complexity versus marginal performance gains.\nLack of Computational Details: Detailed metrics like Number of Function Evaluations (NFE) are not presented in the main manuscript (it is located at appendix F). Including these would provide a clearer view of the computational cost. Please consider reorganize the contents.\nComparison to Deterministic Samplers: The paper does not explore whether the SITCOM method could be adapted into a deterministic version like DDIM or address how it compares to the optimized noise schedules like EDM."
+            },
+            "questions": {
+                "value": "1. Could the authors provide additional intuition or examples for Definition 1 to make backward consistency more accessible?\n2. Are there any performance curves that illustrate the effect of varying the number of optimization steps K and sampling steps N on both image quality and computational efficiency?\n3. Can the authors elaborate on how SITCOM performs when using fewer sampling or optimization steps and if there are trade-offs between quality and computational cost?\n4. Is there potential for SITCOM to be adapted into a deterministic sampler like DDIM? If so, what modifications would be needed?\n5. How does the method handle noise characteristics that deviate significantly from those tested in the paper?\n6. Are there theoretical justifications for the choice of optimization parameters, or is there an analysis showing the method's convergence properties?\nOverall: This paper makes a meaningful contribution by introducing a theoretically rich and empirically validated approach for inverse problem-solving using diffusion models. The addition of backward consistency is an interesting theoretical insight, and the experimental results are compelling. However, the paper could benefit from clearer explanations, formal justifications for certain methodological choices, and more detailed computational metrics. Addressing these points would enhance the completeness and accessibility of the work."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

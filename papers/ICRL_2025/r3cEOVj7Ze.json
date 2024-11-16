@@ -1,0 +1,166 @@
+{
+    "id": "r3cEOVj7Ze",
+    "title": "Neuralized Markov Random Field for Interaction-Aware Stochastic Human Trajectory Prediction",
+    "abstract": "Interactive human motions and the continuously changing nature of intentions pose significant challenges for human trajectory prediction. In this paper, we present a neuralized Markov random field (MRF)-based motion evolution method for probabilistic interaction-aware human trajectory prediction. We use MRF to model each agent's motion and the resulting crowd interactions over time, hence is robust against noisy observations and enables group reasoning. We approximate the modeled distribution using two conditional variational autoencoders (CVAEs) for efficient learning and inference. Our proposed method achieves state-of-the-art performance on ADE/FDE metrics across two dataset categories: overhead datasets ETH/UCY, SDD, and NBA, and ego-centric JRDB. Furthermore, our approach allows for real-time stochastic inference in bustling environments, making it well-suited for a 30FPS video setting. We will open-source our codes upon paper acceptance.",
+    "keywords": [
+        "human trajectory prediction",
+        "interaction modeling"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=r3cEOVj7Ze",
+    "pdf_link": "https://openreview.net/pdf?id=r3cEOVj7Ze",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes a method for human trajectory prediction that incorporates interaction-awareness through a neuralized Markov Random Field (MRF) framework. By integrating MRF with neural networks, the model captures both individual movement patterns and inter-agent interactions over time, effectively addressing uncertainties in predicting human motion. This design is particularly well-suited for real-time trajectory forecasting."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Novel integration of Markov Random Fields with neural networks for human trajectory prediction.\n- Advances the field by combining structured probabilistic modeling with deep learning to address noisy, dynamic environments.\n- Achieves strong performance on multiple datasets with short inference time.\n- Transparent documentation of training and hyperparameter choices ensures reproducibility."
+            },
+            "weaknesses": {
+                "value": "- Important citations about the dataset used in this paper are missing. Eg., ETH, UCY, Stanford Drone Dataset (SDD)...\n- In table 1, it will be interesting to add the previous model Y-net [1] as a baseline since that model had very impressive performance on the datasets used in this paper. \n- The robustness experiment is not clear. E.g., when simulating noisy tracklets by adding Gaussian Noise, which 4 frames out of 9 observed frames are selected to add noise? Are they randomly selected or some specified 4 frames? In addition, adding noise to all 9 observed frames is more convincing to simulate sensor noise. \n\n\n\n[1] Mangalam, Karttikeya, et al. \"From goals, waypoints & paths to long term human trajectory forecasting.\" Proceedings of the IEEE/CVF International Conference on Computer Vision. 2021."
+            },
+            "questions": {
+                "value": "- Figure 1 was never referred to in the text. It will be good to mention it in your text.\n- In table 4, it seems there is a gap between the proposed method and the previous works on JRDB dataset. Please double-check if there is something wrong. (e.g., same data splits? data samples?)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work introduces a multi-person tracking approach. It summarizes per-frame tracks into short segments and uses a MRF to forecast those segments, rather than per-frame tracks. To initialize the first trackless, a VAE based \u201cBayesian update\u201d is performed. Surprisingly, only this first step requires knowledge of the input motion, while the MRF factors out any of the input conditions. The method produces SOTA results on some benchmarks while being significantly faster than most other SOTA methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The method produces SOTA results on standard benchmarks while greatly outperforming SOTA on runtime too."
+            },
+            "weaknesses": {
+                "value": "I have two main concerns: [A] the method description is unclear, and [B] the two-stage approach is not well-motivated and not well-ablated. \n\n[A] I find the data description in LL158-161 confusing: could the authors clearly state what the input modalities are, i.e. are those per-person trajectories in 2D, are they collections of 2D per-person trajectories, how are they normalized/standardized - in what coordinate frame are they? \nThis also makes it difficult to follow the rest of the method description as it is unclear what the inputs/outputs are.\nThe authors make repeated use of the word \u201cjoint configuration space\u201d (i.e. L165) - could they elaborate what that means?\n\nL161: what are those \u201cM individual states\u201d?\n\nThe authors use various words to describe there tracklets and the length, i.e. \u201cstride\u201d, \u201cchunk\u201d, \u201cperiod\u201d, \u201ctime chunk\u201d - I would suggest to stick to one to make it easier to read.\n\nL182-L183: It is unclear here what the parameterizations are, i.e. what are the differences between \\theta_u, \\theta_m and \\theta_j \u2014> this needs more details here and not just in the following chapters (Maybe also reference Figure 2 here..).\n\nCan the authors clarify what they mean by L070: \u201cHuman movements are Markovian up to certain frequencies\u201d ?\n\n\n\n[B] Concerns wrt Two-stage approach\nI wonder if the split into Stage 1 (Bayesian Update) and Stage 2 is necessary. My main concern is that Stage 2 has no information about motion of the past beyond the previous segment S_{t-1}), while the segments seem to be rather short, as indicated in Table 7 (right side). I find it surprising that the method does not need to rely on past motion beyond a few frames to make more accurate predictions.\n\nFor example, just recursively applying the \u201cBayesian update\u201d step (Stage 1) should perform better, as it has access to more historic information. I believe this is what the authors evaluated in Table 4 and 5 (\u201cOurs (Stage 1)\u201d) - could the authors confirm that this is indeed the case? They should more clearly describe this baseline / ablation in text. Also, it is surprising that this performs worse than the MRF as this method can exploit past motion better than the MRF. Could the authors elaborate what causes the Bayesian update step to be outperformed here?\n\nOn a similar note, if Stage 2 (self-evolution + interaction) seems to perform better, I wonder if the Stage 1 is even necessary as the initial Segment S_1 can be obtained from the historic motion sequence. I wonder how \u201cOurs (Stage 2 only)\u201d would perform in this case.\n\nA two-stage approach is more complicated and brittle and thus it is important to clearly motivate each part, which has not been done in the ablation.\n\n*Suggestions*\n\nAdd relative speeds to Table 3 where the fastest method is 1 and the others are multiples of it.\n\nFor the stride size in Table 7 (right) I would suggest to add the time in seconds as well"
+            },
+            "questions": {
+                "value": "In Figure 5 the method seems to predict left/right off-shoots - can the authors comment on why those are happening? They seem like very unlikely predictions.\n\nL472: what is a \u201cstandard normal distribution\u201d?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a neutralized Markov random field-based motion evolution method for stochastic human trajectory prediction, which explicitly models the agent\u2019s motion dynamics and crowd interactions, with lightweight and efficient learning as well as inference. Experimental results show that the proposed method is effective on multiple datasets, with robustness under noise disturbance."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper proposes to use MRF and iteratively infer the stochastic distribution, which is different from existing explicit structured models.\n\n2. The numerical results are good, and the inference speed is promising.\n\n3. The paper is clearly written and easy to follow."
+            },
+            "weaknesses": {
+                "value": "I put both of the Weaknesses and Questions here:\n\n1. The authors should elaborate more on why MRF that iteratively infers the stochastic distribution of future motions could achieve better performance, especially compared to existing methods.\n\n2. It appears to me that this paper clearly express what it does and how it does, but the motivation behind is not very clear, especially when readers are not in the same field, which makes it somewhat confusing why each proposed component would work.\n\n3. I think more visualized results of more baselines and the proposed method are needed for better comparison."
+            },
+            "questions": {
+                "value": "See Weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Modeling interactions and continuously changing intentions in trajectory prediction is challenging.\nTo address this, the paper proposes a Markov Random Field (MRF)-based motion evolution method. The trajectory is divided into time chunks, with the assumption that each trajectory segment follows a Markov chain sequentially.\nThe authors derive crowd motion evolution as a probabilistic distribution, which consists of a Bayesian update term, predicting the next state from each given observation, and a transition term. The transition term is further divided into a self-evolution term, which predicts the next state from each agent\u2019s current state, and an interaction term, modeling relations between agents.\nAll of these terms are implemented using Conditional Variational Autoencoders (CVAEs).\nExperiments are conducted extensively on multiple pedestrian trajectory datasets, achieving state-of-the-art prediction performance and real-time inference speed."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The paper is easy to follow, and the proposed method is technically well-implemented.\n* The method is validated through extensive benchmark experiments. Its fast inference speed and high accuracy on the NBA and JRDB benchmarks are impressive, especially in JRDB-based experiments from an ego-centric view where noisy input was tested, and the prediction results appear plausible.\n* The experiment applying the proposed method to group reasoning is intriguing, and the visual results are very plausible."
+            },
+            "weaknesses": {
+                "value": "* It seems difficult to claim state-of-the-art prediction performance. There \balready are some prediction models showing better performance on ETH-UCY and SDD than the baselines compared here. More convincing reasoning is needed to explain why the proposed method is necessary compared to these models.\n    - View Vertically (ECCV\u201922): 0.18/0.28, SICNet (ICCV\u201923): 0.19/0.33, Socialcircle (CVPR\u201924): 0.17/0.27  (: ADE/FDE on ETH-UCY benchmark)\n* I find it hard to fully grasp the novelty of the proposed method. As mentioned in the related work, there are already trajectory prediction methods that use the Markov property. Additionally, there are existing methods that construct a dynamic graph based on agents' positions to account for interactions between them (e.g., HiVT (CVPR\u201922), QCNet (CVPR\u201923)). The proposed approach seems like a combination of these two approaches, which might not meet the standards for ICLR.\n* I initially thought that using CVAE would introduce stochasticity, but it\u2019s odd to see deterministic samplers are used during stage 2. In that case, why split it into two stages? Couldn\u2019t deterministic sampling alone without CVAE sampling be trained and used for inference? The referenced Non-probability Sampling (Bae, CVPR\u201922) also suggests that deterministic sampling is preferable to random sampling, so I don\u2019t understand why both random and deterministic sampling were used here. The ablation only compares with stage 1 alone; ablation results of state 2 only without CVAE sampling are needed."
+            },
+            "questions": {
+                "value": "* On line 465, what does \"precludes stationary state\" mean? How is that related to robustness against noisy input? \n    - In addition, perturbation from Gaussian noise doesn\u2019t seem related to stationarity.\n* The model uses CVAE in many parts, and CVAE is known to be vulnerable to posterior collapse in autoregressive methods, which could weaken stochastic prediction. What solutions were implemented to address this issue?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

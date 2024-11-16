@@ -1,0 +1,203 @@
+{
+    "id": "s7DkcgpRxL",
+    "title": "Train Small, Infer Large: Memory-Efficient LoRA Training for Large Language Models",
+    "abstract": "Large Language Models (LLMs) have significantly advanced natural language processing with exceptional task generalization capabilities. Low-Rank Adaption (LoRA) offers a cost-effective fine-tuning solution, freezing the original model parameters and training only lightweight, low-rank adapter matrices. However, the memory footprint of LoRA is largely dominated by the original model parameters. To mitigate this, we propose LoRAM, a memory-efficient LoRA training scheme founded on the intuition that many neurons in over-parameterized LLMs have low training utility but are essential for inference. LoRAM presents a unique twist: it trains on a pruned model to obtain pruned low-rank matrices, which are then recovered and utilized with the original model for inference. Additionally, minimal-cost continual pre-training, performed by the model publishers in advance, aligns the knowledge discrepancy between pruned and original models. Our extensive experiments demonstrate the efficacy of LoRAM across various pruning strategies and downstream tasks. For a model with 70 billion parameters, LoRAM enables training on a GPU with only 20G HBM, replacing an A100-80G GPU for LoRA training and 15 GPUs for full fine-tuning. Specifically, QLoRAM implemented by structured pruning combined with 4-bit quantization, for LLaMA-3.1-70B (LLaMA-2-70B), reduces the parameter storage cost that dominates the memory usage in low-rank matrix training by 7.07\u00d7 (8.26\u00d7), while achieving dominant performance gains over both the original LLaMA-3.1-70B (LLaMA-2-70B) and LoRA-trained LLaMA-3.1-8B (LLaMA-2-13B).",
+    "keywords": [
+        "Large Language Model",
+        "Memory-Efficient LoRA"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "LoRAM is a memory-efficient LoRA training for cost-effective performance gains by training low-rank matrices on a pruned model and merging recoverd them for inference on the original model.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=s7DkcgpRxL",
+    "pdf_link": "https://openreview.net/pdf?id=s7DkcgpRxL",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes LORAM, a memory-efficient training approach for Low-Rank Adaptation (LoRA) fine-tuning on large language models (LLMs). LORAM aims to reduce the memory burden during training by pruning the model parameters and then \u201crecovering\u201d them during inference. The technique includes an offline alignment process to minimize knowledge discrepancies between the pruned and original models, as well as integration with quantization to further optimize memory usage. Extensive experiments showcase LORAM\u2019s performance across various tasks using models like LLaMA-2."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- LORAM aims to make LLM fine-tuning feasible on lower-memory devices, addressing a relevant challenge for the NLP community.\n- The introduction of an alignment phase to handle pruning inconsistencies is conceptually innovative and could provide insights for future memory-efficient models.\n- The authors conduct a broad range of experiments, which helps to illustrate LORAM\u2019s performance across multiple tasks."
+            },
+            "weaknesses": {
+                "value": "- The paper contains frequent grammatical errors, inconsistent terminology, and formatting issues that detract from readability.\n- The main technical idea\u2014pruning during training and recovering for inference\u2014lacks fundamental novelty and could be seen as an incremental step on existing methods rather than a breakthrough.\n- The experimental setup would be more convincing with comparisons to simpler or standard pruning approaches, helping to illustrate LORAM\u2019s distinct benefits more clearly.\n- Testing LORAM beyond LLaMA models would make the approach more broadly applicable and better showcase its robustness across architectures."
+            },
+            "questions": {
+                "value": "1. Could the authors provide specific examples of how LORAM compares to standard LoRA without any pruning? Same goes for QLORAM vs QLORA?\n2. What influenced the choice of pruning ratios, and could different ratios impact the effectiveness of LORAM\u2019s alignment step? Could the authors also clarify if any theoretical or empirical basis underlies the decision to use certain pruning ratios in LORAM? For instance, what drives the choice of an optimal parameter reduction ratio?\n3. Are there cases where LORAM underperforms compared to standard LoRA? This would provide insights into LORAM\u2019s limitations. As it is, I find it hard to wrap my head around the possibilities of LORAM winning in all scenarios.\n4. How was the the alignment corpus chosen, and what effect does corpus size have on the performance of aligned models? \n5. How consistent are LORAM\u2019s improvements across different tasks? Further analysis here would help illustrate LORAM\u2019s potential."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes \u201cLoRAM,\u201d a novel memory-efficient LoRA fine-tuning process that significantly reduces required storage by pruning base weights\u2014an approach largely overlooked in prior LoRA research. To mitigate the discrepancy introduced by pruning, the authors introduce a recovery step to ensure alignment at inference time, thereby improving accuracy.\n\nCompared to models with a similar effective parameter reduction ratio, LoRAM achieves a higher compression rate while demonstrating lower training/test loss and higher downstream accuracy on the LLaMA-2 family and LLaMA-3.1 models. Additionally, an ablation study shows that the proposed recovery and alignment steps contribute to improved training performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This paper introduces a novel approach to optimizing the heavy base weights in LoRA-based fine-tuning, an area not well-focused in existing LoRA studies. Moving beyond the widely studied quantization, the authors address the challenges of achieving high compression through pruning by introducing recovery and alignment steps, which help to offset pruning\u2019s drawbacks and yield promising performance results. The method shows scalability potential, and the presentation and explanation are clear, making it easier to follow what might otherwise be a complex process. The experiments also appear to be thoroughly conducted."
+            },
+            "weaknesses": {
+                "value": "- The paper lacks a discussion of the cost implications of the proposed method. Unlike standard one-stage LoRA fine-tuning, the multi-stage process in LoRAM may involve trade-offs in latency, but this is not adequately addressed. Given the focus on efficient training, a detailed comparison of memory and latency costs with baseline methods should be discussed.\n\n- While the main table\u2019s comparisons by compression ratio are understandable, the results should also include fine-tuning outcomes on same LoRAM\u2019s target LLM, as seen in Figure 8. Including the performance upper bound of fine-tuning the same model without memory reduction would allow readers to better assess the trade-off between memory compression and performance.\n\n- To elaborate on the need for comparison within the same model family: from the perspective of a model publisher, different sizes of LLMs are not just scaled versions but may be trained with distinct capabilities in mind, considering future usability (ex. LLaMA-3.1-8/70B vs. LLaMA-3.2-3B). Thus, comparing models with similar reduction ratios but different original capabilities may not be appropriate. For those who performing fine-tuning, it would be more informative to see how LoRAM compares to standard LoRA on the same model, as this would directly reflect the practical value of the method. (I\u2019m open to counterarguments if there\u2019s a rationale for this choice.)"
+            },
+            "questions": {
+                "value": "- Was a comparable grid search conducted for hyper-parameter tuning (learning rate, epochs) for both baseline LoRA and LoRAM? Fine-tuning can be sensitive to settings, so the degree of granularity in hyper-parameter tuning might impact the final performance.\n- I am curious about whether this method would also yield effective results for domain-specific fine-tuning tasks."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces LORAM, a training method that refines a pruned model by adjusting the low-rank pruned matrices and then reintegrates dimensionally restored low-rank matrices with the original model for inference. This approach greatly reduces memory demands from model parameters during training and enhances performance by utilizing all original parameters during inference. Consequently, LORAM effectively improves performance on devices with limited memory capacity. Extensive experiments across diverse pruning techniques, model sizes, and task domains demonstrate LORAM's effectiveness."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is well-written and comprehensively analyzes various adaptations of the proposed method to accommodate different pruning techniques.\n2. This paper conducted thorough experiments across various pruning algorithms, models of different sizes, and tasks."
+            },
+            "weaknesses": {
+                "value": "1. The novelty of this paper is limited as the proposed approach essentially combines existing pruning techniques with LoRA.\n2. The claim that LoRAM substantially reduces the number of trainable parameters compared to standard LoRA is somewhat misleading. In the case of unstructured or semi-unstructured pruned models, there is no actual reduction in trainable parameters, as noted in the paper. Meanwhile, the reduction in trainable parameters when fine-tuning structured pruned models is due to the smaller dimensions of these pruned models compared to the original model, rather than any change in the LoRA component, which remains the same as in standard LoRA.\n3. Could you explain why, after fine-tuning, structured pruned models outperform semi-structured and unstructured pruned models? In previous studies, like SparseGPT, Wanda, and LLM-pruned, unstructured pruning has consistently shown the least accuracy degradation. However, in your case, the results seem to be the opposite after finetuning."
+            },
+            "questions": {
+                "value": "Please refer to Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes LoRAM, a memory-efficient training scheme that combines pruning, LoRA-based training on the pruned model and subsequent integration of the found solution back in the original model. This procedure yields significant memory reduction compared to LoRA-based fine-tuning, which in turn was already an improvement over the full-model fine-tuning.\n\nAuthors further observed that under aggressive pruning rates their method did not work well and identified that the main culprit is inconsistency between the pruned model used for training and the original model used for inference. To combat this, they train the pruned model on a relatively small corpus to achieve alignment, which is a one-shot offline process.\n\nThe effectiveness of LoRAM is evaluated across several model sizes, pruning algorithms, and tasks in different domains."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The paper is fairly well structured and well written. Visualizations are quite helpful for quickly grasping the method.\n* LoRAM enables training a 70B model on a GPU with only 20GB, which is an impressive result.\n* The proposed method is complementary with other memory reduction techniques such as quantization and pruning strategies."
+            },
+            "weaknesses": {
+                "value": "* Some comparisons in Tables 1-3 seem unfair: It would be nice to include a baseline that uses the same total training time/compute as LoRAM (including alignment & LoRA-based fine-tuning of the pruned model), but for full fine-tuning of the original model.\n* Aside from the trivial \u201cw/o FT\u201d baseline, it seems that LoRA is the only method LoRAM is compared against. It would be nice to include more baselines from the literature. For instance, would be interesting to compare LoRAM to the respective pruning method used to see the effect of subsequent LoRA training.\n* The paper did not report the training speed LoRAM compared to LoRA and full-model fine-tuning. Having a comparison of wall-clock time and/or throughput (e.g. tokens/second) for LoRAM vs LoRA and full fine-tuning across a few model sizes would give a more complete picture of the trade-offs.\n* It would greatly help to increase the reproducibility of this work by releasing the code."
+            },
+            "questions": {
+                "value": "* In Figure 3 & 4, any reason for instability for QLoRAM-Rand & QLoRAM-Stru for 70B model when evaluated on Alpaca?\n* Seems there is a typo in Table 3: 0.3415 should be 34.15"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a memory-efficient training scheme for LLMs, named LoRAM. Based on an intuition that some parameters remain unchanged during finetuning, but are important during inference, the authors train a pruned model by updating the pruned low-rank matrices and then uses recovered matrices for inference. In this way, the parameters need to be finetuned can be largely reduced while achieving similar accuracy compared with previous LoRA methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "-Memory efficient training is an important topic in LLM-related fields.\n\n-This paper proposes an easy but effective method to reduce the number of parameters which need to be finetuned.\n\n-The potential this sparsity-based method shows when combined with QLoRA seems a promising way for this field.\n\n-The paper is easy to follow, experiments presented are good."
+            },
+            "weaknesses": {
+                "value": "-My major concern is that why cannot train small and infer small? Training small is convincing enough, but it sounds more reasonable to me that we train on the pruned model, and then also infer on that model. I think it is indispensable for this paper to show the certain benefits of inferring large over inferring small. Detailedly, experimental results (e.g. model accuracy or inference latency) are needed for the comparison of inferring small and inferring large, so that the inference design can be convincing.\n\n-This idea is based on the intuition that some parameters remain unchanged during finetuning, but are important during inference, although the proposed method seems to work, there is no evidence to show the phenomenon and no theoretical analysis to show the reason of the phenomenon. What is the property of those unchanged weights? This paper will be much better with more effort on this part."
+            },
+            "questions": {
+                "value": "-What is the training throughput of your method? Updating pruned parameters seems time-consuming generally."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

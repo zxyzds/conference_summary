@@ -1,0 +1,167 @@
+{
+    "id": "qDSfOQBrOD",
+    "title": "VChangeCodec: A High-efficiency Neural Speech Codec with Built-in Voice Changer for Real-time Communication",
+    "abstract": "Neural speech codecs (NSCs) enable high-quality real-time communication (RTC)\nat low bit rates, making them efficient for bandwidth-constrained environments.\nHowever, customizing or modifying the timbre of transmitted voices still relies on\nseparate voice conversion (VC) systems, creating a gap in fully integrated systems\nthat can simultaneously optimize efficient transmission and streaming VC with no\nadditional latency. In this paper, we propose a high-efficiency VChangeCodec,\nwhich integrates the Voice Changer model directly into the speech Codec. This\ndesign seamlessly switches between the original voice mode and customized voice\nchange mode in real-time. Specifically, leveraging the target speaker\u2019s embedding,\nwe incorporate a lightweight causal projection network within the encoding module\nof VChangeCodec to adapt timbre at the token level. These adapted tokens are\nquantized and transmitted to the decoding module, to generate the converted speech\nof the target speaker. The integrated framework achieves an ultra-low latency of\njust 40 ms and requires fewer than 1 million parameters, making it ideal for RTC\nscenarios such as online conferencing. Our comprehensive evaluations, including\nsubjective listening tests and objective performance assessments, demonstrate that\nVChangeCodec excels in timbre adaptation capabilities compared to state-of-the-art (SOTA) VC models. We are confident that VChangeCodec provides an efficient\nand flexible framework for RTC systems, tailored to specific operator requirements.",
+    "keywords": [
+        "Real-time communication",
+        "Neural Speech codec",
+        "Voice conversion"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=qDSfOQBrOD",
+    "pdf_link": "https://openreview.net/pdf?id=qDSfOQBrOD",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents VChangeCodec, a codec specifically designed for real-time voice conversion. It uses a causal projection network to convert the vocal timbre of the source speaker into that of the target speaker at the token level. Evaluation results show that in original voice mode, VChangeCodec achieves good quality compared with other codec models. In voice change mode, it performs comparably to previous methods in terms of naturalness and intelligibility, and outperforms them in speaker similarity according to objective evaluations."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper presents a voice conversion system that can be used in real-time communication such as virtual meetings. The proposed module, the causal projection network, can be easily plugged into different codec frameworks and has very low latency. The evaluation results look reasonable based on the metrics used. The authors also conducted ablation studies to discuss the influence of each component in the proposed framework."
+            },
+            "weaknesses": {
+                "value": "While there have been several works on zero-shot voice conversion (though they may not be real-time), the proposed framework is constrained to a predefined set of target speakers, which limits its extensibility. Additionally, the evaluation results have issues, such as using very limited test sets, inconsistency in the languages evaluated between the original and voice change modes, and a lack of human evaluation in the voice change mode."
+            },
+            "questions": {
+                "value": "1. In Section 3.2, the authors imply that using pre-trained speaker embeddings would increase computational costs and storage space. However, if I understand correctly, the target speaker features are all pre-computed, so using speaker embeddings (which are usually single vectors) should not pose a problem. Moreover, speaker embeddings have been widely used in several speech synthesis tasks with good results. I wonder if the authors have conducted experiments using pre-trained speaker embeddings, and how their performance compares to the results presented in the paper.\n\n2. In the evaluation, the authors used Mandarin utterances for assessing the original mode and English ones for the voice change mode. I am confused about this setting, as they are very different languages, and it is not natural to evaluate them in two different modes. It would make more sense to either (a) use only Mandarin or English, or (b) evaluate both the original and voice change modes in both English and Mandarin.\n\n3. In the evaluation of the voice change mode, the authors only use automatic evaluations (if I understand correctly, the MOS scores in Tables 2 and 3 are not human ratings). It is necessary to include human evaluation results in speech synthesis tasks. The authors might first conduct objective evaluations on large test sets using automatic MOS models, and then perform human subjective evaluations on a randomly sub-sampled set to justify the reliability of the automatic MOS on the set.\n\n4. Similar to point (3), the authors should conduct subjective evaluations on speaker similarity.\n\n5. In Table 2, there are no values for oracles in the intelligibility column, which I believe the authors should include so that readers can understand the quality gap between the generated utterances and the authentic ones.\n\n6. In Section 4.4, the authors compared the real-time factor of the proposed approach only with Lyra2. I believe there are other real-time voice conversion systems, such as StreamVC, and it would be good to include them.\n\n7. I was unable to listen to the audio samples in the supplementary material. The authors included audio samples in a PPTX file, which is not directly accessible without installing Microsoft Office. I'm not sure if online converters break the audio links in the file, so I prefer not to use them. It would be helpful if the authors could provide the audio files directly."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a real-time voice codec with an integrated vocal identity conversion module. It first trains the original mode of the codec and validates that the performance is approximately similar to other state-of-the-art codecs. Then the authors propose a voice changer module that is a causal convolutional network that is conditioned on the target speaker using a selected set of features provided by the OpenSmile software. To be able to construct target features a parallel training database is required. To this end, the paper proposes to create the target phrases synthetically by means of converting the input phrase of the source speaker using the RVC model. \nThe voice changer mode is evaluated by means of comparing it to results of a few selected algorithms from the literature."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Very original idea to combine a voice codec with an integrated identity conversion component,\n- real-time voice identity conversion with low latency is a very ambitious target\n- using the existing features of the OpenSmile software as a means to condition the target speaker identity is new (at least to me), and looks potentially very interesting."
+            },
+            "weaknesses": {
+                "value": "- Not all final parameters are explicitly described. I wonder about the R parameter. The description in the appendix says in line 795:\n\n*Given the target bitrate r, the dimension of latent feature N, the theoretical bitrate in each frame is computed as \u22121 \u2217 N \u2217 log2( 1/(2\u2217R+1)).*\n\nI suggest explicitly saying here what R is supposed to be in this equation and how you ensure the desired target bitrate is achieved.\n\n- Some of the claims are rather misleading. For example, authors state that in original mode their codec works on party with the DAC and Encodec. These two are trained as codecs for arbitrary signals (music included), while the proposed codec is for speech only. The version of Encodec is not clearly specified (authors should add the information about, which model is used in their experiments), but both DAC and Encodec work on signals with higher sample rate. That your codec outperforms general-purpose codecs training to compress signals with a larger sample rate is a positive point, but is not that astonishing either.  A somewhat similar comment aplies to Lyra2, which supports arbitrary languages (probably trained in 24kHz but I am not 100% sure about that).  I suggest adding an explicit description of the differences in training data and sample rates when discussing the performance comparisons.\n- The description of the data sources in 4.1 is a bit confusing. You write:\n  *The clean speech is from LibriTTS (Zen et al., 2019), DNS Challenge (Reddy et al., 2020). The mixed\nspeech is generated by combining clean speech and background interference (e.g., noise), including\nDNS Challenge, MIR-1K (Hsu & Jang, 2009) and FMA (Defferrard et al., 2016).*     \nA few details should be added: \n  - which part of the DNS challenge data did you use? There are singing and expressive datasets mentioned in the Reddy paper.\n  - Why do we need mixed speech? This is not mentioned anywhere in the paper. How do you perform the mixes with respect to the balance between background (noise) and foreground (voice)\n  - Nothing is said about the data that is used for validation. Please add a description of the train/validation/test split.\n\n- While perceptual evaluation is performed for the codec in original mode, neither DAC nor Encodec are part of the comparison. To give a complete picture of the performance of your codec compared with these two, it would be preferable to have them added to the perceptual evaluation. If you cannot add them then please explain why you think it is not possible or not needed.\n- The fact that the training is performed using synthetically generated parallel training data is quite hidden, it should be mentioned earlier in the description, for example in the introduction.\n- Evaluation of the voice change mode is very weak, no subjective evaluation is provided, and all the base line models are trained on the VCTK dataset. Even if the models support zero-shot conversion it si clearly unfair to compare these models to your model that - as far as I see - is trained particularly on the target speakers. \nThe fact that Resemblyzer similarity is low for QuikVC is clearly due to the fact that you operate it out of its context.\n- Resemblyzer is a weak alternative to perceptual evaluation. \n\n- English language should be improved. Notably, *Casual projection network* should be renamed into *Causal projection network*. When you say your model *achieves superior latency* it would mean it has a larger latency. you probably want to say your latency is lower than that of the other methods."
+            },
+            "questions": {
+                "value": "Please explain better how you perform the bit rate calculation in A.3 and specify the quantizer levels R that you use in your experiments. \n\nYou should discuss the fact that your model is trained on a parallel database of the target speaker, while all other VC models are operated in zero short mode. The results of your model are difficult to judge.\n\nWhy are neither DAC nor Encodec part of the perceptual evaluation in the original mode?\n\nIf I understand correctly, your quantization model is exactly the same as the one used in SimpleSpeech and SimpleSpeech 2.\nhttps://arxiv.org/pdf/2408.13893 - if this is correct you should cite one of them."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a new neural speech codec designed to integrate voice-changing capabilities directly into the codec itself. This integration allows for switching between original and customized voice modes in real-time, making it efficient for bandwidth-constrained environments. The proposed method leverages a causal projection network within its encoding module to adapt the timbre of the transmitted voice at the token level, achieving latency of 40ms and requiring fewer than 1 million parameters. This makes it ideal for real-time communication (RTC) scenarios such as online conferencing.\n\nThis paper highlights the limitations of existing neural speech codecs (NSCs) and voice conversion (VC) systems, which typically operate separately and introduce additional latency. VChangeCodec addresses these issues by combining speech compression and voice conversion into a single, integrated framework. The codec uses scalar quantization to reduce complexity and maintain high fidelity at lower bitrates. Comprehensive evaluations, including subjective listening tests and objective performance assessments, demonstrate that proposed method results in timbre adaptation capabilities, providing a flexible solution for RTC systems.\n\nAdditionally, the paper discusses the technical details of codec's architecture, including its encoder, quantization, and decoder components, as well as the training strategy involving multiple loss functions to ensure high-quality speech reconstruction and timbre adaptation. The authors emphasize the operator-oriented deployment of proposed technique, which minimizes privacy risks by restricting user access to pre-defined timbres. The results of extensive experiments and ablation studies show the effectiveness of VChangeCodec, making it a possible approach for enhancing real-time communication with built-in voice-changing features."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Well written paper with an interesting proposition to carry out voice conversion as part of the codec. The background and methods section is meticulously written and explained nicely. The scalar quantization is a know technique from past which is now getting revived in the context of neural network. The authors have evaluated their models in objective and subjective metrics showing either improvement in performance or matching state-of-the-art codecs and VC models."
+            },
+            "weaknesses": {
+                "value": "The main weakness is the motivation which I fail to understand at this point. If a light-weight Voice conversion model can be used a post-processor or a pre-processing module after/before codec, then what additional advantage does this framework brings. Second, apart from the combination of Codec+VC module and scalar quantization trick, there is no axis of novelty in this paper. Additionally, in the experiment section, evaluation of speaker similarity through SMOS would be more convincing than resemblyzer model. Finally, the usage of WER and CER (by Whisper model) does not suggest greater intelligibility as they inherently make use of a language model to correct pronunciation mistakes."
+            },
+            "questions": {
+                "value": "None"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents VChangeCodec, a speech codec that integrates voice changing capabilities directly into the codec architecture, aimed at enhancing RTC services. \n\nThe authors argue that existing neural speech codecs do not support customizable voice features effectively, particularly in bandwidth-constrained environments."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The reported inference latency of around 40+ ms is impressive and suitable for real-time applications, which is a critical requirement in RTC systems.\n2. This paper is well-organized and easy to read."
+            },
+            "weaknesses": {
+                "value": "1. In Section 4.1, the author claims that ''We select one male and one female speaker from the internal datasets which contain 1-hour data, respectively, to serve as the target timbre.'', I believe the evaluation is not comprehensive and it would be nice to add more target timbre.\n2. Some codec baseline systems need to be replaced, the author claims comparison with SOTA codec models in Table 1, while some baselines are proposed in 2012 or 2014, it is not convincing.\n3. The author should present the difference between VChangeCodec and two related works [1,2], they also are codec models and can achieve voice conversion. A comparison in experimental evaluation is necessary.\n4. A subjective evaluation of the proposed system would be very beneficial. It has been shown time and time again that the opinion of human listeners cannot be replaced with objective evaluation.\n5. VC baselines in Table 2 are not SOTA models, please revise the claim or compare the proposed system with the recent SOTA models like LM-VC, SEFVC, or DDDM-VC.\n\n[1] SpeechTokenizer: Unified Speech Tokenizer for Speech Large Language Models\n\n[2] NaturalSpeech 3: Zero-Shot Speech Synthesis with Factorized Codec and Diffusion Models"
+            },
+            "questions": {
+                "value": "1. What advantages does VChangeCodec offer over existing state-of-the-art neural speech codecs in terms of parameter efficiency and compression quality?\n2. How can VChangeCodec ensure robust performance across various network conditions typical in RTC scenarios?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,168 @@
+{
+    "id": "Xn4Je0CxC6",
+    "title": "Dynamic Learning Rate for Deep Reinforcement Learning: A Bandit Approach",
+    "abstract": "In Deep Reinforcement Learning models trained using gradient-based techniques, the choice of optimizer and its learning rate are crucial to achieving good performance: higher learning rates can prevent the model from learning effectively, while lower ones might slow convergence. Additionally, due to the non-stationarity of the objective function, the best-performing learning rate can change over the training steps. To adapt the learning rate, a standard technique consists of using decay schedulers. However, these schedulers assume that the model is progressively approaching convergence, which may not always be true, leading to delayed or premature adjustments. In this work, we propose dynamic Learning Rate for deep Reinforcement Learning (LRRL), a meta-learning approach that selects the learning rate based on the agent's performance during training. LRRL is based on a multi-armed bandit algorithm, where each arm represents a different learning rate, and the bandit feedback is provided by the cumulative returns of the RL policy to update the arms' probability distribution. Our empirical results demonstrate that LRRL can substantially improve the performance of deep RL algorithms.",
+    "keywords": [
+        "Hyperparameter Optimization",
+        "Meta Learning",
+        "Deep Reinforcement Learning",
+        "Adversarial Multi-Armed Bandits"
+    ],
+    "primary_area": "transfer learning, meta learning, and lifelong learning",
+    "TLDR": "We propose a meta-learning method that dynamically selects the learning rate (step-size) in stochastic gradient descent (SGD) for deep RL using a multi-armed bandit framework.",
+    "creation_date": "2024-09-23",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Xn4Je0CxC6",
+    "pdf_link": "https://openreview.net/pdf?id=Xn4Je0CxC6",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a meta-learning algorithm, LRRL, which selects the learning rate throughout the training process using a bandit algorithm. This algorithm is tested in with DQN on deep RL benchmark environments and in conjunction with differnet optimizers such as RMSProp and Adam. Some analysis is done to assess the learning rate choices through learning."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper presents the proposed algorithm quickly and the motivation is clear. \nI find that the formulation of the meta-learning problem as a bandit problem is interesting and it is nice to see this direction explored more in this paper.\n\nThere are some interesting insights into which learning rates are favourable for different environments by looking at the ones chosen by the proposed algorithm (in Fig.2)."
+            },
+            "weaknesses": {
+                "value": "Generally, my main concern are the purported benefits of the algorithm.\nThe original motivation is that learning rates can be important to tune in general and also throughout training. \nFrom the results (e.g. Fig.1), it looks like the choice of the set of learning rates for LRRL is important. \nMany of the settings do not lead to any benefit over the baseline agent. Moreover, simply choosing the largest set of learning rates, $\\mathcal{K}(5)$, does not necessarily lead to any improvements.\nThis runs counter to the original motivation of reducing hyperparameter sensitivity to the learning rate."
+            },
+            "questions": {
+                "value": "- Tables 1 and 2 which report max average returns seem unecessary given that the entire learning curves are also presented.\nAlso, reporting the maximum return is generally not a good practice due to the additional noise in the estimate. See [1] for a more in-depth discussion of this. \n\n- In section 5.1, which optimizer is used with DQN? Is it RMSProp, Adam or a different choice?\n\n- In fig.1, what are \"# iterations\" on the x-axis? How many training steps are done in total?\n\n- When formulating the meta-learning problem as a bandit problem, the formulation does not make use of the fact that different learning rates are related. In this paper, the learning rates are treated as separate discrete actions while they are in fact continuous quantities. Similar learning rates should have similar optimization properties. \nPerhaps using a formulation that allows some generalization between the bandit actions (learning rates) could be useful here. i.e. linear bandits or more general contextual bandits. \n\n\n- Because of the way the reward is structured, it seems like sparse rewards would be a problem for these methods. \nIf a feedback window happens to be in the middle of the episode where no rewards are given, then it would make it seem like that meta-action was not useful.\nThat could explain why in Pong, which has a relatively sparse reward, the agent does not manage to adapt the learning rate much and ends up mostly picking learning rates relatively uniformly.\n\n- As a comment: In the background section (lines 177 onward), it is mentioned that the adversarial bandit framework deals with nonsationarity, but this is not quite accurate. For that, you would need to consider sequences of changing best actions, not just one action in hindsight. For a more detailed discussion, see Ch 31.1 from [2]. I would suggest rewording this section a little.\nThis does not negatively impact the algorithm in the end since the actual bandit algorithm used does have a decay parameter which does try to account for the nonstationarity by emphasizing recent experiences. \n\n\n[1] \"Deep Reinforcement Learning that Matters\" Henderson et al.\n\n[2] \"Bandit Algorithms\" Lattimore and Szepesvari (Chapter 31.1)  https://tor-lattimore.com/downloads/book/book.pdf"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes to use a non-stationary version of Exp3 (a multi-armed bandit algorithm) to dynamically adjust the learning rate in deep reinforcement learning models during training. The algorithm begins by initializing a set of learning rates. During training, the Exp3 algorithm selects a learning rate from the set based on the agent\u2019s recent performance. The agent then interacts with the environment for a fixed number of steps using the selected learning rate, before the process repeats."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The authors show that LRRL achieves competitive performance compared to standard deep RL algorithms that use fixed learning rates or traditional learning rate schedulers. They test the algorithm using the DQN algorithm with the Adam optimizer on a variety of Atari games.\n* LRRL reduces the need for hyperparameter optimization in principle, but see below for my concern about this."
+            },
+            "weaknesses": {
+                "value": "* The choice of the number of learning rate arms and their values still requires task-specific tuning. This is evidenced in Table 1, where LRRL seems to have significantly different performance depending on what choice of learning rates are used. I would have expected the bandit algorithm to be relatively robust to its set of arms, but this is not the case. \n    * K_sparse(3) performs far better than the other choices. In my view, this approach seems to just shift hyperparameter tuning to a different parameter.\n\n* One intuition for decay of learning rates is that the optimizer takes large steps toward the optimal policy first (perhaps incurring less reward), but later on \"hones in\" on the best policy using a smaller learning rate (incurring high reward). The bandit approach wouldn't be able to encode this kind of intuition, where you sacrifice some reward initially so that higher rewards can be attained later on. I think this is a main drawback of this approach."
+            },
+            "questions": {
+                "value": "* How would the authors address the concern of having to tune the set of learning rates for Exp3?\n\n* Would Exp3 be able to encode the intuition I described above in some way? How would the authors reconcile this potential drawback?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a bandit algorithm for selecting the learning rate of DQN in a set of Atari games. The paper shows how the bandit-selected learning rates over one fixed set of learning rates can, in some cases, yield better performance than the default DQN learning rate."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Clear Writing, easy to follow and understand\n* Good empirical description. Almost all the necessary details about how the experiment was run were included in the main body or Appendix B"
+            },
+            "weaknesses": {
+                "value": "* The biggest weakness is the range of learning rates tested. The paper uses a set of 5 learning rates, all within one order of magnitude, to test LRRL. Most deep RL algorithms are highly sensitive to learning rates. While these are known to be a good range for DQN, as it has been around for over a decade, it is difficult to say whether LRRL equipped with this range will work well with other new algorithms we want to deploy this one. Additionally, would the Adam vs RMSProp results still hold if different ranges of learning rates were given? Two suggestions could address this:\n1. Different sets of learning rates for LRRLs.\n     - A wider range; Like something that goes from 10^-1 to 10^-6\n     - Randomly generated ranges. Maybe have uniform or log uniform sampling over some range 10^-1 to 10^-6, and see how LRRL works with 5 LRs in this range\n2. Try with other algorithms (see next bullet point)\n\n* The other big concern with this paper is that it makes claims for Deep Reinforcement Learning Algorithms but only provides evidence on one (DQN). Two fixes could be either:\n     - Try LRRL with learning rates on other algorithms: PPO, SAC, A3C, TD3, DDQN etc.\n     - Re-adjust the claims in the paper to make it clear that you are studying LRRL+DQN. This would include changes in wording throughout and changing the title to Dynamic Learning Rate for DQN.\n\n* Since the experiments section uses 5 independent runs to measure the average return, we would recommend a different uncertainty measure for the reported results:\n     - A bootstrapped confidence interval or a tolerance interval that could be representative of the variability in performance across different seeds and the same learning rate. This would be useful in figure 1.\n    - 95% confidence intervals. Although this comes with an assumption that the returns for your given agent+learning rate is normally distributed.\n    - The meaning shaded region was not explicitly mentioned any where. I assume it is std dev?\n\n* It would have been useful to see how a bandit algorithm over this set K(5) would compare to other hyperparameter approaches such as bayesian optimization packages like Optuna, which is  commonly used for dynamically tuning learning rates and other deep reinforcement learning hyperparameters."
+            },
+            "questions": {
+                "value": "Why was Pong swapped out for Video PinBall in section 5.2? How did the paper choose which Atari games to use for each section? Did the paper look at all Atari environments but reported those with a significant result in the main body? If so, this should be made clear in the main body."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work presents Dynamic Learning Rate for Reinforcement Learning (LRRL), a meta-learning approach that uses a multi-armed bandit algorithm to dynamically adjust the learning rate of an RL agent during training. Each arm of the bandit represents a different learning rate, and the bandit's feedback mechanism uses the cumulative returns of the RL policy to update the probability distribution over the arms. The authors argue that this approach addresses the non-stationarity of the objective function in RL, where the optimal learning rate can change throughout training, and claim that it reduces the need for extensive hyperparameter tuning compared to traditional learning rate decay schedules. Empirical results on several Atari games using the DQN algorithm are presented, comparing LRRL against fixed baselines, traditional schedulers, and alternative optimizers."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "Overall, adjusting the learning rate during training is an important problem. The proposed approach is conceptually straightforward, using multi-armed bandits, which is also relatively easy to implement."
+            },
+            "weaknesses": {
+                "value": "The main idea in the paper for using bandits for hyperparameter selection in RL is not new. Multiple prior works have explored similar ideas, using bandits to adapt various aspects of learning, including exploration strategies and policy updates. The authors' attempt to position LRRL as a distinct approach within the context of meta-learning is also not entirely convincing, as meta-gradient methods already address the adaptation of learning parameters (see e.g., Flennerhag, Sebastian, et al., among many others). \n\nRe experiments: The scope of the experiments in the paper is limited. The authors focus on a single RL algorithm (DQN) and a restricted set of environments. I propose the authors run their approach using sota RL algorithms, as well as continuous control tasks, which would help understand the broader applicability of LRRL. Finally, the authors should include a comparison of their approach to sota meta-gradient method.\n\nThe paper could also benefit from a more detailed discussion of the theoretical properties of Exp3 in the context of learning rate adaptation and a more comprehensive exploration of alternative bandit algorithms (e.g., linear contextual bandits)."
+            },
+            "questions": {
+                "value": "See above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

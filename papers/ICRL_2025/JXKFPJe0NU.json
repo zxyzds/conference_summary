@@ -1,0 +1,168 @@
+{
+    "id": "JXKFPJe0NU",
+    "title": "BaB-ND: Long-Horizon Motion Planning with Branch-and-Bound and Neural Dynamics",
+    "abstract": "Neural-network-based dynamics models learned from observational data have shown strong predictive capabilities for scene dynamics in robotic manipulation tasks. However, their inherent non-linearity presents significant challenges for effective planning. Current planning methods, often dependent on extensive sampling or local gradient descent, struggle with long-horizon motion planning tasks involving complex contact events.\nIn this paper, we present a GPU-accelerated branch-and-bound (BaB) framework for motion planning in manipulation tasks that require trajectory optimization over neural dynamics models. Our approach employs a specialized branching heuristic to divide the search space into sub-domains and applies a modified bound propagation method, inspired by the state-of-the-art neural network verifier $\\alpha,\\beta$-CROWN, to efficiently estimate objective bounds within these sub-domains. The branching process guides planning effectively, while the bounding process strategically reduces the search space.\nOur framework achieves superior planning performance, generating high-quality state-action trajectories and surpassing existing methods in challenging, contact-rich manipulation tasks such as non-prehensile planar pushing with obstacles, object sorting, and rope routing in both simulated and real-world settings. Furthermore, our framework supports various neural network architectures, ranging from simple multilayer perceptrons to advanced graph neural dynamics models, and scales efficiently with different model sizes.",
+    "keywords": [
+        "Robotic Manipulation",
+        "Model-Based Planning",
+        "Neural Dynamics",
+        "Branch-and-Bound Method"
+    ],
+    "primary_area": "applications to robotics, autonomy, planning",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=JXKFPJe0NU",
+    "pdf_link": "https://openreview.net/pdf?id=JXKFPJe0NU",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents BaB-ND, a GPU-accelerated Branch-and-Bound framework designed for long-horizon motion planning in robotic manipulation tasks that require trajectory optimization over neural dynamics models. Addressing challenges associated with non-linearity in neural network dynamics, BaB-ND utilizes a branching heuristic to divide the action space into sub-domains and a modified bound propagation method (inspired by neural verification methods like \u03b1, \u03b2-CROWN) to efficiently prune non-promising regions. This systematic approach allows BaB-ND to outperform some existing methods in tasks like object pushing, sorting, and rope manipulation, where contact-rich dynamics and high-dimensional action spaces are involved. The framework supports diverse neural architectures (e.g., MLPs, GNNs) and demonstrates scalability and superior planning quality in both simulated and real-world settings.\n\nOverall, this work presents a novel idea, with a clear presentation, and I could increase my rating if my questions are covered during the rebuttal phase."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**Originality**:\nThis paper is quite original in its approach to motion planning by adapting the branch-and-bound (BaB) algorithm for neural dynamics (ND) models. Unlike existing methods, which typically rely on sampling-based or gradient descent approaches, this work creatively applies a modified bound propagation technique inspired by neural network verification algorithms, specifically the \u03b1,\u03b2-CROWN method. This adaptation is novel for addressing the inherent non-linearity and complexity of neural dynamics in long-horizon planning tasks. It might set a new direction in combining machine learning verification methods with motion planning.\n\n**Quality**:\nThe research demonstrates rigor and of high-quality.\n- Good amount of testing across diverse scenarios (planar pushing, object sorting, rope routing)\n- Performance advantages over existing methods like Mixed-Integer Programming and sampling-based approaches\n- Robust handling of complex, contact-rich environments\n- The video covers the experiments and demonstrates the improvement over alternative methods\n\n**Clarity**\nThe presentation of the paper is good.\n- Well-organized structure and methodology explanation\n- Effective use of visual aids and diagrams\n- The step-by-step example of applying BaB on a 1D problem is particularly helpful\n- (mostly) clear differentiation between BaB-ND and traditional verification methods\n\n**Significance**\nThe work is important in several fronts.\n- It addresses a critical challenge in robotic motion planning: managing complex, long-horizon tasks with contact dynamics\n- The provided solution is -somewhat- scalable, when compared to an existing method\n- Different neural architectures (MLPs to graph neural networks) are used, which demonstrates its applicability on different architectures, and hence different types of problems."
+            },
+            "weaknesses": {
+                "value": "There are several weaknesses/limitations of the work:\n\n**Limited Task Diversity**:\n- Current evaluation focuses primarily on basic manipulation tasks (pick-and-place and pushing, relying on planar motions)\n- Framework's applicability remains uncertain for:\n  - Complex 3D manipulation with critical contact points and impact forces\n  - Highly constrained environments requiring precise 3D motions of the full robot kinematic chain\n  - e.g., Real-world scenarios like book reordering across shelves\n\n**scalability**: (somewhat similar to the comment above) \n- Despite GPU acceleration, potential bottlenecks exist:\n  - Computationally intensive bound propagation\n  - Extensive branching requirements\n  - Challenges for real-time applications\n- Paper would benefit from:\n  - Discussion of potential optimizations for real-time use\n  - Experiments measuring latency in time-sensitive scenarios\n  - Strategies for reducing computational overhead\n\n**Lack of Comparative Analysis**:  I acknowledge that it'd be out of scope, but still some remarks:\n- Comparisons with traditional motion planners that use full state information might be interesting, especially considering the somewhat long runtime of BaB-ND + the training time for each task. Overall, that could provide a better context regarding trade-offs between:\n  - BaB-ND's computational costs (including training time)\n  - Performance of conventional motion planning approaches\n  - Overall efficiency in practical applications\n\n**Insufficient Hyperparameter Analysis**: The BaB-ND framework includes various hyperparameters, such as the choice of branching heuristic, bound propagation depth, and sampling rates. However, there is limited discussion or analysis on how these hyperparameters influence performance across different tasks or neural architectures. Since tuning these parameters is likely critical for achieving optimal results in different scenarios, an expanded study on hyperparameter sensitivity would be beneficial. For instance, sensitivity experiments could provide insights into the trade-offs between solution quality and computational efficiency, guiding practical implementation."
+            },
+            "questions": {
+                "value": "- In the supplementary video, it is stated that planning time / horizon is the same for all methods. How would the performance of the baseline methods change if we increase the planning time? In the experiments, it is shown that BaB-ND outperforms other methods in almost all tasks. May it be the case that other methods have not yet found their optimal solutions?\n\n- Can you prune enough sub-domains so that the algorithm does not end up sampling exhaustively? In which cases (or for which type of objective functions) can you provide an assurance that enough sub-domains will be pruned? Can you give a theoretical insight into it? More generally, since the proposed method relies on sampling, in which cases it performs poorly compared to the non-sampling methods?\n\n- Why isn't there any sampling-based method for scalability comparison? It is expected for a sampling-based method to be more scalable compared to MIP (?).\n\n- How is the close-loop control achieved and feedback received?  \n\n- data collection: how are the variations (assuming there are) of the task achieved? \n\n- Fig.6: consistency on the plots is preferred. For rope routing, cost performance is reported for the open-loop scenario, whereas success rate is reported for the closed-loop. Why is it so?\n\n- Could the authors discuss potential modifications for real-time application?\n\n- Could the authors expand on hyperparameter sensitivity?\n\n- Are there potential optimizations for early-stopping propagation in bound calculations? The current early-stopping approach helps avoid excessive error from deep-layer propagation, but it may not achieve the tightest bounds possible. Any chance on adative stopping based on some criteria/threshold?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a GPU-accelerated Branch-and-Bound (BaB) framework for planning in robotic tasks using neural dynamics models, employing \u03b1,\u03b2-CROWN for bound propagation. The framework supports various neural network architectures, such as MLPs and GNNs, but the model requires customization based on different scenarios, selecting specific architectures for tasks like object sorting and rope routing\u200b."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The framework leverages bound propagation from neural network verification (\u03b1,\u03b2-CROWN) to optimize neural dynamics in planning tasks. By structuring the search space into sub-domains and pruning non-promising regions, it shows potential for handling high-dimensional, complex scenarios. \n2. BaB-ND effectively focuses on feasible solutions over global optimization, adapting BaB methods for motion planning in complex, contact-rich robotic tasks. It supports diverse neural architectures, such as MLPs and GNNs.\n3. With GPU acceleration, BaB-ND hints at the potential to manage extended planning horizons and complex models"
+            },
+            "weaknesses": {
+                "value": "1. The code URL provided in the paper is currently unavailable.\n2. Figure 6 has an ambiguous y-axis, making it difficult to understand what is being measured and, therefore, hard to assess the framework\u2019s actual performance or effectiveness based on this chart.\n3. Most experiments are conducted in 2D scenarios, and even the 3D rope manipulation task appears relatively simple, which raises questions about the framework's scalability to more complex 3D environments and interactions, especially with deformable objects.\n4. Although a generalized pipeline is proposed, the framework\u2019s actual scalability across more diverse and complex tasks remains unproven. The comparisons are mostly limited to similar methods, without broader baselines that might better validate its extensibility and robustness.\n5. The current experiments focus on relatively simple tasks, leaving uncertainty about the framework\u2019s effectiveness in more complex or varied scenarios. Custom neural network design for each task could make adaptation time-consuming and resource-intensive.\n6. The framework\u2019s success is sensitive to selecting suitable network architectures for each task. Without careful selection, mismatches could lead to substantial inefficiencies or even failure, indicating a high demand for expert design and tuning."
+            },
+            "questions": {
+                "value": "1. Given that most experiments are based in 2D, what modifications would be necessary to extend the framework to more complex 3D tasks or interactions with deformable objects? Is the focus on 2D a practical choice, or does it reflect inherent limitations in handling higher-dimensional complexity?\n\n2. Would including broader baselines from other methodologies provide a more comprehensive benchmark for evaluating the framework? Stronger comparisons could help clarify its extensibility.\n\n3. How might the framework perform in a wider range of challenging scenarios? Additional experiments with more varied conditions would offer insight into its adaptability to complex tasks or novel object interactions.\n\n4. Since each scenario requires a custom-designed network, how practical is this approach for real-world applications? What are the estimated time and resource requirements for designing and tuning a model for a new scenario, and could this affect the framework\u2019s usability in resource-limited settings?\n\n5. Does the current setup introduce complexity that might hinder practical implementation? If an optimal network is not chosen, how significantly would this impact performance, and are there ways to mitigate this dependency on precise network selection?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents an approach for solving complex long-horizon motion planning tasks using a GPU-accelerated branch-and-bound (BaB) framework. The primary innovation is the integration of bound propagation methods inspired by neural network verification, namely CROWN, to handle the non-linearity of neural dynamics models. This method allows for efficient partitioning of the search space and systematic pruning of sub-domains that cannot yield better solutions, focusing the search on promising areas. The authors demonstrate that BaB-ND outperforms existing sampling-based and mixed-integer programming (MIP) methods in handling contact-rich manipulation tasks like planar pushing and object routing. The framework supports various neural architectures and shows scalability, making it applicable to real-world robotic planning problems."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper tackles an important and challenging problems in robot motion planning, especially in scenarios involving long-horizon, contact-rich tasks.\n- The paper provides a solid overview of related work in neural dynamics, motion planning, and neural network verification, positioning the contribution well within the context of existing research.\n- The use of a branch-and-bound (BaB) framework integrated with bound propagation methods adapted from neural network verification shows potential for enhancing motion planning capabilities.\n- The proposed method is designed to support various neural network architectures, allowing applicability to different robotic models and tasks.\n- The experiments are complex and challenging, showcasing the method\u2019s applicability to real-world scenarios such as object routing and planar pushing."
+            },
+            "weaknesses": {
+                "value": "- The method section is highly abstracted, which leaves readers unable to connect theoretical concepts such as the objective function, inputs, bounds, and sub-domains to practical robotic manipulation problems. Explanations remain too abstract and disconnected from practical robotic tasks. Also, the paper does not detail the method sufficiently, particularly the bounding step, making it difficult for readers to understand the full implementation of the approach.\n- Understanding the methodology relies heavily on prior familiarity with the CROWN method, making the paper less accessible to readers who are not already experts in neural network verification techniques.\n- Although GPU acceleration is mentioned as a key advantage, the paper does not provide sufficient detail or evidence to demonstrate how GPU acceleration is implemented or its specific benefits.\n- While the paper compares performance against sampling-based methods, the absence of Mixed-Integer Programming (MIP) as a baseline for evaluating the optimality of solutions is a significant oversight. Additionally, runtime performance is not benchmarked against methods like MPPI and CEM.\n- The paper does not include an ablation study to show the importance of individual components or design choices in the proposed method, leaving gaps in understanding the contribution of each element.\n- From a robotics perspective the use of a branch-and-bound framework with neural dynamics in contact-rich robotic manipulation seems novel, however, the novelty and contribution from a machine learning perspective is not clear."
+            },
+            "questions": {
+                "value": "- Can you provide more details on the bounding step of the method? How are bounds estimated in a way that ensures meaningful pruning of sub-domains in practical robotic tasks?\n- Could you illustrate the method using a specific example of a robotic manipulation task, detailing how abstract concepts like the input u and bounds map to task-specific elements?\n- How is GPU acceleration implemented in your approach, and what specific parts of the framework benefit from it? Could you provide runtime comparisons with and without GPU acceleration?\n- Why was Mixed-Integer Programming (MIP) not used as a baseline for comparing the quality of the solutions? Similarly, why were methods like MPPI and CEM not included for runtime performance comparisons?\n- Have you considered performing an ablation study to show the contribution of individual components, such as the branching heuristic or specific modifications to the bound propagation method?\n- Could you provide more details on the novelty of the approach from a machine learning point of view ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work introduces a divide-and-conquer approach for planning long-horizon manipulation trajectories. The method relies on a dynamics function trained on simulated data and operates through branching, bounding, and searching."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The writing is clear and well-structured, and the appendix contents are helpful.\n\nThe concepts and formulation are well-defined, and the 1D toy example effectively validates the idea.\n\nThe method includes extensive experiments, both simulated and real-world, with comparisons to several baseline methods."
+            },
+            "weaknesses": {
+                "value": "The specific novelty and distinctions of the proposed method compared to neural network verifiers are unclear, beyond its focus on model-based trajectory planning.\n\nThe robot experiments lack clarity, with important details omitted.\n\nThe limitations and potential future directions of this work are not discussed.\n\nThe learned dynamics function relies on a well-designed simulator, which may limit the scalability of this method to a wide variety of tasks.\n\nThe method assumes static initial poses for obstacles and goal regions, making it challenging to adapt to dynamic changes."
+            },
+            "questions": {
+                "value": "What are the definitions of open-loop and closed-loop performance? They are unclear, making the results in Figure 5 difficult to interpret.\n\nFor data collection to train the dynamics function, thousands of episodes are gathered in the simulator. How is action sampling handled for each task? Are actions randomly generated? Is there a sim-to-real gap? Why not train an RL agent in the simulator instead?\n\nIs it possible to extend the current method to scenarios where obstacles or goal regions are dynamic?\n\nWhat is the action space or control signal for most tasks? It appears to be limited to translations in the 2D plane.\n\nWith a 20-step planning horizon, how many actions does the controller execute? What is the planner\u2019s operating frequency?\n\nIt appears that much of the processing time is consumed by searching. It will dramatically increase computation time and workload when the action space includes both 3D translations and 3D rotations. Would this limit scalability to a full 3D action space?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

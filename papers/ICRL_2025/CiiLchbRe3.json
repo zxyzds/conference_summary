@@ -1,0 +1,209 @@
+{
+    "id": "CiiLchbRe3",
+    "title": "Understanding the Training and Generalization of Pretrained Transformer for Sequential Decision Making",
+    "abstract": "In this paper, we consider the supervised pre-trained transformer for a class of sequential decision-making problems. The class of considered problems is a subset of the general formulation of reinforcement learning in that there is no transition probability matrix; though seemingly restrictive, the subset class of problems covers bandits, dynamic pricing, and newsvendor problems as special cases. Such a structure enables the use of optimal actions/decisions in the pre-training phase, and the usage also provides new insights for the training and generalization of the pre-trained transformer. We first note the training of the transformer model can be viewed as a performative prediction problem, and the existing methods and theories largely ignore or cannot resolve an out-of-distribution issue. We propose a natural solution that includes the transformer-generated action sequences in the training procedure, and it enjoys better properties both numerically and theoretically. The availability of the optimal actions in the considered tasks also allows us to analyze the properties of the pre-trained transformer as an algorithm and explains why it may lack exploration and how this can be automatically resolved. Numerically, we categorize the advantages of pre-trained transformers over the structured algorithms such as UCB and Thompson sampling into three cases: (i) it better utilizes the prior knowledge in the pre-training data; (ii) it can elegantly handle the misspecification issue suffered by the structured algorithms; (iii) for short time horizon such as $T\\le50$, it behaves more greedy and enjoys much better regret than the structured algorithms designed for asymptotic optimality.",
+    "keywords": [
+        "pretrained transformer",
+        "in-context learning",
+        "bandits",
+        "dynamic pricing",
+        "sequential decision making"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=CiiLchbRe3",
+    "pdf_link": "https://openreview.net/pdf?id=CiiLchbRe3",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Reviewer uvAS Part II"
+            },
+            "comment": {
+                "value": "```\nWeakness 3: Additionally, while the insights generated are interesting, the paper lacks a clear and compelling rationale for why the pre-training is worth the extra computation compared to simpler methods...\n```\nIn terms of this weakness, we think the reviewer may have overlooked two important factors.\n\n1. **General Algorithm For Decision-Making**\n\nThis algorithm is not specifically designed for bandit problems. It is a pipeline intended to be broadly applicable across various settings, including stochastic bandits, linear bandits, dynamic pricing, and newsvendor problems. The general pipeline has its merit in designing unified frameworks as a step toward artificial general intelligence (AGI).\n\nMoreover, the theoretical analysis is a fundamental step in understanding Transformers for decision-making problems. If we do not analyze it within the bandit setting as a foundation, how can we extend it to more general RL or practical applications? For instance, the well-known online RL algorithm UCBVI [1] builds on the development of UCB in bandit problems. Therefore, we believe that studying the transformer framework in this simpler setting is both meaningful and necessary.\n\n2. **Applicability to Complex Decision-Making Problems**\n\nWe would like to highlight that our pipeline is capable of handling more complex yet practical problems beyond simple bandits. In real-world decision-making scenarios, such as dynamic pricing and newsvendor problems, it is often necessary to switch between different models depending on the environment. To make an analogy to the bandit setting, an environment may alternate between a linear bandit problem (requiring the LinUCB [2] algorithm to perform well) and a stochastic bandit problem (requiring the UCB algorithm). A unified framework like our transformer-based approach effectively handles these environments by identifying the environment and selecting the right algorithm when seeing the current trajectory, as demonstrated in Figure 12. This versatility extends the applicability of our method beyond simple bandit problems to more complex decision-making tasks.\n```\nWeakness 4: Overall, math notation is confusing and seems even incorrect/inconsistent.\n```\nWe would appreciate it if you could provide specific examples of the issues you found. Raising such concerns without explicitly identifying the problems makes it challenging to address them and, in our view, is both irresponsible and unprofessional. Clear feedback would help us resolve any potential misunderstandings more effectively.\n```\nQuestion 1: Do the benchmarks used need pre-training? If not, then what would the authors argue...\n```\nThis represents a different design philosophy. Previously, for every problem instance, problem-specific algorithms (which are the benchmark algorithms) had to be developed, such as UCB for bandits and LinUCB [2] for linear bandits. We propose a unified framework that is pretrained on trajectories sampled from a massive number of environments. In the evaluation phase, by observing the current trajectory, it effectively identifies the environment and selects the \"right\" algorithm.\n\nThis unified approach is successful across various decision-making problems, as demonstrated in our numerical examples. It is more flexible in terms of algorithm design, provides better performance than problem-specific benchmarks (figure 4), and is generalizable as the number of environments in the simulators $\\mathcal{S}$ increases, allowing us to handle more complex environments (figure 12).\n\n```\nQuestion 2: In line 167, it is stated that...\n```\nWe would like to point out that the pretrained transformer is trained on a massive number of trajectories from a large number of environments, whereas previous methods that incorporate prior knowledge from previously collected data\u2014such as replay buffers, offline learning, and transfer learning\u2014cannot effectively leverage this heterogeneous offline data without knowing the current environment. It is straightforward to construct counterexamples where trajectories from unrelated environments adversely impact algorithm performance.\n\nDeveloping algorithms that can effectively leverage this type of offline data in a online manner requires a dedicated study, which current offline RL and transfer learning techniques do not adequately address. In this setting, our unified framework, pretrained on trajectories sampled from a wide range of environments, can effectively identify the environment and select the \"right\" action.\n\n***References***\n\n[1] Azar, Mohammad Gheshlaghi, Ian Osband, and R\u00e9mi Munos. \"Minimax regret bounds for reinforcement learning.\" International conference on machine learning. PMLR, 2017. \n\n[2] Li, Lihong, et al. \"A contextual-bandit approach to personalized news article recommendation.\" Proceedings of the 19th international conference on World wide web. 2010."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer uvAS Part I"
+            },
+            "comment": {
+                "value": "We appreciate the reviewer\u2019s questions and suggestions. It seems there may be some misunderstandings about the specific setup and other details of our paper. We hope our response clarifies these points and kindly invite the reviewer to re-evaluate our contributions in light of this clarification.\n```\nWeakness 1: The main weakness can be the narrow scope of impact as the sequential decision making problem in the paper is very narrowly defined...\n```\nWe acknowledge that our setting does not cover the general RL framework. However, we would like to emphasize that this is a unified approach, encompassing nearly all other settings\u2014such as various types of bandits, dynamic pricing, and inventory control. These combined research areas already represent a significant and impactful community.\n\nMoreover, this work represents an essential step toward artificial general intelligence (AGI), which holds significant implications for the future of AI. If we do not analyze it within the bandit setting as a foundation, how can we extend it to more general RL or practical applications? For instance, the well-known online RL algorithm UCBVI [1] builds on the development of UCB in bandit problems. Therefore, we believe that studying the transformer framework in the bandit setting is both meaningful and necessary.\n```\nWeakness 2a: The text does very little to motivate the need for the Learned Decision Function (LDF)...\n```\nWe think there might be some misunderstanding regarding the setup. Generally speaking, the Learned Decision Function (LDF), which is the transformer-based decision-maker, is defined in Section 2, and the pretraining method aims to generate an LDF with good performance. The section 4 analyzing LDF is necessary because we need to analyze the theoretical performance of the transformer-based decision-maker, such as the realizability and the regret bound, which are very common and necessary results in the decision-making literature (e.g., bandits, pricing). We were indeed surprised by this question asking for motivations.\n\nTo clarify the relationship: In Section 2 (Page 3, Line 126), we define the LDF, which generates actions from the Transformer as $a_t = TF_{\\theta}(H_t)$. The training loss is generally defined as $\\mathbb{E}[\\sum_{t=1}^T l(TF_{\\theta}(H_t), a_t^*)]$ (Page 5, Line 220).\n\nIn Section 3, we discuss properties of the pretraining and generalization loss, while in Section 4, we analyze the properties of the actions generated by the LDF. Specifically, we identify the Bayes-optimal decision function (Page 7, Line 367), which is the optimal decision. We then show in Proposition 4.1 that the Bayes-optimal decision function minimizes our training loss. This implies that by minimizing the empirical loss, the trained transformer is likely to perform close to the Bayes-optimal decision function. Based on this, Proposition 4.4 provides a regret analysis for the LDF, which is a core component of almost every theoretical decision-making paper.\n\nTherefore, the analysis of the LDF is fundamental to demonstrating important theoretical properties related to decision-making. We hope this clarifies why the LDF is essential.\n\n```\nWeakness 2b: It seems unlikely that there is not an acceptable baseline that can be used from the literature. The confusion is further amplified in the experiments section, where the authors use different baselines to evaluate the pre-trained methods...\n```\nIn summary, the only baseline in [36], from which our method is developed, does not converge and therefore cannot be used as a baseline. Additionally, we cannot use the same baseline across different problems such as stochastic bandits, linear bandits, pricing, and the newsvendor problem, because each problem is distinct, requiring problem-specific algorithms as baselines.\n\nFor the first point, our method, Pre-trained Transformer (PT), originates from [36], which introduces a new architecture and serves as the only benchmark baseline. A key contribution of our paper is improving the pretraining pipeline from [36], enabling our improved PT to converge when pretrained on a large number of environments, while the method in [36] fails to do so (see Figure 2(a)). Therefore, it does not make sense to use the only available baseline in the literature, as it does not converge.\n\nFor the second point, we cannot use the same baseline for stochastic bandits, linear bandits, pricing, and the newsvendor problem because these problems differ significantly, and only problem-specific algorithms can serve as appropriate baselines. For instance, UCB for bandit algorithms cannot be directly applied to pricing settings.\n\n***Reference***\n\n\n[1] Azar, Mohammad Gheshlaghi, Ian Osband, and R\u00e9mi Munos. \"Minimax regret bounds for reinforcement learning.\" International conference on machine learning. PMLR, 2017.\n\n[36] Lee, Jonathan, et al. \"Supervised pretraining can learn in-context reinforcement learning.\" Advances in Neural Information Processing Systems 36 (2024)."
+            }
+        },
+        {
+            "title": {
+                "value": "2nd Round Response"
+            },
+            "comment": {
+                "value": "We thank the reviewer for their quick feedback. While we understand the concern, we respectfully disagree with the perspective on the necessity of adopting a transformer-based decision-making agent. We hope the following clarification provides a clearer picture and kindly ask the reviewer to reconsider after reviewing our explanation.\n\n# General Considerations\n\nThe reviewer may have overlooked two important factors.\n\n1. **Applicability to Complex Decision-Making Problems**\n\nWe would like to highlight that our pipeline is capable of handling more complex yet practical problems beyond simple bandits. In real-world decision-making scenarios, such as dynamic pricing and newsvendor problems, it is often necessary to switch between different models depending on the environment. To make an analogy to the bandit setting, an environment may alternate between a linear bandit problem (requiring the LinUCB algorithm to perform well [1]) and a stochastic bandit problem (requiring the UCB algorithm). A unified framework like our transformer-based approach effectively handles these environments by identifying the environment and selecting the right algorithm when seeing the current trajectory, as demonstrated in Figure 12. This versatility extends the applicability of our method beyond simple bandit problems to more complex decision-making tasks. We provide a detailed discussion of the pricing settings at the end of this response.\n\n2. **Foundational Step Toward General AI**\n\nThis approach is an essential step toward artificial general intelligence (AGI), which holds significant implications for the future of AI. If we do not analyze it within the bandit setting as a foundation, how can we extend it to more general RL or practical applications? For instance, the well-known online RL algorithm UCBVI [2] builds on the development of UCB in bandit problems. Therefore, we believe that studying the transformer framework in the bandit setting is both meaningful and necessary.\n\n# Practical Relevance of Pretraining in Decision-Making Problems\n\nNext, we elaborate on why the transformer-based decision-making agent is practical for our decision-making problems.\n\nIn the dynamic pricing example (a widely studied subject, see [3]), imagine a company (e.g., Amazon) that sells products to customers. At time $t$, the company needs to set the price $p_t$, which corresponds to a demand function $d(p_t)$, with the goal of dynamically maximizing revenue $\\sum_{t=1}^T p_t \\cdot d(p_t)$. In practice, the demand pattern changes from week to week\u2014sometimes $d(p)$ is a linear function, and other times it is polynomial.\n\nTo achieve maximal revenue, two issues need to be addressed:\n\n* Identify the environment and the right algorithm: this is important because using an algorithm designed for linear demand will perform poorly for an environment with polynomial demand.\n* Quickly adapt: Often, it is impractical to start learning from scratch each time since the demand pattern changes frequently. The algorithm must quickly find the near-optimal price.\n\nTherefore, it is necessary to pretrain the decision-transformer on many simulated environments. As shown in Figure 1, the larger the simulator environment $\\mathcal{S}$, the more likely the transformer will have encountered patterns observed in the real environment. Once the transformer identifies these patterns, it can quickly adapt and find the near-optimal price. The transformer we developed is highly effective in addressing this setting (as shown in Figures 4(c) and 4(d), and Figure 12 in the appendix).\n\n\n\n\n\n[1] Azar, Mohammad Gheshlaghi, Ian Osband, and R\u00e9mi Munos. \"Minimax regret bounds for reinforcement learning.\" International conference on machine learning. PMLR, 2017. \n\n[2] Li, Lihong, et al. \"A contextual-bandit approach to personalized news article recommendation.\" Proceedings of the 19th international conference on World wide web. 2010.\n\n[3] Den Boer, Arnoud V. \"Dynamic pricing and learning: historical origins, current research, and new directions.\" Surveys in operations research and management science 20.1 (2015): 1-18."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to author"
+            },
+            "comment": {
+                "value": "Thank you for the clarification.\n\nMy concern about computational and memory overhead (or other potential drawbacks) was specifically in comparison to running TS/UCB in practice, rather than to other generative language models. I remain somewhat unconvinced that, in practice, the more complex pre-trained transformer approach offers a clear advantage or necessity over simpler structured methods like TS/UCB in bandit problems, especially given the costs associated with pre-training on a large number of environments and trajectories. In reinforcement learning, I understand that it\u2019s often challenging to estimate every state-action pair due to the complexities introduced by the transition matrix; therefore, having access to a good simulator can make pre-training models offline to narrow down the scope beneficial. However, in the simpler bandit setting, TS/UCB-type algorithms can already learn optimally from scratch, so I\u2019m not sure why pre-training a more complicated model would be preferable.\n\nAgain, I do see the conceptual value of the framework itself and its connection to performative prediction, but the concern above raises questions about the practical significance of the contribution. I\u2019m not an expert in the field, but with my best understanding, I\u2019ll maintain my score."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer Svgy"
+            },
+            "comment": {
+                "value": "We appreciate the reviewer\u2019s questions and suggestions. It seems there may be some misunderstandings about the specific setup and other details of our paper. We hope our response clarifies these points and kindly invite the reviewer to re-evaluate our contributions in light of this clarification.\n``` \nWeakness 1: My biggest concern is the lack of discussion ...\n```\nWe do not see significant issues with respect to the computational and memory overhead. In terms of computational overhead, our model scales linearly with respect to the context length, as is the case with many generative language models, which is totally acceptable. In terms of memory, our transformer adopts the GPT-2 architecture, which requires less than 1 gigabyte of VRAM and can run on almost all GPUs compatible with CUDA. Therefore, we don\u2019t think there is a significant issue in terms of inference speed or memory requirements.\n```\nWeakness 2: The comparison between the proposed method and UCB/TS seems unfair, as the transformer benefits from...\n```\nWe believe there may be a misunderstanding of our setup. Our transformer is pretrained on a vast number of environments, with each environment generating hundreds of thousands of trajectories. In the evaluation or online learning phase, if the current environment and its sampled trajectories were known, we could leverage that data in combination with the UCB/TS algorithms. However, since the environment is unknown beforehand, using the large volume of offline data indiscriminately could potentially degrade performance. While some algorithms may leverage massive pretraining data from heterogeneous environments online, fully understanding their analytical and computational properties would require a dedicated study, which is beyond the scope of this paper. For this reason, we adhere to the original UCB/TS algorithms in our comparisons.\n```\nWeakness 3: The claimed short-term advantage of the proposed method also seems unconvincing. While it\u2019s true that...\n```\nTo address this question, we would like to reiterate our main contribution: a stable and unified pretraining pipeline for transformers in the context of decision-making, with both theoretical guarantees and strong empirical performance. This pipeline is designed to be broadly applicable across various settings, including stochastic bandits, linear bandits, dynamic pricing, and newsvendor problems.\n\nWe believe it would be inappropriate to compare our method with problem-specific algorithms, as those algorithms are tailored to individual problem instances rather than offering a unified framework. The strength of our approach lies in its generality and versatility across different problem domains, which is distinct from optimizing performance in specific scenarios.\n```\nWeakness 4: I am not very familiar with related work on applying deep learning...\n```\nWe thank the reviewer for suggesting this, and we will put this in the updated version.\n```\nWeakness 5: The clarity and organization of the paper could be improved...\n```\nWe thank the reviewer for suggesting this, and we will put this in the updated version.\n```\nQuestion 1: What is the difference between the setting described in the paper...\n```\nThe setting in our paper encompasses both the stochastic bandit and contextual bandit settings. In Appendix B, we provide detailed examples that fall within this framework. We believe this is the most general formulation, as it includes these specific settings. A contextual bandit framework, by contrast, would be considerably less general.\n```\nQuestion 2: What are the disadvantages of using pre-trained transformers compared to structured algorithms like UCB and Thompson Sampling...\n```\nThe computational cost grows linearly (similar to the UCB and TS algorithms) with respect to the context length, as it corresponds to the number of tokens that need to be evaluated by the large language model, which we believe is entirely acceptable in practice. In terms of memory, our transformer is based on the GPT-2 architecture, requiring less than 1 GB of VRAM and running on most CUDA-compatible GPUs. Therefore, we do not anticipate significant practical issues with inference speed or memory requirements.\n```\nQuestion 3: If UCB/TS had access to the same amount of pretraining data, how would...\n```\nAs mentioned earlier, for UCB/TS to effectively leverage the pretraining data, they would need to know the current environment and its corresponding trajectories. Without this knowledge, it is straightforward to construct counterexamples where trajectories from unrelated environments could adversely impact UCB/TS performance by distorting the confidence bounds or posterior estimates."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a supervised training framework for transformers applied to sequential decision-making problems\u2014a subset of reinforcement learning (RL) tasks that lack an explicit transition matrix. In this framework, transformers are pre-trained on the target task class by simulating multiple environments to generate trajectories consisting of states, actions, and rewards. However, a discrepancy exists between action selection during pre-training and at test time, which leads to a gap between the empirical loss observed in training and the expected loss during testing. This gap can cause out-of-distribution issues, as studied by previous literature, causing the regret bound of the model\u2019s performance to increase exponentially over time. To address this, the authors propose a mixed pre-training algorithm, in which the models learn not only from simulated data but also from trajectories generated by their own actions. This hybrid approach reduces the discrepancy between training and testing distributions. The proposed algorithm is theoretically validated and supported by experimental results."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. This paper applies transformers in the domain of sequential decision-making, typically dominated by traditional RL approaches. The authors ground their framework with rigorous theoretical proofs, establishing conditions under which the mixed pre-training algorithm minimizes cumulative regret. They also prove that the learned decision function asymptotically matches the Bayes-optimal policy as the data approaches infinity.\n\n2. I like how the authors propose the two-phase training strategy to effectively mitigate out-of-distribution problems by including the model's self-generated actions in the second training phase. This solution is simple yet effective and also maintains theoretical rigor."
+            },
+            "weaknesses": {
+                "value": "1. I think the setup in Section 2 goes on a bit too long and could be more concise. A detail: the way f is used in Equation (4) isn\u2019t fully explained until after Equation (5), which makes it hard to follow. Plus, describing f as \"a prespecified decision function used to generate the data\" is too vague.\n\n2. The framework leans heavily on simulated environments ($gamma_i$ and $f$) for pre-training, which might limit scalability to real-world cases. Generating high-quality simulations can be both costly and challenging."
+            },
+            "questions": {
+                "value": "1. How do the authors choose the environments for pre-training, and do variations in the gamma values during training impact the model\u2019s ability to generalize? It would be interesting to know if a big difference between training and testing gamma values affects performance or creates bias.\n\n2. Have the authors thought about using curriculum learning, where self-generated actions gradually increase over time, instead of the two-phase switch? I think it would enjoy less theoretical property, but possibly perform better in numerical experiments."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigates the training and generalization of pre-trained transformers for sequential decision-making tasks without transition probabilities. The authors propose an algorithm that incorporates transformer-generated action sequences during pretraining, establishes a connection to performative prediction, and addresses the challenge of limited exploration. They highlight three advantages of pre-trained transformers over structured algorithms like UCB and TS: improved utilization of pretraining data, robustness to model misspecification, and enhanced short-term performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper introduces notation and a framework for studying pre-trained transformers in decision-making tasks.\n- It proposes a new algorithm and demonstrates its practical performance.\n- The connection to performative prediction is intriguing."
+            },
+            "weaknesses": {
+                "value": "- My biggest concern is the lack of discussion regarding the disadvantages of using transformers for tasks like bandits. The paper does not sufficiently address the computational and memory overhead involved.\n\n- The comparison between the proposed method and UCB/TS seems unfair, as the transformer benefits from extensive prior data while UCB/TS is evaluated in a cold-start setting. Claiming that UCB/TS is less effective at utilizing prior knowledge is misleading since these algorithms aren\u2019t provided with any pre-training data. In fact, UCB/TS algorithms do incorporate observed data as part of their operation, in the form of empirical mean rewards and reward uncertainty. \n\n- The claimed short-term advantage of the proposed method also seems unconvincing. While it\u2019s true that UCB/TS in their original forms is designed for asymptotic optimality rather than short-term performance, there are likely modifications or more state-of-the-art structured algorithms that can improve short-term performance. For instance, restricting the variance (exploration) in these algorithms could make them more greedy. I\u2019m not convinced that this is an inherent limitation of structured algorithms.\n\n- I am not very familiar with related work on applying deep learning or transformer methods to bandits, so a more comprehensive related work section would be helpful. For example, some studies use generated data as priors for algorithms like TS.\n\n- The clarity and organization of the paper could be improved. For instance, while the paper emphasizes reinforcement learning and sequential decision-making settings, I believe the studied problem is more aligned with the contextual bandit setting. I believe some of the notations on pages 3-5 could be streamlined, and a discussion in the main text about how these settings differ and why the setting studied in the paper is more general would be beneficial."
+            },
+            "questions": {
+                "value": "- What is the difference between the setting described in the paper (reinforcement learning/sequential decision-making without transition probabilities) and the stochastic bandit or contextual bandit settings? If it aligns with an existing setting, that should be clarified. The use of reinforcement learning terminology here seems to add more confusion than clarity.\n\n- What are the disadvantages of using pre-trained transformers compared to structured algorithms like UCB and Thompson Sampling? One notable concern could be the computational and memory cost; can this be quantified? For instance, how would the algorithms compare if the x-axis were aligned with computational metrics? What is the computational or memory overhead compared to simpler methods? Given that the proposed method is intended to be practical but lacks theoretical rigour, it is important to assess whether using these algorithms makes sense in practice.\n\n- If UCB/TS had access to the same amount of pretraining data, how would their performance compare to the proposed method?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors explore the implications of using pre-trained transformers on bandit-style decision-making problems. They perform a scientific analysis that yields interesting insights, and provide empirical case studies that show that the use of pre-trained transformers yields competitive results with existing methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper offers an analytical analysis of using pre-trained transformers on bandit-style problems and demonstrates the benefits exceeding the typical asymtotic optimal regret. Along the way, the paper provides interesting insights, and the resulting algorithm is well-motivated and explained clearly."
+            },
+            "weaknesses": {
+                "value": "The main weakness can be the narrow scope of impact as the sequential decision making problem in the paper is very narrowly defined. \n\nThe text does very little to motivate the need for the Learned Decision Function (LDF) described in Section 4. In particular, the relationship between the LDF and the pre-trained methods described in this paper is unclear on a first read. The authors need to better explain why the LDF is necessary. It seems unlikely that there is not an acceptable baseline that can be used from the literature. The confusion is further amplified in the experiments section, where the authors use different baselines to evaluate the pre-trained methods.\n\nAdditionally, while the insights generated are interesting, the paper lacks a clear and compelling rationale for why the pre-training is worth the extra computation compared to simpler methods. In particular, the use of a complex transformer architecture on a bandit-style problem would, on the surface, appear to be \u2018overkill\u2019, and the paper is not able to clearly articulate a compelling reason that justifies the use of such a complex solution method.\n\nOvearll, math notation is confusing and seems even incorrect/inconsistent. \n\nSome minor comments:\n\u2022\tFigures 1 and 2 are not referenced anywhere in the main text."
+            },
+            "questions": {
+                "value": "1.\tDo the benchmarks used need pre-training? If not, then what would the authors argue is the benefit of the pre-trained method given the increased computation that is required for the pre-training?\n2.     In line 167, it is stated that \"...reinforcement learning algorithms and are usually hard to combine with prior knowledge such as pre-training data.\" However, I believe there are many options to combine prior knowledge in previously collected data: initializing replay buffer, offline learning, transfer learning, ...."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper looks at how supervised pre-trained transformers can be used in sequential decision-making tasks, which is a subfield of reinforcement learning that doesn't involve transition probability matrices. The authors believe that transformers can perform well in tasks like bandits, dynamic pricing, and newsvendor problems if you leverage closed-form or easily computable optimal actions during the pre-training phase. They look at an issue that arises when there are differences between the training and test phases, and suggest an algorithm that lets transformer-generated actions be part of the training, which helps with generalisation. The authors also give some theoretical insights by looking at the transformer model as a near-Bayesian optimal predictor and suggest some numerical experiments comparing its performance against structured algorithms like UCB and Thompson sampling, which show where transformers work well."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "By showing that transformers can outperform traditional algorithms in some sequential decision-making contexts, this work contributes to advancing the understanding of transformers."
+            },
+            "weaknesses": {
+                "value": "**Confusing claims and demonstration:**\n\n- The notations abuse. For example, decision function $f$ generate $a$ or $a^*$. In Eq. 5, the authors claim to generate $a^*$  but there is no $a^*$ in Eq. 5. I can only infer that $f$ generate $a^*$. And then below Eq. 7 it becomes $a_{\\tau}$.\n\n- In the paragraph, below Eq. 9, the authors claim that OOD in this setting is because \"when generating the training data, there is no way we can know the final parameter. This is not an OOD problem to me. Training on some tasks and testing on other tasks, or changing test-time environmental parameters are more likely to be OOD problem.\n\n- Above Eq. 9, pertraining -> pretraining, and this paragraph is unclearly written. Overly referring to the equation make me hard to follow the idea and intuition.\n\n   \n\n**Lack of Novelty** \n\n- The theory is comprehensively covered, while simply adding a mixed training phase and testing only on simple experimental setup doesn't seem novel enough to me, given the existing works [1-3]. \n\n- In addition, given that Transformer is a powerful sequence model, isn't studying pretraining on state-free bandit problems less meaningful? The authors claim that bandit is a special case, but it's to me more like out-of-scope because sequential problems are more related.\n\n  \n\nSince the motivations and clarity are less satisfying, I didn't look into the proof in details. While it's good to see that mixing online and offline data can preserve a theoretical guarantee.\n\n\n\n[1] Lee, Jonathan, et al. \"Supervised pretraining can learn in-context reinforcement learning.\" *Advances in Neural Information Processing Systems* 36 (2024).\n\n[2] Laskin, Michael, et al. \"In-context reinforcement learning with algorithm distillation.\" *arXiv preprint arXiv:2210.14215* (2022).\n\n[3] Sodhani, Shagun, Amy Zhang, and Joelle Pineau. \"Multi-task reinforcement learning with context-based representations.\" *International Conference on Machine Learning*. PMLR, 2021."
+            },
+            "questions": {
+                "value": "See Weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

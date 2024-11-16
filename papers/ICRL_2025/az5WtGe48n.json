@@ -1,0 +1,202 @@
+{
+    "id": "az5WtGe48n",
+    "title": "Diffusion Models are Few-shot Learners for Dense Vision Tasks",
+    "abstract": "The ability to adapt to new, unseen tasks with only a handful of training examples is a key factor behind the unprecedented success of language models. However, in computer vision, few-shot adaption has largely focused on adapting to new semantic categories or answering new visual questions. Adapting a model to dense vision tasks \u2013 depth estimation, surface normal estimation, semantic segmentation \u2013 has only been possible with large amounts of training data and with custom decoder heads, since the output spaces for each task varies widely. For instance, depth estimation outputs continuous values while semantic segmentation generates discrete categorical assignments. In this paper, we found that the diffusion prior can effectively adapt to various dense tasks, and based on this, we introduce an adaptation mechanism that exploits a pretrained diffusion model for 12 different dense vision tasks using only a few training examples. Moreover, adapting to different tasks requires only modifying the input, without changing the internal parameters of the model. Our key insight is to reframe all dense prediction tasks into a codebook-conditioned classification problem, even for continuous outputs.\nSpecifically, we learn two set of parameters: (1) concept embeddings that condition the diffusion model to encode task-specific representations in their attention masks; and (2) codebook embeddings that recombine discrete outputs to continuous ones. With this novel design, we achieve state-of-the-art results across 12 datasets for few shot learning.",
+    "keywords": [
+        "Few-shot Learning; Dense Prediction; Generative Model"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=az5WtGe48n",
+    "pdf_link": "https://openreview.net/pdf?id=az5WtGe48n",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents an approach for adapting a diffusion model for dense vision tasks in a few-shot setting. To do this, the authors transform dense prediction tasks into classification tasks, with a learnable codebook that converts the classes into continuous outputs. The method is (likely) efficient to train as it only requires finetuning the additional components added to the diffusion model, and not the entire model end to end."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tThe paper is generally well-written, and addresses an important task with growing interest in the field (how to use diffusion models for discriminative tasks)\n2.\tThe figures are both easy to understand and aesthetically pleasing.\n3.\tThe results appear to outperform the prior methods reported across all tasks in a few-shot setting."
+            },
+            "weaknesses": {
+                "value": "1.\tMy main concern is that it\u2019s not clear to me where the wins are coming from compared to prior work. As I understand it, the submission uses a more capable Stable Diffusion backbone compared to prior work, and the paper does not ablate the importance of this.\n2.\tMy second concern is that this win appears to show up only in the few-shot setting, and VPD outperforms when there is more data. Given the size of vision datasets today, I\u2019d be curious where this sort of few-shot adaptation is a concern \u2013 it would be great to show off the value of this method in a setting like that! I\u2019d also be curious what the tipping point is at which VPD starts to outperform (100 images? 1,000 images? 10,000 images?)"
+            },
+            "questions": {
+                "value": "1. My main concern: How much does SD2.1 affect results? The prior methods that use diffusion, from what I understand, used earlier or different variants of Stable Diffusion, and it\u2019s not clear how much of the improvement can be explained by that.\n2. The ablations in Fig 3 suggest that a major improvement is due to transforming the dense tasks into classification tasks, though this is only on train loss. What happens to the evals here?\n3. The main ablations are:\n\n    i) Code book size: It doesn\u2019t seem like codebook size affects results significantly\n\n    ii) Classification vs. not: This is very important\n\n    iii) Self attention is slightly helpful\n4. Ultimately VPD performs better with more data. What if you had a simpler baseline like VPD but with more parameters frozen? What is the threshold of data at which VPD starts outperforming? Is it easy to compare the models with a few different thresholds of data points?\n5. Fig 1 caption says the method is more useful for real-world online deployment because the approach only requires optimizing the model\u2019s input. But this should only impact training, not deployment, right? \n\nNit: L451: typo: \u201cWe can see We can observe that both\u201d"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors demonstrate that a pretrained diffusion model can be successfully used to adapt to novel dense vision tasks in scenarios when only few examples are available. To this end, the authors propose the use of learnable concept embeddings (i.e. prompts) and a combination of the model\u2019s internal attention maps to extract category-probabilities for discrete tasks, whereas continuous outputs are recovered via a codebook-based value mapping conditioned on the input image via CLIP embeddings \u2013 allowing the approach to be used across a variety of dense vision tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**Originality & Significance:**   \n- The authors propose an elegant method to leverage the internal power of pretrained diffusion models in a parameter-efficient manner\n- The codebook-based value mapping is a versatile way to map between discrete and continuous domains\n\n**Quality:**   \n- Experiments conducted across a good selection of datasets, contrasted to some recent related works\n\n**Clarity:**  \n- The paper is mostly easy to read\n- The authors provide a very clear visualization of their approach in Figure 1, which nicely accompanies their explanations"
+            },
+            "weaknesses": {
+                "value": "_TL;DR: While I appreciate the work the authors have put into the paper and their experiments, the manuscript in its current form would significantly benefit from several improvements and additions (esp. to remove inconsistencies) -- and does (for me) in its current form not pass the bar for ICLR._\n\n- Inconsistencies in analysis descriptions/interpretation, see questions.\n- Very few 'few-shot' evaluations/insights for a few-shot specific work \n- Writing quality could be significantly improved, as this unfortunately negatively affects the interpretation of results / findings.\n- Missing references \u2013 the idea of discretising a continuous prediction problem in vision (e.g. depth estimation) is NOT new\n- Concern: copy-paste sentence (out of context) from a different (uncited) ECCV paper \u2013 needs to be explained\n- The preciseness of statements could be improved: E.g. instead of \u2018conduct [\u2026] experiment multiple times\u2019 (l276f), state number explicitly\n\n\n- Minor: Some criticism the authors place on other works during motivation similarity applies to their own \u2013 see questions/additional comments"
+            },
+            "questions": {
+                "value": "**Main concerns, questions & potential improvements:**    \n- The authors\u2019 approach of discretising a continuous space to solve the prediction problem in vision, especially depth estimation, is NOT new to the field. I\u2019d highly suggest the authors to include references to prior work to attribute these efforts accordingly.\n\n- For a work centered around few-shot learning, I would expect more few-shot specific evaluations: For example, how does the method behave for different tasks (continuous and discrete) when a growing number of samples become available? How does it fare for 1shot, 5shot, etc? Is it more robust than other methods? Why/why not, and on which tasks?   \n-> Note that currently, the authors provide one fixed setting only which provides very little insight regarding the few-shot character of the method.\n\n- L161f: The sentence \u2018preserves the overall motion and semantics of the original video \u2026\u2019 is entirely out of place, and \u2013 more importantly \u2013 is a direct copy-paste from a recent ECCV paper by Fan et al. (2024)   \n-> I\u2019d like the authors to explain if this simply slipped in there, or whether there are other reasons (and potentially other copied sentences)? Note that this can significantly compromise a reader\u2019s trust in your work. \n\n- During the analysis in Table 3, the authors denote in the caption that the results are \u201ccompared to only using self attention mask\u201d, i.e. NO cross-attention \u2013 however, the table then shows \u201cw/o Msa\u201d and \u201cw/ Msa\u201d, which contradict the earlier statement;    \nIndependent of which of the two is correct, it would be beneficial to show all three as ablation \u2013 i.e. Msa only, Ca only, Msa&Ca; \n\n- The influence of Msa and Ca is only partially demonstrated for continuous tasks \u2013 I would be interested whether their influence is different in discrete settings, where they are pretty-much used directly (w/o codebook); I\u2019d suggest the authors extend their Table 3 and present some discrete results as well;\n\n- Figure 3 & corresponding results: The authors state they calculate the \u2018regression loss\u2019 on the validation set, which drops faster when using regression+classification loss than it does with regression-only;    \n-> However, this raises the question whether the two have been using the same hyperparameters or have been independently \u2018optimised\u2019;   \n-> Note: When adding the \u2018additional\u2019 classification loss, the loss will generally likely be larger, and hence gradients will likely be larger as well;  This might by itself cause a faster convergence, which is mainly caused by the magnitude and not necessarily the nature of the losses;    \nI\u2019d suggest the authors take a look at their gradient and loss magnitudes, and check fi the same holds when the learning rate is adjusted accordingly (or losses are scaled accordingly)\n\n- I\u2019d further like the authors to provide some more insights they have gained, as well as potential limitations they can see for their method. The manuscript in its current form mainly reports how things are done, but I am missing some deeper insights into the underlying motivations and potential corner cases / things that would need to be considered in follow-up work!    \n\n- I\u2019d suggest the authors read through their manuscript again and make an effort to correct typos and grammatical mistakes (e.g. l59 demonstrate, l155 missing period, l160 \u2018that\u2019 must be removed, \u2026 and many more.)   \nWhile I am aware that this might be due to language barrier, there are many tools available to support these efforts, and it would significantly improve the quality of the manuscript.\n\n\nAdditional comments:\n- The authors criticize other works for using \u2018custom decoder heads, since the output space for each task varies widely\u2019, mainly due to some tasks requiring continuous vs. discrete outputs;     \n-> However, their own method equally uses a different methodology for continuous (codebook-based value mapping) vs. discrete tasks \u2013 and hence, the criticism could similarly be applied to their own work; Some reformulating or discussion why this would be different might be helpful for the reader.\n- The ease of interpretation of the results in the table could be significantly improved by added the metrics as well as an arrow (up/down) to indicate the desired direction (e.g. minimal or maximal)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Diffusion model uses U-Net model with 2 types of attention-layers: self-attention (pixels x pixels), cross-attention (text x pixels). \n\nIn the authors' approach they use (N-categories x pixels) instead of (text x pixels) for cross-attention. Then they extract both attention outputs: self-attention (pixels x pixels) and cross-attention (N-categories x pixels) and apply matrix-multiplication to get new feature-map (N-categories x pixels). \n\nAuthors extracts attention outputs from the 8th to the 12th layers, and the last three layers, upsample and average all of them across layers and normalize across N-categories. They represent the label-to-value mapping as a learnable random variable. But f.e. since the values need to be smaller when representing depth for indoor scenes but larger for outdoor images, they model this random variable as a learnable codebook C that contains K sets of mappings from label to value. Codebook size is KxNxD.\n\nDuring training they use 2 loss functions Classification and Regression, and train only:\n1. Linear layer \n2. N Concept Embeddings\n3. K Codebook Embeddings\nwhile keep frozen both models: Diffusion and ViT-L Clip."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "Advantages of your approach:\n1. The accuracy of your approach is higher than other few-shot dense prediction methods\n2. You get a single model that works well for all 10 tasks, unlike VTM which requires training 5 different models, each for 2 of the 10 tasks\n3. Your approach adapts faster to a new task, because you are not training a diffusion model, unlike VPD\n4. You provide experimental results showing the need to transform the regression problem into a classification problem to improve accuracy in your case, Figure 3"
+            },
+            "weaknesses": {
+                "value": "Disadvantage and Limitation:\nBased on Table 5, if you have more training data for each sub-stream task, VPD has higher accuracy for most tasks than your approach. But this does not mean that VPD is better than your approach even in this case, since the accuracy is measured In-domain, but not Out-of-domain / Zero-shot.\n\nThe limitation of experiments is, do you measure Out-of-domain accuracy, so for the few-shot you use indoor images, while for evaluation you use outdoor images, or indoor images but at least from completely another dataset?\n\nDo you compare number of parameters, and Flops or Latency between your model and VTM, VPD, or ViT-backbones Clip and Dinov2 in your experiments, to be sure that higher accuracy isn't achieved by using larger model?"
+            },
+            "questions": {
+                "value": "A few questions and notes to make some sentences in the text less ambiguous:\n\n> our method only requires optimizing the input during few-shot adaptation, avoiding changes to the backbone parameters... by only optimizing these input tensors...\n> For an input image I and task T , we load its corresponding concept embeddings as inputs to M.\n\nIt should be better explained, what is the input in this case, since the input is usually considered to be the \"input image\". \nWhile in your case your train:\n1. Linear layer \n2. N Concept Embeddings\n3. K Codebook Embeddings\n\n\n> To our knowledge, VTM is the only work that addresses few-shot learning for universal dense prediction. But because they utilize meta-learning to achieve this, they require a significant amount of dense annotations for different tasks.\n\n\nIf VTM only uses 10 samples per task for fine-tuning, then why do you claim it requires a significant amount of dense annotations?\n\n> First, we split the possible range of continuous values in the original D-dimensional output space into B buckets.\n\nWhat is the difference between your approach and AdaBins[1]?\n\n\n> As shown in Table. 1, the CLIP and DINOv2 backbones perform worse than the diffusion backbone under the few-shot dense prediction setting. We conjecture that this is partly because the pre-trained diffusion model, being generatively pre-trained, retains more detailed information compared to contrastive loss-based pre-training, making it more suitable for few-shot adaptation.\n\nIn some [2] paper Dinov2 pre-trained weights leads to much faster training of models: DiT (diffusion) and SiT. Quote from their paper:\n> However, these representations are significantly inferior to those produced by DINOv2.\n\n\nIn another DepthPro[3] paper they use ViT-L Dinov2 pre-trained model and achieve much higher zero-shot accuracy and many times higher speed than diffusion-based Marigold [4] model for depth estimation task.\n\nAre there any assumptions or conclusions why in your case the priors from the diffusion model are better than those from Dinov2, could it be due to the higher computational complexity of your model? Have you compared the sizes and latencies of your approach (Diffusion-model + ViT-Clip) vs Dinov2?\n\n\n> So, we model this random variable as a learnable codebook C that contains K sets of mappings from label to value, so C \u2208 R (K\u00d7N\u00d7D).\n\nWhat are K, N and D in this case?\n\n\n> We include the results of full training set in Table. 5. Although VPD\u2019s performance in the few-shot setting is not strong, with more training data, we can see that its performance improves significantly because it fine-tunes more parameters.\n\nBut this does not mean that VPD is better than your approach even in this case (full training set), since the accuracy is measured In-domain, but not Out-of-domain / Zero-shot.\nSo if you train on Taskonomy and NYUv2, but test on completely different datasets or real-world problems, then it is possible that your approach may be more accurate, while maintaining all the other advantages.\n\n\n[1] Shariq Farooq Bhat, Ibraheem Alhashim, and PeterWonka. Adabins: Depth estimation using adaptive bins. In CVPR, 2021\n\n[2] Representation Alignment for Generation: Training Diffusion Transformers Is Easier Than You Think Sihyun Yu, Sangkyung Kwak, Huiwon Jang, Jongheon Jeong, Jonathan Huang, Jinwoo Shin, Saining Xie\n\n[3] Depth Pro: Sharp Monocular Metric Depth in Less Than a Second, Aleksei Bochkovskii, Ama\u00ebl Delaunoy, Hugo Germain, Marcel Santos, Yichao Zhou, Stephan R. Richter, and Vladlen Koltun.\n\n[4] Bingxin Ke, Anton Obukhov, Shengyu Huang, Nando Metzger, Rodrigo Caye Daudt, and Konrad Schindler. Repurposing diffusion-based image generators for monocular depth estimation. In CVPR, 2024"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents an innovative approach to adapt pretrained diffusion models for few-shot learning in dense vision tasks, such as depth estimation and semantic segmentation. By reframing dense prediction tasks as codebook-conditioned classification problems, the authors enable the model to handle various tasks without altering internal parameters. They introduce concept and codebook embeddings to enhance task-specific adaptation, achieving notable performance on 12 vision tasks, especially in low-data scenarios."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The use of pretrained diffusion models for few-shot dense tasks is sound, leveraging generative models for discriminative tasks without modifying model parameters.\n2. The model shows state-of-the-art results across multiple benchmarks, outperforming other few-shot learning methods like VTM and VPD.\n3. The approach reduces training data requirements, which could lead to lower computational costs and broader accessibility."
+            },
+            "weaknesses": {
+                "value": "1. The overall presentation of this paper is poor, making it hard to understand. Specifically, the notations are not clearly defined and some of them may cause confusion, for example, n, N, K.\n\n2. The operations and the rationale behind it are not clearly illustrated. The authors merely describe the the operations step by step using notations. I suggest adding more figures to vividly show how each operation is done.\n\n3. Adapting diffusion models without altering its original structure by prompting is not something new and I believe that the novelty of this paper is limited. More clarifications are required.\n\n4. In Problem Formulation under Method section, the text contains incomplete sentences and unclear phrasing, making it difficult to understand. For instance, \" that If T is a depth estimation task, the output is a continuous tensor J \u2208 R H\u00d7W . preserves the overall motion and semantics of the original video V, while propagating the changes made to the first frame I.\"\n\n5. Grammar issues are commonly seen in this article, including but not limited to, \"a attention mask\" in L216"
+            },
+            "questions": {
+                "value": "Overall, I believe presentation is the most critical issue that needs to be improved. Until then, reviewers can better understand the motivation of the approach and provide constructive feedback."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a general strategy to adapt pre-trained large diffusion models to dense image tasks (both classification and regression) in a few-shot fashion. The tackle this by framing all dense problems as pixel-wise classification and learning a a set of conditioning encodings for the cross attention, that are responsible for the classification. To address the regression tasks, the authors introduce a codebook that serves as a basis to construct the real value output, and pick from that codebook in an image-adaptive fashion.\nThe results show SoTA performance on Taskonomy and NYUv2 datasets."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The proposed technique is simple and allows to effectively bring out the knowledge out of a large diffusion model for the classification task.\n- SoTA on two standard benchmark datasets.\n- The ablation experiments clearly demonstrate the importance of every component."
+            },
+            "weaknesses": {
+                "value": "- It's not clear what the rows in Figure 2 mean.\n- See some other concerns in questions."
+            },
+            "questions": {
+                "value": "- Why do you perform inference of a diffusion U-Net with noise at t=200? I would expect the noise to degrade the performance for dense prediction tasks. Why not use a lower level of noise, e.g., t=1? Also during training time t is randomly sampled in [5, 200] range, why not make it consistent with the inference?\n- It seems like 10 or 20 examples for training the codebook, the queries and the linear projection layer for clip is a little small. Have you observed overfitting? If so how have you tried addressing it?\n- Does figure 3 show training loss? If so, it would be great to look at the validation loss instead."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

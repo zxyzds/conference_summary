@@ -1,0 +1,167 @@
+{
+    "id": "KCTHM2Ffh3",
+    "title": "Runtime Learning Machine",
+    "abstract": "This paper proposes the Runtime Learning Machine for safety-critical autonomous systems. The learning machine has three interactive components: a high-performance (HP)-Student, a high-assurance (HA)-Teacher, and a Coordinator. The HP-Student is a high-performance but not fully verified Phy-DRL (physics-regulated deep reinforcement learning) agent that performs safe runtime learning in real plants, using real-time sensor data from real-time physical environments. On the other hand, HA-Teacher is a verified but simplified design, focusing on safety-critical functions. As a complementary, HA-Teacher's novelty lies in real-time patch for two missions: i) correcting unsafe learning of HP-Student, and ii) backing up safety. The Coordinator manages the interaction between HP-Student and HA-Teacher. Powered by the three interactive components, the runtime learning machine notably features i) assuring lifetime safety (i.e., safety guarantee in any runtime learning stage, regardless of HP-Student's success), ii) tolerating unknown unknowns, iii) addressing Sim2Real gap, and iv) automatic hierarchy learning (i.e., safety-first learning, and then high-performance learning). Experimental results involving a cart-pole system and a real quadruped robot, as well as comparisons with state-of-the-art safe DRL, fault-tolerant DRL, and approaches for addressing Sim2Real gap, demonstrate the machine's effectiveness and unique features.",
+    "keywords": [
+        "Runtime Learning",
+        "Deep Reinforcement Learning",
+        "Safety",
+        "Unknown Unknown",
+        "Autonomous Systems"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "Runtime Learning Machine for Safety-critical Autonomous Systems",
+    "creation_date": "2024-09-18",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=KCTHM2Ffh3",
+    "pdf_link": "https://openreview.net/pdf?id=KCTHM2Ffh3",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Reviewer mpnQ: 4/4"
+            },
+            "comment": {
+                "value": "**Q2: What theoretical guarantees exist for the teacher's performance in completely unanticipated scenarios?**\n\n**Answer:** ...\n\n-----\n\n**Q3: How might this system perform in applications outside of the tested environments, such as in higher dimensional or more complex environments?**\n\n**Answer:** ..."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer mpnQ: 3/4"
+            },
+            "comment": {
+                "value": "These issues and limitations do not occur in current DRL and fault-tolerant DRL frameworks because they do not address the real-time unknown unknowns and the real-time Sim2Real gap in the real plants. As a result, the real-time updating of the dynamics model and action policy, the real-time correction of unsafe learning, and runtime learning are not necessary. Below, we outline the issues and limitations we faced, along with our solutions. While this experience may have limited academic significance, it offers valuable implementation contributions that can save users considerable time and reduce hardware costs. Therefore, in the revised paper (**will be available in 3 days**), we have included the identified issues, limitations, and solutions in **Appendix J: Implementation Problems and Solutions**.\n\n1. **CVXPY Toolbox**:  The runtime learning machine depends on obtaining feasible solutions from Linear Matrix Inequalities (LMIs) to allow the HA-Teacher to perform safe actions. We found that the default CVX solver, SCS, exhibited instability and inconsistent accuracy across different computing platforms. Therefore, in our experiment, we used the CVXOPT solver [5] to achieve more stable and accurate results. While LMIs can generally be solved in real-time, the operating frequency on our platform still varies between 10 and 50 Hz. Although this fluctuation does not adversely affect overall performance in simulations, it does pose challenges when implementing the framework on a physical platform. To ensure efficient operation on hardware that requires a high frequency, such as a quadruped robot, we designed the HA-Teacher with an additional process that runs in parallel with the central control process. This design, however, adds complexity, such as the need for multi-process synchronization, and increases the demand for computational resources.\n\n2. **Hardware Real-time Efficiency**: The runtime learning machine was tested by sending remote control commands to the quadruped robot indoors. All computations were executed on a desktop equipped with a 12th Gen Intel\u00ae Core\u2122 i9-12900K 16-core processor. The onboard computing platform of the Unitree A1 utilizes an Intel\u00ae Atom\u2122 x5-Z8350 CPU, which operates at 1.44 GHz with 6 cores. To enhance development efficiency, Python was chosen as the programming language for implementing this framework. Given that the runtime learning process requires significant interaction between the CPU and GPU, and considering the current architecture includes a high-frequency MPC module operating at 500 Hz for the quadruped robot, achieving comparable optimal real-time performance with the existing onboard hardware may be challenging. However, we believe that this computational limitation can be addressed or significantly alleviated by either adding extra computing resources\u2014such as an external mini-PC, as suggested in [6]\u2014or by restructuring the code framework. This restructuring could involve encapsulating the current implementation in C++ to enhance real-time performance, as proposed in [7].\n\n**References**\n\n[5] Andersen, M. S., Dahl, J., \\& Vandenberghe, L. (2013). CVXOPT: A Python package for convex optimization. Available at cvxopt. org, 54.\n\n[6] Yang, Y., Zhang, T., Coumans, E., Tan, J., \\& Boots, B. (2022, January). Fast and efficient locomotion via learned gait transitions. In Conference on robot learning (pp. 773-783).\n\n[7] Chen, Y., \\& Nguyen, Q. (2024, May). Learning agile locomotion and adaptive behaviors via rl-augmented mpc. In 2024 IEEE International Conference on Robotics and Automation (pp. 11436-11442).\n\n-----\n\n**Q1: Could you provide more insights into the teacher's handling of complex unknowns, such as hardware failures or significant sensor errors?**\n\n**Answer:** By default, we assume that the hardware of our safety-critical systems, including mechanical components and sensors, functions correctly while some noise is permitted. Meanwhile, we assume the computing hardware and operating systems operate correctly,  which allows the ML software to work for arbitrary faults and bugs tolerated by HA-Teacher. \n\nA single HA-Teacher cannot ensure safety if the assumptions are violated, i.e.,  significant hardware or software faults occur. For example, our quadruped robot is equipped with 12 precision joint motors. If even one of these motors becomes frozen or damaged, the robot could fall, potentially causing bodily harm.  In our robot experiment, a damping mode is activated to perform a soft emergency stop when HA-Teacher encounters significant hardware or software faults. \n\nIn summary, safety-critical systems shall include a damping mode that responds to substantial incidents that exceed the HA Teacher's capabilities. An illustrative example is the emergency landing option available to airplane pilots; it is a safeguard when a situation surpasses their handling ability.\n\n-----"
+            }
+        },
+        {
+            "comment": {
+                "value": "**Requirement 3: Attracting Toward Safety Envelope.** The center of the HA-Teacher's patch must be located within the safety envelope. If it is not, the system's state may become trapped within the patch. This situation can cause the HA-Teacher to dominate the machine during runtime learning, preventing the HP-Student (the DRL agent) from independently learning a high-performance action policy.\n\nIn the paper, Equations (16), (18), (23), and (28) to (31) detail the design of HA-Teacher, which is formally stated in Theorem 6.7. The resulting properties are outlined in Items 1-3 of Theorem 6.7. Meanwhile, Items 1-3 mean that Requirements 1, 3, and 2 are, respectively, satisfied. The theoretical proof and Equations (18), (23), and (28) to (31) are pretty lengthy, so we have moved them to Appendix D due to page limitations. This may have led to the reviewer\u2019s impression that the design of HA-Teacher lacks formal rigor. To address this concern, we have highlighted sentences on page 7 and in Remark 6.9 in teal color, clearly stating that the design of HA-Teacher simultaneously and strictly satisfies the proposed Requirements 1-3.\n\n-----\n\n**W3: While the selected experimental domains are relevant, further discussion on generalizability to applications like autonomous driving or complex industrial robots would broaden the framework\u2019s impact.**\n\n**Answer:** We appreciate the reviewer\u2019s suggestion. Our proposed runtime learning machine is explicitly designed for safety-critical systems. It applies to various safety-critical applications, such as quadruped robots, drones, UAVs, autonomous vehicles, humanoid robots, and cart-pole systems. Our method needs additional knowledge of system dynamics. Moreover, generalizability applies to two scenarios concerning the knowledge of the system dynamics: the normal and extreme scenarios. In the normal scenario, we have access to the dynamics model. For instance, when our application systems include quadruped robots, drones, and autonomous vehicles, we can obtain their dynamics models from relevant literature on system dynamics [1-3]. In the extreme scenario, where the dynamics model cannot be obtained offline (which has not occurred in our studies and experiments), we can utilize system identification techniques [4] to swiftly and effectively acquire a dynamics model online. We have included this discussion in Remark 6.5 of the revised paper (**will be available in 3 days**).\n\nCompared with existing frameworks of safe DRL and fault-tolerance DRL, our runtime learning machine notably features i) assuring lifetime safety (i.e., safety guarantee in any runtime learning stage, regardless of HP-Student's success), ii) tolerating real-time unknown unknowns, iii) addressing Sim2Real gap, and iv) automatic hierarchy learning (i.e., safety-first learning, and then high-performance learning for high-performance action policy). Initially, we were able to provide more benchmarks. However, we need to demonstrate all four claimed features, requiring more pages. Due to the page limit, the benchmarks in our original paper were reduced to a cart-pole system and a real A1 quadruped robot. However, partial experimental results still need to be moved to the appendices in the original paper. To more convincingly demonstrate the generalizability of our runtime learning machine, we added additional benchmarks to Appendix I in the revised paper (**will be available in 3 days**). The two benchmarks are the waypoint tracking of the 2D quadrotor and the locomotion of the Go2 quadruped robot in dynamic, uneven, and unstructured environments.\n\n**References**\n\n[1] Di Carlo, J., Wensing, P. M., Katz, B., Bledt, G., \\& Kim, S. (2018, October). Dynamic locomotion in the MIT Cheetah 3 through convex model-predictive control. In 2018 IEEE/RSJ international conference on intelligent robots and systems.\n\n[2] Beard, R. W. (2008). Quadrotor dynamics and control. Brigham Young University, 19(3), 46-56.\n\n[3] Rajamani, R. (2011). Vehicle dynamics and control. Springer Science \\& Business Media.\n\n[4] Kowshik, S. S. (2022). Non-asymptotic Behavior in Massive Multiple Access and Streaming System Identification (Doctoral dissertation, Massachusetts Institute of Technology).\n\n-----\n\n**W4: Although comparisons with other DRL methods are made, the analysis could be enhanced by discussing specific scenarios where other methods may outperform this framework or identifying potential limitations.**\n\n**Answer:** We appreciate the reviewer\u2019s suggestion. While implementing the runtime learning machine on real robots, we encountered a few issues and limitations related to the software toolbox and hardware resources. Fortunately, we have successfully addressed these challenges."
+            },
+            "title": {
+                "value": "Response to Reviewer mpnQ: 2/4"
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer mpnQ: 1/4"
+            },
+            "comment": {
+                "value": "**W1: The design details for the teacher, a core element of this framework, could be expanded, particularly in scenarios where unknowns extend beyond simple disturbances to include hardware or sensor faults.**\n\n**Answer:** We appreciate the valuable suggestion from the reviewer. Our system's sensors generate two types of data: samplings of the system state (including velocities, positions, roll, yaw, pitch, etc.) and samplings of control commands. In our experiments with the cart-pole system and the real A1 quadruped robot, we introduced faults in the controller sensors by injecting unknown-unknown noise. This noise was generated according to a randomized Beta distribution, explained in detail in Appendix F of the paper as one method for representing unknown unknowns. Initially, we did not intentionally induce faults in the system-state sensors because the sensor readings are inherently noisy. Besides, the real robots' center of mass (CoM) positions are estimated using the Kalman filter that relies on velocity samplings, making estimation errors unavoidable.\n\nAlso, in response to Reviewer Z8i5's comments, we have added two additional benchmarks: 1) the locomotion of the Go2 quadruped robot in dynamic, uneven, and unstructured environments, and 2) waypoint tracking of the 2D Quadrotor. In these new experiments, we introduced system-state sensor faults by injecting unknown-unknown noise. Due to page limitations, these new benchmarks are presented in Appendix I in the revised paper (**will be available in 3 days**). Additionally, the demonstration video showcasing the runtime learning system in the presence of sensor faults for both the system state and the controller will be available at [Go2 Demo Video (anonymous link)](...) (**will be available in 3 days**).\n\nOur unknowns in the experiment with the real A1 quadruped robot go beyond simple disturbances, which include:\n1. **Beta**: Disturbances injected into HP-Student's action/control commands.\n2. **PD**: Random and sudden payload (around 4 lbs) drops on the robot's back. \n3. **Kick**: Random and sudden kick by a human.\n4. **DoS**: A real denial-of-service fault of the platform, which can be caused by task scheduling latency, communication delay, communication block, etc., is unknown to us. \n5. **SP**:  A sudden side push. \n\nTo be more convincing, we consider three combinations of these unknown unknowns applied to the runtime learning stage: i) **Beta + PD**, ii) **Beta + DoS + Kick**, and iii) **Beta + SP**. The demonstration video is available at [A1 Robot: unknown unknowns (anonymous link)](https://www.dropbox.com/scl/fi/jjxlym8xtdxqgr7d5hclp/unk.mp4?rlkey=kh76ojwhspqgslzolmowuuu0l&st=igbjnji3&dl=0). To clarify this critical information, we highlighted the five different unknowns in bold black font in the revised paper.\n\n-----\n\n**W2: Additionally, the theoretical justification for the teacher\u2019s resilience against unknown unknowns could be strengthened, as the current analysis lacks formal rigor or quantitative measures.**\n\n**Answer:** We appreciate the reviewer\u2019s insightful question. A rigorous and verifiable design is essential for HA-Teacher in our runtime learning machine. One of the primary motivations for this is the Sim2Real gap, as prevalent DRL typically involves training within a simulator. Additionally, there are challenges posed by unknown unknowns, the unpredictability of DNNs, and the difficulty in verifying their functions due to the vast parameter space and nonlinear activations. These make it nearly impossible to enable DRL with verified safety in safety-critical systems that operate in time-sensitive physical environments. These challenges inspire us to develop HA-Teacher, a verified yet simplified design focused exclusively on safety-critical functions. As a complement to DRL, HA-Teacher has two main objectives: i) to correct any unsafe learning conducted by HP-Student (the DRL agent), and ii) to back up the safety of the real plants. We conclude that the design of the HA-Teacher must be formal and rigorous regarding safety assurance. The actions of HA-Teacher must have verifiable safety, with rigorous theoretical foundations and proof. To achieve this, we propose three essential requirements (outlined in Requirements 6.2-6.4 of the paper) that the designed HA-Teacher must simultaneously fulfill. If these requirements are not met, we cannot trust HA-Teacher to correct unsafe learning or ensure safety effectively.  We will now summarize these three requirements.\n\n**Requirement 1: Conformity with Safety Regulations.** It requires that the HA-Teacher's real-time patches be subsets of the safety set. Otherwise, the HA-Teacher will not be able to ensure safety.\n\n**Requirement 2: Conformity with Operation Regulations.** It is necessary to confine the real-time actions of HA-Teacher within a physically-feasible bounded action space."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a \"Runtime Learning Machine\" designed for autonomous systems operating in safety-critical environments. The machine combines three main components: an HP-Student (high-performance learner), an HA-Teacher (high-assurance safety monitor), and a Coordinator. The HP-Student learns in real-time from physical environments, with the HA-Teacher correcting unsafe actions and enforcing safety. This design aims to address critical challenges in deep reinforcement learning, including tolerating unknown unknowns and bridging the Sim2Real gap."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper presents an innovative hierarchical safety mechanism where the HA-Teacher manages safety while the HP-Student prioritizes performance optimization within safety constraints. This interactive approach is practical and well-suited to the paper\u2019s focus on real-world, safety-critical applications. The experimental setup, involving both a cart-pole system and a quadruped robot, is comprehensive and shows the method\u2019s robustness across different unknowns. The results suggest that the system can maintain stability through real-time patching by the HA-Teacher, showing practical value in environments where safety and performance trade-offs are essential. Additionally, the framework addresses the Sim2Real gap, which remains a significant challenge in deploying DRL systems in physical settings."
+            },
+            "weaknesses": {
+                "value": "The design details for the teacher, a core element of this framework, could be expanded, particularly in scenarios where unknowns extend beyond simple disturbances to include hardware or sensor faults. Additionally, the theoretical justification for the teacher\u2019s resilience against unknown unknowns could be strengthened, as the current analysis lacks formal rigor or quantitative measures. While the selected experimental domains are relevant, further discussion on generalizability to applications like autonomous driving or complex industrial robots would broaden the framework\u2019s impact. Although comparisons with other DRL methods are made, the analysis could be enhanced by discussing specific scenarios where other methods may outperform this framework or identifying potential limitations."
+            },
+            "questions": {
+                "value": "Could you provide more insights into the teacher's handling of complex unknowns, such as hardware failures or significant sensor errors?\n\nWhat theoretical guarantees exist for the teacher's performance in completely unanticipated scenarios?\n\nHow might this system perform in applications outside of the tested environments, such as in higher dimensional or more complex environments?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a novel approach to runtime learning for agents, guided by a verified teacher during runtime to ensure safe operation. This teacher-student framework leverages physics-regulated deep reinforcement learning (PhyRL) and aims to address safety concerns arising from unknown variables and Sim2Real gaps. The validation of the approach is conducted on two benchmarks, including a real quadruped robot, which adds to the practical value of this research."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper addresses a important safety issue in learning-based systems, particularly focusing on challenges like unknown unknowns and Sim2Real gap.\n2. The paper presents solid theorem.\n3. The evalution is performed on a real robot, which exhibits the practicality of this work."
+            },
+            "weaknesses": {
+                "value": "Though the results look impressive, I found some parts of the paper needs further clarification and a few more discussion about related works are expected.\n1. The paper lacks details on the verifiability of the PhyRL structure, especially regarding how the teacher's safety is guaranteed in unknown environments. In Equation 2, the system safety is only related to its state. Does this mean that this paper assumes such simple constraint and not consider how the environment change impacts on the states?\n2. The paper should discuss whether switching back to the teacher affects operational performance, as such switches may potentially degrade it. Additionally, the evaluation would benefit from presenting metrics on how frequently the teacher\u2019s guidance is triggered.\n3. The work currently assumes a single-step safety model, where each action ensures safety only for the immediate next state. However, a broader perspective on end-to-end safety\u2014considering the effects over several steps or even entire trajectories\u2014is the cases that usually happen in reality.\n4. There are lots of verified learning works that are not cited/discussed by this paper.\u2028 For example, Neurosymbolic reinforcement learning with formally verified exploration. Neurips 2020.\n5. There are only two benchmarks presented. Though one of them is the real robot, it would be necessary to evaluate on a more diverse set of benchmarks."
+            },
+            "questions": {
+                "value": "1. How often does the teacher\u2019s intervention occur during runtime, and is there an impact on the agent's performance with frequent switches?\n2. If the teacher is adjusted or modified during runtime, how is its performance or reliability guaranteed in changing conditions?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "/"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a runtime learning machine for safety-critical autonomous systems, featuring an interactive HP-Student, HA-Teacher, and Coordinator. It ensures lifetime safety by addressing unknowns and the Sim2Real gap, enabling real-time learning for safe, high-performance policies. Experimental results validate its effectiveness on cart-pole and quadruped robot systems."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The proposed method combines a High Assurance Teacher with a Performance optimizing student to yield strong real word robustness results on a challenging quadruped robot.\n- The experiments show scalable computation that can work fast enough for real-time learning using matrix toolboxes and related libraries."
+            },
+            "weaknesses": {
+                "value": "- The setting considered assumes knowledge of the environment dynamics by the HA-Teacher. System identification is proposed but does not appear to have been experimented with.\n- The presentation is cluttered at times and causes some difficulty in parsing. For example, some of the numerous assumptions, remarks, characteristics, and definitions should be consolidated if possible. Section 1.3 is almost entirely italicized."
+            },
+            "questions": {
+                "value": "1. How is this approach placed in the context of other shielding approaches [1,2]?\n2. The triggering condition in Eq 7 is entirely causal (i.e., depends only on the current time and prior to the current time). Why is this better than using the environment model to predict for a future failure from the current state and input?\n3. How does the approach generalize to different safety sets (e.g., velocity < 1.5 vs velocity < 3)? Will the entire training process be needed for each change? How long would the training time be for each minor change?\n4. Are there any experiments or examples with System Identification as mentioned in Remark 6.5 or Appendix C?\n\n### References:\n[1] Safe Reinforcement Learning with Nonlinear Dynamics via Model Predictive Shielding, Bastani, ACC 2020\n\n[2] Dynamic Model Predictive Shielding for Provably Safe Reinforcement Learning, Banerjee et al, arXiv 2024"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

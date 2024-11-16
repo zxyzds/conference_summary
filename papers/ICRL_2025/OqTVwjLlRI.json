@@ -1,0 +1,182 @@
+{
+    "id": "OqTVwjLlRI",
+    "title": "S2-Attention: Hardware-Aware Context Sharding Among Attention Heads",
+    "abstract": "Sparse attention, which selectively attends to a subset of tokens in the context, has been an established approach to enhance the efficiency of Transformers. \nHowever, its theoretical reduction in FLOPs has rarely translated into wall-clock speed-up over its dense attention counterparts, mainly due to the lack of hardware-level optimizations like FlashAttention.\nMeanwhile, it remains unclear wheter sparse attention can maintain the model's quality at a scale of today's large language models (LLMs), and how this can be achieved.\n%how to guarantee model quality with sparse attention, given the decoder-only architecture and model scale of modern LLMs.  \nThis paper presents Sparsely-Sharded(S2) Attention, a Triton library that provides kernel optimization for sparse attention customizable at both per-head and per-context-range levels.\nS2-Attention enables the exploration of novel and high-performance sparse attention techniques, which we demonstrate through extensive ablations across a wide range of sparse attention deisngs at various model scales. \n% design heuristics across model scale. \nFrom these insights, we present several basic guidelines to design sparse attention that can achieve not only practical efficiency improvements, but also strong performance on downstream tasks.\n% heterogeneous context sharding, union completeness, and inevitable density as principles to improve LLM training and inference efficiency without compromising model quality.\nTo achieve high parallelization and optimized memory IO, sparse attention should \\textbf{shard the context heterogeneously across attention heads}, where each head attends to a different subset of tokens while \\textbf{collectively covering the full context}. Meanwhile, we find hybrid architectures combining sparse and dense attention particularly beneficial in practice.\nThese design choices lead to a novel sparse attention architecture,\nwhich we evaluate with 1.3B, 7B models.\nIt achieves wall-clock speedup of 8.79X, 15.87X, 25.3X compared to the strong FlashAttention-2 baseline with strong downstream performance on-par with full attention and perfect retrieval performance at a 128k context length. \n% on-par downstream performance and perfect 128k needle retrieval.\n% In 1.3B, 7B, 70B Llama architecture models, S2-Attention following the principles delivers a speedup of 7X, 12X, 22X wall-clock speed-up compared to FlashAttention-2, while achieving on-par downstream performance and perfect 128k needle retrieval.\nIn inference, for 7B models, our model, with the help of our S2-Attention kernel, achieves 4.5x speed-up compared to dense counterparts. \nS2-Attention will be released with easy-to-customize APIs for direct usage in Megatron and vLLM. \nWe hope they will help future research develop sparse attention algorithms to improve the efficiency of large language models.",
+    "keywords": [
+        "efficient transformer",
+        "kernel",
+        "sparse attention",
+        "long context",
+        "efficiency",
+        "infrastructure",
+        "pre-training",
+        "inference",
+        "sparsity",
+        "software library"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We implement a hard-aware sparse self-attention kernel to support highly customizable sparsity pattern. We pretrain a wide range of sparsity patterns and propose Sparsely-Sharded Attention, which achieve perfect 128k needle and 20X speed-up.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=OqTVwjLlRI",
+    "pdf_link": "https://openreview.net/pdf?id=OqTVwjLlRI",
+    "comments": [
+        {
+            "title": {
+                "value": "Quick response to Reviewer 8jB7"
+            },
+            "comment": {
+                "value": "Overall response to Weakness 1: The design principle of previous KV eviction is beautiful, yet they show little respect to the actual hardware. They are similar to the approximate attention papers before FlashAttention, both in terms of spirits and weakness. Due to the disrespect to hardware, the approx attention works died out after FlashAttention and are rarely used in large-scale pre-training attempts. The KV eviction works are repeating this route despite hardware-aware and scalable systems like vLLM appear much earlier this time (almost the same time as H2O). This paper, S2-Attention, is proposed to bridge this hardware optimization gap for both previous training-oriented sparse attention and sparse inference/KV sparsity.\n\nAbout weakness 1.a: Unfortunately, none of the KV eviction methods [1]-[5] mentioned are compatible with actual serving systems. More specifically, their designs can hardly be compatible with fundamental techniques like continuous batching, pagedattention, prefix caching, which mitigates the benefits from sparsity, making no real-world wall-clock speedup. This is also one of the reasons why none of them are implemented in, or compared to, actual inference optimization systems used by the community, e.g., vLLM, SGLang, FlashInfer. The latency/throughput of [1]-[5] are significantly inferior to basic dense/flash attention backend of vLLM/SGLang in realistic production settings, while S2-Attention can bring a few times speed-up over the dense/flash attention backend of vLLM and deployed in billion-user services.\n\nAbout weakness 1.b: The point here is efficient sparsity should avoid memory fragmentation and respect system commonsense, which [1]-[5] and most of the KV eviction works overlook. For example, it's not feasible to release/allocate small chunks frequently, e.g., 2 bytes, of memory at arbitrary, non-deterministic locations decided on GPU. It also won't save memory, but only cause internal memory fragmentation, for instances of the same batch, to have diverse sparsity patterns.  \"Absolute positions rather than relative ones\" secures the deterministic pattern among instances and avoid fragmentation. \"vertical line\" means a KV block should be kept for a few decoding steps for realistic memory management, compared to non-consecutive usages(fragmentation and memory waste) or immediate/frequent release/allocation(hurt performance). We find it's beneficial for researchers to review basic malloc design before working on LLM inference optimization.\n\nOverall, the design principles are there to make sparsity work in actual pre-training and inference, namely, real wall-clock speed-up over well-built systems that are actually serving. We publish and open-source S2-Attention not to claim STOA stuff, but hope the community could have a customizable and useful sparse attention library and cookbook they could use to accelerate real-world pre-training and deployment.\n\n2. We actually evaluate on both short and long tasks. Quality-wise, WinoGrande, piqa, race are shorter ones ranging from a few dozens to a few hundreds of tokens. Passkey and Needle are measure from hundreds to 32k/128k tokens. They demonstrate the effectiveness of the heterogeneous sharding. For performance, we benchmarked across context lengths up to 256k.\n\n3. As mentioned in W1, [4][5] are even slower than the FlashAttention backend of vLLM, let along scalability and generality. We compare our method directly against vLLM and show ours is multiple times faster that it. I don't think it's necessary to compare with weaker baselines like [4],[5].\n\nQuestion 1: How does the efficiency of the proposed sparse attention kernel compare to that of other sparse attention methods?\n\nAnswer 1: Previous sparse attention methods, e.g., sparse transformers, are slower than FlashAttention, let alone FlashAttention-2, which is our baseline for comparing training efficiency. S2-Attention is multiple times faster than FlashAttention-2, I don't think it's necessary to compare to slower baselines. For inference-time sparsity methods, we addressed it in Weakness 3. \n\nQuestion 2: In what ways does the proposed sparse attention pattern adapt to varying input lengths, and what is its performance across different lengths?\n\nAnswer 2: We benchmarked both the quality and performance over different context lengths, from 50-128k, as reported in Section 5.1, 5.2, 5.3.\n\nQuestion 3:\nAnswer3: The block size optimization is to improve the generality and customization of the framework. Intuitionally, community want a flexible framework, e.g., supporting token-wise sparse mask, comparing to masking/keeping 64/128 tokens. S-2 Attention can support as small as 16 granularities. We didn't exploit the benefit of different block size because we considered the existing perf and quality are already strong enough for publishing purpose. Instead, we want S2-Attention to be a useful backbone for the community, so we still optimize the performance as much as possible."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a Triton-based GPU kernel library designed to enhance the efficiency of sparse attention training and inference. By merging query blocks and splitting along head dimensions, the library improves GPU warp utilization, particularly for fine-grained sparse attention patterns. With this library, the authors propose a KV-cache-efficient heterogeneous sparse attention method, showing the performance and efficiency benefits of the library."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Useful libarary. The paper implements a practical sparse attention GPU kernel library that supports both training and inference. The flexibility to support fine-grained sparse patterns can benefit future research towards more effective and efficient sparse pattern design.\n2. High efficiency. With the optimized sparse attention kernel, the paper shows speedups of up to 25.3 and 4.5 times for training and inference over the dense FlashAttention baseline."
+            },
+            "weaknesses": {
+                "value": "1. The main concern of the paper lies in the proposed sparse attention pattern design. The proposed KV-Cache design principle seems overly conclusive and conflicts with existing works.\n\n    a. The principle itself is not novel; similar sparse pattern designs for KV-Cache optimization have been explored extensively in prior studies, such as [1, 2]. Furthermore, recent work on retrieval-based KV-Cache reduction [3] demonstrates high performance despite contradicting this principle. It would be beneficial for the authors to revise their claims to improve rigor and acknowledge alternative approaches.\n\n    b. The deduction of the claim \"the sparse patterns should be based on absolute positions rather than relative ones\" is confusing. It is unclear why the \"vertical line\" sparse pattern leads to absolute positions, and why windowed attention is the only exception.\n\n2. The advantages of the proposed heterogeneous context sharding pattern over existing designs are not clearly shown. Additionally, it is unclear how this pattern adapts to varying input lengths, as the ranges of context shards appear pre-defined and fixed.\n\n3. The performance comparison with other sparse attention kernels is not shown. Beyond dense attention methods, it would be valuable to assess the proposed kernel\u2019s performance against other sparse attention methods with GPU kernels, such as those optimize prefill [4] and decode [5].\n\n4. Minor writing issues: \n\n    a. Gramma and typo: Spelling mistake in section 3.1: imrpvoes -> improves; in section 5.1: th -> the\n\n    b. Clarity: In the abstract, it should be specified that the \u201c8-25x speedup\u201d refers to training time.\n\n[1] Xiao, Guangxuan et al. \u201cEfficient Streaming Language Models with Attention Sinks.\u201d, ICLR'24\n[2] Zhang, Zhenyu (Allen) et al. \u201cH2O: Heavy-Hitter Oracle for Efficient Generative Inference of Large Language Models.\u201d, NeurIPS'23\n[3] Tang, Jiaming et al. \u201cQuest: Query-Aware Sparsity for Efficient Long-Context LLM Inference.\u201d, ICML'24\n[4] Jiang, Huiqiang et al. \u201cMInference 1.0: Accelerating Pre-filling for Long-Context LLMs via Dynamic Sparse Attention.\u201d, arXiv'24\n[5] Fu, Tianyu et al. \u201cMoA: Mixture of Sparse Attention for Automatic Large Language Model Compression.\u201d, arXiv'24"
+            },
+            "questions": {
+                "value": "1. How does the efficiency of the proposed sparse attention kernel compare to that of other sparse attention methods?\n2. In what ways does the proposed sparse attention pattern adapt to varying input lengths, and what is its performance across different lengths?\n3. Given that the kernel dedicatedly optimized for fine-grained sparse patterns, how does the fine-grained sparse pattern impact model accuracy? What are the performance-efficiency trade-offs at different granularities for the proposed kernel compared to others?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces S2-Attention, a Triton-based library designed to optimize sparse attention in large language models (LLMs). Traditional sparse attention methods reduce FLOPs but fail to deliver real-world speedups due to memory access inefficiencies. S2-Attention addresses this with customized kernel optimizations, enabling flexible and efficient sparse attention patterns at per-head and per-context levels. \n\nKey contributions include:\n1. S2-Attention uses a novel method of context sharding across attention heads, maximizing parallelization and improving memory access efficiency.\n2. By combining sparse and dense layers, S2-Attention achieves performance on par with dense attention models while accelerating training and inference.\n3. The library achieves up to 25.3x speedup over FlashAttention-2 in 7B models and provides substantial efficiency gains across different model sizes and context lengths."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper presents a novel approach to improving the real-world efficiency of sparse attention mechanisms in LLMs through S2-Attention, a customizable, hardware-optimized library. Unlike prior sparse attention methods that often fail to deliver actual speedups, S2-Attention effectively addresses the GPU memory access bottleneck. Additionally, the hybrid architecture combining sparse and dense layers is an innovative solution to balance efficiency and model performance.\n2. The paper demonstrates high-quality research with extensive benchmarking and thorough evaluations that underscore S2-Attention's performance benefits. The experiments cover a range of model sizes (e.g., 1.3B and 7B models) and contexts, showing both training and inference gains across different configurations. The authors also offer a clear implementation path in Triton, indicating that the work is robustly engineered for real-world applications.\n3. By achieving up to 25.3x speedup over FlashAttention-2 and providing easy-to-use APIs for integration into frameworks like Megatron and vLLM, S2-Attention has the potential to become a standard tool for optimizing sparse attention in LLMs."
+            },
+            "weaknesses": {
+                "value": "The paper is innovative in its approach and thorough experimentation. However, there are several critical questions that I raised in the \"Question\" section, which I believe are essential for the clarity and robustness of the findings. I hope the authors can provide insights on these points, and I look forward to further discussion."
+            },
+            "questions": {
+                "value": "1. I am also a researcher specializing in hardware optimizations for Transformers, and I recognize the importance of sparse attention. Due to the self-attention mechanism in Transformers, there is significant redundancy since token-to-token similarities vary in each head\u2019s activation, and sparse attention can help reduce this. However, because operations across heads are independent in Transformers, applying different attention sparsity patterns to each head does not traditionally contribute much to overall model acceleration. Each head has a different computational overhead, leading to an imbalance. Ultimately, the runtime is dictated by the head with the highest computational complexity. In Figure 1, the 'S2-Attention' subfigure seems to illustrate this issue, but it doesn\u2019t appear that the authors discuss this challenge in the library design. Could the authors clarify if this imbalance was considered and, if so, how it was addressed?\n2. In Section 3.2, the authors mention that \"retaining or masking every 64 tokens\" allows the dense portion of sparse attention to fill each block. However, in Section 3.1, they state that \"each warp contains 32 threads.\" The values of 32 and 64 seem contradictory. Is there a relationship between the 64-token blocks and the 32-thread warps, or are these independent design choices?\n3. In Figure 2(b), the authors seem to indicate that with a 32K context length, the \u201cdepth perfect\u201d remains at 100% regardless of the token limitation. How is \u201cdepth perfect\u201d defined in this context? It doesn\u2019t appear to be referenced or defined elsewhere in the paper. Could the authors clarify? The same question for Figure 6(c)(d).\n4. In Figure 3, what is the control logic for data movement in MergeQ? Does it follow a fixed pattern? What kind of memory control logic is used in the SRAM for this process? Are the authors implementing in-memory computation within the SRAM, and is the softmax operation also executed within SRAM? Could you please provide a more detailed explanation of the MergeQ process, perhaps with a step-by-step breakdown or a flowchart illustrating the control logic and data movement?\n5. Lastly, could the authors clarify how many hardware measurements were conducted to obtain the reported results? Given the inherent variability in hardware performance, multiple measurements are typically necessary to ensure stability and reliability. It would be helpful to understand the stability of the hardware results presented. Could you please provide details on the number of runs performed for each experiment, any measures taken to account for variability (e.g., averaging results, reporting standard deviations), and how you ensured the stability and reproducibility of your hardware measurements?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper first introduces a Triton library that implements sparse attention customizable at both per-head and per-context-range levels, and then proposes Sparsely-Shardded (S2) Attention which shards the context heterogeneously across attention heads but collectively covers the full context. The evaluation show that the proposed S2-Attention can achieve 2.5X training speed-up and 4.5X inference speed-up for a 7B transformer architecture design."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "+ this work presents a flexible kernel implementation that supports finer-grained sparse attention. Previous work FlashAttention-2 requires the sparsity granularity to be same as the block size, while this work introduces Merge-Q technique to effectively decouple the granularity of sparsity pattern and attention computation while achieving the expected speedup.\n+ this work provides a detailed accuracy comparison to demonstrate the effectiveness of heterogeneous context sharing and union completeness."
+            },
+            "weaknesses": {
+                "value": "- S2-Attention requires training models from scratch, raising concerns about its compatibility with pre-trained models. This limits its flexibility compared to other sparse attention methods  (e.g., QUEST, H2O) that support plug-and-play integration.\n- the benefits of supporting finer-grained sparsity remain unclear; if existing block sparse attention methods suffice, the proposed library may be less practical."
+            },
+            "questions": {
+                "value": "My questions are listed in the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Sparsely-Sharded (S2) Attention, a Triton-based library that optimizes sparse attention mechanisms for large language models (LLMs) by selectively attending to subsets of tokens. It proposes sharding context heterogeneously across attention heads to achieve higher parallelism and memory efficiency while maintaining strong downstream performance. Additionally, the paper demonstrates that hybrid architectures combining sparse and dense attention are particularly effective. Extensive experiments showcase the proposed attention mechanism\u2019s significant wall-clock speedups and accuracy comparable to dense attention methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**Significant Performance Gains**: S2-Attention achieves impressive wall-clock speedups (8.79x, 15.87x, and 25.3x), outperforming FlashAttention-2 and maintaining strong downstream performance.\n\n**Memory and Computation Efficiency**: The method offers higher parallelization and optimized memory I/O, crucial for large-scale models, especially when handling high token lengths.\n\n**Real-World Applicability**: The library is designed to integrate with popular LLM frameworks (e.g., Megatron, vLLM) and provides user-friendly APIs, enhancing its usability for practitioners."
+            },
+            "weaknesses": {
+                "value": "**Lack of Performance Comparison on Larger Models**: While the paper demonstrates hardware benefits on large-scale models, especially with high token lengths, it lacks the corresponding task performance comparisons.\n\n**Paper Organization and Writing Issues**: There are several grammatical issues and unclear figure descriptions, which hinder the readability and understanding of the paper. For example:\n1. The caption of Figure 5 only explains Figure 5(a) and lacks descriptions for Figure 5(b).\n2. The legends in Figure 8 are too small to read. Additionally, there is an issue with the label on the y-axis of Figure 8(b)."
+            },
+            "questions": {
+                "value": "1. Although this paper highlights its advantages for large-scale models, especially with high token lengths, it only provides task performance results on Llama2-1.3B with a maximum sequence length of 8192, which somewhat limits the validation of its overall effectiveness.\n\n2. Table 1 lists various S2-Attention variants, each with different task performance. Could the authors clarify which S2-Attention variant was used to measure the speedup and throughput in the subsequent experiments?\n\n3. The paper reports both backward latency and end-to-end training speedup, validating its effectiveness for a single step. However, I would like to know if the sparse models proposed here require the same number of training steps to converge as dense models, so that the benefits extend to the total training time as well.\n\n4. Since memory reduction is another key advantage of sparsity, it would be helpful to include comparisons in terms of GPU memory reduction for the proposed S2-Attention."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

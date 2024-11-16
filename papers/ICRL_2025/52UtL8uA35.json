@@ -1,0 +1,195 @@
+{
+    "id": "52UtL8uA35",
+    "title": "Deep Networks Learn Features From Local Discontinuities in the Label Function",
+    "abstract": "Deep neural networks outperform kernel machines on several datasets due to feature learning that happens during gradient descent training. In this paper, we analyze the mechanism through which feature learning happens and use a notion of features that corresponds to discontinuities in the true label function. We hypothesize that the core feature learning mechanism is label function discontinuities attracting model function discontinuities during training. To test this hypothesis, we perform experiments on classification data where the true label function is given by an oblique decision tree. This setup allows easy enumeration of label function discontinuities, while still remaining intractable for static kernel/linear methods. We then design/construct a novel deep architecture called a Deep Linearly Gated Network (DLGN), whose discontinuities in the input space can be easily enumerated.  In this setup, we provide supporting evidence demonstrating the movement of model function discontinuities towards the label function discontinuities during training. The easy enumerability of discontinuities in the DLGN also enables greater mechanistic interpretability. We demonstrate this by extracting the parameters of a high-accuracy decision tree from the parameters of a DLGN. We also show that the DLGN is competitive with ReLU networks and other tree-learning algorithms on several real-world tabular datasets.",
+    "keywords": [
+        "Deep Learning",
+        "Feature learning",
+        "Interpretable",
+        "Local Discontinuities",
+        "Deep learning theory",
+        "Deep neural architectures",
+        "Supervised learning"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "Deep neural networks outperform kernel machines by learning features through discontinuities in label functions during gradient descent training, showing better performance and offering greater interpretability compared to ReLU networks.",
+    "creation_date": "2024-09-17",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=52UtL8uA35",
+    "pdf_link": "https://openreview.net/pdf?id=52UtL8uA35",
+    "comments": [
+        {
+            "title": {
+                "value": "First reply to reviewer tLyw (Part 3 of 3)"
+            },
+            "comment": {
+                "value": "Question 1: We indeed use a temperature hyperparameter, but freeze it to a constant during training. There is an interesting interplay between the temperature parameters and the initialization scale (i.e., for every temperature $\\beta$ and init $w$, there exists an appropriate scalar $\\gamma$ such that using temperature $1$ and init $\\gamma w$ gives the same optimization trajectory. \n\nQuestion 2: We expect many of the trained DLGN gating hyerplanes to be useless/irrelevant to the label function, these hyperplanes need not be close to any of the label function discontinuities. These hyperplanes would be the outliers.\n\nQuestion 3: The first layer of a DLGN does not change much during the training. This is an artefact of the parameterization where the gating hyperplanes are represented as product of the parameters that the gradient descent operates on. If one maintains the effective linear transform for each layer directly as parameters, this artefact vanishes. (This would correspond to the variant DLGN-SF in the paper)."
+            }
+        },
+        {
+            "title": {
+                "value": "First reply to reviewer tLyw (Part 2 of 3)"
+            },
+            "comment": {
+                "value": "6. **Link between DLGN and DNN** : The tale behind the birth of the DLGN is rooted in the ReLU network. A ReLU network can be represented as $  y(x) = W_L* D_L* \\ldots W_1* D_1 * W_0 * x $. Where the matrices $D_i$ are diagonal matrices that depend on $x$, taking values 1 or 0 depending on whether the corresponding neuron is active for the input $x$. When viewed as a function of $x$ the $i^{th}$ diagonal element of the matrix $D_l$ is rather complex, except for $l=1$ where it is simply equal to 1 on a halfspace and 0 outside it. DLGN simply makes the gating function for every neuron as a halfspace, whose parameters are given separately, i.e. in the above ReLU model output expression replace the diagonal matrices $D_\\ell$ with diagonal matrices containing $\\eta^\\ell$ as defined in the paper. \n\n7. **Can we say same statement about ReLU networks?**:Based on our current understanding of ReLU networks, it is not possible to show or check if a ReLU network discovers these discontinuities. (Where would we even look for these in the parameters of the DNN?). That we cannot demonstrate even such a non-surprising conclusion for the ReLU is exactly the reason we study the DLGN instead. In short, the significance of DLGNs is that there are no surprises and things are not \u201chidden\u201d/inscrutable.\n\n8. **DLGNs utility**: We don\u2019t make the claim that DLGN is a better architecture that can be applied right now. The utility of the DLGN architecture is in being able to test our hypotheses regarding feature learning. Something that is not possible with deep linear networks (because they are essentially still linear) and ReLU networks (they are too complex). The experimental results are merely to establish that DLGNs outperform kernel methods, and hence learn non-trivial features. That they are competitive with random forests is merely an add-on bonus.\n\n9. **DLGN interpretability**:  The source of complexity in ReLU nets lies in composition of nonlinear functions. Also, there is no meaningful notion of an \u201cindependent part\u201d in a ReLU network \u2013 scalar weights connecting neurons are meaningless by themselves,  and neurons as real valued functions over the input space require almost as many parameters to describe as the entire network itself.  In the case of DLGN the source of power and complexity is just a sum of product of simple functions. While there are exponentially many ($m^L$) features, this complexity is due to a structured combination of merely $mL$ features. Also, each gating neuron is a meaningful part of the DLGN that can be compactly described as a halfspace in the input domain. This explicit sum of products nature of the DLGN makes it so that it can be almost considered a white box model.\n\n10. **Tangential comment on the current state of interpretability** : We are not particularly enthusiastic about the current paradigms of interpretability (ala GradCAM, LIME, SHAP etc) which go to the extent of making the explanation itself as a prediction. The goodness of a prediction is judged by how it is found subjectively satisfactory rather than how faithful to the model the explanation is. We favor a more deconstructionist approach where we say \u201cwe understand something only if we can break it apart and put it together again\u201d. The rise of *mechanisitc interpretability* (we are not fully sure of what an appropriate definition of this would be) in current literature suggests that current ML researchers are cognizant of this issue."
+            }
+        },
+        {
+            "title": {
+                "value": "First reply to reviewer tLyw  (Part 1 of 3)"
+            },
+            "comment": {
+                "value": "Thank you very much for the detailed review. Responses to the review below. Some of these arguments are explicit in the paper while the rest are implicit. We will add extra remarks to make the implicit statement explicit in a revised version. \n\n1. **DLGN as a tree reparameterization (point in the strengths section)** : This might be a misunderstanding, as the DLGN is NOT interchangeable with a decision tree. We do give a procedure for converting a trained DLGN into a decision tree based on the properties of its learning dynamics but an arbitrary DLGN cannot be converted into a decision tree. A core reason for the difference is that a data point can pass through any number of the m^L paths of a DLGN and the output is a sum of individual path values, as opposed to decision tree having a unique path for every input.\n\n\n2. **Lack of focus**: Section 5 and 6 are closely related because the \u201cclustering\u201d of learned features in a trained DLGN (Section 5) is a crucial property  exploited in the decision tree construction (Section 6). Admittedly Section 5 could stand on its own and be expanded further without Section 6. But Section 6 plays an important role in making the DLGN a unique architecture. It demonstrates that the DLGN model allows for more control by the learner. For example, (say) a ReLU network model cannot be converted to any other known model type other than via painful retraining on surrogate data labeled by the ReLU network. \n\n\n3. **Model finding label discontinuities is not surprising** : Broadly, yes, we agree. The title of the paper is perhaps a bit too simplistic. But the internals do more and give an alternative view of the term features itself and gives us the machinery and vocabulary to ask more meaningful questions. I am not sure the discontinuities can be called decision boundaries, as these have limited scope, e.g. consider the line corresponding to the root node 0 in Figure 1, the label function is only discontinuous along some sections of it. We have recently become aware of a concept known as the Gaussian surface area (from this year\u2019s COLT best paper) which is very closely related to the notions that we have in mind and might play a crucial role in future work. Next two points are also related to this comment.\n\n4. **Potential future lines of discussion being opened up**: The DLGN model is explicitly a weighted sum of product of halfspace indicator functions ($m^L$ in number) and hence we are somewhat justified in calling the individual halfspaces (only $mL$ in number) as features of the model. The halfspaces in the gating network seeking out the label function discontinuities (as demonstrated in Table 1) gives us a way to ask questions regarding parameter efficiency etc. Clearly, there is no need for multiple DLGN halfspaces to go towards the same discontinuity, but gradient descent (which is a greedy procedure) does it anyway. Maybe it would be possible to exploit this and have learning routines go beyond the greedy nature of gradient descent and build smaller models that perform similarly (say, identify two different gates going towards the same halfspace and pushing away one of them). This is however beyond our scope right now, but the very fact that such discussions are possible is the main point of this paper.\n\n5. **What is the secret sauce in deep networks?**: Another aspect that the DLGN opens up is questioning the source of power in a deep network. It has been taken as an article of faith that this is due to composition of multiple simple layers. But this paper postulates that the power of a deep network might be due to the fact that it learns separate features that interact (through a product). This also sheds some  light on the \u201cmain mystery in the theory of deep learning at the moment\u201d. The existence of multiple layers enables the \u2018local\u2019 nature of the discontinuity finding \u2013 each layer operates in the context set by other layers, and hence, discontinuities that might be minor in a global context can become significant and drive the learning process. (Lines  61 to 65 in the paper). More concretely, in a data labeled by a CODT, the root node halfspace would not be seen as a good direction for any gating hyperplane to move towards when seen globally. But when the data is restricted to random convex polyhedra (by say all gating neurons in a path except layer i) the gating function for the layer i neuron might see that the hyperplane corresponding to the root node is a good separator and move towards it. The fact that there are a huge number of paths ($m^L$)  means that this is likely to happen with at least a few paths."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel model architecture (deep linearly gated network, DLGN) and studies the way in which this model seeks out \u201clabel discontinuities\u201d in the data during training. This analysis is enabled the fact that we can enumerate such label discontinuities in a DLGN. The synthetic datasets with known discontinuities are generated by another model \u2014 an oblique decision tree (ODT). The authors also show how an ODT can be constructed from a trained DLGN, for the purpose of interpretability. Finally, the paper presents results of fitting a DLGN to several UCI regression tasks, comparing performance to several tree-based, kernel-based, and NN-based baselines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- Originality. The DLGN is an interesting architecture that combines deep linear networks with the gating mechanism to construct a novel class of non-linear models. One could also treat DLGN as a novel decision tree parametrization which, when relaxed using a sigmoid, can be learned by back-propagation. To the best of my knowledge, DLGN is a novel, original model architecture, though its connection to soft decision trees should be studied more carefully."
+            },
+            "weaknesses": {
+                "value": "- Lack of focus. At the moment, the paper\u2019s focus is split between a study of feature learning using DLGN (chapter 5), and a study of the DLGN itself as an expressive, yet interpretable model architecture (chapter 6). To me these are two orthogonal contributions, and the paper would be stronger if authors focused on one of these.\n- Significance. The significance of the proposed model and the feature learning study presented in the paper is not clear to me. \n  1. Capturing \u201clabel discontinuities\u201d (are these not simply decision boundaries?) is at the core of solving a classification problem, hence it is not surprising that a model which works well on the task has to discover such hyperplanes \u2014 I don\u2019t see an alternative way that a model can solve a task. The real question is how an over-parametrized model can correctly identify high-dimensional decision boundaries given limited data \u2014 this is the main mystery in the theory of deep learning at the moment, and one that this paper doesn\u2019t shed much light on.\n  2. To understand the significance of the findings for deep learning, we would need to understand the relationship between a DLGN and a DNN. While it is nice (albeit, not surprising) to see how a DLGN uncovers the true \u201clabel discontinuities\u201d, how can we know that a DNN will demonstrate the same behavior?\n  3. While the proposed architecture is appealing due to potentially being both expressive and interpretable, results on the real (UCI) datasets suggests that DLGN is comparable in performance to standard tree algorithms. There is little evidence that we should prefer the proposed architecture to e.g. the well-studied random forests, which we could also argue to be \u201cinterpretable\u201d. (I do not consider results on synthetic data to be good evidence, given the connection between ODTs used to generate the data and DLGN.)\n  4. While the authors claim that the proposed architecture is interpretable, no interpretations of the models fit to real data are given. If interpretability if the main selling point of the architecture, I would expect a deeper analysis focused on interpretability.\n- Presentation. Please consider moving the DLGN model diagram to the main text: it\u2019s difficult to understand the model architecture from the formulas alone. Also, please try to stick to academic language, and avoid informal phrases like \u201cwell nigh impossible\u201d, \u201chandily outperform\u201d, \u201csucceed comfortably\u201d, \u201cabout the same\u201d, etc."
+            },
+            "questions": {
+                "value": "- Authors suggest that they use a sigmoid instead of an indicator function to make the DLGN differentiable for training. Have authors considered using a temperature parameter for the sigmoid (potentially annealed during training), as common in other continuous relaxation methods?\n- On lines 406-407 authors suggest that they use DBScan for clustering hyperplanes due to this algorithm being \u201crobust to outliers\u201d \u2014 why do authors expect outliers to be a significant issue here?\n- How do authors explain the observation that certain layers of the DLGN are more prone to matching the true discontinuities than others  (Figure 2)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce a model called the Deep Linearly Gated Network (DLGN) to study feature learning, specifically in binary classification tasks defined by an oblique decision tree labeling function. They use DLGN to test the hypothesis that during training, the model\u2019s discontinuities move towards label function's discontinuities. The paper includes evaluations on dozens of open tabular datasets to compare DLGN with ReLU networks and tree-learning algorithms."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. Clear writing. The authors study a specific class of problems with great clarity. \n2. The authors' persistence in tackling a challenging yet manageable problem setting is commendable.\n3. Like a black-box learner, the DLGN is able to learn non-linear features. Yet, it still provides mechanistic interpretability.\n4. DLGN outperforms both tree-based and non-tree algorithms, as well as ReLU networks, in the oblique decision tree setting, while maintaining strong competitiveness on real-world tabular datasets.\n5. The authors provide a framework that paves the way for future research and development."
+            },
+            "weaknesses": {
+                "value": "I'm not seeing effective weaknesses."
+            },
+            "questions": {
+                "value": "1. What's the purpose of defining the manifold $\\mathcal{M}$ in line 133?\n2. In line 239, Equation (4), is there a missing transpose on $\\mathbf{u}_{i_1}^1$?\n3. I find it difficult to understand how the computational cost of a forward pass for Equation (1) is less than twice that of a ReLU network with $mL$ nodes. Could the authors provide further clarification on this?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors propose a mechanism to intuitively explain why neural networks can surpass kernel methods through feature learning. They hypothesize that the feature learning process involves the alignment of model function discontinuities with label function discontinuities during training. To explore this, they introduce a new network architecture called the Deep Linearly Gated Network (DLGN), designed as a surrogate for ReLU networks. They argue that this architecture retains similarities to ReLU networks while offering easier interpretability. Under this framework, they provide empirical evidence showing how model function discontinuities move toward label function discontinuities during training, facilitated by feature learning."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper is a bold attempt to deepen our understanding of feature learning in deep learning. The hypothesis, data setup, network architecture, and approach to interpretability are unconventional, and they bring a fresh perspective to the literature. This work has the potential to inspire new ideas and serve as a valuable starting point for further exploration."
+            },
+            "weaknesses": {
+                "value": "From my perspective, while this work is intriguing, it is not yet ready for formal publication. My concerns are as follows:\n\n1. The authors reference previous studies examining the dynamics of single hidden layer models under specialized data and settings to push beyond kernel methods or deep linear models (Damian et al., 2022; Ba et al., 2022). They appropriately note that these analyses, often focused on specific data settings like the parity function, fall short of addressing the needs or behaviors of deeper networks. However, numerous works also investigate complex feature learning with deep neural networks, such as https://arxiv.org/abs/2305.06986 and https://arxiv.org/pdf/2311.13774. These studies should be acknowledged and compared with the current work.\n\n2. I am skeptical about the extent to which the new architecture resembles a ReLU network. Additionally, it is unclear how this intuition or design could extend to CNNs or transformers. Besides, the current version only applies to binary classification, whereas a universal feature learning mechanism should ideally apply across setups, such as binary classification, multi-class classification, and regression. I am unsure how the proposed intuition extends to these broader contexts. For example, existing papers (such as the two mentioned above) demonstrate that neural networks can efficiently learn $h = g \\circ p$ with $p$ quadratic and $g$ nonlinear via feature learning. How would this intuition explain such cases?\n\n3. In Section 3, the introduction to ODT progresses too quickly. The paper would benefit from a more mathematically detailed introduction to the new concepts presented in this section."
+            },
+            "questions": {
+                "value": "See the weakness part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a theory to explain how feature learning happens in neural networks. The authors posit that neural networks align (or rather, get attracted to) the discontinuites in the way the target label changes over the input domain. As a pilot test for this theory, the authors consider a setting where the target function to learn is an Oblique Decision Tree (ODT). ODTs correspond to decision trees where each internal node is a linear threshold. Thus, the hyperplanes associated to the nodes in the decision tree split up the input space into different labeled regions (see Figure 1). The hyperplane corresponding to the root is \"most discontinuous\" in terms of how the label changes on both sides of it (owing to further and further splits by its many descendants). The authors posit that the training of non-linear neural networks procedurally aligns the model with these discontinuities.\n\nAs a tractable model to further empirically study this theory, the authors propose a novel neural network architecture which they term Deep Linearly Gated Networks (DLGNs). DLGNs are somewhere in between standard nonlinear (e.g., ReLU activated) deep networks and deep linear networks. The function computed by a DLGN can be writen as a large summation of terms of the form $f_\\pi \\cdot g_\\pi$. Here, $f_\\pi$ is a product of the signs of activations of neurons in a deep linear network (a single neuron from each layer). $g_\\pi$ is a product of the activations themselves (a slight detail is that the weight matrices producing the activations in $f_\\pi$ and $g_\\pi$ are different). Thus, we can think of $f_\\pi$ as an indicator of the intersection of halfspaces, while $g_\\pi$ is the weight we add up if the indicator turns out to be true.\n\nThe authors fix the target function to be an ODT, and train the DLGN architecture on synthetic data labelled by the ODT. The suprising observation is given in Figure 2. At the end of training, if one plots the hyperplanes corresponding to the linear threshold at every neuron, one observes that the hyperplanes (at least in the later layers of the DLGN) align very well with the hyperplane splits in the ODT! Furthermore, Table 1 shows that most of these linear thresholds align with some hyperplane in the ODT. That is, the neurons in the DLGN architecture are \"getting attracted\" to aligning with some internal node in the ODT.\n\nThe authors next use this empirical observation to extract a decision tree out of a trained DLGN. Namely, they plot the linear thresholds corresopnding to all the activations after training, and then cluster these thresholds. The center of the largest cluster is chosen to be a root node hyperplane, and then we recurse this procedure on data on either side of this hyperplane. This procedure is pictorally well illustrated in Figure 3. Again, one can see that on performing such clustering-based decision tree generation, the first cluster center aligns very well with the root node hyperplane, and the phenomenon continues as we recurse. The upshot is that one can extract an interpretable model from the DLGN..\n\nFinally, the authors perform experiments on real-world classification data to illustrate that the classification accuracy of DLGNs is somewhere in between standard ReLU networks and other simpler non-neural network algorithms. Thus, DLGNs have the added benefit of being interpretable, but more powerful than stanard decision trees."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The proposed theory is intriguing and indeed very interesting. The plots in Figures 2 and 3 are indeed striking---they illustrate how faithfully the DLGN neuron activations are increasingly aligning with the ODT hyperplanes over the process of training. These observations support the theory put forth by the authors about neural network architectures possibly picking up on the discontinuities in the labelling function. The clustering procedure to extract a decision tree is also very interesting, and empirically seems to work well (as suggested by Figure 3). Overall, I find the theory proposed by the authors, along with the striking empirical illustrations, very interesting. These could motivate further theoretical investigations for such phenomena."
+            },
+            "weaknesses": {
+                "value": "The pilot experiments done by the authors are admittedly specialized. Namely, they don't actually consider standard ReLU networks, but only the DLGNs they propose. Furthermore, they only consider cases where the target function is conveniently an ODT. While this is totally okay as an initial starting point, it does raise the question about whether such empirical phenomena of the neurons aligning with the discontinuities also arise in cases where the target function has discontinuities of a different nature (like curvy discontinuities, etc). But this is not a significant weakness, as it seems beyond the scope of a pilot study. But it would be really interesting to visualize the activations of the neurons (say with quadratic thresholds) for when the target function is also composed of curvy discontinuities."
+            },
+            "questions": {
+                "value": "1) Why do you even introduce a manifold $M$ in your notation in line 133? It is never used \n2) On line 192, I don't think I agree that \"no other hyperplane other than the internal nodes has this property\". e.g. consider any other hyperplane that is not one of the internal nodes in the plot in Figure 1; doesn't it also have points of both labels on either side of it?\n3) You introduce this formal notion of $\\gamma(R, f)$ as the local discontinuity coefficient in Section 3, but then never mention it anywhere later in the paper. How would you explain the results in say Figure 2 and 3 in the context of this quantity? Could you elaborate on this a bit?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

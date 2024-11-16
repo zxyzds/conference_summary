@@ -1,0 +1,171 @@
+{
+    "id": "QjSOgxJ0hp",
+    "title": "Learning from End User Data with Shuffled Differential Privacy",
+    "abstract": "We study a setting of collecting and learning from private data distributed across end users.\nIn the shuffled model of differential privacy, the end users partially protect their data locally before sharing it, and their data is also anonymized during its collection to enhance privacy. \nThis model has recently become a prominent alternative to central DP, which requires full trust in a central data curator, and local DP, where fully local data protection takes a steep toll on downstream accuracy. \n\nOur main technical result is a shuffled DP protocol for privately estimating the kernel density function of a distributed dataset, with accuracy essentially matching central DP. \nWe use it to privately learn a classifier from the end user data, by learning a private density function per class. \nMoreover, we show that the density function itself can recover the semantic content of its class, despite having been learned in the absence of any unprotected data. \nOur experiments show the favorable downstream performance of our approach, and highlight key downstream considerations and trade-offs in a practical ML deployment of shuffled DP.",
+    "keywords": [
+        "differential privacy",
+        "shuffled differential privacy",
+        "kernel density estimation",
+        "kde"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "We present a method for collecting and learning a classifier from private data distributed across end users, via kernel density estimates in the shuffled DP model.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=QjSOgxJ0hp",
+    "pdf_link": "https://openreview.net/pdf?id=QjSOgxJ0hp",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper studies kernel density estimation (KDE) under shuffle DP, which is suitable for the setting where users do not persistently participate in training. The authors prove convergence for Gaussian kernel and test their algorithm on various datasets."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Kernel density estimation is an important machine learning problem, and shuffle DP is an important intermediate privacy model between local and central DP.\n2. The authors conducted extensive experiments on various datasets."
+            },
+            "weaknesses": {
+                "value": "1. The algorithm proposed in this work mainly seems like an application of bitsum algorithm. The authors should highlight the novelty in either the algorithm design or theoretical analysis. For example, what is the main difficulty in applying to kernel density estimation\n2. The algorithm does not demonstrate a consistent good performance. The performance is bad for inner product kernel and shuffle-DP algorithms other than 3NB (Bhadi et.al. 2020).\n3. The authors claimed that there is no need to optimize the bandwidth for the Gaussian kernel. However, by shrinking the dataset by some factor, one can equivalently view this as changing the bandwidth. Thus, this claim may not be justified."
+            },
+            "questions": {
+                "value": "How can the algorithm adapt to new users joining in and we need to update the kernel density?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new method to perform kernel density estimation (KDE) under Shuffle model of differential privacy (Shuffle-DP).\n\nThe KDE problem is as follows: Given datapoints $X = (x_1, \\ldots, x_n)$ and a query point $y$ (all points in $\\mathbb{R}^d$), the goal is to compute $\\mathrm{KDE}\\_X(y) := \\frac1n \\sum\\_{i=1}^n \\mathbf{k}(x\\_i, y)$ for a given kernel $\\mathbf{k}$.\n\nThe Shuffle-DP is the setting where messages from the users are sent to a shuffler that randomly permutes all received messages before sending it to the analyst, and it is required that the multi-set of messages received by the analyst satisfies differential privacy.\nVarious Shuffle-DP mechanisms are known in literature for computing \"Bit-sums\", wherein, each user holds a single bit $x_i \\in \\{0, 1\\}$ and the goal is to estimate their sum $\\sum_i x_i$.\n\nThe main technique in this paper is to reduce the problem of KDE to Bit-sums, for kernels $\\mathbf{k}$ that admit \"(approximate) locality sensitive quantization (LSQ)\". This means that there is a distribution $\\mathcal{Q}$ over pairs of functions $(f, g)$ each mapping $\\mathbb{R}^d \\to [-R, R]^Q$ such that $\\mathbb{E}_{(f, g) \\sim \\mathcal{Q}} [f(x)^T g(y)]$ is equal to (or closely approximates) $\\mathbf{k}(x, y)$ for all $x, y \\in \\mathbb{R}^d$.\n\nThus, given access to $f_i(x_j)$ for $i \\in \\{1, \\ldots, I\\}$ and all $x_j \\in X$, one can approximate $\\mathbf{k}(x, y)$ as $\\frac1I \\sum\\_{i=1}^I \\sum\\_{x \\in X} f\\_i(x)^T g\\_i(y)$.\n\nFinally, the $f_i(x_j)$ themselves are estimated by reducing to \"Bit-sums\" through randomized rounding.\n\nFinally it is standard to use KDE for solving classification tasks, by performing a KDE on examples of each class, and on given query point $y$, return the class with the largest kernel density estimate.\n\nThe paper provides bounds on the communication cost and root-mean-squared-error (worst case over all query points $y$).\n\nThe paper also provides experimental evaluation on three textual datasets (two on topic classification, one on sentiment classification) and an image classification dataset (CIFAR-10), and evaluates the performance of two kernels (Gaussian kernel and Inner Product kernel) in three regimes: (i) without privacy, (ii) central DP and (iii) shuffled DP."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper proposes a novel application of Bit-sums in Shuffle-DP to the problem of Kernel Density Estimation. The idea is simple and easy to implement. The paper has rigorous theoretical bounds on the error.\n\nOverall the paper is well written and easy to read."
+            },
+            "weaknesses": {
+                "value": "This is not particularly a \"weakness\", but the approach in the paper is limited to kernels that admit good locality sensitive quantization."
+            },
+            "questions": {
+                "value": "I would imagine that the theoretical bounds on the $\\mathrm{supRMSE}$ in Theorem 3.2 are quite loose. Would it be possible to add a comparison of the theoretical bounds alongside the empirically realized errors in KDE ?\n\nFor example, I am surprised that for the IP kernel, it is better to go with the $(1, \\sqrt{d}, 1)$-LSQ instead of the naive $(d, 1, d)$-LSQ. While the latter has additional dimension, it is no variance, whereas the former has a large variance, even if it is $1$ dimensional. But I don't see the bounds in Theorem 3.2 accounting for the variance in the LSQ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper focuses on learning a kernel density estimator (KDE) under shuffled differential privacy (SDP), while the learned KDEs are used for a downstream classification task. The proposed method first estimates noisy class counts under local DP, and then learns KDE for each class using the noisy counts (and the corresponding class assignments) for calibrating SDP noise level. The method for estimating KDE is based on the notion of locality-sensitive quantization (LSQ), which also allows the authors to prove general as well as more specific utility bounds (e.g. for Gaussian kernel with random Fourier features). The authors experimentally demonstrate their proposed method on several data sets using various existing SDP summation protocols together with Gaussian and inner product kernels."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "i) The proposed method seems to be interesting and novel in the SDP setting.\n\nii) The paper is mostly well-written and nice to read, with no obvious major oversights.\n\niii) The code is included with the submission (at least partly; e.g., as there is no requirements.txt or equivalent, getting the code to run would take some amount of effort)."
+            },
+            "weaknesses": {
+                "value": "i) While the stated goal is to do learning in a \"single-shot\" manner, i.e., without clients participating (iteratively) in training beyond just choosing to send their data, the proposed approach still involves 2 communication rounds (getting noisy counts for the classes, then running the KDE protocol with noisy class sizes) and a non-trivial amount of compute spend on client-side (run some pretrained model as feature-extractor, run Alg.1 with given hypers).\n\nii) See comments below for some additional specific concerns."
+            },
+            "questions": {
+                "value": "In decreasing order of importance:\n\n1) On the distinction between classification and class decoding, e.g. lines 315-27, 526-29: I am not sure how meaningful this difference actually is; I would expect that to be able to classify examples well, the KDE $\\tilde K_c$ for any given class $c \\in [m]$  should give higher scores than any other KDE for that class. This seems pretty much the same things as any given KDE $\\tilde K_c$ being able to give high scores for inputs from the matching class $c$ and lower scores to inputs from any other class. Whether or not this matches what humans would consider to be semantically relevant for the classes seems like quite a fuzzy claim.\n\n2) Experimental details: please specify how all hyperparameters have been set, how many seeds you used etc. Also, please add some error metrics (sem, std or similar) to the results.\n\n3) How much utility do the noisy counts via LDP cost? Please add an ablation study (at least for some experimental setting) using the actual true counts and comparing to the proposed full method with LDP counts (using same noise levels for the shuffle protocol).\n\n4) Thms 3.2, 3.3: please clarify in what sense the bit-width 1 is optimal (e.g. communication, utility, both)?\n\n5) Lines 312-14: there are some proposed DP-kNN methods, so this claim does not seem to be true (although I haven not read the said papers in detail).\n\n6) Please add an additional step after line 913 to be clearer on the proof.\n\n## Minor typos, comments etc. \n\nI do not expect any acknowledgement or comment on these, just fix when appropriate:\n* typos: lines 109-110, 775-76, 1063-64, 1139-40, 1160-61\n* Why suppress eq numbers? Would be more straightforward to ref these using numbers instead of lines.\n* To make the result figures more readily interpretable, it would be good to add some more basic info to the captions (e.g. $\\delta$, how many repeats)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "I have not specific ethical concerns for this paper."
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies private kernel density estimation and the privacy at the user end is considered. The methodology is with the protocol of the shuffled-DP: each user first randomize her own data and then a shuffler will collect the randomized messages from all users and shuffle them in a random order. The basic module is the bitsum in the shuffled DP where each user has one bit and the set of bit after shuffling keeps well the sum of all bits. The main algorithm is designed to call this module towards the private kernel estimation. The paper provides the theoretical guarantee for the algorithm. In the experiment, the proposed algorithm under shuffled-DP is compared with the algorithm at central-DP in two downstream tasks classification and class decoding."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The flow of the writing and the clarity are great. The background such as the framework of shuffled DP is mostly well-introduced; I do have questions for some concepts (see the question section), but they are not influencing my overall understanding for the method.\n2. The analysis of proposed algorithm seems solid as presented in theorem 3.2 and theorem 3.3.\n3. The empirical evaluation is systematic. It is located to two downstream tasks of the private kernel estimation."
+            },
+            "weaknesses": {
+                "value": "As this paper is the first paper (to my best knowledge) to study private kernel estimation with the shuffled DP protocol, I think more comparison with other settings can enhance the understanding what role shuffled DP plays. In details:\n1. How is the proposed method compared with central DP in terms of theoretical guarantees? Would this be aligned with the empirical comparison as shown in the experiment section?\n2. Another popular framework is to leverage secure multiparty computation (MPC) to compute sums of values from each user [1]. What is the advantage and limitations between these two framework in terms of utility and communication cost?\n\n[1] Bonawitz, Keith, et al. \"Practical secure aggregation for privacy-preserving machine learning.\" proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security. 2017."
+            },
+            "questions": {
+                "value": "Please see the weaknesses section. Moreover, I have some questions of some mentioned concepts:\n1. Bit-width is introduced in line 239-240. What is the exact definition of it? In the theorem, \"the protocol has optimal bit-width 1\" is stated; what does this mean?\n2. $S$ is introduced in Definition 2 as a property to describe the kernel. It does not appear in the algorithm's description but seems to be an important factor for the theoretical guarantees, which occurs in both DP's guarantee and the utility upper bound. Could you explain what role $S$ plays to bring these effects on the theoretical results?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

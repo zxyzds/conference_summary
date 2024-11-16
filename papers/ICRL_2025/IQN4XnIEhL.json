@@ -1,0 +1,165 @@
+{
+    "id": "IQN4XnIEhL",
+    "title": "A Variational Approach for Generative Speech Language Modeling",
+    "abstract": "The success of large language models in text processing has inspired their adaptation to speech modeling. However, because speech is continuous and complex, it is often discretized into tokens derived from self-supervised speech models. These speech tokens typically focus on the linguistic aspects of speech and neglect its paralinguistic content. As a result, autoregressive models trained on these tokens may generate speech with suboptimal naturalness. Previous methods attempted to address this limitation by adding pitch features to speech tokens prior to autoregressive modeling. However, pitch alone cannot fully represent the range of paralinguistic attributes, and selecting the right features requires careful hand-engineering. To tackle this issue, we propose a variational approach that automatically learns to encode these continuous speech attributes to enhance the speech tokens. Our proposed approach eliminates the need for manual paralinguistic feature selection and extraction. Moreover, we demonstrate that our proposed approach maintains or improves speech language modeling performance and enhances the naturalness of generated speech compared to baseline approaches.",
+    "keywords": [
+        "Generative Spoken Language Modeling;Speech Language Model"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We combine a variational autoencoder with a token-based speech language model to improve the naturalness of the speech syntheses.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=IQN4XnIEhL",
+    "pdf_link": "https://openreview.net/pdf?id=IQN4XnIEhL",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces a variational approach that automatically learns to encode these continuous speech attributes to enhance the speech tokens, and eliminates the need for manual paralinguistic feature selection and extraction, such as pitch features."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Employing an encoder to derive continuous features instead of manually crafted paralinguistic features endows the features with greater flexibility and potency.\n2. The symbols and formulas within the paper are clearly defined, and comprehensive details, encompassing mathematical derivations and experimental setups, are thoroughly documented in the Appendix.\n3. Various advanced technologies are used to enhance the model, such as time-wise normalizing flow, and diffusion decoder (However, the ablation studies are not reported in the paper)."
+            },
+            "weaknesses": {
+                "value": "1. In section 3.2, it is mentioned that \"By using these tokens, the model no longer needs to encode as much phonetic information in Z^c, allowing Z^c to focus on other continuous speech attributes. \". To strengthen this argument, it would be more convincing to include some analytical experiments. For instance, demonstrating that Z^c excels in speaker verification or emotion recognition, but performs less effectively in speech recognition, would provide a more nuanced understanding of its capabilities.\n2. The descriptions of the evaluation are unclear. The authors should provide a clear explanation of whether the AR model is utilized for each metric, possibly by referring to section 3.1 of the GSLM paper.\n3. In the main results, the conclusion, \"Speech generated from our proposed approach does not sacrifice meaningfulness compared to speech generated from the baselines.\", is not strongly supported by the experiments, particularly when considering the observed declines in sWUGGY and sBLIMP. Despite the authors' speculations, the empirical data does not robustly corroborate this claim.\n4. it is very weird that the sWUGGY of (Token + continues features) is worse than that of both Token-LM or continues features-LM. (Proposed vs. Token-LM, Proposed vs. Proposed - tokens, in Table 3)."
+            },
+            "questions": {
+                "value": "1. What is the CER of the ground-truth, which serves as the upper bound for the ASR model?\n2. When utilizing discrete tokens enriched with acoustic information, such as Encodec, can the proposed method yield enhancements?\n3. Why does the Token-LM trained on the LibriSpeech dataset exhibit significantly better CER compared to the Token-LM trained on the Libri-light dataset (5.40 vs. 10.19), yet this improvement is not obtained in the proposed method (5.06 vs. 4.35)?\n4. why the numbers of \u03b3=0.5 in Table 4 can not be found in Table 3?\n5. why the \u03b2 is set to 0.04 instead of 0.03 in Table 4?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper describes an approach to improve speech LM modeling in a speech sequence completion task.  The central idea is to augment the speech tokens with an additional autoregressive variational input.  This results in improved naturalness and meaningfulness of the responses compared to a baseline and a speech-token + pitch representation."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The proposal is well motivated, and builds on prior work on speech representation and variational modeling speech generation.\n\nThe results are generally quite strong.  The subjective evals show clear improvements to both meaningfulness and naturalness.  The only regressions are to sWUGGY and sBLIMP objective measures.\n\nWhile the approach adds overall complexity to the inference call, the number of parameters added appear to be quite low -- only 2M additional params."
+            },
+            "weaknesses": {
+                "value": "It would be useful to have some confidence measure for the sWUGGY, sBLIMP and Perplexity values.  It is unclear how much the 61.75 -> 60.48 sWUGGY regression means.  Is this statistical noise, or an issue that should be addressed.\n\nWhile the variational augmentation adds fewer than 1% of parameters, it would be useful to know if this meaningfully adds to inference latency."
+            },
+            "questions": {
+                "value": "See above -- it would help understand the approach more completely to have an understanding of any latency implications to this model adjustment."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes learning para-linguistic information within a VAE framework by incorporating semantic information from a speech language model. However, there are issues with both the learning objective formulation and the experimental results.\n\n1. The core idea is to learn an autoregressive prior through VAE training. This approach differs from VQ-VAE, where the prior is learned separately after training. However, the authors use the intermediate features directly to train \\(\\phi\\) and then expect \\(\\phi\\) to generate \\(z_t^{c}\\) for computing divergence. This does not achieve the traditional effect of KL divergence in regularizing the latent space. Furthermore, it diverges from standard approaches where the prior is parameterized independently from the latent features. Effectively, this approach is equivalent to learning the prior after training, which undermines the formulation's purpose.\n\n2. Conditioning on semantic information to learn para-linguistic features is not new and has already been investigated in works like [1]. Additionally, the audio samples presented by the authors are audibly poor and notably worse than those produced by speech synthesis methods that directly utilize pitch features, as demonstrated in [2]. Furthermore, unlike most recent studies, the authors did not provide a web interface for easy access to samples, which makes evaluation cumbersome. If MOS evaluations were already conducted, it would be beneficial for reviewers to have a similar interface for sample evaluation.\n\nReferences:  \n[1] Zhang, Xin, et al. \"Speechtokenizer: Unified speech tokenizer for speech large language models.\" arXiv preprint arXiv:2308.16692 (2023).  \n[2] Polyak, Adam, et al. \"Speech resynthesis from discrete disentangled self-supervised representations.\" arXiv preprint arXiv:2104.00355 (2021)."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "Nothing particularly strong."
+            },
+            "weaknesses": {
+                "value": "Theoretical problem and poor result. Please refer to point 1 and 2 in my summary."
+            },
+            "questions": {
+                "value": "Why no demo page? Have you try train the AR prior post training?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a variational approach to speech-language modelling in contrast to traditional auto-regressive models. The aim is to capture information other than semantics."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Using the variational method for speech-language modelling is novel and useful. The exploration is very interesting and I like the idea.\n2. The paper is well-written with adequate derivations for key loss functions."
+            },
+            "weaknesses": {
+                "value": "1. My main concern is how this method is useful for more practical downstream tasks such as ASR, emotion or speaker recognition, to reflect that capturing the additional (mainly paralinguistic) information is useful. I strongly encourage the authors to conduct at least 2 of the above practical tasks using the variational speech LM and compare it to token-based speech LM to see if there are any potential benefits of using variational methods.\n2. Experimental is conducted using LibriSpeech and Libri-light, which are datasets with quite small variabilities other than semantic information. I believe the variability remains in the speaker representation space, which is not explicitly reflected in the experimental design. \n\nTogether with the question below, I am not convinced that this paper has acceptance quality at the moment. However, given the idea is interesting, I would like to see how the authors would improve the paper during the rebuttal period, and promise to raise my score if my concerns are addressed."
+            },
+            "questions": {
+                "value": "1. Why do we need to separate z^c and z^d? Are they really independent? I believe knowing z^c will tell you a lot about z^d, right? The authors are encouraged to explain this design choice further."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

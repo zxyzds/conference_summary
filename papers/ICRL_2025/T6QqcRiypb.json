@@ -1,0 +1,171 @@
+{
+    "id": "T6QqcRiypb",
+    "title": "SeLoRA: Self-Expanding Low-Rank Adaptation of Latent Diffusion Model for Medical Image Synthesis",
+    "abstract": "The persistent challenge of medical image synthesis posed by the scarcity of annotated data and the need to synthesize \"missing modalities\" for multi-modal analysis, underscored the imperative development of effective synthesis methods. Recently, the combination of Low-Rank Adaptation (LoRA) with latent diffusion models (LDMs) has emerged as a viable approach for efficiently adapting pre-trained large language models, in the medical field. However, the direct application of LoRA assumes uniform ranking across all linear layers, overlooking the significance of different weight matrices, and leading to sub-optimal outcomes. Prior works on LoRA prioritize the reduction of trainable parameters, and there exists an opportunity to further tailor this adaptation process to the intricate demands of medical image synthesis. In response, we present SeLoRA, a Self-Expanding Low-Rank Adaptation Module, that dynamically expands its ranking across layers during training, strategically placing additional ranks on crucial layers, to allow the model to elevate synthesis quality where it matters most. The proposed method not only enables LDMs to fine-tune on medical data efficiently but also empowers the model to achieve improved image quality with minimal ranking. The code of our SeLoRA method is publicly available on https://anonymous.4open.science/r/SeLoRA-980D.",
+    "keywords": [
+        "Text-to-Image Synthesis",
+        "Low-Rank Adaptation",
+        "Medical Imaging",
+        "Parameter Efficient Finetuning"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=T6QqcRiypb",
+    "pdf_link": "https://openreview.net/pdf?id=T6QqcRiypb",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces SeLoRA (Self-Expanding Low-Rank Adaptation), an extension of the LoRA (Low-Rank Adaptation) technique, designed for the fine-tuning of large diffusion models specifically in medical image synthesis. The core idea is to dynamically expand the rank of low-rank matrices during training, based on a criterion derived from Fisher information. This adaptation is applied selectively across different layers, allowing for a more effective distribution of ranks that aligns with each layer's significance in the model, particularly within the denoising U-Net of the Stable Diffusion framework."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is well-organized and easy to follow.\n\n2. The idea of adaptive computation rank selection is interesting and highly relevant for using pre-trained models for downstream tasks in a memory efficient fashion"
+            },
+            "weaknesses": {
+                "value": "- While the paper mainly focusses on making a more efficient LoRA design as claimed by authors, there is no Analysis of Training Efficiency in the paper.\n\n- Lack of detailed explanation of the procedure of selecting hyper-parameters needed."
+            },
+            "questions": {
+                "value": "- How is the proposed method compared to other baselines in terms of max training GPU memory, training speed, and\ntraining time costs? An analysis of these criteria would strengthen the paper.\n\n- The paper mentions thresholds (\u03bb and t) for triggering rank expansion. How sensitive is the method to these hyper-parameters?\n\n- In figure 7, why are the other methods not generating similar xray images? As per my understanding, they should at-least make a similar image like figure 8. \n\n- The proposed method is just compared to methods with rank pruning methods (dylora and adalora), could you mention why there is no comparing with adaptive rank selection papers? as they seem to be a similar approach to your paper."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No ethics review needed."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new parameter-efficient fine-tuning method SeLoRA (Self-Expanding Low-Rank Adaptation) for adapting Stable Diffusion to generate chest x-ray images. The main contribution of the paper lies in dynamically expanding the rank of LoRA during the training process, allowing it to adapt the rank according to the importance of different layers and thereby improving the quality of the synthesized images. The novelty of this approach is in using Fisher Information to guide the rank expansion, avoiding the limitations of the traditional LoRA method, which uses a \"uniform rank,\" especially when dealing with models (like Stable Diffusion) that have diverse weight matrix shapes. The paper demonstrates the effectiveness of SeLoRA on two chest x-ray datasets and provides detailed comparative experiments with other LoRA variants."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. \nThe papers proposes SeLoRA, a dynamic rank-expanding method using Fisher Information to guide rank expansion during fine-tuning large models with LoRA. This is novel and more applicable to models with diverse weight matrix shapes.\n2.\nExperimental results demonstrate the effectiveness of the proposed method.\n3. \nThe paper is well-organized."
+            },
+            "weaknesses": {
+                "value": "1.\nThe contribution is vague. As a paper focusing on adaptive parameter efficient fine-tuning methods, the paper utilizes LoRA to adapt Stable Diffusion for Chest X-ray synthesis, limiting its technical contribution. For a paper dedicated to adapting foundation model like Stable Diffusion for Chest X-ray (medical image) synthesis, the exploration is also limited and does not compare with previous work (e.g. Chambon et al., 2022a;b). Through visual comparison with image displays in Chambon et al., 2022a;b, the proposed method seems at a disadvantage.\n2.\nExperiments are conducted on relatively small datasets. Large image-report paired Chest X-ray datasets exist (e.g. MIMIC-CXR). Is this because of the heavy burden of large model like Stable Diffusion, or may be also related to the proposed method? Can the authors provide training time comparisons between SeLoRA and the compared methods? Also, as the test set of IU X-RAY and Montgomery County CXR dataset has only contains 100~200 images, the validation of the effectiveness of the method is weak.\n3.\nEvaluation and explanation are insufficient. Using a CLIP model trained purely on natural images and a maximum text token length of 76 to compute CLIP-score may not faithfully reflect how good the text-image alignment is for Chest x-ray images.\nThe training/validation/testing split is strange, could the author explain why the test set only contain 4% of the data? Are Table 1 values computed with valid data or test data? This is unclear. The paper also lacks in-depth discussion of the distribution of final rank (Figure 4,5,6) and why other LoRA methods fail on Montgomery county CXR data (Figure7). How accurate can the model generate an image given the disease or abnormal findings in the text prompt? This may be revealed using pretrained Chest X-ray classification models or manually inspect a small subset of generated results.\n\nOther non-important issues:\n4.\nthe paper title is about \"medical image syntheis\u201d; but it only focuses on chest x-ray image.\n5.\nThe formula derivation in section3.3 is unclear.\n6.\nThe Stable Diffusion model is trained to generate a resolution of 512x512, using a resolution of 224x224 may limit the performance."
+            },
+            "questions": {
+                "value": "Please answer the questions mentioned in the above 'weakness' section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper present SeLoRA, a Self-Expanding Low-Rank Adaptation module, that dynamically expands its ranking across layers during training. The proposed method increases the rank from 1 gradually. FI-Ratio and parameter \\lambda were used to determine when to expanding the rank.  The experiment is performed with stable diffusion and X-ray dataset and synthesis the X-ray image with text prompt."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper introduces a parameter-efficient method to e fine-tune stable diffusion models for generating X-ray images based on text (radiology) prompts. And the proposed method can progressive expansion in the rank of LoRA. FI-Ratio is used to guiding SeLoRA to expand its rank. The rank of different layers was given. The experiment shows the result is promisingly."
+            },
+            "weaknesses": {
+                "value": "1. Computational overhead. While SeLoRA reduces the number of trainable parameters, its dynamic rank expansion mechanism introduces additional computational complexity. Computing Fisher information increases the overhead, which may become significant for larger datasets or more complex models.\n2. Limited dataset evaluation. Experiments were limited to two 2D X-ray datasets, with no evaluation of SeLoRA\u2019s performance on other modalities, such as MRI or CT scans. Further validation on additional modalities would help confirm the generalizability of the method.\n3. Visual result is limited. The visual result is not satisfactory, such as in Figure 8, the contrast and details are not good."
+            },
+            "questions": {
+                "value": "1. Computational complexity analysis A comparison of training time, memory usage and FLOPs between SeLoRA, LoRA, and other variants is needed to quantify the computational trade-offs introduced by dynamic rank expansion.\n2. Evaluation on a wider range of datasets Evaluating SeLoRA on larger datasets, such as MIMIC-CXR (containing approximately 377,000 images), would provide more insights into its scalability. Future work could also validate SeLoRA on MRI, CT, or ultrasound datasets, as testing on diverse datasets would better demonstrate its robustness and versatility.\n3. Incorporating related work. The idea of dynamically adjusting the rank of the LoRA matrix in SeLoRA is conceptually similar to the recently proposed ALoRA (NAACL 2024). However, the two methods differ in implementation: ALoRA utilizes pruning and redistribution strategies, while SeLoRA relies on Fisher information as the adjustment criterion. Insights from ALoRA could provide valuable inspiration for future improvements of SeLoRA.\n4. Evaluation with medical doctor may help verify the experiment results.\nOther questions\n1. Unconventional split of the IU X-Ray dataset. The 80:16:4 split results in a relatively small test set, which could compromise the robustness of the evaluation. A more conventional split (e.g., 80:10:10) might provide more reliable insights.\n2. Small sample size in the Montgomery County CXR dataset. With only 138 samples, the Montgomery County dataset is too small for deep learning applications, which may impact the stability and generalizability of the model\u2019s results"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents Self-Expanding Low-Rank Adaptation (SeLoRA), akin to LoRA\u2019s structure but distinguished by the dynamic growth of ranks guided by Fisher information during training.   This enables SeLoRA to flexibly adapt to the inherent characteristics of each layer, guaranteeing enhanced medical image synthesis quality while minimizing challenges related to rank adjustments."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* Originality: good originality, combining self-expanding and LoRA to make LoRA self-adapt to the different needs of layers.\n\n* Quality: simple but effective method. Performance validated in the scope of medical image synthesis.\n\n* Clarity: clear figures and method presentation.\n\n* Significance: Data scarcity is very common in the medical AI field, and a strong LoRA variant is important to the community. IF the proposed method is effective and generalizable in the general scenes, it could be significant in efficient learning."
+            },
+            "weaknesses": {
+                "value": "* The paper proves the proposed method is significantly outstanding in the medical image synthesis scene (IU X-RAY dataset and CXR dataset). Would it work well in other tasks, like perceptual tasks or other synthesis tasks?\n\n* Time cost is an important metric for the self-expand algorithm. The paper lacks a discussion of the efficiency of the algorithm and the experimental comparison with other LoRA methods."
+            },
+            "questions": {
+                "value": "Included in the Weaknesses part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

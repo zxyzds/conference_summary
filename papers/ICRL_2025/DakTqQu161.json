@@ -1,0 +1,167 @@
+{
+    "id": "DakTqQu161",
+    "title": "Unified Multi-Modal Interleaved Document Representation for Information Retrieval",
+    "abstract": "Information Retrieval (IR) methods aim to identify relevant documents in response to a given query, which have gained remarkable attention due to their successful application in various natural language tasks. However, existing approaches typically consider only the textual information within the documents, which overlooks the fact that documents can contain multiple modalities, including texts, images, and tables. Further, they often segment each long document into multiple discrete passages for embedding, preventing them from capturing the overall document context and interactions between paragraphs. We argue that these two limitations lead to suboptimal document representations for retrieval. In this work, to address them, we aim to produce more comprehensive and nuanced document representations by holistically embedding documents interleaved with different modalities. Specifically, we achieve this by leveraging the capability of recent vision-language models that enable the processing and integration of text, images, and tables into a unified format and representation. Moreover, to mitigate the information loss from segmenting documents into passages, instead of representing and retrieving passages individually, we further merge the representations of segmented passages into one single document representation, while we additionally introduce a reranking strategy to decouple and identify the relevant passage within the document if necessary. Then, through extensive experiments on diverse information retrieval scenarios considering both the textual and multi-modal queries, we show that our approach substantially outperforms relevant baselines, thanks to the consideration of the multi-modal information interleaved within the documents in a unified way.",
+    "keywords": [
+        "Information Retrieval",
+        "Multi-Modal Information Retrieval",
+        "Multi-Modal Representation Learning"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "Our paper introduces a novel approach to use full contextual information of multimodal interleaved documents for information retrieval.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=DakTqQu161",
+    "pdf_link": "https://openreview.net/pdf?id=DakTqQu161",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduced a novel IR framework, which enables integration and representation of diverse multimodal content including text, images, and tables, into a unified document representation."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The motivation of the work is clear and the problem is worth exploring. The proposed methods are technically sound."
+            },
+            "weaknesses": {
+                "value": "The novelty of the proposed method is limited. The experiment results and discussion sections are not well-presented to demonstrate the effectiveness and benefits of the proposed methods."
+            },
+            "questions": {
+                "value": "1. The paper proposed to first represent each document as a sequence of sections as $s_i = [V_{S_i}, L_{S_i}, T_{S_i}]$, where $V_{S_i}$,  $L_{S_i}$, and $T_{S_i}$ are visual tokens, text tokens, and table tokens, respectively. Is there a specific reason why concatenate features from different modalities in this way? Have you tried other feature fusion methods?\n2. The above mentioned question also exists in section 3.3, is there a specific reason why concatenate query q and s_i? Why not shuffle their positions? Why not choose other feature fusion methods such as inner product, outer product, addition, subtraction, etc.?\n3. I was wondering is there a specific reason why choose contrastive loss for training in section 3.2? Have you compared it with conventional cross-entropy loss?\n4. In the experiment section, I was wondering have you conducted the experiments with conventional methods such as dual encoder, where the feature embeddings are extracted from LLaVA?\n5. In the experimental result and discussion sections, it is worth exploring how much benefits introduced by each modality. \n6. Besides, it is worth comparing the additional performance gain introduced by each modality v.s. their extra latency."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a unified approach to encode document representations for information retrieval, consisting of (1) encoding multi-modal interleaved information in a document; (2) split a document into multiple passages and separately encoding the split passages; then average pooling over the passage embeddings as the document representation. The authors conduct studies on how to fine-tune a VLM retriever and reranker to handle  information retrieval tasks with interleaved document."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed approach is straightforward. Leveraging the pre-trained VLMs for information retrieval is an important topic.\n2. The ablation studies on training a reranker are comprehensive and clearly illustrates the detail on how to train a multimodal reranker."
+            },
+            "weaknesses": {
+                "value": "1. Although the main claims of the paper (interleaved document embeddings and aggregate representations from sections) are intuitive, the experiments are not fully convinced. (1) Is interleaved document encoding better? No text-only retrievers as baselines are provided. It is reasonable to compare document encoding with and without interleaved images; however, it is also sensible to provide the text-only retriever (such as E5, DRAGON or MistralE5) fine-tuned on the same dataset or zero-shot as the text-only retrieval baseline since using VLM fine-tuned on text-only training data may make the VLM overfitting on the small training data. (2) Is aggregating representation from sections better? The experimental results in Table2 may provide the answer but some settings are not clear to me (See 1. in Questions). \n2. Some experimental settings are not clear (See Questions) and I\u2019m somehow a bit confused by the tables in the main experiment. For example, in the same dataset, Encyclopedic-VQA and Enc-VQA, there are document and section retrieval; however, there is no clear explanation of the settings on document and section retrieval (See 3. in Questions)."
+            },
+            "questions": {
+                "value": "1. Clarifying the experimental settings in Table2: If I understand correctly, the comparison of 2nd and 3rd rows is to demonstrate the effectiveness of document retriever (aggregate section embeddings from section retriever) is better than section retriever. However, I cannot find the detailed settings for the 2nd row (i.e., how many documents are passed to rerankers? Since the retrieved unit is section; then, there maybe multiple top-K sections coming from the same document.). For a comparison, my imagination is that the top 25 distinct documents should be first identified from the top-K retrieved sections (where K > 25) before reranking? \n2. Why the numbers of the last row from Table1 and Table 2 are different? I assume that they are from the best approach with document retrieval with reranker?\n3. For document retrieval, how you conduct reranking? Is the reranking pipeline is still the same as section retrieval? I.e., top-25 documents are provided to the reranker, which reranks all the sections in the top-25 documents and use the maximum score of the section in a document as the score to rerank the document?\n4. Have you tried to train a retriever and reranker on all the datasets and check if the ranking models can generalize well across different datasets?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents Interleaved Document Information Retrieval System (IDentIfy), a document retrieval framework that uses vision-language models (VLMs) to encode the multi-modal document interleaved with textual, visual, and tabular data to perform document retrieval followed by section retrieval. In the document retrieval stage, following the bi-encoder paradigm, the query and document section is separately encoded, and the section embeddings from a document is averaged to form the document embedding. In the section retrieval stage, the authors develop a re-ranker to re-rank sections previously retrieved by the document retriever. Experimental results show that IDentIfy can outperform Entity and Summary baselines as well as textual models."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- With the advantages of VLMs, IDentIfy is able to perform effective retrieval on documents interleaved with multiple modalities.\n- IDentIfy effectively integrates global information into segmented sections while maintaining efficient training inference."
+            },
+            "weaknesses": {
+                "value": "- The experiments are conducted on clean, source-avaliable corpus whose documents can be easily segmented into sections according to the subtitles, and then extracted into multi-modal elements. However, real-world data are often presented in compiled files like PDFs. In such scenarios, document division and multi-model data extraction may not be possible. This poses a challenge for IDentIfy in real-world use.\n- The presentation of the results in Section 4.3 lacks a main thread, and is difficult to follow. I suggest the authors add an introductory paragraph at the beginning of Section 4.3 and organize the experiments in a clearer structure.\n- There are some details in this paper that are not very clear (see Questions)."
+            },
+            "questions": {
+                "value": "- As shown in Table 8, the retrieval target of Encyclopedic-VQA, InfoSeek, ViQuAE is only text. Why does IDentIfy perform better than the Text-document baseline on these datasets?\n- The equation on line 240 contains an error: exp is missed in the loss calculation.\n- Do \u201csection\u201d and \u201cpassage\u201d in this paper mean the same thing? If yes, a sentence could be added stating that the two terms refer to the same thing.\n- The terms \u201cdocument retrieval\u201d and \u201csection retrieval\u201d are confusing. They actually mean the two stages in IDentIfy. But they read like two levels of retrieval granularity, as the experiment presents on line 347.\n- How are texts, images, and tables extracted from a section organized into the input to the section encoder? Is it a fixed order of texts, then images, finally tables (as line 210 indicates)?\n- What do the authors mean by \u201ccombine four images into one\u201d, on line 301?\n- How do the authors \u201cconsider four sections per document in representing documents\u201d (line 302)? What four, the first four?\n- In Table 2 and 1, the passage (section?) retriever performs significantly worse than document retriever (20.5 R@1 for document retriever, 3.9 R@1 for passage retriever, only 19% of the performance of document retriever). Does that mean that the global information plays a so important role, that ignoring it can have a huge impact on retrieval, while a simple embedding averaging can mitigate it effectively? If yes, why can the re-ranker, which doesn\u2019t integrate any global information, offer so much gain (3.9\u219228.6, closer to 35.1)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses limitations in document representation for information retrieval (IR) by recognizing that documents can contain multiple modalities\u2014such as text, images, and tables\u2014and that segmenting long documents into discrete passages often hampers the ability to capture overall context and inter-paragraph interactions. The authors propose a novel method that interleaves different modalities in document embeddings, leveraging the capabilities of vision-language models (VLMs) to enhance the representation of multimodal documents. The proposed method aims to improve the effectiveness of document retrieval by better capturing the relationships among various modalities within a single document."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. **Originality**:\n   - The paper identifies significant limitations in current document representation methods and proposes an innovative approach to integrate multiple modalities, a relatively underexplored area in information retrieval.\n\n2. **Quality**:\n   - The methodology demonstrates a thoughtful integration of VLMs for enhancing document embeddings, showing promise in leveraging advanced models to address multimodal challenges.\n\n3. **Clarity**:\n   - The paper is well-structured and articulately presents the limitations of existing approaches, the proposed solution, and the expected impact on information retrieval. This clarity makes it accessible to readers across various backgrounds.\n\n4. **Significance**:\n   - By focusing on the multimodal nature of documents, the research has potential implications for various applications in IR, making it a timely contribution to the field as the demand for more sophisticated document processing techniques grows."
+            },
+            "weaknesses": {
+                "value": "1. **Lack of Novel Contribution**:\n   - While the application of VLMs to IR is interesting, the paper lacks substantial novelty beyond their application. Previous works, such as those exploring VLMs in other contexts (e.g., CLIP, BLIP), have already laid the groundwork for similar methodologies.\n   - The segmentation of documents into sections does not introduce a new technique; rather, it mirrors existing practices without clear justification for its necessity.\n\n2. **Evaluation and Baselines**:\n   - The evaluation framework appears insufficiently rigorous, with limited baseline comparisons provided. The selection criteria for these baselines are not clearly articulated, raising concerns about the validity of the results.\n   - There is a notable absence of non-VLM-based evaluations to establish the effectiveness of the proposed method relative to traditional approaches.\n\n3. **Methodological Concerns**:\n   - The rationale for dividing documents into sections is not convincingly justified, leaving the impression that it may compromise document representation integrity.\n   - The proposed use of representations such as \u2018End of Query\u2019 and \u2018End of Section\u2019 lacks comparative evidence demonstrating their superiority over alternative representation methods.\n\n4. **Inadequate Discussion of Modality Gap**:\n   - The paper does not sufficiently address how the modality gap is resolved, which is critical for understanding the effectiveness of the proposed method."
+            },
+            "questions": {
+                "value": "1. **Rationale for Sectioning**:\n   - Could you clarify the rationale for segmenting documents into sections? What benefits do you envision from this approach that could not be achieved through a holistic document representation?\n\n2. **Alternative Approaches**:\n   - Have you considered preprocessing with techniques like CNNs before embedding to retain document-level context without segmenting? How might this impact your findings regarding limitations?\n\n3. **Effectiveness of Representations**:\n   - Can you provide empirical evidence or theoretical justification that supports the efficacy of using representations like \u2018End of Query\u2019 and \u2018End of Section\u2019 compared to other methods?\n\n4. **Baseline Choices**:\n   - What criteria did you use to select the baseline models for evaluation? How do these baselines adequately reflect the current state of research in multimodal IR?\n\n5. **Modality Gap Resolution**:\n   - How does your approach specifically address the modality gap? Can you elaborate on any mechanisms or metrics used to assess this aspect?\n\n6. **Generalizability of Results**:\n   - Since LLaVA-NeXT is highlighted as a strong VLM, how do you anticipate the performance might vary with other VLMs? Have you conducted preliminary analyses to explore this?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

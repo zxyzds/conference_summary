@@ -1,0 +1,166 @@
+{
+    "id": "tYVmxoRps3",
+    "title": "IS TRANSFORMER A STOCHASTIC PARROT? A CASE STUDY IN SIMPLE ARITHMETIC TASK",
+    "abstract": "Large pre-trained language models have demonstrated impressive capabilities, but \nthere is still much to learn about how they operate. In this study, we\n conduct a investigation of the autoregressive transformer\u2019s ability to\n perform basic addition operations. \n Specifically, by using causal analysis we found that a few different attention heads in the middle layers control the addition carry, with each head processing carries of different lengths. Due to the lack of globality in these attention heads, the model struggles to handle long-sequence addition tasks. By performing inference intervention on mistral-7B, partial task performance can be restored, with the accuracy on 20-digit long-sequence additions from 2\\% to 38\\%. Moreover, through fine-tuning, we discovered that the model still struggles to generalize carry chains beyond the training sequence length and the formation of the attention heads is crucial to the length generalization. Our research reveals how the model performs addition, and further provides insights into the debate on whether these models are merely statistical.",
+    "keywords": [
+        "large language model",
+        "interpretability"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=tYVmxoRps3",
+    "pdf_link": "https://openreview.net/pdf?id=tYVmxoRps3",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper studies how pre-trained autoregressive language models perform addition operations. It founds that the model relies on localized attention distribution for handling carry operations. Thus it's hard for the model to process inputs with long sequences. The paper tries to restore the model's performance by intervening in attention during inference without training. The experimental findings show that autoregressive models rely on the staircase attention patterns to transmit carry-encoded value tokens to the final token for prediction Since their analysis shows that many errors stemmed from incorrect handling of carries, they try to restore the model's internal mechanisms by modifying the attention weights depending on whether there is a carry or not. The paper also tried fine-tuning with long addition data, with carry length up to 10. While fine-tuning is effective in improving the accuracy, it doesn't extend the model's ability to do addition with correct carries beyond 10, the limit set in the training time."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Carefully designed tasks and intervention techniques to understand how the model performs addition. From the analysis, designing data to test the models' abilities to do addition with long carry chain."
+            },
+            "weaknesses": {
+                "value": "- Finetuning experiments are done with one of the pre-trained models in the analysis."
+            },
+            "questions": {
+                "value": "- Have the authors considered similar experiments for substraction?\n- How does it affect the model's performance if we revert the input so that it becomes the order that humans perform addition?\n- What's the authors thought on whether the model are merely statistical or there is deeper reasoning mechanism embedded in the model."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper attempts to study the carry propagation error for the task of addition when LLMs such as mistral and Lllama2 are doing the calculations. Through some ablation study, they find the attentions heads responsible for this error, and make an intervention to offset this error.  Accordingly, they suggest fine-tuning the model based on this to get better results."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1- The paper has developed a natural story from doing the ablation study to fine-tuning a model in Sections 3 to 5, which makes it more understandable to a general reader. \n\n2- To my knowledge, this is the first attempt for doing an ablation study for the task of addition in a model as large as llama2. Hopefully, this will contribute to the mechanistic interpretability of LLMs for logical tasks such as addition and parity."
+            },
+            "weaknesses": {
+                "value": "1- Before, jumping to the details of experiments in section 3, it would\u2019ve been more convenient for the reader if they had described the input and the output format. For instance, I was curious about the answer of Llama2 and prompted \u201c233335 + 566667\u201d twice for temperature = 1 and got the two answers below \u2014 While the final answer is the same, the format is different and needs some extra care. Did you read the final answer manually across all your experiments?  Did you set the temperature to zero? How do you ensure that the output format stays the same? \n\n```\nSure! Here is the result of adding 233335 and 566667:\n233335 + 566667 = 799992\n\nSure! Here is the calculation:\n233335 + 566667 = 799992\n```\n\n\n2- In line 177, initially I thought it must be $x_{d+1} + y_{d+1}$ and $x_{d+1}' + y_{d+1}'$. I had to go over the entire section to understand that it is not the case and reason for that choice. The authors must have done a better job at explaining their experimental set up. Another example of this are equations (1) to (3) where attention scores and $m_i$\u2019s are given without any explanation. For example, what are $\\sigma$ and $\\gamma$? \n\n3- In line 200, $v$ is used for the first time in the paper. I\u2019m still not sure what the definition of this entity is. Because of this I couldn\u2019t understand the ablation study in section 3.3, which is the core idea of the entire work and is later used in sections 4 and 5.\n\n4- Figure 6 is not being referred anywhere in the main body. While it is probably for the results of Section 4, please make sure to refer the reader to the right place for checking up the results. Also, this figure only includes the accuracies up to length of 20, whereas in 417 they talk about a case where sequences of length 60 are involved. \n\n5- If the ablation study demonstrates the main cause for the carry propagation errors in a large model such as mistral, why is there no improvement in figure 6 for up to length 5? This must be discussed by the end of Section 4.2. \n\n6- Can you compare your work to some previous result that has attempted to address the carry propagation issue? For instance, the paper below:\n\n[1] Sabbaghi et al., Explicitly Encoding Structural Symmetry is Key to Length Generalization in Arithmetic Tasks.\n\n7- What is the effect of fine-tuning on tasks unrelated to the addition? Does the explained procedure do any harm to the typical benchmark score of llama2 or mistral?"
+            },
+            "questions": {
+                "value": "Please address the concerns expressed above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper offers a comprehensive and detailed investigation into how a Transformer performs simple addition. The authors support their findings by conducting inference interference to improve addition performance. Finally, they demonstrate that fine-tuning a model on the addition task does not significantly enhance its ability to perform addition."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The experiments conducted in this paper are thorough.\n\n- Exploring the limitations of Transformers to handle mathematical tasks is a crucial research focus, as it has significant implications for their use in quantitative applications."
+            },
+            "weaknesses": {
+                "value": "- Additional details needed: What kind of positional embedding is used in the model? Previous research such as [1] has shown that positional embeddings play a crucial role. I am aware that [1] is cited, but the authors only briefly mentioned it sec 4.2.\n\n- Fine-tuning: How many epochs were used by the authors to fine-tune the model? Can the grokking effect start to take effect with sufficient fine-tuning steps?\n\n- Related work: The authors should position this paper more clearly within the related work section. Transformers with addition have been well-studied, and lines 90 to 93 mention at least two very similar studies. How does this work differ from them?\n\n- Lack of an implementable algorithm: This paper does not provide an algorithm/circuit that can be directly implemented by a Transformer. That said, I understand the challenge of identifying a circuit for addition and do not expect the authors to provide one in the rebuttal.\n\n[1] Transformers Can Do Arithmetic with the Right Embeddings"
+            },
+            "questions": {
+                "value": "See above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors address the issue that large-scale language models based on Transformers often make mistakes in integer addition.\nIn integer addition, the result of the operation is often transferred from the lower digits to the higher digits. The authors define this transfer as the carry length and analyze it in detail.\nThe causal analysis showed that some attention heads strongly influence the output. (Sec 3.2)\nNext, from the visualization of the attention pattern, it was found that the model predicts the next token by relying on a stair-shaped attention pattern, and when the carry becomes long, this stair-shaped pattern becomes disordered, and the value information is lost. (Sec 3.3)\nFrom these analyses, the authors argue that many of the model's errors are due to incorrect processing of carries and propose a method for re-weighting the attention weights, and the experimental results show its effectiveness. (Sec 4)\nIn addition, the authors investigate how much the model can generalize to carry learning in out-of-distribution generalization. (Sec 5)"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper was written in an easy-to-understand way, so it was easy to understand. The theme is interesting.\n- The proposed method also seems to be simple but effective.\n- The experiment was conducted using three types of models (Mistral-7B, Llama-2-7B, Gemma-7B), so it is considered to be a comprehensive result."
+            },
+            "weaknesses": {
+                "value": "- In the abstract of this paper, the authors claim that 'the formation of the attention heads is crucial to the length generalization,' but I cannot find any evidence in the main text to support this claim. Therefore, this claim should at least be removed from the abstract. (If the authors make this claim, they should discuss it with position encoding. Position encoding is the most critical factor in length generalization, and there has been much research on it. However, this paper does not mention RoPE, position interpolation methods, or extrapolation. )\n- (L140-141)  h_i^0 = d_i + pos(i), this formula is incorrect because Mistral-7B uses RoPE. It would be better to rewrite it.\n- There is no description of the fine-tuning parameter settings or detailed description of the data set. It may appear to be non-reproducible."
+            },
+            "questions": {
+                "value": "1\\. (Sec 3.3) There is a large variation in the baseline scores for CC4, CC6, and CC10. What is the cause of this?\nIn particular, the score for Llama2-7B is very low compared to Mistral-7B and Gemma-7B for CC10.\n\n2\\. (Sec 3.3) How long is the sequence length of CC10?\nLooking at Figure 8, I think the sequence length of CC10 may exceed 4k.\nIf it does, the effect of max_position_embeddings is significant, so a discussion or explanation should be included.\nThe max_position_embeddings is 32k for Mistral-7B (window size is 4k), 4k for Llama2-7B, and 8k for Gemma-7B. Is this difference affecting the results in Table 1?\n\n3\\. (Sec 4.2) The experimental results are listed in Table 1, but it is difficult to understand because there is no citation in the main text. Please include a citation in Section 4.2."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

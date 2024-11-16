@@ -1,0 +1,133 @@
+{
+    "id": "UvMSKonce8",
+    "title": "Gnothi Seauton: Empowering Faithful Self-Interpretability in Black-Box Models",
+    "abstract": "The debate between self-interpretable models and post-hoc explanations for black-box models is central to Explainable AI (XAI). Self-interpretable models, such as concept-based networks, offer insights by connecting decisions to human-understandable concepts but often struggle with performance and scalability. Conversely, post-hoc methods like Shapley values, while theoretically robust, are computationally expensive and resource-intensive. To bridge the gap between these two lines of research, we propose a novel method that combines their strengths, providing theoretically guaranteed self-interpretability for black-box models without compromising prediction accuracy. Specifically, we introduce a parameter-efficient pipeline, AutoGnothi, which integrates a small side network into the black-box model, allowing it to generate Shapley value explanations without changing the original network parameters. This side-tuning approach significantly reduces memory, training, and inference costs, outperforming traditional parameter-efficient methods, where full fine-tuning serves as the optimal baseline. AutoGnothi enables the black-box model to predict and explain its predictions with minimal overhead. Extensive experiments show that AutoGnothi offers accurate explanations for both vision and language tasks, delivering superior computational efficiency with comparable interpretability.",
+    "keywords": [
+        "Interpretability",
+        "Efficient-AI",
+        "Transformers"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "We introduce a method that makes a black-box model self-interpretable. By using a side network to generate Shapley values, it reduces memory, training, and inference costs while maintaining prediction accuracy.",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=UvMSKonce8",
+    "pdf_link": "https://openreview.net/pdf?id=UvMSKonce8",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper aims to address the tradeoff between prediction accuracy and interpretability of machine learning models. That is develop an inherently explainable model without compromising its prediction performance. To achieve this, the authors propose to integrate small side networks into black-box models and use them to generate Shapley value explanations. The paper provides comparisons of computational costs and memory usage, and empirical results on both prediction accuracy and explanation quality."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The idea is intuitive and novel.\n2. The paper is well-written and easy to follow.\n3. The proposed method significantly cuts down the trainable parameters, memory usage, and FLOPs without compromising prediction accuracy and explanation quality."
+            },
+            "weaknesses": {
+                "value": "1. Since the proposed method relies on the frozen pretrained black-box model\u2019s parameters, will the biases or spurious correlations in the pretrained model also affect the generated explanations from the side network? Can the side network mitigate these issues?\n2. Following Weakness 1, robustness evaluations are missing from the current experiments. How the side network will behave under the out-of-distribution (OoD) or even adversarial data w.r.t. the pretrained model?\n3. The side network is designed to be parameter-efficient, but is there an optimal balance between its complexity and explanation fidelity? It would be better to see ablation studies on different side network sizes or architectures."
+            },
+            "questions": {
+                "value": "See Weaknesses for details."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a method called AutoGnothi for generating Shapley-based explanations in black-box models, such as Vision Transformers (ViTs) and BERT, using side-tuning. Instead of modifying the main model, AutoGnothi trains a lightweight, parallel \"surrogate\" network that learns to approximate the importance of different input features without requiring iterative masking during inference, as is typically needed for Shapley values.\nThe main advantage of AutoGnothi lies in its efficiency. By using side-tuning, AutoGnothi is more memory- and time-efficient compared to previous approaches like ViT-Shapley, which require a fully fine-tuned surrogate model.\n\nThe authors measure the quality of explanations using insertion and deletion metrics, which test whether removing or adding key features impacts the model\u2019s prediction as expected. In these tests, AutoGnothi\u2019s explanations are shown to be comparable to ViT-Shapley (I read through the Appendix as well to make this conclusion). Besides, although qualitative examples suggest that AutoGnothi may better highlight main objects in images, the paper doesn\u2019t fully convince me that it strictly produces better explanations than ViT-Shapley. Putting the explanations into a human-in-the-loop evaluation would help answer my concern.\n\nThe general idea is not new (e.g. compared vs. ViT-Shapley) but I appreciate the efficient solution, clear/detailed writing style, and thorough evaluation. I especially enjoyed reading Section 4.2.\n\nIn summary, I like the paper and recommend accepting it. My ratings can be adjusted during the rebuttal."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Originality: While AutoGnothi's goal of providing Shapley-based explanations overlaps with previous work like ViT-Shapley, it introduces a new side-tuning approach to reduce memory and computational demands.\n\nQuality: The paper provides a thorough evaluation across multiple datasets (both vision and language), using various metrics to prove the efficiency and explanation faithfulness.\n\nClarity: The writing is clear and  well-organized."
+            },
+            "weaknesses": {
+                "value": "The evaluation of explanation: \nAlthough qualitative examples (Fig.7) suggest that AutoGnothi may better highlight main objects in images, the paper doesn\u2019t fully convince me that it strictly produces better explanations than ViT-Shapley. Putting the explanations into a human-in-the-loop evaluation [1,2] would strengthen claims about its explanation quality.\n\n[1] The Effectiveness of Feature Attribution Methods and Its Correlation with Automatic Evaluation Scores\n\n[2] What I Cannot Predict, I Do Not Understand: A Human-Centered Evaluation Framework for Explainability Methods\n\nMinor: I think the authors could also be upfront about the limitations of the works (e.g. approximation, explanation evaluation). The current writing does not discuss any of its **possible** limitations."
+            },
+            "questions": {
+                "value": "Q1. The general idea in AutoGnothi is that the main model makes predictions, and the surrogate model explains those predictions. However, how can the authors ensure that the surrogate model **truly** reflects how the main model makes its decisions? Although the paper shows efforts to align the two main and surrogate models, how well would AutoGnothi work if we scale it to more complex models (where aligning networks structure is prohibited) with complicated output distributions, where using KL divergence might not be enough to keep them aligned? Are there better alternatives than KL divergence?\n\nQ2. I\u2019m curious to see how AutoGnothi performs on more complex tasks. Currently, the tasks feel easy (especially the text classification). I\u2019m concerned that side-tuning may not scale well with more complex tasks, like question answering or fine-grained image classification (e.g., CUB-200). How would the authors think the current side-tuning can satisfy interpretability and accuracy for complex tasks?\n\nTo clarify more, Q1 is about alignment and Q2 is about the feasibility of side-tuning."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper is concerned with the setting of training an explainer for an explainee. \nImprovements to the previous work, which trains a surrogate model that can handle masked inputs and another explainer, that can predict the saliency, are primarily in terms of required ressources, both for training and inference with respect to time and memory. \nThis is achieved by utilizing Ladder-Side-Tuning to only train a reduced number of parameters on top of the explainee.\nWhen saliency and prediction are both desired, only the explainee and the few additional parameters are needed, incurring significantly reduced costs, while still matching the previous SOTA performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is presented very clearly, well written and easy to understand.\n\nThe proposed method combines ideas of PETL and Covert et al. in an original way. \n\nThe method at least matches the performance of the significantly more resource intensive method of Covert et al., clearly improving upon it overall.\n\nThe evaluation covers two modalities and multiple datasets with consistent results.\n\nA convincing ablation demonstrates the superiority of the proposed approach to two naive baselines, called Froyo and Duo, showing that explaining and predicting cause orthogonal gradients."
+            },
+            "weaknesses": {
+                "value": "The paper discusses a  simple, resource efficient alternative to a niche paradigm of explaining a model, that is only applicable to Transformers.\n\nPatch Dropout has recently emerged as training augmentation for Vision Transformers, that enables transformers to handle masked inputs. (https://openaccess.thecvf.com/content/WACV2023/papers/Liu_PatchDropout_Economizing_Vision_Transformers_Using_Patch_Dropout_WACV_2023_paper.pdf)\nSince the surrogate models are more accurate on multiple datasets, it is not clear why one would want to stick to the explainee.\nThe paper misses a discussion of that.\n\nCombining the two points above, I am unsure how significant this work is, as the field might move towards Transformers trained with Patch Dropout. \n\nWhile the results in Table 3 suggest a gap, they are cherry-picked and no \"clear margin\" is visible to Covert et al. across the different architectures, typcially more evenly matched (As in Tab.  4 -8).\n\nThe evaluation using the surrogate model is frickle, as it is not actually the model to be explained. \n\nIt is unclear why ImageNette is used as main dataset, as it seems too easy, with accuracies above 99%.\n\nFig. 2 is too full. The table is repeated in the paper anyway. (Table 1 and 2)\n\ntypos in lines : 264, 535"
+            },
+            "questions": {
+                "value": "How do the saliency maps transfer across surrogate models?\nAs the saliency maps explain the explainee, they should work across a range of surrogate models, especially those the explainers were not trained on,  but which still try to explain the same explainee.\n\nWhich surrogate model is used to evaluate the baselines?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

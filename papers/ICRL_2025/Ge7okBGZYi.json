@@ -1,0 +1,207 @@
+{
+    "id": "Ge7okBGZYi",
+    "title": "How Learnable Grids Recover Fine Detail in Low Dimesions: A Neural Tangent Kernel Analysis of Multigrid Parameteric Encodings",
+    "abstract": "Neural networks that map between low dimensional spaces are ubiquitous in\ncomputer graphics and scientific computing; however, in their naive\nimplementation, they are unable to learn high frequency information. We present\na comprehensive analysis comparing the two most common techniques for mitigating\nthis spectral bias: Fourier feature encodings (FFE) and multigrid parametric\nencodings (MPE). FFEs are seen as the standard for low dimensional mappings, but\nMPEs often outperform them and learn representations with higher resolution and\nfiner detail. FFE's roots in the Fourier transform, make it susceptible to\naliasing if pushed too far, while MPEs, which use a learned grid structure, have\nno such limitation. To understand the difference in performance, we use the\nneural tangent kernel (NTK) to evaluate these encodings through the lens of an\nanalogous kernel regression. By finding a lower bound on the smallest eigenvalue\nof the NTK, we prove that MPEs improve a network's performance through the\nstructure of their grid and not their learnable embedding. This mechanism is\nfundamentally different from FFEs, which rely solely on their embedding space to\nimprove performance. Results are empirically validated on a 2D image regression\ntask using images taken from 100 synonym sets of ImageNet. Using the peak\nsignal-to-noise ratio to evaluate how well fine details are learned, we show\nthat the MPE increases the minimum eigenvalue by 8 orders of magnitude over the\nbaseline and 2 orders of magnitude over the FFE. The increase in spectrum\ncorresponds to a 15 dB increase in PSNR over baseline and 12 dB increase over\nthe FFE.",
+    "keywords": [
+        "neural tangent kernel",
+        "compute graphics",
+        "scientific computing",
+        "fourier feature encodings",
+        "multigrid parametric encodings",
+        "encodings"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "We explore the exceptional performance of multigrid parametric encodings, commonly found in compute graphics, through the lens of the neural tangent kernel (NTK).",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Ge7okBGZYi",
+    "pdf_link": "https://openreview.net/pdf?id=Ge7okBGZYi",
+    "comments": [
+        {
+            "comment": {
+                "value": "Thanks for engaging in the review process respectfully and benevolently.\n\nI am happy with the response provided, and will keep my score.\n\n- Could you please include in writing here the content of your modifications?\n- Re the memory limitation of MPE, I think it would be nice to mention it in the paper"
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Weaknesses and Questions"
+            },
+            "comment": {
+                "value": "We appreciate the reviewers feedback and thank them for their time. We apologize for any confusion in the grid. The grid structure itself is not learnable and is instead set by the hyperparamters L and d (now h to avoid conflict with the input dimensions). At each intersection point of the grid there are learnable parameters that are trained using gradient descent and backpropagation. The structure of this grid is shown in figure 1 and examples of these learned parameters are shown in Appendix C. We consider both a uniform grid of decreasing cells as well as a logarithmic grid in our evaluations. The baseline is a similar point of confusion as it is just the same as the identity encoding. We address this in the question answer below.\n\nThe takeaway from this analysis is that the MPE often outperforms the FFE and should be considered in more applications. As pointed out by reviewer pL4m, the MPE has been mainly used in the graphics community. Our work addresses the theoretical underpinning of the MPE in hopes that it sees a wider adoption in areas such as scientific computing. The MPE is often easier to use and does not suffer from the alias problems found in the FFE (Tancik et al., 2020). The MPEs main limitation is the memory requirement for the grid, but this has already been addressed by sparse (Hadadan et al., 2021) and hashgrid (Muller et al., 2022) representation that reduce memory requirements without changing our analysis. The MPE also is not suited for high dimensional problems as the scaling is poor; however, these domains often find the MPE unnecessary because the spectral bias problem is not present. This is why you will see the FFE used as the positional encoding for Transformers but not the MPE.\n\nWe present evaluations on a random 100 image subset of ImageNet to show the generalization of our analysis on a wide variety of images. This is shown in Table 1 and Figure 5. The spectra are averaged across each evaluation and show that the MPE consistently outperforms the FFE and network without any encoding. We have also expanded our results with 3D implicit surface representations on meshes from the Stanford graphics dataset and show that the MPE still produces the highest eigenvalue spectrum overall. Muller et al., 2022 has already shown the broad applicability of the MPE. Our work provides the theoretical underpinning for why the encoding works so well.\n\nWe appreciate the reviewer\u2019s feedback in strengthening our paper. As we work on a new draft, are there any shortcomings that can be addressed to improve your view of our contributions? Our paper provides valuable insight into how the MPE functions, and it is our hope that this understanding will motivate future work in further optimizing the encoding as well as extend the MPE\u2019s adoption beyond the graphics community.\n\nQuestions:\n1. Would it be useful for comparison against other image compression algorithms?\n\nWe appreciate the reviewer's suggestion but believe that such a comparison would detract from the goal of the original paper. We are using the 2D image regression problem to illustrate the performance of the different results and provide provide empirical evaluations for the theory. We are not necessarily trying to find the most optimal image compression algorithm. We point the reviewer to Tancik et al., 2020 and Muller et al., 2022 for the broad applicability of these encodings.\n\n2. What does identity correspond to in the plots?\n\nIdentity and baseline both refer to a network without any encoding. The change in naming is confusing and we have remedied this in the current draft by referring to this network as the baseline throughout. We also made this explicit at the start of section 5.\n\n3. It would be nice to see the actual learned grid superimposed on the image itself.\n\nFigure 1 shows the structure of the grid overlayed on an example image; however, this grid is much finer in practice. The structure of the grid itself is set with hyperparameters before training. Appendix C shows what the learned grid parameters look like at the end of the training. If there are additional figures that the reviewer would find helpful, we would be happy to add them in a future draft."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Weaknesses and Questions"
+            },
+            "comment": {
+                "value": "We greatly appreciate the time spent reviewing and providing feedback for our paper. We are working to address the notation issues in a new draft. To address the weaknesses, we have included a short description highlighting why the low dimensionality is important. The notation used for the kernel regressions and encodings was chosen to mirror previous works (Tancik et al., 2020; Wang et al., 2020), but we will change the x for kernel regression to be capitalized to represent the entire dataset (as defined in the notation section). Thank you for pointing out the lack of clarity in the original derivation description. The FFE's NTK was well established in Tancik et al., 2020, but the equations were given in a different form that makes it difficult to compare directly to our results. Our derivation does not change their original analysis, but it allows us to more easily compare the structure of the two kernels. We've updated the sentence at the start of section 4 to highlight this distinction. We also thank the reviewer for highlighting the limitations with PSNR. Our results follow the evaluations presented in Tancik et al, 2020, Hadadan et al., 2021, and Muller et al., 2022 which use PSNR. We will reevaluate the results using these new metrics and update a future draft. To address the generalization, we have completed additional evaluations on a 3D implicit surface problem using OccupancyNet (Mescheder et al., 2018) on meshes from the Stanford graphics dataset.\n\nThank you for your time and feedback. While we update the draft, are there additional details that you would like to see included?\n\nQuestions:\n1. What is d in figure 1?\n\nThe d in Figure 1 refers to the depth parameter of the grid, which describes the number of learnable parameters at each grid corner. As you point out, however, it seems that this name is overloaded. To address this, we have update the value to h in the current draft. Table 1, Table 2, and Figure 1 have been updated to reflect this. We thank the reviewer for helping to approach the notation used in the paper.\n\n2. Is it possible to quantify the improvement of the MPE over the MLP with no encoding?\n\nSadly, there is no readily available way to quantify the improvement of the MPE spectrum other than providing a lower bound. To address this, we included Figure 2. Though out of scope for the current work, this finding provides an efficient way for future work to optimize or design new parametric encodings as the kernel only needs to be evaluated on the learnable grid. The minimum eigenvalue could then be used during a hyperparameter search or to compare different grid interpolation schemes. Though we are not able to find an exact quantity for this gap, the method laid out is widely applicable to evaluation of parametric encodings.\n\n3. Why isn't everyone using MPE?\n\nThis is a good question and was a major motivation for our work. MPEs have strong performance and do not suffer from the aliasing problem found with FFEs (Tancik et al., 2020). One limitation is the amount of memory needed to store the grid, but this problem has been largely addressed by a sparse grid representation (Hadadan et al., 2021) and a hashgrid representation (Muller et al., 2022). It's important to note that these only affect the storage and do not change the analysis presented in this paper. The MPE has been largely published in the graphics community, but we hope to see more papers using MPE in other communities. We also note that there has been some use of the MPE in scientific machine learning applications (Huang and Alkhalifah, 2023), and we hope that our work will improve adoption by providing a more theoretical basis for the MPE, which was already explored for the FFE."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Weaknesses and Questions"
+            },
+            "comment": {
+                "value": "We thank the reviewer for their time and the important feedback. We address your questions below, but would first like to respond to the weaknesses presented. We agree that the neural tangent kernel is a well established method; however, we see this as a strength of our work rather than a detriment to it. Previous work (Jacot et al., 2020; Tancik et al., 2020; Wang et al., 2020; Yang and Salman, 2019) has established that the NTK is representative of real networks in use. The novelty of our work is in the application of the NTK to the multigrid parametric encoding. This analysis provides invaluable insight into the function of the encoding, allowing for better fine-tuning and broader application in the machine learning community. The establishment of the NTK in the literature also lends itself to the generalization of our results on ImageNet. Our evaluation on a wide variety of images shows that the spectrum holds. Previous work by Tancik et al., 2020, Muller et al., 2022, and Hadadan et al. 2021 have shown that the encodings work well on a wide variety of applications, but the eigenvalue spectrum for the MPE was never established. To strengthen our results, we have evaluated the NTK on OccupanyNet (Mescheder et al., 2018) to show that the spectrum holds for implicit surface representations in 3D. Meshes from the Stanford graphics dataset, as used by Tancik et al., 2020, show that the MPE produces a larger eigenvalue spectrum in the 3D case as well. We are preparing these plots for an upcoming draft. Reviewer pL4m corroborates this stance that the ImageNet evaluations are sufficient. The draft also updates the notation in equations 9, 12, and 14 to make the derivative more explicit as they are with respect to the model parameters.\n\nWe again thank the reviewer for their time. Are there any other aspects of the paper that we can address to strengthen your impression of the work? We believe that our analysis is important for the wider adoption of the MPE and better use of encodings in machine learning applications.\n\nQuestions:\n1. Can the theory be applied to other architectures like CNNs?\n\nYes, the theory can be applied to most common architectures as shown by Yang and Salman, 2019. Our analysis however is purposely restricted to MLPs as described at the start of the introduction. Often there are applications in graphics or scientific machine learning where the network needs to be both small and fast to evaluate. There is also typically not regular structure that can be applied to CNNs, so MLPs are used.\n\n2. Do the presented figures show results only for single-layer, fully connected networks?\n\nWe apologize for the confusion. The derivation in section 4 focuses on a single layer as extension to multiple layers is trivial, but the number of terms quickly become unwieldy, adding little benefit to the reader\u2019s understanding of our work. As explained in \u201cExperimental Setup\u201d, the networks used contain two hidden layers with a width of 512 each. Evaluations on these networks are use for the plots in all figures. Our additional evaluations on 3D implicit surface regression using a network with 6 fully connected hidden layers with a width of 256 each. In this case, we find that the same eigenvalue spectrum trends hold, with the MPE greater than the FFE which is, in tern, greater than the baseline, unencoded network."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Weaknesses and Questions"
+            },
+            "comment": {
+                "value": "Thank you for your review and providing feedback to improve the impact of our work. We apologize for the confusion in our presentation and seek to address your questions below and in a new draft. We would, however, like to highlight comments from reviewers uZqD and pL4m, which emphasize the clarity and structure of our paper. In response to the weaknesses presented, the connection between the eigenvalues and high frequency information has been explored in multiple works (Tancik et al., 2020; Wang et al., 2020) and is explained in section 3. Equation 7 shows that the error decays along each eigenvector based on the magnitude of the corresponding eigenvalue. If the eigenvalue is larger, then the decay is faster. The smaller eigenvalues inherently match to higher frequency information, as explained in Basri et al., 2019. Beyond, the answers below, is there any additional information to be included in the paper to improve the reviewer's understanding of the background?\n\nWhile we fix these notational issues, are there other concerns that would improve your confidence in our work? Having a stronger theoretical understanding of encodings is important to the machine learning community, as it allows for the creation of improved coordinate based MLPs and wider adoption of the MPE. Our work leveraging the NTK provides such an important analysis. \n\nQuestions:\n1. Dimensions in Equation 1.\n\nThank you for catching this omission. The dimension of x is as you have stated as it in the original input to the network. The output dimension is then $2dL$. We have included these values next to equation 1 for clarity.\n\n2. Notation in Equation 3.\n\nThe plus symbol is a common notation for concatenation.\n\n3. Equation 7 is hard to understand. What are the dimensions of y?\n\nWe apologize for the confusion. y in this context all of the training targets concatenated, so it is not just the output dimension. It is the output dimension multiplied by the number of samples. We've included the dimension explicitly in the \"Spectral Bias\" section and use a capital letter to denote that it\u2019s the entire dataset. \n\n5. Is there an expectation missing in equation 9?\n\nWe thank the reviewer for pointing this out. We have updated equation 9, 12, and 14 to include the expectation.\n\n6. Theorem 1 is unclear.\n\nWe have removed the $n$ superscript to align more with the notation description. You are correct in that the two are the same. Lambda is a common notation for the eigenvalue of a matrix, and $\\lambda_i^{MPE}$ is simply the ith largest eigenvalue of the NTK for the MPE contributions to the kernel shown in equation 13. We will highlight this connection in a new draft."
+            }
+        },
+        {
+            "summary": {
+                "value": "The article proposes a multi-grid parametric encoding approach\nto capture high-frequency information in images. \nThrough a neural tangent kernel analysis angle,\nit is proven that the proposed encoding can learn an NTK \nkernel with a higher eigenvalue spectrum than using no encoding. \nThe superior performance of this approach is further analyzed \nin detail by separating the contribution from the learnable grid, and \nthe embedding space. On the image regression task of ImageNet, \nthe proposed encoding ourperforms Fourier feature encodings."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- It is an interesting idea to analyze the impact of different\nencoding schemes of a coordinate of an image using the spectrum\nin the  NTK framework to make the theory concise. \n- The proposed multi-grid parametric encoding works very well in \nthe image regression task."
+            },
+            "weaknesses": {
+                "value": "- The writing of the article should still be improved\nfor the reviewer to understand the methodology. Please clarify the questions below.\n- Conceptually, it is still unclear how the spectrum of the NTK \nis related to the high-frequency information of an image, i.e. \nthe large modes of the Fourier transform of a signal X = (x_1,...,x_N) of length N."
+            },
+            "questions": {
+                "value": "- It is unclear in the definition (1), what is the dimension of x,  is it in R^d? \nIf so what about the dimension of the output \\gamma_F(x), is it 2d x L ? \n- It is not clear what is the notation round + in eq. 3 means.\n- eq. 7 is hard to understand. If K_NTK is a matrix of size NxN, would the size \nof Q be also NxN? In this case, why it makes sense to write Q ( f_theta(x,t) - y ) if y is not on dimension N?\n- Is there an expectation missing in eq. 9 to define the K_NTK, as in eq. 4?\n- The statement of Theorem 1 is not so clear, it would be better to write directly what lambda_i^MPE means as in the proof.\nWhat is the size of the training set X^n in this proof? Isn't it the X in the notation section?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper provides a theoretical and empirical analysis demonstrating that Multigrid Parametric Encodings (MPEs) improve neural network performance in learning fine details and handling discontinuities. By deriving the neural tangent kernel (NTK) for MPEs, the authors show that multigrid encoding elevates the NTK's eigenvalue spectrum compared to coordinate-based MLPs, explaining why MPEs capture detail more effectively. Their analysis isolates this improved performance to MPEs\u2019 learnable grid structure rather than the embedding space alone, a distinction from Fourier Feature Encodings (FFEs). Empirical results on 2D image regression with ImageNet data reveal that MPEs, especially those with smaller grid cells, achieve higher Peak Signal-to-Noise Ratio (PSNR) scores, indicating better detail preservation than both FFE and baseline MLP approaches."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper has a well-established theory.\n2. The paper is well structured.\n3. The authors aim to fill the gap in understanding why MPEs improve a network\u2019s performance through the structure of their grid and not their learnable embedding."
+            },
+            "weaknesses": {
+                "value": "1. The paper offers limited novelty and applicability. The authors demonstrate that MPEs enhance network performance through grid structure rather than learnable embeddings by analyzing a lower bound on the eigenvalues of the Neural Tangent Kernel (NTK). However, they use well-known methods to address the problem, which limits the work's novelty.\n2. Most of the paper is focused on describing the existing theory which is well described in literature.\nThe evaluation process is insufficient; in my opinion, images from a single dataset (ImageNet) are not enough to thoroughly validate the theory.\n3. In Equation (9), derivatives are denoted by a single prime symbol without specifying the parameter with respect to which they were calculated, creating confusion and potential errors in further derivations, which makes the paper difficult to follow. \n4. Furthermore, the analysis focuses primarily on a single-layer MLP network. While the authors state that the theory can be easily extended to deeper networks, they do not provide this extension, even in the appendix. The structure and width of individual layers in finite-width networks introduce variability in the NTK. For example, deeper layers in finite networks may capture complex feature hierarchies, while shallow layers contribute differently to the NTK. This dependency adds analytical challenges, as each layer\u2019s contribution can influence the network\u2019s performance and generalization in unique ways. This is the main reason why the evaluation process should also be conducted on deeper neural networks."
+            },
+            "questions": {
+                "value": "1. Can the presented theory be applied to other neural network architectures, such as Convolutional Neural Networks (CNNs)?\n2. Do the presented figures show results only for single-layer fully connected neural networks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies how Multi-grid positional encodings affect the spectrum of the Neural Tangent Kernel of coordinates-based MLPs, and show that it forms a provably better encoding (compare to Fourier) to recover high frequency details."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper doesn't make assumptions about what the reader knows or doesn't know and redefines terms and gives clear examples as well as clear expressions for the tools and objects mentioned.\n- Isolating the effect of the embedding size and the grid is really important theoretically and practically. I wouldn't necessarily have thought to ask for this analysis, but seeing it in the paper is definitely a strength.\n- The work is to the point with a clear theoretical contribution backed by solid experiments."
+            },
+            "weaknesses": {
+                "value": "- nit: in notations, it would be nice to discuss why $d \\leq 3$ is important for the theoretical analysis and the limitation.\n- nit: in notations, $f_\\theta(x)$ is not a function, it's an expression. Same for $\\gamma(x)$. Btw, they shouldn't both use $x$ as an input.\n- FFE NTK contribution: line 256 says \"we derive the kernel for MPEs and FFEs\", while line 134 says \"Previous analysis of the NTK for coordinate based MLPs has been restricted to FFEs\". I think it's really important to clarify what exactly the contribution is when it comes to the NTK of FFE based MLPs. If the latter is what is actually the case, then a reference to this work would be appropriate.\n- Use of PSNR: because PSNR is an MSE-based metric, it is actually not really sensitive to fine details. I think using a metric like HFEN or a multiscale-SSIM would make more sense in this context.\n- Large-scale realistic experiments: while I do think the current state of the experiments is really solid, for a more impactful work I think larger scale experiments with NeRFs or other SotA models would be beneficial."
+            },
+            "questions": {
+                "value": "- in Fig. 1, is $d=2$ dimension of the input in the notations or 3 as suggested by the input of the MLP? Either way it's a bit confusing\n- In theorem 1, the result states that the spectrum of NTK of MLP+MPE is uniformly lower bounded by the spectrum of NTK of MLP, could it be possible to quantify given some assumptions how much above it it is? For now we have an empirical answer.\n- What's unclear to me after reading this paper is: since there is a consensus in computer graphics that MPE is better + it seems to work so well out-of-the-box in this work, why isn't everyone (typically in scientific ML) using MPE?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors look at the Multigrid Parametric Encoding through the lens of Neural Tangent Kernel analysis.  They find that MPE have a raised eigenvalue spectrum compared to baseline encodings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The approach seems straightforward and shows an improvement over the baseline.\n\nI appreciate the theoretical contribution and subsequent evaluation of another approach."
+            },
+            "weaknesses": {
+                "value": "I feel like the choice of the grid is not discussed enough.  There is either the choice of having a regularly spaced grid as well as having a learnable one.  There would at least be some intermediate option as well, like having an irregular grid, as it is done in the fast multipole method.  There it has also been observed that using a regular grid leads to unstable results.  Hence, it's not convincing that the grid actually needs to be learnable to be useful, like the authors claim.\n\nThe baseline network is not really defined.  After reading through the paper, I am still not sure what you mean by that and how you trained it.\n\nWhile the analysis performed appears sound, it begs the question of what the take-away message is.  Does MPE always outperform FFE?  Figure 2 is missing the eigenvalue spectrum for FFE.  \n\nAs it stands, the examples seem a bit cherry-picked.  It would improve the paper, if the authors could provide an average eigenvalue spectrum for both approaches considered that gives an idea of how it generalizes."
+            },
+            "questions": {
+                "value": "If you use non-parametric networks for encoding an image, maybe it would be useful to also include comparisons to classical image compression algorithms and show their signal to noise ratio?\n\nWhat does Identity correspond to in the plots?\n\nIt would be nice to see the actual learned grid superimposed on the image itself."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

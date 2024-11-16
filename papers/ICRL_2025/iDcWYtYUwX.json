@@ -1,0 +1,170 @@
+{
+    "id": "iDcWYtYUwX",
+    "title": "EcoFace: Audio-Visual Emotional Co-Disentanglement Speech-Driven 3D Talking Face Generation",
+    "abstract": "Speech-driven 3D facial animation has attracted significant attention due to its wide range of applications in animation production and virtual reality. Recent research has explored speech-emotion disentanglement to enhance facial expressions rather than manually assigning emotions. However, this approach face issues such as feature confusion, emotions weakening and mean-face. To address these issues, we present EcoFace, a framework that (1) proposes a novel collaboration objective to provide a explicit signal for emotion representation learning from the speaker's expressive movements and produced sounds, constructing an audio-visual joint and coordinated emotion space that is independent of speech content. (2) constructs a universal facial motion distribution space determined by speech features and implement speaker-specific generation. Extensive experiments show that our method achieves more generalized and emotionally realistic talking face generation compared to previous methods.",
+    "keywords": [
+        "3D Talking face generation",
+        "Audio-visual emotional co-disentanglement",
+        "Speaker-specific"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=iDcWYtYUwX",
+    "pdf_link": "https://openreview.net/pdf?id=iDcWYtYUwX",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes EcoFace, a framework for generating 3D talking faces using speech signals. The framework first constructs an audiovisual emotion space that is independent of the speech content. Using a Variational Autoencoder the framework then generates FLAME parameters (a low-dimensional representation of facial movements). The model\u2019s encoder is conditioned on both speech and emotion features to create a latent representation that captures expressive nuances. Finally, a decoder that is conditioned on the speaker is used for the facial animation generation. Experimental results show better performance in both emotional expressiveness and lip-sync accuracy when compared with state-of-the-art methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Novel approach for emotion disentanglement using speech and visual information.\n2. Comprehensive evaluation through quantitative/qualitative metrics, user studies, and ablation experiments."
+            },
+            "weaknesses": {
+                "value": "1. Some methodological choices are unclear, and additional evaluation details are needed (see questions).\n2. Speaker-specific modeling. Generation can only be performed for speakers the model has seen during training."
+            },
+            "questions": {
+                "value": "1. You mention in the introduction that your model can discriminate the signal of different types and intensities of emotion features. How does your model interpret varying intensities of emotion and how does the contrastive-triplet loss contribute to this? \n\n2. Sec. 4.1: To evaluate the methodology on the test set for unseen subjects you condition on all training identities. Why use all identities rather than a subset?\n\n3. Although you retrained FaceFormer and CodeTalker on RAVDESS and HDTF, you did not retrain EMOTE which seems to provide better results than your approach on MEAD that the model was trained on. For fair comparison could you perform this experiment by retraining EMOTE on the RAVDESS too?\n\n4. Table 3: Can you show the results on each dataset separately and for each emotion? Since your model was trained on RAVDESS it may contain some bias towards that dataset when compared with EMOTE.\n\n5. Sec. 4.3,\u201dEffect of emotion embeddings\u201d: Have you tried to extract content features from an emotional speech signals? How would the model perform in this more challenging experiment?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "EcoFace addresses issues in 3D facial animation: feature confusion (lack of clear signals for content and emotion), emotion weakening (difficulty in controlling emotion intensity), and the mean-face problem (limited control over individual speaker\u2019s style of expression). The authors tackle these issues by introducing explicit signals for emotional motion representation and intensity control using audio-visual loss and a contrastive triplet loss to distinguish emotion intensities. They also generate speaker-specific, stylized facial animations with a lip-sync discriminator."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The work presents following strengths:\n1. EcoFace introduces an audio-visual emotion disentanglement mechanism to supervise the discrepancy between emotional information captured by facial motion and the audio stream, effectively capturing information from both audio and video. \n2. EcoFace controls within-emotion intensity by using an emotional triplet loss."
+            },
+            "weaknesses": {
+                "value": "1. The GT videos on the webpage show severe issues, such as unnatural mouth closure and a jerky appearance, which don\u2019t match the [original implementation](https://download.is.tue.mpg.de/emoca/assets/emoca_v2_comparison.mp4). Since EcoFace is trained on meshes obtained using EMOCA, the authors should clarify how their model produces improved animations compared to the GT animations on which it was trained, as shown in their demo videos.\n2. The EMOTE comparison videos on the webpage don\u2019t match the exemplar videos from other methods, such as [FaceTalk](https://youtu.be/7Jf0kawrA3Q?si=ZvxQT3FD27Eh-RDj), [3DiFACE](https://youtu.be/Mep5pAU3TPc?si=Pe93jkT_eC_pBjPZ), [EMOTE](https://download.is.tue.mpg.de/emote/EMOTE_SupMat_video.mp4) . Could the authors explain the observed differences?\n3. Triplet loss in eq 7 operates within a single emotion space. Since it focuses on a single emotion, how does EcoFace ensure that emotion intensities for high arousal, high valence (e.g., surprise) are disentangled from those of high arousal, low valence (e.g., anger or fear)?\n4. Since EcoFace claims to generate speaker-specific animations, it would help to provide more details on the number of identities in the training set and any animation results for unseen subjects for better evaluation.\n5. Training details are unclear. With a batch size of 30, how are typical forward passes structured to use 2N pairs for computing contrastive loss in Eq. 4, and how is triplet loss computed per emotion in Eq. 7?"
+            },
+            "questions": {
+                "value": "1. L219: What kinds of augmentations were applied to the video frames and audio samples?\n2. L225: The latent representations are averaged over the sequence. How is it ensured that continuous emotional information along the sequence is not lost? Could the authors provide more details on the contrastive loss in Equation 4, and clarify if other methods besides averaging were considered, such as mapping to a lower dimension with a learnable layer?\n3. fig 1a: The method name is missing in the caption.\n4. fig 1b: The triangle and circle shapes representing features lack labels indicating what they refer to.\n5. fig 4 and Ablation Studies (pages 9,10): \"Ecotalk\" is used instead of \"EcoFace.\"\n6. What was the rationale for training the sync expert independently? How are the FLAME region landmarks obtained\u2014are they input as rendered crops or as 3D vertices?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Privacy, security and safety"
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the challenge of separating emotional information from speech content in facial animation, which often leads to feature confusion and emotion weakening. This work, EcoFace, introduces audio-visual co-disentanglement and a speaker-specific motion generator to address these issues. By using an audio-visual loss for emotion consistency and a contrastive-triplet loss for distinct emotional space, EcoFace creates a low-dimensional motion distribution that captures speaker-specific styles for personalized animation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper proposes a novel framework to distanglment emotion and speech content in the face synthesis field.\n2. This work is well-written and well-organized.\n3. The results shows the efficiency of the proposed framework."
+            },
+            "weaknesses": {
+                "value": "Major Concerns:\n\n1. LSE-C Range Consistency\n   There appears to be a discrepancy in the LSE-C values reported in this manuscript compared to those commonly cited in the community. For instance, DINet [https://arxiv.org/pdf/2303.03988] lists an HDTF LSE-C value (as GT) of 8.9931, while the value reported in this work is 0.824. Clarification regarding this disparity is needed, as it may suggest a difference in evaluation methodology or algorithm implementation. \n\n2. Definition Clarity for L_emo and L_sync in Ablation Study.\n   The explanation of L_emo and L_sync in Table 4 is missing, which decreases in interpreting the results and understanding the contributions of each component.\n\n3. Validity and Interpretation of VE-FID Metric\n   Introducing VE-FID as a new metric to measure emotion expression is a great try. However, some results in Table 1 and Table 4 raise questions. For example, the comparison between EcoFace (21.57) and EmoTalk (51.98) shows a large difference, even when EcoFace lacks L_emo (30.88). Does this suggest that EcoFace may outperform EmoTalk on emotion-related metrics even without the emotion-related modules or guidance?\n\n4. Lack of Results for Speaker-Specific Generation\n   One of key contributions is implementing speaker-specific generation; however, the absence of results supporting this feature weakens its impact. Providing empirical evidence or case studies to demonstrate speaker-specific generation\u2019s effectiveness would strengthen the claim.\n\nMinor Issues:\n\n1. On Page 3, Lines 160-161, please use \u201cWav2Vec 2.0\u201d instead of \u201cWav2Vec2\u201d.\n\n2. In Figure 1(a) on Page 4, the method name is currently missing.\n\n3. On Page 10, in Figure 4(a) and Figure 4(c), Line 518, the label/term should be corrected from \u201cEcoTalk\u201d to \u201cEcoFace.\u201d\n\n4. Demographic Information in User Study"
+            },
+            "questions": {
+                "value": "1. What is the demographic information in the user study?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper describes a framework for disentangling facial expressions of emotion from facial motions related specifically to speech.  The goal is to later re-synthesize expressive talking faces driven by speech.  Furthermore, a triplet loss is included to ensure that different expressions can be separated in the representation, and that the differences in the magnitude of same expression can be disambiguated.  To account for differences in the way that different people display facial expressions, the generator is conditioned on a learned identity embedding.."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The problem being tackled is important and challenging.  We are highly sensitive to discrepancies in generated facial motion that accompanies speech.  This work tackles the problem by disentangling facial motion related to emotion from facial motion related to speech.  Furthermore, accounting specifically for the degree of expression is effective.\n\nThe work uses open data to aid re-producibility.  Furthermore, code will be made available.\n\nThe approach is effective.  The performance against the baselines is good.  The demo videos are impressive.  Talking head generators often cannot generalize to things like singing (because the sustained gestures look unnatural) but the approach here does an excellent job.  Furthermore, the differences in the articulation for different languages is very well captured.  For example, the lip-rounding in articulation of French speech is very impressive.\n\nThe ablations show the importance of the design of the components of the system.\n\nI appreciate the inclusion and attention to detail in Section 4.3."
+            },
+            "weaknesses": {
+                "value": "A limitation of the objective metrics, such as LVE, is that they do not account for type of error.  A larger LVE in the articulation of, say, /k/ might be insignificant, but a large error in the articulation of, say, /b/ is highly problematic.  I realize these are standard metrics, but I still see these as problematic for this reason.\n\nSee the questions/suggestions below."
+            },
+            "questions": {
+                "value": "How is the level of emotion in the training data assigned?\n\nOn line 135 \u2014 is an element of s \\in R^{n} the probability of that expression being present?\n\nIn Equation (7) how is alpha set?\n\nIn the paragraph following Equation (7), should z_l} be z_{i} to match the equation?\n\nIn Equation (11), does each term contribute equally to the loss?  There is no weighting to account for things like differences in scale?\n\nOn line 477 \u2014 you mentioned the margin that you beat the baselines by being 30.9%, 29.4%, and 41.24%.  This is not a margin though is it?  Are these not the scores that your approach attained?  The margin would be the difference.\n\n*Suggestions*\nChange references to. \u201cspeaker-specific\u201d to \u201cspeaker-aware\u201d.  Speaker-specific typically means that you train a different model for each individual speaker.  \n\nOn line 135 you mention \u201cwhere each a \\in R^{D} has D sampled audio.  I think you mean that each a \\in R^{D} is a D-dimensional feature vector.  I am not sure what \u201dD sampled audio\u201c means.\n\nIn Section 3.1 it would help to specify that the speech features are latent features and not typical speech features, e.g., from a Mel-filter bank.\n\nIn Section 3.1 it was not clear that for T frames of audio, why there are 2T frames of emotion-related and 2T frames of content-related features.  Maybe explain this when these are introduced.\n\nThe equations should flow as part of the sentences.  Throughout the paper you end a sentence before providing the equation.\n\nLine 146 \u2014 replace low-latitude with low-dimensional.\n\nOn line 232, you refer to \u201cthe voiceless phase\u201d.  Voiceless has specific meaning in speech.  To be clear here you should avoid using this terms and refer to \u201cperiods where speech is not present\u201d.  (For reference, voiceless speech is speech produced when the vocal chords are apart.)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

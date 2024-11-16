@@ -1,0 +1,166 @@
+{
+    "id": "FB84Wkn3Xp",
+    "title": "Differentiable Solver Search for fast diffusion sampling",
+    "abstract": "Diffusion-based models have demonstrated remarkable generation quality but at the cost of numerous function evaluations. Recently, advanced ODE-based solvers have been developed to mitigate the substantial computational demands of reverse-diffusion solving under limited sampling steps. However, these solvers, heavily inspired by Adams-like multistep methods, rely solely on t-related Lagrange interpolation. We show that t-related Lagrange interpolation is suboptimal and reveals a compact search space comprised of timestep and solver coefficients. Building on our analysis, we propose a novel differentiable solver search algorithm to identify the optimal solver. Equipped with the searched solver, our rectified flow models, SiT-XL/2 and FlowDCN-XL/2, achieve FID scores of 2.40 and 2.35, respectively, on ImageNet-$256\\times256$ with only 10 steps. Meanwhile, our DDPM model, DiT-XL/2, reaches a FID score of 2.33 with only 10 steps. Notably, our searched solver outperforms traditional solvers by a significant margin. Moreover, our searched solver demonstrates its generality across various model architectures, resolutions, and model sizes.",
+    "keywords": [
+        "Generative models",
+        "Solver",
+        "Sampler",
+        "FlowMatching"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "A differentiable solver search method to find optimal solver parameters as much as, and  use it to explore the upper performance of the pre-trained diffusion model under limited steps",
+    "creation_date": "2024-09-16",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=FB84Wkn3Xp",
+    "pdf_link": "https://openreview.net/pdf?id=FB84Wkn3Xp",
+    "comments": [
+        {
+            "comment": {
+                "value": "**Presentation issues**\n\nThank you for your insightful feedback. We have taken your suggestions and made significant revisions to the article. To maintain clarity, we eliminated most of the redundant formulas and introduced theorems. The proof of theorems is in the appendix."
+            }
+        },
+        {
+            "comment": {
+                "value": "**Presentation issues**\n\nThank all three reviewers for taking the time to provide valuable comments. We apologize sincerely for the typos and any inconvenience they may have caused. We have thoroughly reviewed every detail and submitted a new revised version.\n\n* We thoroughly checked and rectified existing typos, improving the article's readability.\n* We eliminated most of the redundant formulas and introduced theorems to maintain the article's clarity.\n\nWe have resubmitted a revised version of the article, with the aim of enhancing its display quality. If the reviewers have any constructive feedback or suggestions for further improvement, please don't hesitate to reach out to me directly."
+            }
+        },
+        {
+            "comment": {
+                "value": "**Thanks for the valuable feedback**\n\nThank you for taking the time to provide your valuable feedback. We apologize sincerely for the typos and sudden jumps in the text. We apologize any inconvenience they may have caused. We will thoroughly review every detail and submit a revised version that meets the ICLR standards.\n\n**Q1. Computational complexity compared to other methods.**\n\n**For sampling** When performing sampling over $n$ time steps, our solver caches all pre-sampled predictions, resulting in a memory complexity of  $\\mathcal{O}(n)$. The model function evaluation also has a complexity of $\\mathcal{O}(n)$ ($\\mathcal{O}(2 \\times n)$ for CFG enabled). It is important to note that the memory required for caching predictions is negligible compared to that used by model weights and activations. Besides classic methods, we have also included a comparison with the latest Flowturbo published on NeurIPS24.\n|              | Steps | NFE  | NFE-CFG | Cache Pred | Order | search samples   |\n|--------------|-------|------|---------|------------|-------|------------------|\n| Adam2        | n     | n    | 2n      | 2          | 2     | /                |\n| Adam4        | n     | n    | 2n      | 4          | 4     | /                |\n| Henu         | n     | 2n   | 4n      | 2          | 2     | /                |\n| DPM-Solver++ | n     | n    | 2n      | 2          | 2     | /                |\n| UniPC        | n     | n    | 2n      | 3          | 3     | /                |\n| FlowTurbo    | n     | $>$n | $>$2n   | 2          | 2     | 540000(Real)     |\n| our          | n     | n    | 2n      | n          | n     | 50000(Generated) |\n\n**For Searching**  Solver-based algorithms, limited by their searchable parameter sizes, demonstrate significantly lower performance in few-step settings compared to distillation-based algorithms(5/6steps), making direct comparisons inappropriate. Consequently, we selected algorithms that are both acceleratable on ImageNet and comparable in performance, including popular methods such as DPM-Solver++, UniPC(reported in main paper Tab1 and Tab.2), and classic Adams-like linear multi-step methods. Since our experiments primarily utilize SiT, DiT, and FlowDCN that trained on the ImageNet dataset. We also provide fair comparisons by incorporating the latest acceleration method, FlowTurbo. Additionally, we have included results from the Henu method as reported in FlowTurbo.\n\n| SiT-XL-R256 | Steps | NFE-CFG  | Extra-Paramters | FID  | IS    | PR   | Recall |\n|-------------|-------|----------|-----------------|------|-------|------|--------|\n| Henu        | 8     | 16x2     | 0               | 3.68 | /     | /    | /      |\n| Henu        | 11    | 22x2     | 0               | 2.79 | /     | /    | /      |\n| Henu        | 15    | 30x2     | 0               | 2.42 | /     | /    | /      |\n| FlowTurbo   | 6     | (7+3)x2  | 30408704(29M)   | 3.93 | 223.6 | 0.79 | 0.56   |\n| FlowTurbo   | 8     | (8+2)x2  | 30408704(29M)   | 3.63 | /     | /    | /      |\n| FlowTurbo   | 10    | (12+2)x2 | 30408704(29M)   | 2.69 | /     | /    | /      |\n| FlowTurbo   | 15    | (17+3)x2 | 30408704(29M)   | 2.22 | 248    | 0.81    | 0.60      |\n| ours        | 6     | 6x2      | 21              | 3.57 | 214   | 0.77 | 0.58   |\n| ours        | 7     | 7x2      | 28              | 2.78 | 229   | 0.79 | 0.60   |\n| ours        | 8     | 8x2      | 36              | 2.65 | 234   | 0.79 | 0.60   |\n| ours        | 10    | 10x2     | 55              | 2.40 | 238   | 0.79 | 0.60   |\n| ours        | 15    | 15x2     | 110              | 2.24 | 244   | 0.80 | 0.60   |\n**Reference**\n\n[1]. Zhao, Wenliang, et al. \"FlowTurbo: Towards Real-time Flow-Based Image Generation with Velocity Refiner.\" arXiv preprint arXiv:2409.18128 (2024)"
+            }
+        },
+        {
+            "comment": {
+                "value": "**Thanks for valuable feedback**\n\nWe appreciate the time you took to share your valuable feedback with us. We offer our sincerest apologies for the typos and any inconvenience they may have caused. We will conduct a thorough review of every detail and submit a revised version that meets the highest standards of the ICLR.\n\n**Q.1 Why do we need to prove that the error bound is related to timesteps and coefficients?**\n\nOur primary objective is to design a compact search space that enables the identification of a solver that achieves near-optimal performance. To accomplish this, we must first establish the constituent components of the search space for the optimal solution. Notably, if the error bound is independent of the number of steps, our search can be limited to the coefficients alone. In fact, it can be proved that the error bound is dictated by the time selection and the coefficients.\n\n**Q.2 What is $\\eta$ in Section 4.3?**\n\n$\\eta$ is a constant scalar. We will add more explanation of notations in the finial version.\n\n **Assumption.2** As shown below, the pre-trained velocity model $v_\\theta$ is not perfect and the error between ${v}_\\theta$ and ideal velocity field $\\hat{v}$ is bounded, where $\\eta$ is a constant scalar. \n\n$||\\hat{v}-v_\\theta || \\leq \\eta \\ll ||\\hat{v}|| $\n\n**Q.3 Richardson's extrapolation for solving ODE**\n\nYes, the Adams-like linear multi-step method employs Lagrange interpolation to determine its coefficients, which makes it feasible to substitute Lagrange interpolation with alternative interpolation (or extrapolation) techniques[1], such as Richardson's method. Nevertheless, Richardson functions also solely rely on the variable $t$, without considering $x$.\n\n**Reference**\n\n[1] Fekete, Imre, and Lajos L\u00f3czi. \"Linear multistep methods and global Richardson extrapolation.\" Applied Mathematics Letters 133 (2022): 108267."
+            }
+        },
+        {
+            "comment": {
+                "value": "**Q7.1. Solver Across different variance schedules**\n\nSince our solvers are searched on a specific noise scheduler and its corresponding pre-trained models, applying the searched coefficients and timesteps to other noise schedulers yields meaningless results. We have tried applied searched solver on SiT(Rectified flow) and DiT(DDPM with $\\beta_{min}=0.1, \\beta_{max}=20$) to SD1.5(DDPM with $\\beta_{min}=0.085, \\beta_{max}=12$), but the results were inconclusive. Notably, despite sharing the DDPM name, DiT and SD1.5 employ distinct $\\beta_{min}, \\beta_{max}$ values, thereby featuring different noise schedulers. A more in-depth discussion of these experiments can be found in Section(Extend to DDPM/VP).\n\n**Q7.2. Solver for different variance schedules**\n\nSince every discrete Denoising Diffusion Probabilistic Model (DDPM) has a corresponding continuous Variance Preserving (VP) scheduler, we can transform the discrete DDPM into a continuous VP, thereby successfully finding a better solver compared to traditional DPM-Solvers. \n\nTo put it simply, under the empowerment of our high-order solver, the performance of DDPM and Rectified flow does not differ significantly (8, 9, 10 steps), which contradicts the common belief that FM is stronger at limited sampling steps."
+            }
+        },
+        {
+            "comment": {
+                "value": "**Q3. Ablation on Search Samples**\nWe ablate the number of search samples on the 10-step and 8-step solver settings. \\textit{Samples} means the total training samples the searched solver has seen.   \\textit{Unique Samples} means the total distinct samples the searched solver has seen.  Our searched solver converges fast and gets saturated near 30000 samples.\n\n| iters(10-step-solver) | samples | unique samples | FID  | IS  | PR   | Recall |\n|-----------------------|---------|----------------|------|-----|------|--------|\n| 313                   | 10000   | 10000          | 2.54 | 239 | 0.79 | 0.59   |\n| 626                   | 20000   | 10000          | 2.38 | 239 | 0.79 | 0.60   |\n| 939                   | 30000   | 10000          | 2.49 | 240 | 0.79 | 0.59   |\n| 1252                  | 40000   | 10000          | 2.29 | 239 | 0.80 | 0.60   |\n| 1565                  | 50000   | 10000          | 2.41 | 240 | 0.80 | 0.59   |\n| 626                   | 20000   | 20000          | 2.47 | 237 | 0.78 | 0.60   |\n| 939                   | 30000   | 30000          | 2.40 | 238 | 0.79 | 0.60   |\n| 1252                  | 40000   | 40000          | 2.48 | 237 | 0.80 | 0.59   |\n| 1565                  | 50000   | 50000          | 2.41 | 239 | 0.80 | 0.59   |\n\n| iters(8-step-solver) | samples | unique samples | FID  | IS  | PR   | Recall |\n|----------------------|---------|----------------|------|-----|------|--------|\n| 313                  | 10000   | 10000          | 2.99 | 228 | 0.78 | 0.59   |\n| 626                  | 20000   | 10000          | 2.78 | 229 | 0.79 | 0.60   |\n| 939                  | 30000   | 10000          | 2.72 | 235 | 0.79 | 0.60   |\n| 1252                 | 40000   | 10000          | 2.67 | 228 | 0.79 | 0.60   |\n| 1565                 | 50000   | 10000          | 2.69 | 235 | 0.79 | 0.59   |\n| 626                  | 20000   | 20000          | 2.70 | 231 | 0.79 | 0.59   |\n| 939                  | 30000   | 30000          | 2.82 | 232 | 0.79 | 0.59   |\n| 1252                 | 40000   | 40000          | 2.79 | 231 | 0.79 | 0.60   |\n| 1565                 | 50000   | 50000          | 2.65 | 234 | 0.79 | 0.60   |\n\n\n**Q4. Stopped evaluation at 5 Steps.**\n\nSince DM-nonuniform introduced the most effective online optimization solver before our search-based approach, we leveraged their results for comparison on DDPM models. We followed the evaluation pipeline established by DM-nonuniform to report performance within 5 and 10 optimization steps. In general, solver-based methods tend to exhibit inferior results under extremely limited numbers of function evaluations (NFE), such as 5 or 6 steps. \n\n**Q5. comparison with distillation methods**\n\nWe provide a comparison with FlowTurbo in Q.2\n\nAs the solving difficulty increases and the number of searchable parameters decreases (e.g., only 10 searchable parameters for 4 steps and 6 searchable parameters for 3 steps), the performance of solver-based methods falls significantly behind that of distillation methods when limited to fewer than 5 steps. Notably, it is unlikely for solver-based methods to achieve performance comparable to or exceeding that of distillation methods, such as CM, given that their number of learnable parameters is tens of thousands of times larger than our searchable parameters. \n\nFurthermore, integrating denoiser distillation with solver search holds significant promise for achieving even greater performance enhancements.\n\n**Q6. 10-step solver outperforming 50 Euler steps.**\n\nLinear multistep-based high-order solvers can significantly boost performance in simulations with a limited number of time steps. By leveraging the reference trajectory from the Euler solver with 100 steps, it is possible to outperform the Euler solver with 50 steps. As illustrated in all metrics, our solver enables SiT-XL/2-R256 and FlowDCN-XL/2-R256 to achieve better Recall scores than the Euler solver with 50 steps. Notably, FlowDCN-XL/2-R512 with our solver surpasses its Euler counterpart in terms of sFID, Precision, and Recall, demonstrating its exceptional performance."
+            }
+        },
+        {
+            "comment": {
+                "value": "**Thanks for the valuable feedback**\n\nThank you for taking the time to provide your valuable feedback. We apologize sincerely for the typos and any inconvenience they may have caused. We will thoroughly review every detail and submit a revised version that meets the ICLR standards.\n\n**Q1. More Metrics of Searched Solver**\n\nWe adhere to the evaluation guidelines provided by DM-nonuniform, reporting only the FID as the standard metric in the current main paper. \n\nTo clarify, we do not report selective results; **we will provide sFID, IS, PR, and Recall metrics for SiT-XL(R256), FlowDCN-XL/2(R256), and FlowDCN-B/2(R256) in a new revision pdf (cause we can not directly submit figs on openreview)**. Our solver searched on FlowDCN-B/2, consistently outperforms the handcrafted solvers across FID, sFID, IS, and Recall metrics.\n\n**Q2. Computational complexity compared to other methods.**\n\n**For sampling** When performing sampling over $n$ time steps, our solver caches all pre-sampled predictions, resulting in a memory complexity of  $\\mathcal{O}(n)$. The model function evaluation also has a complexity of $\\mathcal{O}(n)$ ($\\mathcal{O}(2 \\times n)$ for CFG enabled). It is important to note that the memory required for caching predictions is negligible compared to that used by model weights and activations. Besides classic methods, we have also included a comparison with the latest Flowturbo published on NeurIPS24.\n|              | Steps | NFE  | NFE-CFG | Cache Pred | Order | search samples   |\n|--------------|-------|------|---------|------------|-------|------------------|\n| Adam2        | n     | n    | 2n      | 2          | 2     | /                |\n| Adam4        | n     | n    | 2n      | 4          | 4     | /                |\n| Heun         | n     | 2n   | 4n      | 2          | 2     | /                |\n| DPM-Solver++ | n     | n    | 2n      | 2          | 2     | /                |\n| UniPC        | n     | n    | 2n      | 3          | 3     | /                |\n| FlowTurbo    | n     | $>$n | $>$2n   | 2          | 2     | 540000(Real)     |\n| our          | n     | n    | 2n      | n          | n     | 50000(Generated) |\n\n**For Searching**  Solver-based algorithms, limited by their searchable parameter sizes, demonstrate significantly lower performance in few-step settings compared to distillation-based algorithms(5/6steps), making direct comparisons inappropriate. Consequently, we selected algorithms that are both acceleratable on ImageNet and comparable in performance, including popular methods such as DPM-Solver++, UniPC(reported in main paper Tab1 and Tab.2), and classic Adams-like linear multi-step methods. Since our experiments primarily utilize SiT, DiT, and FlowDCN that trained on the ImageNet dataset. We also provide fair comparisons by incorporating the latest acceleration method, FlowTurbo. Additionally, we have included results from the Heun method as reported in FlowTurbo.\n\nWe can achieve **better or comparable performance** with **much fewer NFE and parameters** compared to FlowTurbo\n\n| SiT-XL-R256 | Steps | NFE-CFG  | Extra-Paramters | FID  | IS    | PR   | Recall |\n|-------------|-------|----------|-----------------|------|-------|------|--------|\n| Heun        | 8     | 16x2     | 0               | 3.68 | /     | /    | /      |\n| Heun        | 11    | 22x2     | 0               | 2.79 | /     | /    | /      |\n| Heun        | 15    | 30x2     | 0               | 2.42 | /     | /    | /      |\n| FlowTurbo   | 6     | (7+3)x2  | 30408704(29M)   | 3.93 | 223.6 | 0.79 | 0.56   |\n| FlowTurbo   | 8     | (8+2)x2  | 30408704(29M)   | 3.63 | /     | /    | /      |\n| FlowTurbo   | 10    | (12+2)x2 | 30408704(29M)   | 2.69 | /     | /    | /      |\n| FlowTurbo   | 15    | (17+3)x2 | 30408704(29M)   | 2.22 | 248    | 0.81    | 0.60      |\n| ours        | 6     | 6x2      | 21              | 3.57 | 214   | 0.77 | 0.58   |\n| ours        | 7     | 7x2      | 28              | 2.78 | 229   | 0.79 | 0.60   |\n| ours        | 8     | 8x2      | 36              | 2.65 | 234   | 0.79 | 0.60   |\n| ours        | 10    | 10x2     | 55              | 2.40 | 238   | 0.79 | 0.60   |\n| ours        | 15    | 15x2     | 110              | 2.24 | 244   | 0.80 | 0.60   |\n\n**Reference**\n\n[1]. Zhao, Wenliang, et al. \"FlowTurbo: Towards Real-time Flow-Based Image Generation with Velocity Refiner.\" arXiv preprint arXiv:2409.18128 (2024)\n\n[2]. Xue, Shuchen, et al. \"DM-nonuniform: Accelerating Diffusion Sampling with Optimized Time Steps.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2024."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the inefficiencies in diffusion models for image generation, which require numerous denoising steps during inference. The authors present several key contributions:\n\n1. The authors demonstrate that the choice of interpolation function in the reverse-diffusion ODE can be reduced to mere coefficients, which simplifies the error minimization process related to discretization.\n\n2. The authors propose a novel algorithm that identifies optimal solver parameters within a compact search space defined by timesteps and solver coefficients, enhancing the performance of pre-trained diffusion models.\n\n3. Utilizing their algorithm, they achieve state-of-the-art (relative to a selection of methods) results on ImageNet from 5 to 10 sampling steps."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "# Content\n\n1. The paper critically revisits Adams-like multistep methods and highlights their limitations specifically in the context of diffusion models. \n\n2. The derivation of error bounds and the use of Cauchy-Schwarz inequalities to establish relationships between error, solver coefficients, and timestep choices demonstrate a rigorous mathematical approach.\n\n3. By proposing a universal interpolation function $\\mathcal{P}$ without an explicit form and focusing on coefficients rather than fixed interpolation methods, the paper opens new avenues for flexibility in solver design. This could lead to more adaptable and potentially more accurate methods in sampling the reverse diffusion process.\n\n4. The introduction of a differentiable solver search algorithm provides a novel way to optimize timesteps and coefficients. This approach could leverage pre-trained models, possibly leading to improved performance in practical applications.\n\n5. The paper's focus on error bounds related to pre-trained velocity models is valuable, as it acknowledges the imperfections in real-world applications and provides a framework for quantifying these errors."
+            },
+            "weaknesses": {
+                "value": "# Presentation (Minor)\n\nI marked the Presentation as poor. The reason for this is that, to my liking, the equations are not properly embedded into the text and there are too many prominent typos.\n\nPlease improve your usage of punctuation in and surrounding equations. Furthermore, 29 enumerated equations in the main paper, of which many are not referenced, can be considered excessive. Detailed derivations could be moved to the appendix, shifting the focus to the core functions of your method and leaving more space for figures 4 & 5 (e.g. allowing for larger text within the figures), and algorithms 1 & 2. This could drastically improve the presentation of your work.\n\nTo further improve the presentation of your work, please also check for typos, like in the title of section 3, Eular vs. Euler, etc..\n\n# Content (Major)\n\n1. The emphasis on optimizing solver coefficients based on small data (50K in the experiment section) raises concerns about overfitting. While the expectation of coefficients is meant to enhance generalization, the process must be carefully managed to ensure robust performance across varied datasets.\n\n2. The Paper does not feature any other metrics than FID. \n\n3. While the paper suggests state-of-the-art performance, its experiments and comparisons appear selective. It is important to compare it to other methods that could potentially outperform your method as well. Otherwise, the reader has no perspective regarding the limitations of your approach.\n\n4. The Paper also does not discuss limitations w.r.t. how well the solver algorithm scales to smaller or larger amounts of samples. Furthermore, all evaluation was stopped at 5 solver steps."
+            },
+            "questions": {
+                "value": "In general, I am willing to raise my score if my questions and concerns are addressed with compelling evidence.\n\nConcerning the aforementioned weaknesses, I pose the following questions:\n\n1. The paper features FID as its only metric. Can you incorporate more metrics, such as e.g. Improved Precision & Recall, as well as Inception-Score?\n\n2. How long does it take for Algorithm 2 to complete in theory? O-Noation w.r.t. network evaluations, samples and solver steps should be featured in your paper.\n\n3. You used 50K samples for Algorithm 2 in your experiments section, can you add an ablation study for the cardinality of the samples used to solve your coefficient search? (e.g. 10K, 50K, 100K & 1M samples)\n\n4. You stopped your evaluation at 5 Steps, how much do scores deteriorate for 1 to 4 steps, can you add an additional ablation study for less than 5 solver steps?\n\n5. While your evaluation in Tables 1 & 2 suggests your method outperforms competing methods, how does your work compare to Distillation Methods, such as Consistency-Distillation Training, which yields methods that require less than 5 solver steps? Such comparisons should be featured to put the performance of your method into perspective relative to the state-of-the-art for efficient solving techniques of the reverse process.\n\n6. How do you explain the 10-step solver outperforming 50 Euler steps in Figure 5 (c), what scores would your method reach for 50 steps? I kindly ask you to evaluate more than one metric (see 1.).\n\n7. How well does your method work across different variance schedules? Can variance schedules be identified, where your method works better or worse? Does your method perform better on diffusion processes where the forward process is driftless (e.g. VE) or forward processes that do not omit the drift function (e.g. VP)? \n\n8. Can you add an evaluation of your text-to-image experiments that is based on metrics rather than visual impressions?\n\nOverall I kindly ask you to rework your paper's presentation and add a more rigorous evaluation with more metrics than FID, measuring the diversity- and fidelity of samples."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies diffusion algorithms for generating images. The authors propose a novel differentiable solver search\nalgorithm to build better diffusion solvers. Specifically, the authors demonstrate that the upper bound of discretization error in reverse-diffusion ODE is related to both timesteps and solver coefficients and define a compact solver search space. Then, a differentiable solver search algorithm can be designed to make better diffusion models. The authors conduct experiments compared with current state-of-the-art methods. They show that the proposed DiT-XL achieves 2.33 FID under ten steps, beating current best methods by a large margin."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The authors propose a novel differentiable solver search algorithm to build better diffusion solvers. Specifically, the authors demonstrate that the upper bound of discretization error in reverse-diffusion ODE relates to both timesteps and solver coefficients and defines a compact solver search space. \n\n2. The experimental results seem great compared with current state-of-the-art methods."
+            },
+            "weaknesses": {
+                "value": "FYI: Since I am not working in this area, my reviews may be biased (or even wrong) in a large probability. In general, I found the experimental results to be excellent, and the proposed method seems simple and elegant. I will lean to accept but keep open during the discussion period.\n\n1. The concern of the error bound analysis in Section 4.3: First of all, there are some typos; these $x$ and $\\hat{x}$ should be bold. I lost in Equ. (22), should be $||$ be $\\| \\|_2^2$. The bound provided in Equ. (24) is meaningless to me. It could be helpful to discuss this further. I feel that the authors want to make their method theoretically sound, but it goes in the opposite direction... Even if the authors claim the method is optimal, the algorithm derivation is largely empirical. (Can you justify why the method is optimal? From my understanding, the method should at least match an existing lower bound for the problem.) So, the authors may prefer to keep it as it is.\n\n2. What is $\\eta$ in Section 4.3?\n\n3. Section 5 provides algorithms 1 and 2, the proposed differentiable method for solving ODE. This kind of configuration reminds me of some typical extrapolation methods for solving ODE. For example, Richardson's extrapolation for solving ODE forms a kind of table; the method will converge to ODE in a very efficient way. If possible, please discuss this."
+            },
+            "questions": {
+                "value": "See the weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a method for accelerating reverse diffusion. State-of-the-art models solely rely on the time variable to interpolate and reverse diffuse. The proposed approach builds on the Taylor expansion on top of which the Adams-Bashforth is built around x and not only t in order to improve the search performance. Authors elaborate on the theoretical grounding of their approach and show results on a few benchmarks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The idea of relying on x in addition to t to expand the search space seems very natural."
+            },
+            "weaknesses": {
+                "value": "The paper's writing is an obstacle for the reader to access the work. The number of typos is too large for me to report them here. There are numerous sudden jumps in the text which miss any logical connectors. Also too many of these to start reporting them. \n\nThe analysis in Eq. (7) --> (24) is interesting but it is hard to follow as it is written in a semi-narrative style. It may help to rephrase it as a theorem (state the final result) and the analysis would be the proof of the result."
+            },
+            "questions": {
+                "value": "What is the computational complexity of the proposed approach and how does it compare to existing methods?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

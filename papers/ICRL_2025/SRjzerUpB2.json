@@ -1,0 +1,168 @@
+{
+    "id": "SRjzerUpB2",
+    "title": "Fat-to-Thin Policy Optimization: Offline Reinforcement Learning with Sparse Policies",
+    "abstract": "Sparse continuous policies are distributions that can choose some actions at random yet keep strictly zero probability for the other actions, which are radically different from the Gaussian.\nThey have important real-world implications, e.g. in modeling safety-critical tasks like medicine.\nThe combination of offline reinforcement learning and sparse policies provides a novel paradigm that enables learning completely from logged datasets a safety-aware  sparse policy. \nHowever, sparse policies can cause difficulty with the existing offline algorithms which require evaluating actions that fall outside of the current support.\nIn this paper, we propose  the first offline policy optimization algorithm that tackles this challenge: Fat-to-Thin Policy Optimization (FtTPO).\nSpecifically, we maintain a fat (heavy-tailed) proposal policy that effectively learns from the dataset and injects knowledge to a thin (sparse) policy, which is responsible for interacting with the environment.\nWe instantiate FtTPO with the general $q$-Gaussian family that encompasses both heavy-tailed and sparse policies and verify that it performs favorably in a safety-critical treatment simulation and the standard MuJoCo suite.",
+    "keywords": [
+        "reinforcement learning",
+        "offline reinforcement learning",
+        "actor critic",
+        "sparse policies"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "this paper for the first time addresses the issues of offline reinforcement learning with sparse policies",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=SRjzerUpB2",
+    "pdf_link": "https://openreview.net/pdf?id=SRjzerUpB2",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces a novel approach for learning sparse policies within the context of offline RL. Sparse policies are crucial for enhancing safety, as they prevent the policies from considering all possible actions, which can reduce potential risks. Unlike existing methods that rely on ad hoc techniques such as reverse KL divergence or random action replacement, this study proposes the Fat-to-Thin Policy Optimization (FtTPO) algorithm. This algorithm leverages the deformed q-exponential function to parameterize policies and employs a greedy two-stage actor-critic optimization approach. The result is a method that achieves desirable sparsity and outperforms existing techniques in simulated deep offline RL tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper presents an innovate approach for learning sparse policies from logged datasets that outperform current offline RL methods.\n- The work is empirical rigorous, with sufficient analysis and abalations of the proposed method on a variety of simulated tasks - including safety-critical  bencahmark and Mujoco. \n- The paper is clearly written and accessible, making it easy to understand the authors' arguments and methodology."
+            },
+            "weaknesses": {
+                "value": "- It could be great if the authors can provide insight into why the combination of forward and reverse KL (with the two-stage optimization framework) helps in the first place? \n- Another element that the work is missing is to compare how the proposed method works in low-data regime. In a lot of safety-critical settings, size of the datasets are quite limited, so it would have been nice to have that analysis in the paper."
+            },
+            "questions": {
+                "value": "- A primary factor contributing to the success of the proposed algorithm appears to be the use of the weighted q-exponential function in the objective. According to line 241, $ q = 0 $ is used in practice. If so, then how does that affect filtering of \"bad actions\"?\n\n- In algorithm 3, won't copying $\\mu_{\\phi_t}$ to $\\mu_{\\theta_t}$ violate the original choice of the policy parametrization? Is the sampling procedure still valid after copying only parameters and not changing the associated sampling parameters? \n\n\nMinor comments: \n- How to pronounce FtTPO? \n- Typo in line 52 (algorithmsk)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel approach for offline reinforcement learning with sparse policies. Sparse policies have important real-world implications but pose challenges to existing algorithms. The paper presents Fat-to-Thin Policy Optimization (FtTPO), a two-stage learning method that addresses these challenges."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper presents a novel FtTPO algorithm for handling sparse policies in offline reinforcement learning. This is a new combination of ideas as it builds on two-stage actor-critic methods and uses a fat (infinite-support) policy to inform a thin (sparse) policy. It addresses the previously less-studied problem of out-of-support actions in offline learning with sparse policies, providing a solution where prior works relied on ad hoc methods.\n\nThe paper is well-structured, with clear sections for introduction, background, method description, experiments, and related works."
+            },
+            "weaknesses": {
+                "value": "The safety benefit of having a thin (sparse) policy isn't directly clear to readers. The authors somehow use 'performance' and 'safety' interchangeably and imply that a higher reward means higher safety.  A very common misunderstanding is that 'dangerous action' means 'higher dosage'. For example, the daily insulin dosage for T1 diabetic patients is around 0.5-1 unit per day. A 0.001 unit dosage can be considered a low dosage. However, if such a dosage is given per 2 min, the accumulative dosage will far exceed body tolerance and cause serious damage to the patient. In fact, 'dangerous states and actions' are precise in medicine. In domains such as dynamic treatment regimes, dangerous states are explicitly defined. I encourage the authors to define safety clearly before using it. Besides, the authors can visualize the occurrence of dangerous states following their policy versus baseline policies to see if safety is indeed enhanced."
+            },
+            "questions": {
+                "value": "NA"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel architecture for learning sparse policies in an offline RL paradigm. Specifically, the authors address issues of domain alignment when training sparse policies, whereby the sparse policy may not support actions within the offline dataset. The induced sparse policy placing measure 0 probability over part of the offline dataset can result in numerical instabilities, for example, when using a log likelihood loss.\nThe proposed architecture requires first learning a \u201cfat\u201d (or non-sparse policy) policy i.e., a policy with at least the support of the offline dataset (the authors propose a Gaussian), which is subsequently refined to a \u201cthin\u201d policy using existing methods for learning sparse policies i.e., using the reverse KL divergence."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "-\tOriginality: To the best of my knowledge the method of induing a sparse policy from one with a larger support has not been explored and as such, the research is original. \n-\tClarity: The paper is well presented and written in the sense that relevant (to the best of my knowledge) existing work is contextualised, the proposed solution is well defined and the paper is generally easy to follow.\n-\tQuality and Significance: The problem is well motivated and thus assuming the solution can be demonstrated to provide significant performance improvements over existing \u201cad-hoc\u201d approaches, the \u201cfat to thin\u201d architecture  would be of great significance to practioners aiming to learn sparse policies in an offline setting. Furthermore, the breath of evaluation benchmarks used is reasonable in the sense that a reasonable number of challenging offline RL benchmarks have been used."
+            },
+            "weaknesses": {
+                "value": "The core weakness of the paper is the experimental approach. The authors consistently draw conclusions that it is \u201csurprising\u201d that the proposed architecture performs so well given the \u201csparse policy\u201d (referenced in section 5.2) or given the relative simplicity of the proposed architecture (referenced in section 5.3). I disagree with this line of analysis for several reasons:\n-\tA sparse policy working \u201csurprisingly well\u201d is not a substantively validated claim as the authors do not explain why it is surprising. Without this additional analysis, the performance of the proposed method is inconsistent and only obtains notable performance on the Medium-Expert and Medium-Replay HalfCheetah datasets.\n-\tThe authors have not made clear why the proposed architecture is less complex and I would contest, that given two policies are required to be maintained, the proposed architecture is actually more complex than the existing baseline approaches.\nBroadly speaking, the proposed architecture appears to be overly complex and the experimental direction of demonstrating that the architecture performs \u201cat least as well as\u201d existing methods is not strong enough to support this additional complexity. \nAdditionally, it is not completely convincing that the proposed architecture is necessary. Based on Figure 6, the proposal only policy (utilising existing and simpler methods for learning sparse policies) performs on par with the proposed architecture. Furthermore, from Figure 5, the proposal policy appears to already learn a relatively concentrated policy. As such, it is unclear why using only proposal policy and preventing actions being selected outside X standard deviations would not achieve the desired result (assuming an improper distribution of the resulting policy is reasonable).\nOverall, I would encourage the authors to revisit the experiments and strive to obtain stronger results that demonstrate solid benefits of the algorithm. Deriving a novel architecture and having it reasonably converge is no mean feat however, the results presented in the paper are not yet ready for publishing. It might be worth exploring why the proposed architecture performed better on the aforementioned HalfCheetah environments to understand the types of environments where the fat-to-thin model is strongly beneficial."
+            },
+            "questions": {
+                "value": "-\tUnderstanding why the authors feel the fat-to-thin architecture is less complex than existing methods and why it is surprising the a sparse policy competes with existing methods would help in changing my opinion."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies offline reinforcement learning in continuous action settings where it is desired to learn a sparse policy (that has zero probability for some actions) that is stochastic. This occurs, for instance, when there is a safety aspect and so some parts of the action space should have zero probability. This paper creates a new algorithm for this setting based on a two-stage actor-critic approach, where a non-sparse proposal policy learns and injects knowledge into a sparse actor. There are quite a few design decisions along the way. The resulting method FtTPO is compared to a large number of existing methods on both safety-motivated and general RL (Mujoco) benchmarks. On the safety benchmarks, it is the strongest, and on general RL it is very competitive."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is excellent at contextualizing its contributions relative to existing work.\n- The description of the algorithm, the design decisions, and the motivations behind the design decisions is clear.\n- FtTPO makes design decisions that are different than previous algorithms.\n- Experimental results are strong against a wide variety of relevant benchmarks. There is enough task variation.\n- The demonstration that there are sparse, strong, policies for Mujoco tasks is interesting and provocative.\n- Hyperparameter selection is clearly explained."
+            },
+            "weaknesses": {
+                "value": "- The paper is driven purely by intuition and empirical results. There are several cases where there is not a clear understanding of why a certain approach does not work (e.g., reversing the direction of the KL divergence).\n- There is no comparison of computational cost (time) of the different methods."
+            },
+            "questions": {
+                "value": "1. For 5.1, how many seeds where used?\n2. What is shown by the shaded area on all graphs?\n3. How does hyperparameter tuning FtTPO compare to the other methods? (I see Tables 1 and 2\u2014I'm interested in a qualitative statement).\n4. How do these methods compare in terms of computational time?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

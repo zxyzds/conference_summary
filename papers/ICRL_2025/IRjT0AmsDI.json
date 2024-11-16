@@ -1,0 +1,167 @@
+{
+    "id": "IRjT0AmsDI",
+    "title": "Understanding Grokking: Insights from Neural Network Robustness",
+    "abstract": "Recently, an interesting phenomenon called grokking has gained much attention, where generalization occurs long after the models have initially overfitted the training data. We try to understand this seemingly strange phenomenon through the robustness of the neural network. From a robustness perspective, we show that the usually observed decreasing of $l_2$ weight norm of the neural network is theoretically connected to the occurrence of grokking. Therefore, we propose to use perturbation-based methods to enhance robustness and speed up the generalization process. Furthermore, we show that the speed-up of generalization when using our proposed method can be explained by learning the commutative law, a necessary condition when the model groks on the test dataset. In addition, we empirically observe that \n$l_2$ norm correlates with grokking on the test data not in a timely way and then propose new metrics based on robustness that correlate better with the grokking phenomenon.",
+    "keywords": [
+        "Grokking",
+        "Representation Learning",
+        "Training Dynamics"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=IRjT0AmsDI",
+    "pdf_link": "https://openreview.net/pdf?id=IRjT0AmsDI",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper aims to understand the grokking phenomenon deeper and proposes a method to mitigate grokking to achieve faster generalization. Authors provide both theoretical and experimental evidences for the grokking phenomenon and shows their perturbation method accelerates the generalization speed. Authors also provide 2 metrics PMI and PE that aim to better monitor when grokking happens."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The novelty and contribution of this paper is good, focusing on grokking problem, authors provide better metrics and algorithm to accelerate model generalization.\nThe paper has both theoretical and empirical results."
+            },
+            "weaknesses": {
+                "value": "1. Figures' x-axis switch between logarithmic and linear, make it very hard to do a comparison among figures. Especially in Figure 3, curves are compressed by logarithmic x-axis on larger step numbers make it very difficult to understand the difference.\n2. It is vague that how authors choose the transition point in all figures, for example, in Fig 1(a), the transition point for weight norm is selected at the beginning of weight norm start decrease, but in Fig 9(b), where PE has a similar curve, the transition point is selected much later to convey the point that PE is more aligned with Test Acc. The vague selection also happens in 8(b) 9(a) 10(b) 14(a) and etc. I suggest authors provide a consistent principle in choosing those points to reduce bias in result presenting.\n3. I didn't really get the definition of PMI, in ln 394, $W_1$ is the first layer so the $W_2$ is the second layer? Is the PMI defined as the layer-wise mutual information on feature embedding gram matrix? also, in ln 399, It is not clear to my that $z^{(2)}_i$ is defined on whether entire $W$ or $W_2$?\n4. Results and experiments are mostly based on shallow network and no deep network results.\n5. Combine 3 and 4, if I understand correctly PMI and PE will be extremely costly when network being larger and deeper, what will be the complexity of PMI and PE regarding the number of layers and representation dimensions?\n6. Ln 429 states that in Fig. 9, the PE changes sharply but 9(a) doesn't, and 9(b) also changes earlier than test acc (see weakness 2)."
+            },
+            "questions": {
+                "value": "1. What is meaning of X-axis in figure 1 and 2? There are several more figures don't have x-axis labels.\n2. What is Algo refer to in Fig 2?\n3. In Fig. 7, the logit distance has a significant scale difference(0-15000 vs. 0-150), does standard training also has the \"chaotic behavior\" if we zoom-in?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work explains grokking, a large accuracy gap between training and test errors in the early stage of the training, with a sharp catch-up of test errors in the late stage. The authors show the importance of weight decay (or small L2 norm of parameters) from the nearest-neighbor perspective (Theorem 4.2). Further, several interesting observations are made empirically in terms of the commutativity and information-theoretic metrics that correlate better with the timing of the grokking."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Grokking is explained from their lower bounds of test accuracy. \n- Several interesting observations are made in terms of the commutativity and information-theoretic metrics."
+            },
+            "weaknesses": {
+                "value": "I raise the following as the major weaknesses of this work. \n1. Limited technical contributions\n2. Limited justifications and interpretations for the observations\n3. Poor paper writing\n\nI elaborate on the weaknesses below. \n\n1. Limited technical contributions\nThis paper has only one technical claim (Theorem 4.2) with the associated corollary. Theorem 4.1 should be a direct adaptation from a related work. The proof of Theorem 4.2 is also straightforward. Further, it is not very clear to me whether the conditions in Theorem 4.2 to guarantee the lower bound of test accuracy are likely to be satisfied in the realistic datasets and whether it really explains the grokking that occurs in various types of datasets. To me, Theorem 4.2 certainly gives an intuitive but still weak argument. \n\nCorollary 4.3 gives a more concrete lower bound, but it was not very understandable as several definitions are missing (related to Weakness 3). What are $L$, $a$, and $b$? The programming-like variable \"train-acc\" is also not professional. The condition $\\|\\mathbf{x}\\|_2 = 1$ seems to assume one-hot encoding of a number or a concatenation of two encoding vectors, but no details are given. \n\nFigure 3 seems amazingly fits to the empirical test accuracy. However, the choice of the values of $(L, \\mu, a, b)$ is not justified. To me, these values appear to be carefully selected for the fitting. \n\n2. Limited justifications and interpretations for the observations\nThe observations on the commutativity and the better correlating metrics are interesting. It would be better if the authors could justify them theoretically or at least give reasonable interpretation. As for the metrics, I don't see why these better correlate with the timing of grokking - is it trivial or not - and their utility. \n\n2. Poor paper writing\nAs partially given in Weakness 1, this paper does not provide sufficient details of the symbols and setup. To list a few, \n- [Sec. 3] The encoding of numbers is not given. The theoretical model of the neural network is not given (ReLU network?). Numerical experiments are done with transformer models, but the theory is for MLPs. What is the one-layer ReLU transformer? (one encoder layer or decoder layer)?\n- [Sec. 4.1, line 158] $\\mathrm{onehot}(\\,\\cdot\\,)$ is not defined.\n- [Corollaly 4.3] See Weakness 1.\n\n**Minor comments**\n- [Sec 5.2, line 322] \"(a) shows that ... but (b) [Perturb learning?] has a chaotic.\""
+            },
+            "questions": {
+                "value": "Please answer the two weaknesses raised above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper shows that the L2 weight norm decay is connected to generalization and designs an adaptive data augmentation method to speed up generalization"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper studies how to speed up generation in grokking, that is an important problem.\n- The theory seems to match the experiments well."
+            },
+            "weaknesses": {
+                "value": "In Figure 4, how are the hyperparameters (learning rate, weight decay) selected? In the standard training of Figure 4b, the generalization speed may be much faster with proper tuning. It would make the generalization speed-up method more convincing by carefully tuning the hyperparams."
+            },
+            "questions": {
+                "value": "- Where did you define $a$ and $b$ shown in Corollary 4.3? The only place a,b are defined is Sec 3, where (a,b) represents the input pair. \n- Why do you set L=1/2, a=1925, b=500? Does Corollary 4.3's predicted accuracy change with learning rate and weight decay?\n- [1] mentioned that there is almost no grokking phenomenon for the MNIST experiments under standard training, and they induce clear grokking by setting large initialization scale. But Figure 2a and 2c show clear grokking for MNIST. What initialization scale is used in those experiments?\n\n[1] OMNIGROK: GROKKING BEYOND ALGORITHMIC DATA"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigates the phenomenon of \"grokking\" in neural network training, where models fully fit the training data but experience a prolonged period of low test accuracy before suddenly achieving high generalization performance. Through theoretical analysis and experiments, the authors reveal a relationship between grokking and the decay of the l2 weight norm, proposing a robustness-based \"degrokking\" strategy to accelerate grokking. Specifically, they demonstrate that the reduction in the l2 weight norm enhances model robustness, thus improving generalization to test data. The authors also introduce novel information-theory-based metrics that aim to better capture the grokking phenomenon, with empirical evidence supporting the effectiveness of these metrics."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper provides a new theoretical framework to explain the underlying mechanisms of grokking and proposes a robustness-based degrokking method, offering a fresh perspective on the study of grokking.\n2. The authors design new metrics based on information theory that show potential in capturing grokking effectively.\n3. The experiments on MNIST and the Modulo Addition dataset support the theoretical findings, demonstrating the relationship between l2 weight decay and grokking."
+            },
+            "weaknesses": {
+                "value": "1. The study and experiments are based primarily on small-scale tasks and datasets, making it difficult to assess the generality of the theory in larger, more complex datasets or deeper networks.\n2. Although the authors propose a perturbation strategy for degrokking, they do not clearly differentiate this approach from traditional data augmentation methods or discuss its unique advantages in accelerating generalization."
+            },
+            "questions": {
+                "value": "1. While the authors demonstrate a relationship between l2 weight decay and grokking, the applicability of this theory to more complex datasets or large-scale models (e.g., modern deep neural networks) is not discussed. For instance, does this phenomenon persist when the dataset and task complexity increase? Could similar l2 weight decay behavior be observed on more complex tasks?\n2. The proposed degrokking strategy introduces perturbations to enhance robustness, thereby accelerating generalization. How does this method fundamentally differ from traditional data augmentation techniques? If the goal is to accelerate generalization, could conventional data augmentation methods (e.g., random noise) achieve similar effects? Additionally, the authors\u2019 theory appears to support the idea that data augmentation enhances generalization\u2014would it be helpful to further clarify the relationship between the two?\n3. Although the decay in the l2 weight norm is related to grokking, how does this phenomenon relate to the model\u2019s learning dynamics and generalization ability? This relationship could be more complex in larger models. Can the authors\u2019 theoretical explanation be extended to more diverse model architectures and tasks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

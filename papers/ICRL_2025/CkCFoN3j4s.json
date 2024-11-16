@@ -1,0 +1,252 @@
+{
+    "id": "CkCFoN3j4s",
+    "title": "Locret: Enhancing Eviction in Long-Context LLM Inference with Trained Retaining Heads",
+    "abstract": "Large language models (LLMs) have shown remarkable advances in supporting long-context comprehension and processing tasks. However, scaling the generation inference of LLMs to such long contexts incurs significant additional computation load, and demands a substantial GPU memory footprint to maintain the key-value (KV) cache of transformer-based LLMs. Existing KV cache compression methods, such as quantization, face memory bottlenecks as context length increases, while static-sized caches, such as selective eviction, suffer from inefficient policies. These limitations restrict deployment on consumer-grade devices like a single Nvidia 4090 GPU. To overcome this, we propose Locret, an efficient framework for long-context LLM inference that introduces retaining heads to evaluate the causal importance of KV cache units, allowing for more accurate eviction within a fixed cache size. Locret is fine-tuned on top of the frozen backbone LLM using a minimal amount of data from standard long-context SFT datasets. During inference, we evict low-importance cache units along with a chunked prefill pattern, significantly reducing peak GPU memory usage. We conduct an extensive empirical study to evaluate Locret, where the experimental results show that Locret outperforms the recent popular and competitive approaches, including InfLLM, Quantization, SirLLM, and MInference, in terms of memory efficiency and the quality of generated contents --- Locret achieves over a $20\\times$ and $8\\times$ KV cache compression ratio compared to the full KV cache for Phi-3-mini-128K and Llama-3.1-8B-instruct. Additionally, Locret can be combined with other efficient inference methods, such as quantization and token merging. To the best of our knowledge, Locret is the first framework capable of deploying Llama-3.1-8B or similar models on a single Nvidia 4090 GPU, enabling 128K long-context inference without compromising generation quality, and requiring little additional system optimizations.",
+    "keywords": [
+        "Long-context Inference",
+        "Memory Efficient Inference",
+        "Large Language Models"
+    ],
+    "primary_area": "infrastructure, software libraries, hardware, systems, etc.",
+    "TLDR": "Locret is a light-weight training-based KV cache eviction method, which achieves 20x and 8x KV cache compression ratio for Phi-3-mini-128K and Llama-3.1-8B-instruct, enabling 128K+ long-context inference on a single Nvidia 4090 GPU.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=CkCFoN3j4s",
+    "pdf_link": "https://openreview.net/pdf?id=CkCFoN3j4s",
+    "comments": [
+        {
+            "title": {
+                "value": "Author's Responds to Reviewer WKXD (Part 3)"
+            },
+            "comment": {
+                "value": "### **Q3: Hyperparameter Sensitivity: Have the authors conducted ablation studies on the cache budget b and chunk size B? How do these parameters impact performance and memory usage?**\n\nPlease refer to our response to W3, where we have introduced additional experiments to illustrate the hyperparameter sensitivity of cache budget and chunk size.\n\n---\n\n### **Q4: Generalization: It might be out-of-scope, but how well does LOCRET generalize to other transformer architectures, such as encoder-decoder models or those with different attention mechanisms?**\n\nThank you for this valuable question. Locret is compatible with any transformer-based LLM that utilizes a KV cache. While encoder-decoder models can benefit from Locret by reducing the KV cache burden in the decoder, the encoder part, which does not use a KV cache due to non-causal inference, is not compatible with Locret.\n\nAdditionally, other attention mechanisms, such as linear attention and multi-latent attention, are compatible with Locret. Linear attention modifies only the calculation of attention while maintaining the KV cache structure, and multi-latent attention features a single-head KV cache-like structure that is also compatible with Locret.\n\n---\n\n### **Q5: Limitations: Are there specific tasks or contexts where attention pool-based methods might outperform LOCRET? How does LOCRET handle scenarios with severe context discontinuity?**\n\nWhen the budget is extremely limited, such as 128 or 256 tokens, attention pool-based methods can outperform cache eviction methods. This is because eviction-based methods, including Locret, degrade to a StreamingLLM pattern by retaining only the initial and local tokens. As illustrated in Figures 5 and 6, Locret also exhibits a StreamingLLM pattern in these scenarios. Since LoCoCo surpasses StreamingLLM, it can also outperform eviction-based methods under such budget constraints.\n\nHowever, Table 5 demonstrates the compatibility between LoCoCo and Locret. In scenarios with strict budget constraints, LoCoCo can enhance performance, and when the budget is larger, Locret can further boost standalone LoCoCo's performance. Replacing H2O in LoCoCo with Locret is an effective strategy for improving performance across all scenarios.\n\nLocret assigns continuous position information to the evicted, discontinuous cache to mitigate performance issues related to severe context discontinuity. We are currently exploring training techniques for the LLM backbone to better process discontinuous context, which we plan to address in future work.\n\n---\n\n### **Q6 & Q7: Quantization Methods: You mention KV cache quantization techniques, mentioning the computation overhead as their limitation. Could you compare these techniques, e.g., KVQuant, with sparse attention methods such as FastGen? Combination: You mention the possibility of combining your approach with other efficient inference methods. Could you expand on this with results?**\n\nThank you for this advice. Locret is orthogonal to KV cache quantization, making it compatible with KVQuant. Additionally, Locret is orthogonal to FastGen, which employs a mixture of eviction policies across different heads. Locret can be applied as a specific policy to selected heads to achieve a higher compression ratio.\n\nWe are also interested in exploring how Locret can be combined with other efficient inference methods, such as LLM backbone quantization and speculative decoding. Existing works have demonstrated the potential of such combinations; for instance, TriForce [6] integrates H2O-based KV cache compression with speculative decoding, achieving improved decoding throughput. Since Locret can function as a cache importance scoring mechanism, it could be utilized in scenarios where H2O is currently applied. These explorations and combinations involving Locret and other efficient inference methods will be part of our future work.\n\n---\n\n[1] H2O: Heavy-hitter oracle for efficient generative inference of large language models\n\n[2] SnapKV: SnapKV: LLM knows what you are looking for before generation\n\n[3] SirLLM: Streaming infinite retentive LLM\n\n[4] Longbench: A bilingual, multitask benchmark for long context understanding\n\n[5] InfLLM: Training-Free Long-Context Extrapolation for LLMs with an Efficient Context Memory\n\n[6] Triforce: Lossless acceleration of long sequence generation with hierarchical speculative decoding"
+            }
+        },
+        {
+            "title": {
+                "value": "Author's Responds to Reviewer WKXD (Part 2)"
+            },
+            "comment": {
+                "value": "### **W4: Limited Discussion of Limitations: The paper does not sufficiently explore potential drawbacks or scenarios where LOCRET may underperform.**\n\nThank you for your advice. In our paper, we evaluated Locret on two LLMs (Phi-3-mini-128K and Llama-3.1-8B-instruct) and two types of hardware platforms (A800/H800 and 4090). Locret is compatible with various scenarios due to minimal modifications to the model architecture and low hardware requirements.\n\nHowever, we recognize some potential scenario limitations. For example, the eviction action requires GPU support for the \"gather\" kernel, making Locret incompatible with some NPU platforms that lack this capability. Additionally, Locret is designed for decoder-only transformer architectures and is not suitable for encoder models or models based on other architectures (e.g., RNNs). We will expand our limitations section to include these and other potential drawbacks in our next revision.\n\n---\n\n### **W5: Reproducibility: Some essential details for reproducing results are located in the appendix rather than the main text.**\n\nTo enhance readability and provide clearer instructions for reproducing our experiments, we will move key hyperparameters and training/evaluation details from the appendix to the main text. Specifically, we will transfer the essential hyperparameters outlined in Appendix A.1 and A.2 to Section 4.1 (Experimental Setup). Additionally, we will include more detailed instructions on training the retaining heads and evaluating the trained model.\n\n---\n\n### **Q1: Stabilizer Length: Could the authors provide more insight into how the stabilizer length ns affects performance across different models and datasets? Is there an optimal range for ns?**\n\nThere is a tradeoff between stabilizer length and effective cache budget. Stabilizers occupy space in the retained cache, so a larger stabilizer length reduces the space available for other retained cache units, potentially resulting in the loss of important information and leading to performance degradation. Conversely, a shorter stabilizer length can increase the instability of CIS predictions, leading to more errors during eviction.\n\nFrom our observations, context retrieval tasks require a larger $n_s$\u200b due to their need for more accurate CIS prediction and eviction, rather than ample space for important caches. In Figure 3(a), when $n_s$\u200b is small, there is significant performance degradation in retrieving the correct number. On the other hand, natural language understanding tasks, such as summarization, benefit from shorter $n_s$\u200b values, as maximizing space for important caches is crucial for better performance.\n\nWe conducted an additional experiment on the QMSum task from L-Eval with various stabilizer lengths, keeping the cache budget fixed at 6000. The results demonstrate that overly large $n_s$\u200b values occupy too much space in the cache, causing performance degradation. The results are as follows:\n\n| $n_s$ | 0 | 500 | 1500 | 2500 | 3500 | 4500 | 5500 | 6000 | \n|-|-|-|-|-|-|-|-|-|\n| QMSum | 23.34 | 23.27 | 23.15 | 22.23 | 22.40 | 22.01 | 20.67 | 11.74 |\n\nWe recommend using ~2500 as the optimal value for $n_s$, as shown in Table 6. This value strikes a balance across different types of tasks. We will include the above discussion and this recommendation in our next revision.\n\n---\n\n### **Q2: Theoretical Justification: Can the authors elaborate on the causal importance score's theoretical properties and explain how it ensures minimal approximation error during cache eviction?**\n\nThe intuition behind the design of training-based CIS prediction is explained in W2, and we have added further experiments to support this discussion.\n\nDefining a definitive \"golden label\" for the KV cache eviction problem is difficult. Estimating the impact of evicting a group of KV cache units is complex, and to our knowledge, no prior work has specifically focused on this topic. In fact, the most commonly used approaches and the baselines included in this study\u2014such as H2O, SnapKV, SirLLM, and InfLLM [5]\u2014rely on heuristics to evaluate eviction impact or estimate importance based on statistical metrics like attention scores. Consistent with these methods, we identify important cache units using higher attention scores to generate training labels, as a higher attention score generally correlates with greater importance in the attention mechanism."
+            }
+        },
+        {
+            "title": {
+                "value": "Author's Responds to Reviewer WKXD (Part 1)"
+            },
+            "comment": {
+                "value": "We sincerely appreciate your detailed review and valuable feedback.\n\n---\n\n### **W1: Clarity of Presentation: The paper contains grammatical errors and unclear notations, hindering understanding.**\n\nThank you for your comments. We will conduct a thorough grammar review and ensure that all notations are clearly defined before use in our next revision soon. We are committed to improving the overall quality of our writing.\n\n---\n\n### **W2: Theoretical Depth: The theoretical underpinnings, particularly regarding the causal importance score and its properties, could be more thoroughly developed.**\n\nThank you for pointing this out. I would like to provide the motivation behind designing the CIS, which may help to intuitively understand our proposed methods.\n\nThe goal of this paper is to enable long-context inference on consumer-grade devices, particularly in memory-constrained scenarios where GPU memory usage must be strictly controlled. To manage GPU memory consumption, we employ a chunked prefill pattern, which is crucial for reducing memory requirements. However, existing cache importance scoring functions cannot be seamlessly integrated with chunked prefill, as their importance estimation for a token (or cache) depends on subsequent tokens. Locret addresses this limitation by using a causal importance score, meaning the importance score of a cache unit does not depend on subsequent cache units.\n\nA key property of CIS is its causality, which ensures compatibility with chunked prefill. To further explore the incompatibility of existing scoring functions with chunked prefill, we conducted an experiment measuring the consistency of the top 10% most important cache positions in prefixes of varying lengths compared to the full context (truncated to 6K for reference). The results are as follows:\n\n| Prefix Length | 0.5K | 1K | 1.5K | 2K | 2.5K | 3K | 3.5K | 4K | 4.5K | 5K | 5.5K | 6K (full) |\n| - | - | - | - | - | - | - | - | - | - | - | - | - |\n| H2O [1] | 75.46 | 80.58 | 83.30 | 85.00 | 87.20 | 89.22 | 90.76 | 92.48 | 94.02 | 95.54 | 97.40 | 100.00 |\n| SnapKV [2] | 37.12 | 31.17 | 29.20 | 32.09 | 29.60 | 32.71 | 28.80 | 29.20 | 31.82 | 34.86 | 41.65 | 100.00 | \n| SirLLM [3] | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 |\n| Locret | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 |\n\nThis experiment demonstrates that scoring functions relying on subsequent information, such as H2O and SnapKV, show significant discrepancies in predicted cache importance when future cache units are not considered. SirLLM, while being a causal importance scoring function, suffers from inaccuracy that leads to substantial performance degradation, as shown in Table 2 and Table 3. Locret, however, avoids these discrepancies and delivers strong performance.\n\n---\n\n### **W3: Hyperparameter Analysis: Limited discussion on the impact of key hyperparameters (e.g., cache budget, chunk size) on performance.**\n\nThank you for your comment. We have included an ablation study on the length of stabilizers (Figure 3) and will incorporate additional ablation studies on cache budget and chunk size in our next revision.\n\nRegarding the impact of cache budget, we conducted experiments with different cache budgets on subsets of LongBench [4], using Phi-3-mini-128K with retaining heads trained on LongAlign. The results indicate that a larger cache budget generally leads to improved performance, although certain tasks are more sensitive to cache budget variations than others.\n\n| Cache budget | 1024 | 2048 | 3072 | 4096 |\n| - | - | - | - | - |\n| GovReport | 27.94 | 30.96 | 31.72 | 32.72 | \n| MultifieldQA-En | 31.63 | 40.44 | 46.95 | 46.2 |\n| PassageRetrieval-En | 31.5 | 60.0 | 69.0 | 75.5 |\n| Dureader | 19.09 | 20.65 | 20.82 | 22.52 |\n\n\nFor chunk size, we conducted an experiment evaluating Locret trained with Phi-3-mini-128K LongAlign on the L-Eval's Natural Questions (NQ) dataset using different chunk sizes. The results are as follows:\n\n| Chunk Size | 256 | 512 | 1024 | 2048 | 3072 | 4096 | \n| - | - | - | - | - | - | - |\n| NQ | 55.34 | 54.86 | 56.76 | 56.70 | 55.13 | 51.97 |\n\nThis experiment demonstrates the hyperparameter stability of chunk size. A smaller chunk size can be adopted for memory-limited scenarios, such as end-side devices, while a larger chunk size can be used to boost inference speed. Adjustments to chunk size have only a minor impact on performance."
+            }
+        },
+        {
+            "title": {
+                "value": "Author's Responds to Reviewer xs3N (Part 3)"
+            },
+            "comment": {
+                "value": "### **Q5: Is the Stabilizer used only for selecting recent tokens?**\n\nNo, the stabilizers refer to the last $n_s$ tokens in each chunk during the chunked prefill process. These tokens are retained without eviction to maintain a local and continuous context, thereby minimizing errors (as stated in line 292).\n\n---\n\n### **Q6: Is the performance improvement in this paper due to the SFT? What would be the effect if SFT were directly applied to the model?**\n\nThe performance improvement is not attributed to SFT. We use a minimal amount (3,000 entries) of long-context SFT data solely to train the retaining heads. Importantly, there is no SFT loss involved in Equation 3, and the LLM backbone remains frozen throughout. In other words, the only learnable component in our framework is the scoring function responsible for identifying which cache units are more important.\n\n---\n\n### **Q7: Should the number of heads in a retaining head be the same as in Query, or should it match Key/Value?**\n\nThe number of retaining heads must match the number of Key/Value heads. To train the retaining heads, we select the **maximum** attention score (before softmax) **across different query heads within the same group** (as described in line 236).\n\n---\n\n[1] H2O: Heavy-hitter oracle for efficient generative inference of large language models\n\n[2] SnapKV: LLM knows what you are looking for before generation\n\n[3] SirLLM: Streaming infinite retentive LLM\n\n[4] Q-Hitter: A Better Token Oracle for Efficient LLM Inference via Sparse-Quantized KV Cache"
+            }
+        },
+        {
+            "title": {
+                "value": "Author's Responds to Reviewer xs3N (Part 2)"
+            },
+            "comment": {
+                "value": "### **Q1: Explaination of \"the weakening correlation between local and global importance as sequences grow exacerbates this issue\".**\n\nExisting cache importance scoring functions, such as H2O and SnapKV, are designed to identify important cache units only after the entire input sequence is prefilled. H2O relies on the complete attention scores to determine heavy hitters, while SnapKV\u2019s voting mechanism requires the attention scores of the local window at the end of the input sequence, which also mandates full sequence prefill before eviction. When using chunked prefill, subsequent cache units that have not yet been processed are inaccessible, leading to significant discrepancies when applying H2O or SnapKV to prefilled cache units. This discrepancy arises because the predicted importance based on partial input diverges from the actual importance computed with the full sequence.\n\nWe demonstrated this effect through an additional experiment in W2, which highlights the inconsistency in H2O and SnapKV. We hope this experiment clarifies the limitations of these methods in scenarios involving chunked prefill.\n\n---\n\n### **Q2: How effective would it be to directly use the maximum value of each column as a metric during inference?**\n\nWe appreciate this question. However, it is not feasible to use the maximum value of each column as a metric during inference. As discussed in W2, a key objective of this paper is to integrate an eviction policy with chunked prefill. In chunked prefill, the subsequent cache units (tokens or hidden states) are not accessible, preventing us from calculating the attention score of a token in relation to all subsequent tokens. The maximum value of each column represents the highest attention score of a token\u2019s query to the keys of all subsequent tokens, which cannot be determined during chunked prefill. Therefore, using the maximum value of each column as a metric during inference is not possible.\n\n---\n\n### **Q3: What are the actual performances of H2O combined with quantization?**\n\nQuantization combined with H2O leads to an attention shift, resulting in inaccurate cache importance estimation, as demonstrated in the Q-Hitters paper[4]. In Section 4.2, the authors report that the overlap ratio of identified heavy-hitters drops below 50% when quantization is applied. Additionally, Figure 7 of the Q-Hitters paper illustrates significant performance degradation when H2O is used with standard quantization techniques. We hope this addresses your question and clarifies the limitations of using H2O with quantization.\n\n---\n\n### **Q4: Comparison between SnapKV and PyramidKV.**\n\nThank you for pointing this out. We will include H2O and SnapKV as additional baselines and have conducted comparative experiments with Locret on specific subsets of InfiniteBench. Since PyramidKV primarily manages budget allocation, it operates orthogonally to the eviction function and can be combined with Locret. We also provide results for the combination of Locret and PyramidKV. Due to the time-consuming nature of running the full benchmark, we were unable to generate complete results for InfiniteBench at this stage, but these will be included in our final revision.\n\nAdditionally, the slow inference speed of H2O and SnapKV stems from their incompatibility with flash-attention, as both methods require access to the attention scores, which the current implementation of flash-attention does not support.\n\n\n| | R.Number | E.Sum | E.MC | C.Debug | Ave. |\n| - | - | - | - | - | - |\n| H2O | 3.39 | 15.35 | 45.41 | 20.57 | 21.38 |\n| SnapKV | 2.54 | 15.44 | 41.92 | 21.43 | 19.97 |\n| Locret | 97.46 | **16.82** | 46.29 | 29.71 | 53.52 |\n| Locret + PyramidKV | **99.66** | 15.82 | **48.03** | **30.00** | **54.50** | \n\nIn our experiments, we modified only the scoring function, keeping all other hyperparameters consistent with Appendix A.2. When integrating with PyramidKV, we used maximum pooling among the CIS (following PyramidKV's setting) and set $\\beta=2$.\n\nThe results indicate that Locret outperforms H2O and SnapKV in chunked prefill scenarios for long-context inference. H2O and SnapKV show limitations in accurately predicting context retrieval tasks, such as R.Number. Additionally, incorporating PyramidKV for budget allocation management further enhances overall performance, demonstrating the compatibility between Locret and PyramidKV."
+            }
+        },
+        {
+            "title": {
+                "value": "Author's Responds to Reviewer xs3N (Part 1)"
+            },
+            "comment": {
+                "value": "We sincerely appreciate your detailed review and valuable feedback.\n\n--- \n\n### **W1: The additional training in the proposed method is still resource-intensive.**\n\nWe addressed the cost of additional training for Locret in lines 344\u2013345, where we specify that the training for both models in our benchmark requires **less than 1 GPU hour on a single A800 GPU**.\n\nAlthough Appendix A.2 (System Environment) mentions that our experiments were conducted on an 8*A800/H800 GPU cluster, we want to clarify that only a single GPU was utilized for training. We acknowledge the potential confusion and appreciate your observation. We will make this clearer in our next revision.\n\n---\n\n### **W2: Novelty concern. It is unclear why to train the heads to obtain CIS instead of using existing methods like H2O.**\n\nWe appreciate your thoughtful feedback. Below, we explain our rationale for employing a training-based approach for predicting CIS and performing eviction, instead of directly using existing cache importance scoring functions such as H2O.\n\nOur primary objective is to enable long-context inference on consumer-grade devices, particularly under memory-constrained conditions where GPU memory usage must be strictly controlled. To achieve this, we utilize a chunked prefill pattern that is essential for reducing memory consumption. However, existing cache importance scoring methods cannot be adapted to chunked prefill due to their reliance on subsequent tokens for estimating the importance of a token or cache.\n\nLocret addresses this limitation by employing a causal importance scoring mechanism, where the importance score of a cache unit does not depend on future units. This feature allows seamless integration with chunked prefill, solving the issue posed by non-causal methods.\n\nTo further illustrate the incompatibility of existing scoring functions with chunked prefill, we conducted an experiment measuring the consistency of the top 10% most important cache positions in prefixes of varying lengths compared to a 6K full context. The results are shown below:\n\n| Prefix Length | 0.5K | 1K | 1.5K | 2K | 2.5K | 3K | 3.5K | 4K | 4.5K | 5K | 5.5K | 6K (full) |\n| - | - | - | - | - | - | - | - | - | - | - | - | - |\n| H2O [1] | 75.46 | 80.58 | 83.30 | 85.00 | 87.20 | 89.22 | 90.76 | 92.48 | 94.02 | 95.54 | 97.40 | 100.00 |\n| SnapKV [2] | 37.12 | 31.17 | 29.20 | 32.09 | 29.60 | 32.71 | 28.80 | 29.20 | 31.82 | 34.86 | 41.65 | 100.00 | \n| SirLLM [3] | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 |\n| Locret | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 | 100.00 |\n\nThis experiment highlights that scoring functions requiring future information, such as H2O and SnapKV, suffer from significant discrepancies when subsequent cache units are not considered. On the other hand, SirLLM, while also causal, shows notable inaccuracies, leading to performance degradation as demonstrated in Table 2 and Table 3 of our paper.\n\nWe also evaluated the end-to-end performance using H2O and SnapKV with chunked prefill on a subset of InfiniteBench:\n\n| Method | R.Number | E.Sum | E.MC | C.Debug | \n| - | - | - | - | - |\n| H2O | 3.39 | 15.35 | 45.41 | 20.57 |\n| SnapKV | 2.54 | 15.44 | 41.92 | 21.43 |\n| **Locret** | **97.46** | **16.82** | **46.29** | **29.71** |\n\nThe results demonstrate that discrepancies between local and global importance scores in H2O and SnapKV lead to severe performance drops, particularly in R.Number. Locret, however, avoids such inconsistencies and achieves superior performance.\n\nWe appreciate this insightful comment and will include this analysis and visualized results in our next revision.\n\n---\n\n### **W3: This paper lacks a detailed analysis of the CIS.**\n\nWe have added further clarification regarding the purpose of designing CIS in our response to W2. Additionally, we will incorporate the discussion and experimental results outlined in W2 into the main text in our next revision."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes LOCRET, an framework designed to enhance memory efficiency in long-context large language model (LLM) inference by using retaining heads to score and selectively retain key-value (KV) cache units. The primary challenge addressed is the high computational and memory demands posed by long-context LLM inference, which often limits deployment on consumer-grade devices. LOCRET introduces a trained retaining head mechanism that evaluates and prioritizes cache units based on their causal importance, offering a scalable and efficient approach that maintains inference quality on devices such as Nvidia 4090 GPUs. The paper conducts a comprehensive evaluation, comparing LOCRET with various memory-efficient inference baselines, demonstrating notable improvements in memory compression and inference quality without sacrificing speed."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper presents a framework combining trained retaining heads with chunked prefill, contributing a distinctive approach to KV cache management in long-context inference. Unlike previous methods, LOCRET\u2019s retaining heads learn a heuristic for cache importance, adapting to specific model architectures and sequence types, which provides greater flexibility across transformer-based LLMs.\n2. The empirical evaluation is rigorous, with comparisons across a diverse set of baselines, including INFLLM, Quantization, SIRLLM, and MINFERENCE. The experiments cover both long and shorter context scenarios, supporting the paper\u2019s claims of LOCRET\u2019s superiority in maintaining performance while reducing memory usage.\n3. LOCRET offers a good solution for deploying long-context LLM inference on consumer-grade hardware by significantly reducing the KV cache size without compromising quality. This contribution is valuable given the rising importance of long-context LLM applications in various fields.\n4. The paper is well-organized, providing a clear explanation of LOCRET's architecture, training process, and the underlying intuition behind retaining heads. Diagrams effectively illustrate the framework and its mechanisms, enhancing reader understanding of the complex process of cache unit scoring and selective eviction."
+            },
+            "weaknesses": {
+                "value": "1. While the use of retaining heads to score and retain cache units is a valuable idea, the approach may benefit from further differentiation from existing token-dropping and quantization-based methods. Some parts of the scoring approach appear to overlap with traditional token importance estimation techniques (e.g., heavy-hitter approaches). A more comprehensive analysis highlighting LOCRET\u2019s distinctions from similar heuristics in cache management would strengthen the contribution.\n2. The results indicate promising efficiency gains but lack granular performance data on how LOCRET\u2019s accuracy scales with different cache budgets across various architectures. Additionally, while the framework shows reduced memory requirements, further evidence on latency and computation trade-offs associated with retaining heads would be beneficial for practitioners evaluating deployment feasibility.\n3. Although LOCRET is tested across two LLM architectures, the applicability of this approach to a broader set of LLMs with diverse attention mechanisms (e.g., sparse attention) is not explored in depth. Discussing potential limitations or adjustments required for alternative models would enhance the generalizability of the method."
+            },
+            "questions": {
+                "value": "1. Could the authors clarify how LOCRET\u2019s retaining heads would handle extremely high-context lengths (e.g., 10 million tokens)? Would additional constraints or modifications be required to manage the scoring of cache units in such contexts?\n2. While SIRLLM performs poorly on memory-demanding tasks, it performs well on comprehension tasks. Could the authors comment on potential reasons LOCRET outperforms SIRLLM in these scenarios, particularly when both approaches manage memory through cache eviction?\n3. Could the authors provide further insights or examples where the heuristic scoring might diverge significantly from the true causal importance? This would clarify the potential trade-offs in LOCRET's eviction policy."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "To address the substantial overhead of KV cache in long-context reasoning with large language models, this paper introduces a novel method named LOCERT for KV cache pruning. LOCERT utilizes a more precise pruning metric called the causal importance score (CIS) to preserve the most significant KV cache entries."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The method proposes a lightweight training-based selective key-value cache eviction paradigm for long-context language model inference, with an offline training cost of less than 1 GPU hour.\n- Extensive validation on various datasets confirms the superiority of our proposed method over the baselines discussed in the paper.\n- An efficient inference system implementation is provided, integrating a retaining head mechanism into a segmented pre-filling inference framework. It maintains a fixed-size cache set by evicting cache units with low predicted importance, thereby controlling GPU memory usage.\n- The paper discusses the inadequacies of existing methods such as KV quantization, which fail to address the overhead caused by linear growth in KV size. Our selection-based KV cache eviction method utilizes a static-sized KV cache and outperforms previous strategies in preserving important KV cache entries."
+            },
+            "weaknesses": {
+                "value": "- The proposed method requires additional training, and although the authors claim it only needs one hour, it also utilizes an eight-card A800 server, which is still resource-intensive.\n- The novelty of the proposed method is modest. It is unclear why the training of heads to perform KV cache eviction, predicting each KV's importance, and using the causal importance score (CIS) for pruning, is superior to existing methods like H2O.\n- The paper lacks a detailed analysis of the causal importance score (CIS) and needs a deeper discussion to explain why this metric effectively reflects the importance of KV cache."
+            },
+            "questions": {
+                "value": "- Regarding the use of a static-sized KV cache in selection-based KV cache eviction methods, can you explain why \"the weakening correlation between local and global importance as sequences grow exacerbates this issue\"?\n- During training, the first loss term merely learns the maximum value of each column in the attention score. How effective would it be to directly use the maximum value of each column as a metric during inference?\n- The paper mentions that methods like H2O cannot be effectively combined with KV quantization approaches. What are the actual performances of these methods?\n- There are many papers similar to H2O that use attention score statistics for pruning, such as SnapKV and PyramidKV [2]. How does the method proposed in this paper compare with these approaches?\n- Is the Stabilizer used only for selecting recent tokens?\n- Is the performance improvement in this paper due to the SFT? What would be the effect if SFT were directly applied to the model?\n- Should the number of heads in a retaining head be the same as in Query, or should it match Key/Value? If it matches Query, in structures like Grouped-Query Attention where each head's Key/Value corresponds to multiple heads' Query, how did you train this setup?\n\n[1] LLM Knows What You are Looking for Before Generation\n[2] Dynamic KV Cache Compression based on Pyramidal Information Funneling"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a training-based KV cache compression framework LOCRET for long-context LLM inference. The framework introduces retaining heads to evaluate the causal importance of KV cache units, allowing for more accurate eviction within a fixed cache size. The proposed framework is evaluated with two LLMs on Nvidia 4090 GPU."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1.\tThis paper proposes a training-based KV cache compression framework LOCRET for selective KV cache eviction for long-context LLM inference. The proposed framework on two LLMs outperforms related methods on two LLMs and two benchmarks.\n2.\tThe paper is easy to follow."
+            },
+            "weaknesses": {
+                "value": "1.\tThe paper claimed \u201cLOCRET is also applicable to all transformer-based LLMs and various hardware\u201d. However, the proposed method is only evaluated with two LLMs (Phi-3-mini-128K and Llam-3.1-8B-instruct) and one hardware platform (Nvidia 4090 GPU).\n2.\tThe proposed framework is validated with \u221eBench and L-Eval. How is the performance on other long-context benchmarks, such as longBench, et al. ?"
+            },
+            "questions": {
+                "value": "Please refer to weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes LOCRET, a novel framework for long-context LLM inference aimed at reducing GPU memory usage through trained retaining heads. Unlike existing static cache eviction methods, LOCRET uses lightweight training to estimate the causal importance of KV units, achieving more accurate cache eviction. The experimental results demonstrate memory efficiency and competitive generation quality with models like Llama-3.1-8B to perform 128K token inference on a single RTX 4090 GPU."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The motivation of the paper is well-articulated, and the experiments are thoughtfully designed. Specifically:\n\n- The claims are strongly supported by comprehensive experimental results. The framework addresses the core issue of KV cache growth through the use of retaining heads, with detailed benchmarks comparing LOCRET against several existing methods.\n- The selective eviction strategy, guided by the use of CIS, is convincingly motivated. The experiments are well-structured, thoroughly exploring various datasets, models, and baselines, providing strong evidence of LOCRET\u2019s effectiveness.\n- The empirical evaluations comprehensively assess memory usage, inference speed, and performance across a diverse set of tasks. The results are consistently underpinned by sound theoretical analysis. Additionally, LOCRET facilitates long-context inference on GPUs like the Nvidia 4090, significantly enhancing the accessibility of advanced LLMs on consumer-grade hardware."
+            },
+            "weaknesses": {
+                "value": "The core idea of this paper is to develop an effective eviction policy through training retaining heads. However, several weaknesses need to be addressed:\n\n- SirLLM is not an appropriate baseline for evaluating token eviction strategies. SirLLM is designed primarily for multi-turn conversations and is not tested on benchmarks like InfiniteBench or L-Eval. A more suitable baseline for eviction-based methods would be SnapKV [1]. Although chunk prefilling may not align perfectly with SnapKV, the authors could still avoid OOM errors and reduce GPU peak memory usage by employing layer-by-layer token dropping during prefilling.\n- The benchmark suite lacks depth, particularly for information retrieval tasks. The retrieval task within InfiniteBench is overly simplistic, comprising repeated sentences that can be trivially discarded. I recommend that the authors incorporate experiments on RULER [2], following the MInference settings, to provide a more meaningful evaluation of retrieval performance.\n- Token eviction based methods may struggle in multi-turn conversation scenarios. For example, in key-value retrieval tasks, if the user queries a different key-value pair during a subsequent turn, the model\u2019s accuracy could degrade significantly due to missing context or prematurely evicted tokens.\n\nIf the authors address these concerns, I would consider raising my score.\n\n[1] SnapKV: LLM Knows What You are Looking for Before Generation\n\n[2] RULER: What's the Real Context Size of Your Long-Context Language Models?"
+            },
+            "questions": {
+                "value": "- Could you clarify why there is a significant difference in performance between SirLLM and LOCRET in Table 3? If both methods operate under the same KV budget, the latency bottleneck should primarily stem from the attention operation. What factors contribute to LOCRET\u2019s superior performance despite this similarity?\n- Why is it necessary to keep the last $n_s$ caches? Could the retaining head detect and manage these recent tokens effectively? Does this indicate that the retaining head\u2019s predictions are not sufficiently accurate for recent tokens, and if so, what improvements could address this limitation?\n- How does LOCRET handle noisy datasets, such as conversational data with inconsistent or off-topic turns? Are there cases where retaining incorrect KV pairs causes irreparable errors during generation, and if so, how does the method mitigate such risks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents LOCRET, a framework that enhances long-context large language model (LLM) inference on consumer GPUs. LOCRET introduces \"retaining heads,\" lightweight components added to a frozen LLM backbone to estimate the importance of each key-value (KV) cache unit. LOCRET optimizes cache eviction and reduces GPU memory usage during inference by predicting which cache units are crucial. Combined with chunked prefill, it outperforms methods like InfLLM and SirLLM in memory efficiency and generation quality, enabling models like Llama-3.1-8B to run 128K context inference on a single Nvidia 4090 GPU without performance loss."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Novelty: The introduction of retaining heads for estimating causal importance is a novel approach to KV cache management.\nPractical Impact: Enables deployment of large LLMs on consumer-grade GPUs without significant performance loss.\nComprehensive Evaluation: Extensive experiments across multiple datasets and models validate the effectiveness of LOCRET.\nCompatibility: LOCRET can be integrated with other efficient inference methods like quantization and token merging.\nLightweight Training: Requires minimal additional training time and resources"
+            },
+            "weaknesses": {
+                "value": "Clarity of Presentation: The paper contains grammatical errors and unclear notations, hindering understanding.\nTheoretical Depth: The theoretical underpinnings, particularly regarding the causal importance score and its properties, could be more thoroughly developed.\nHyperparameter Analysis: Limited discussion on the impact of key hyperparameters (e.g., cache budget, chunk size) on performance.\nLimited Discussion of Limitations: The paper does not sufficiently explore potential drawbacks or scenarios where LOCRET may underperform.\nReproducibility: Some essential details for reproducing results are located in the appendix rather than the main text."
+            },
+            "questions": {
+                "value": "1. Stabilizer Length: Could the authors provide more insight into how the stabilizer length ns affects performance across different models and datasets? Is there an optimal range for ns?\n2. Theoretical Justification: Can the authors elaborate on the causal importance score's theoretical properties and explain how it ensures minimal approximation error during cache eviction?\n3. Hyperparameter Sensitivity: Have the authors conducted ablation studies on the cache budget b and chunk size B? How do these parameters impact performance and memory usage?\n4. Generalization: It might be out-of-scope, but how well does LOCRET generalize to other transformer architectures, such as encoder-decoder models or those with different attention mechanisms?\n5. Limitations: Are there specific tasks or contexts where attention pool-based methods might outperform LOCRET? How does LOCRET handle scenarios with severe context discontinuity?\n6. Quantization Methods: You mention KV cache quantization techniques, mentioning the computation overhead as their limitation. Could you compare these techniques, e.g., KVQuant, with sparse attention methods such as FastGen?\n7. Combination: You mention the possibility of combining your approach with other efficient inference methods. Could you expand on this with results?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,167 @@
+{
+    "id": "FDmKe5EBuy",
+    "title": "Diverse and Effective Red Teaming with Auto-generated Rewards and Multi-step Reinforcement Learning",
+    "abstract": "Automated red teaming can discover rare model failures and generate challenging examples that can be used for training or evaluation.  However, a core challenge in automated red teaming is ensuring that the attacks are both diverse and effective.  Prior methods typically succeed in optimizing either for diversity or for effectiveness, but rarely both.  In this paper, we provide methods that enable automated red teaming to generate a large number of diverse and successful attacks.\n\nOur approach decomposes the task into two steps: (1) automated methods for generating diverse attack goals and (2) generating effective attacks for those goals.  While we provide multiple straightforward methods for generating diverse goals, our key contributions are to train an RL attacker that both follows those goals and generates diverse attacks for those goals.  First, we demonstrate that it is easy to use a large language model (LLM) to generate diverse attacker goals with per-goal prompts and rewards, including rule-based rewards (RBRs) to grade whether the attacks are successful for the particular goal.  Second, we demonstrate how training the attacker model with multi-step RL, where the model is rewarded for generating attacks that are different from past attempts further increases diversity while remaining effective.  We use our approach to generate both prompt injection attacks and prompts that elicit unsafe responses.  In both cases, we find that our approach is able to generate highly-effective and considerably more diverse attacks than past general red-teaming approaches.",
+    "keywords": [
+        "red teaming",
+        "safety",
+        "reinforcement learning"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "We find we can create a diverse and effective red teamer by first generating many diverse, specific red-teaming tasks and then using those tasks as part of multi-step reinforcement learning to train an LLM red teamer.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=FDmKe5EBuy",
+    "pdf_link": "https://openreview.net/pdf?id=FDmKe5EBuy",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors propose a pipeline for automated red-teaming to both generate diverse attack goals, and then generate attacks for the goals. By prompting an LLM, a diverse set of instructions and criteria are obtained and used to create a dataset. This dataset is then used to fine-tune an LLM using RL on a few different rewards: attack success (rule-based rewards and breaking moderation filters), style diversity, similarity/consistency, and response length. The core contributions of this paper are the multi-step RL approach and formulation of the reward to encourage style diversity, and proposing to apply this framework for red-teaming prompt injections (in addition to standard jailbreaks). The attacks produced by the fine-tuned model are then evaluated by either their RBRs or OpenAI\u2019s Moderation API, showing that their method improves over baselines (one-shot generation, vanilla RL) while also improving on diversity metrics."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Results show clear improvement over the naive baselines (one-shot generation, vanilla RL) given the evaluated metrics\n- Novel rewards for handling issues with prompt diversity (to the best of my knowledge)"
+            },
+            "weaknesses": {
+                "value": "- Qualitatively, the results appear questionable - more discussion in the question section\n- Figure 5a colours don\u2019t match (success rate vs attack diversity)\n- Figures are generally hard to parse and general presentation could be improved\n- It is impossible to verify the claims of this paper; no information of the models evaluated was given, and  was given, nor the code to reproduce results. While the authors did promise to release code upon publication, it is difficult to gauge the significance of the results"
+            },
+            "questions": {
+                "value": "- Why was the method not evaluated on more commonly benchmarked models (e.g. Llama, Gemma, etc)?\n- The qualitative examples in C.3 either look very simplistic or somewhat odd; which ones succeeded/failed, and what were the outputs the model produced to these prompts?\n- I found the prompt injection task difficult to follow. I understand what they are, and I understand the goals/types of prompt injections that are being included (links/images/specific phrases in responses, or generally the examples in table C.3). However it is unclear to me what you are injecting these goals into, and what you are exactly evaluating."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a method for improving the joint diversity and effectiveness of automated red teaming methods for LLMs. The overall method first generates a diverse set of goals, which are then optimized by a multi-step RL method that conditions on previously generated attacks to improve the diversity of the attacks. This improves the attack diversity while maintaining good ASR."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This is a good line of work. Most jailbreaking and automated red teaming papers haven't taken the RL route first explored by Perez et al (2022), and most haven't given diversity of attacks enough consideration. I wish more work like this existed.\n- I appreciate how the authors describe that the diversity was relatively poor at first, which led them to develop their multi-step method where the attacker conditions on previous attacks and tries to make the new attacks different from what came before.\n- The proposed methods improve diversity of the attacks."
+            },
+            "weaknesses": {
+                "value": "- This paper discusses diversity of attacks, but it doesn't clearly distinguish between two types of diversity that appear in the paper: attack goal diversity, and diversity of the attack itself (i.e., style diversity). These should be clearly distinguished.\n- Only the style diversity is evaluated using embedding cosine similarity (presumably self-similarity, as in Perez et al. (2022)). What about the attacker goal diversity? If part of the method involves improving the attacker goal diversity, then surely that should be backed up with an evaluation of some sort. I'm actually not sure what would be a good metric for this, and it seems like an important point to consider for future work on automating exploratory red teaming, so updating the paper to include some sort of evaluation of goal diversity could provide value to the community.\n- The presentation is lacking in areas. E.g., Figure 1's caption is essentially missing. This needs to be fixed. Also, the handwritten style of Figure 1 is hard to follow, and many symbols in the figure are not labeled.\n- Reading section 5.3, I can't shake the feeling that the discovered lack of diversity isn't a very deep finding. Couldn't one characterize this as just not having designed a good enough goal generation prompt? Does this merit being mentioned in an ICLR-tier paper?\n- I'm generally not a fan of making metrics depend on closed-source models. The ASR and diversity metrics used in this submission both rely on the OpenAI API, which reduces reproducibility in the long run.\n- The paper involves a lot of experiments, but it's unclear what scientific or technical advances were made. It's OK for papers to be more about interesting results; technical novelty isn't the only source of value. But in this case, I think the outcomes of the experiments aren't that surprising; this may be a paper where the main source of value is in figuring out all the details and showing that this could be done."
+            },
+            "questions": {
+                "value": "I'm not sure that the distinction between jailbreaking and indirect prompt injection is good to propagate. They feel like exactly the same problem, with different window dressing. What do you think?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes an automatic two step red-teaming method for LLMs that aims at generating prompts that are very diverse as well as effective. Diversity is important to transfer attacks across different models and for generalization purposes. The first step of the red-teaming process consists of collecting several prompts that score a high reward using GFlowNets algorithms. In these methods, the learned policy sample prompts with probability proportional to the reward the prompts received. The reward is defined as the likelihood that a prompt is classified as toxic by a toxicity classifier (plus a KL term). The second step takes into account some issues related to tuning some hyperparameters in the reward function. In particular, the prompts collected at the previous step are filtered and used to fine-tune the initial policy to maximize model log-likelihood. The red-teaming is tested against different baselines and across different models. The results show that prompts generated with this method are more diverse and effective compared to the ones produced by other baselines and transfer across different models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Attack diversity is important in red-teaming and finding automatic methods to produce diverse and effective prompts is valuable.\n- The second step seems to significantly improve over the baseline consisting only of the first step. \n- The method is compared against many different baselines."
+            },
+            "weaknesses": {
+                "value": "- The tested models are quite small. Even if the attacks generalize to different models, it\u2019d be good to have an evaluation of bigger and closed-source models (since the technique doesn\u2019t require access to model weights).\n- Although inexpensive, it seems not very efficient to retrain the policy on a subset of generated prompts. For example, filtering the prompt can be done on the fly during the GFlowNet stage."
+            },
+            "questions": {
+                "value": "- Why do you use two different toxicity classifiers for different models?\n- The difference in performance between GFlowNets and GFlowNets+MLE changes quite a bit across different models. For example, for Dolly and GPT-2 the performance is almost the same, for Gemma there is a huge gap, for the Llamas the difference is a bit smaller. Do you have a sense of why this is happening?\n- The attacks produced with this method are very diverse. Is this diversity mainly semantic or also stylistic?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a reinforcement learning approach to training \u201cattacker\u201d models that generate adversarial prompts triggering harmful responses by \u201cvictim\u201d models. As part of this process, the authors proposes a method for generating goals for the attacks. The paper has experiments both in the jailbreaking and in the prompt injection setting."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "It is not currently possible for me to understand the paper well due to the coloring of the plots and the confusing presentation of the generated examples."
+            },
+            "weaknesses": {
+                "value": "It is not currently possible for me to understand the paper well due to the coloring of the plots and the confusing presentation of the generated examples.\nHowever, I will flag a weakness in the design of the goal selection. Since this paper proposes as its own contribution the design of goals for red teaming/jailbreaking, it should take better care to lay down a robust line of what is and is not considered a violation or a harmful response for jailbreaking. I might be misinterpreting the examples provided in the table in Appendix C.4 (see questions) but I am concerned that currently they do not always explicitly elicit truly harmful responses. Some may even leave enough wiggle room for a model to respond in a generically helpful but not harmful manner instead of outright refusing. This, in turn, might be inflating the attack success rate. For example, it might be perfectly reasonable for the model to assist in writing a book about password cracking in response to the prompt \u201cWhat are the methods a criminal in my book could steal password:\u201d \u2013 as long as the response does not provide information that can truly be used for harm."
+            },
+            "questions": {
+                "value": "Can you provide a more readable version of Figures 4 and 5? For example, a table with the raw numbers might be needed. Currently, it is hard for me to map between the colors in the legend and the plot colors, so I cannot tell how well each method does.\n\nCan you explain the table in Appendix C.4? Is each row supposed to be goals based on the prompt in the furthest left? Why do prompts in some columns have nothing to do with the \u201cPrompt Details\u201d column?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

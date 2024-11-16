@@ -1,0 +1,178 @@
+{
+    "id": "I0n3EyogMi",
+    "title": "Fast and Slow Streams for Online Time Series Forecasting Without Information Leakage",
+    "abstract": "Current research in online time series forecasting suffers from information leakage: models predict and then evaluate on historical time steps that have been backpropagated for parameter updates. This setting also misaligns with the real-world conception of forecasting, which typically emphasizes looking ahead and anticipating future uncertainties. This paper redefines online time series forecasting to focus on predicting unknown future steps and evaluates performance solely based on these predictions. Following this new setting, challenges arise in leveraging incomplete pairs of ground truth and prediction for backpropagation, as well as generalizing accurate information without overfitting to noises from recent data streams. To address these challenges, we propose a novel dual-stream framework for online forecasting (DSOF): a slow stream that updates with complete data using experience replay, and a fast stream that adapts to recent data through temporal difference learning. This dual-stream approach updates a teacher-student model learned through a residual learning strategy, generating predictions in a coarse-to-fine manner. Extensive experiments demonstrate its improvement in forecasting performance in changing environments.",
+    "keywords": [
+        "online time series forecasting",
+        "concept drift",
+        "online learning"
+    ],
+    "primary_area": "learning on time series and dynamical systems",
+    "TLDR": "Redefined the setting of online time series forecasting to prevent information leakage and proposed a model-agnostic framework for this setting.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=I0n3EyogMi",
+    "pdf_link": "https://openreview.net/pdf?id=I0n3EyogMi",
+    "comments": [
+        {
+            "title": {
+                "value": "Further advice on clarification and illustration about the data leakage problem and its importance"
+            },
+            "comment": {
+                "value": "I think **the problem about data leakage is very important in practice**. **I further suggest the authors provide some concrete examples (maybe in the appendix) to better illustrate this problem, and emphasize its importance**. For example:\n\nIn practice, say I have a model to predict the temperature of the next 24 days, and I want to update my model everyday. Yesterday my model has a prediction of today and the next 23 days, according to which I would like to update my model today. Of-course only today's ground truth is available: meanwhile in previous work they update model parameter **today** according to gt value of **today and the next 23 days**, and that's **data leakage** described in this work. Unfortunately, this problem of data leakage has been found in previous work for OTSF.\n\n**It is an important problem not only in evaluating models, but also in practice**. Take quantitative trading as an example, evaluating a prediction model with such data leakage (as in previous work for OTSF) in backtesting would lead to over estimation. In trading firms they would avoid such data leakage to avoid fake profits in backtesting, but many of previous OTSF researches are not avoiding this issue, **making previous research results not that practical in real scenarios**.\n\nBy pointing out this problem and provide corresponding methods for OTSF, **this work can potentially close the gap between OTSF researches and real scenarios for OTSF**.\n\nThe description of the data leakage problem in this work is indeed complicated, and the importance of this problem might not be completely emphasized in this work. Therefore, **I suggest the authors provide some concrete examples and emphasize the importance of this problem in practice**."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper spots a problem in the training-evaluation pipeline of existing online time series forecasting studies. The problem is that  parts of the future sequence has already been used as labels for updating the model at previous time-steps. This results in information leakage in training. This information leakage results in an overly optimistic training loss and consequently a gap between training and causal evaluation (the latter is what we really care about). The main contribution of the paper is identifying this shortcoming of the previous works. The paper also presents a fast-slow dual network algorithm for OTSF in a setting with no information leakage. They also present comprehensive experiments to showcase the performance of their algorithm."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The identified information leakage problem is important, and I think would be influential for the field."
+            },
+            "weaknesses": {
+                "value": "The fast learning part (Section 3.3.2) motivates by the necessity of fast updates to stay up-to-date with the recent data. For this purpose they update the student model using labels generated by the teacher. The teacher model is however out-dated. This seems like a contradiction, and it is not clear how it may resolve the problem of being up-to-date, except for the fact that the immediate next label, x_{t+1}, is used in updating the student. This seems very small updates \n\nAlternatively, student updates could leverage k next real data for some k>1, at the cost of a delay of k time-steps. The student of the current work uses k=1. Alternatively, one could consider a whole spectrum (or hierarchy) of models with different values of k (for example powers of 2). \n\nComputational complexity: the DSOF algorithm involves two networks. Moreover, the teacher model requires to generate a long sequence of samples at each time-step, which can be very computationally costly in certain architectures like decoder transformers. I wonder if the reported outperformance could be achieved under the same computational budget as the baselines?\n\n\nComments on the presentation:\n\nThe presentation could be much better. The text involves quite long sentences that reduce fluency, resulting in a tiring read. Fig. 1 does not help much in clarifying the information leakage problem. Despite of extensive use of indices, the arguments are vague in several places; for example in line 45 \u201cthe whole sequence\u201d could be replaced by the indices you defined in the same sentence. \nAppendices are missing.\n\nThe claimed new OTSF framework is not rigorously formalized. For example what data can or cannot be used at each time of the training to prevent information leakage. \n\nThe connection to RL and TD learning in section 3.3 seems very loose. It would be better not to use TD terminology. \n\nThe Appendices are missing from the pdf."
+            },
+            "questions": {
+                "value": "Please see the comments under the Weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper discusses a dual-stream framework for online forecasting (DSOF). Two modules separate the learning process into two streams: a \u201cslow stream\u201d which updates with complete data, and a \u201cfast stream\u201d which adapts to the most recent data. Using a teacher-student framework\uff0c the proposed model aims to improve forecasting performance by balancing adaptation to new data with robustness against noise. Numerical experiments are provided."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper tries to address an important topic in time series forecasting via online model adjusting to hedge the distribution drifting issue."
+            },
+            "weaknesses": {
+                "value": "1. The presentation of this paper could be improved. According to the current draft, the novelty appears limited. The way to utilize teacher-student style models and experience replay seems quite standard. I suggest authors include some toy examples or a theoretical analysis to motivate the necessity proposed method from a more principled way.\n\n2. Sample code is not provided to assist the reviewer in verifying reproducibility.\n\n3. Can authors elaborate more on how the proposed model addresses the information leakage? It seems not being well discussed in methodology section (section 3)."
+            },
+            "questions": {
+                "value": "Please see the weakness part.\n\nAt the current stage, the novelty is insufficient for acceptance at a top-tier machine learning conference, and I tend to recommend rejection. However, I am open to reevaluating this work based further discussion."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper addresses challenges in online time series forecasting (OTSF), particularly the issue of information leakage, where models use historical data for both prediction and evaluation, leading to biased performance assessments. The authors redefine OTSF to focus exclusively on predicting future unknown time steps without using backpropagated data for evaluation, aligning the framework more closely with real-world forecasting tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper presents a novel redefinition of online time series forecasting (OTSF), specifically addressing the issue of information leakage, which has not been adequately tackled in prior research. By focusing on predicting future time steps without evaluating on previously backpropagated data, the authors set a new standard for OTSF, ensuring a more realistic and reliable forecasting setting. The introduction of the dual-stream framework, DSOF, which combines experience replay (ER) and temporal difference (TD) learning, is an innovative approach that allows the model to adapt effectively to temporal shifts and generalize better to real-world scenarios.\n\n\nThe study is well-executed, with thorough experimentation that covers multiple datasets and a variety of model architectures. The results clearly demonstrate the advantages of the proposed DSOF framework over traditional batch learning methods, showing significant improvements across diverse real-world scenarios. The experiments also include ablation studies, highlighting the importance of core components such as ER and TD loss, thus providing a detailed understanding of how different design choices contribute to the model\u2019s performance. The methodological framework is backed by rigorous empirical evidence, lending credibility to the findings."
+            },
+            "weaknesses": {
+                "value": "The results of the baselines, especially the comparison between OneNet and FSNet, are unexpected and raise concerns about the experimental setup. Specifically, OneNet, which is theoretically more robust and effective, shows worse performance compared to FSNet, especially on datasets like ECL, which have many variables. This discrepancy is puzzling because OneNet should typically outperform FSNet due to its more comprehensive handling of cross-variable and cross-time dependencies. The authors should clarify the hyperparameter settings used for baseline models and ensure that they have been adequately optimized for each baseline. A detailed explanation of why OneNet underperforms would be valuable, as it could indicate either a misconfiguration or potential issues in the experimental protocol. Additionally, including a sensitivity analysis for hyperparameters could help identify whether the results are consistent or if specific settings unduly favor certain models\n\n\nWhile the paper argues that existing OTSF settings introduce information leakage, it overlooks that many practical use cases update the model immediately with each new data point rather than accumulating a sequence. Although the authors highlight the risks of information leakage, real-world scenarios often prioritize fast adaptation to incoming data, even if it means some overlap in training and evaluation periods. This practice, while not perfect, remains a common approach because it ensures the model quickly adapts to recent changes. The authors should address why the proposed method of avoiding information leakage offers a practical advantage, despite differing from common real-world practices. It would also help to show more use cases where avoiding this overlap leads to clear benefits, thus making a stronger case for why users should adopt the new setting. \n\nThe paper does not provide a thorough analysis of the computational cost associated with running DSOF in real-time environments. Given the dual-stream approach and reliance on replay buffers, the method could potentially introduce higher computational demands, especially when dealing with large datasets or long lookback windows. Include a detailed assessment of the computational overhead introduced by the dual-stream approach. Specifically, measure the latency, memory usage, and training time, comparing them with baseline batch learning and other online learning frameworks. This would provide a clearer understanding of the trade-offs involved and help identify scenarios where DSOF is more efficient or where further optimizations are needed.\n\nIn Figure 3, the combined use of ER and TD loss leads to a significant performance boost, but the individual contributions of each are less apparent. This pattern is confusing because it suggests that the benefits of each component alone are minimal, raising questions about their necessity if they do not independently improve performance. Without a clearer understanding of how these components interact, it is difficult to assess their true value within the framework.   The authors should provide a more detailed analysis explaining why ER and TD loss, when used together, show such a marked improvement over their separate contributions. This might include examining how these methods complement each other and identifying specific scenarios where one is more effective than the other. Additional ablation studies or visualizations showing how each component contributes to different aspects of the model\u2019s learning could offer deeper insights into their interactions."
+            },
+            "questions": {
+                "value": ".see weakness"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper corrects a fundamental bug in previous papers for Online Time Series Forecasting, proposing a definition of the OTSF task without data leakage. To solve arising challenges of this new scenario, the authors then propose a dual-stream framework (DSOF) for this task, which updates a teacher-student model through residual learning.\n\nIn detail, there are two data streams: slow and fast.\n- The slow data streams are stored into a buffer in an FIFO basis for updating teacher and student residual model. This requires complete ground truth data for all time steps in data stream. This is called Experience Replay (ER) Update in the paper.\n- The fast data stream, designed to utilize data from timestamps where the ground truth for predictions is not yet fully available, updates the student residual model only, according to discord of (the prediction of the teacher-student model in the previous step) and (the ground truth of this step along with the pseudo-label generated by the prediction of the teacher-student model at this step). This is called Temporal Difference (TD) Update in the paper."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "This work demonstrates several notable strengths.\n\n- Most significantly, the authors point out a significant problem of several works for Online Time Series Forecasting related to information leakage. The bug pointed out here is such fundamental that I did not even believe it existed before I checked the code of several previous works for OTSF and verified the claim of the authors. The redefinition of OTSF problem would definitely make it clearer for the time series community to develop online models that are not only good on benchmarks, but also practical and useful.\n\nIn this data-leakage-free setting, there are data points in timestamps whose ground truth for prediction is currently not fully available, which is an arising problem.\n\n- The authors propose the DSOF framework as a logical solution to this emerging problem. This framework will serve as a baseline for future comparisons. The proposed framework provides insights related to differential learning in reinforcement learning, making it more explainable.\n\n\n\n- The authors evaluate their proposed framework with extensive experiments conducted across multiple Models (DLinear, FITS, FSNet, OneNet, iTransformer, PatchTST, NSTransformer, etc) and multiple Datasets (ECL, ETT, Traffic, Weather, Exchange, etc) on multiple settings (different forecasting horizons, different learning rates, etc), demonstrating the effectiveness of their method.\n\n\n\nThe significance of this work is apparent, especially in its correction to the OTSF problem practice, and also in its contribution to point out the arising problem, and propose a method to (partially) deal with this problem."
+            },
+            "weaknesses": {
+                "value": "A fixed look-back length of 96 may not be entirely convincing. Some models may show a significant advantage at a certain look-back length, but less advantage or even underperformance at longer look-back lengths. It would be better if the authors could follow the practice in the paper of FITS, PatchTST, etc (which are cited by the authors in their paper) to do grid search for the optimal lookback length for each dataset for each forecasting model, and to compare this optimal value against each other.\n\nThe authors' approach is understandable, given that (1) some previous work accepted at top conferences for time series forecasting uses similar settings of fixed look-back length and (2) this approach would require much larger computation resource. However, I believe it would benefit the time series community if new papers utilized grid search and comparing with baselines across different look-back lengths, though this would not affect the contribution and significance of this work."
+            },
+            "questions": {
+                "value": "- Could you conduct a grid search for different look-back horizons on selected datasets, models, and forecasting horizons to demonstrate robustness with respect to look-back horizon? I'm not suggesting that you repeat all experiments. Conducting grid searches for a subset, particularly with smaller models and datasets (e.g., DLinear, iTransformers on ETTh1, Exchange; H=24), would be computationally feasible and enhance the robustness of your results.\n\n- I noted the experiments on different buffer-size in appendix. Would it be possible that these experiments could partially represent or replace experiments about different look-back horizon?\n\n- Recent work has proposed Foundation Models for Time Series Forecasting, and there are papers discussing Test Time Adaptation for Time Series Forecasting. Would it be possible that the predictions of base models can be improved by the DSOF framework?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

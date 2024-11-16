@@ -1,0 +1,198 @@
+{
+    "id": "ZsP3YbYeE9",
+    "title": "Enhancing Language Model Agents using Diversity of Thoughts",
+    "abstract": "A popular approach to building agents using Language Models (LMs) involves iteratively prompting the LM, reflecting on its outputs, and updating the input prompts until the desired task is achieved. However, our analysis reveals two key shortcomings in the existing methods: $(i)$ limited exploration of the decision space due to repetitive reflections, which result in redundant inputs, and $(ii)$ an inability to leverage insights from previously solved tasks. To address these issues, we introduce DoT (Diversity of Thoughts), a novel framework that a) explicitly reduces redundant reflections to enhance decision-space exploration, and b) incorporates a task-agnostic memory component to enable knowledge retrieval from previously solved tasks\u2014unlike current approaches that operate in isolation for each task. Through extensive experiments on a suite of programming benchmarks (HumanEval, MBPP, and LeetCodeHardGym) using a variety of LMs, DoT demonstrates up to a $\\textbf{10}$% improvement in Pass@1 while maintaining cost-effectiveness. Furthermore, DoT is modular by design. For instance, when the diverse reflection module of DoT is integrated with existing methods like Tree of Thoughts (ToT), we observe a significant $\\textbf{13}$% improvement on Game of 24 (one of the main benchmarks of ToT), highlighting the broad applicability and impact of our contributions across various reasoning tasks.",
+    "keywords": [
+        "Large Language Models",
+        "Reasoning",
+        "Programming"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ZsP3YbYeE9",
+    "pdf_link": "https://openreview.net/pdf?id=ZsP3YbYeE9",
+    "comments": [
+        {
+            "comment": {
+                "value": "I thank the authors for their response. The suggested changes all look sensible to me and I commend the inclusion of average cosine-similarities as a measure of diversity."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank the reviewer for their constructive feedback and are glad that they found our work to be well-motivated and well-justified. We are encouraged by the recognition of our carefully chosen experiments and the clarity and consistency of our reported gains in performance.\n\n---\n\n**W1:** We will revise the writing to clarify how previous trajectories are retrieved and to better explain our ablative study in Table 9. Briefly, Table 9 examines the impact of injecting random in-context examples versus cosine-similarity-based examples. In phase 1, successful trajectories and the embedding of the problem's docstring are added to the memory bank to facilitate retrieval. In phase 2, when re-attempting failed problems, we generate an embedding for the docstring and retrieve the k most similar trajectories from the memory-bank to inject as in-context examples. The results indicate that using similar-style examples boosts performance over random ones, aligning with recent findings in [1]. \n\n----\n\n**W2:** We will revise the plots to place both embeddings in the same space, as suggested, to improve clarity. Additionally, we introduce a new metric to quantify the diversity of generated reflections. This metric calculates the average pairwise cosine similarity of self-reflections for each problem within a dataset; we report both the mean and standard deviation. We use the \u2018all-Mini-LM-v6\u2019 model from SentenceTransformers to generate embeddings for these reflections. Diversity scores are presented for HumanEval and LeetCodeHardGym across two different LLMs, with lower similarity scores indicating greater diversity.\n\n|               | **HumanEval**        |        |\n| ------------- | ---------------- | ------ |\n| **Llama-3.1-70B** | **Similarity Score** | **Pass@1** |\n| **LATS**          | 0.65 (0.41)      | 84.76  |\n| **Reflexion**     | 0.83 (0.09)      | 87.2   |\n| **DoT**           | **0.48 (0.11)**      | **89.63**  |\n| **DoT-Bank**      | **0.48 (0.12)**      | **93.29**  |\n|               |                  |        |\n|               |                  |        |\n|               | **LeetCodeHardGym**  |        |\n| **Sonnet3.5**     | **Similarity Score** | **Pass@1** |\n| **LATS**          | 0.70 (0.29)      | 42.5   |\n| **Reflexion**     | 0.83 (0.13)      | 42.5   |\n| **DoT**           | **0.62 (0.13)**      | **50**     |\n| **DoT-Bank**      | **0.61 (0.10)**      | **52.5**   |\n\n---\n\n**W3:** We agree with the reviewer. We will reformat and reposition the tables to enhance readability and clarity.\n\n----\n\n**Q1:** Tree-of-Thoughts and LATS use LLMs as evaluators, where the LLM is prompted to generate a numeric score, as noted by the reviewer.\n\n\n**Q2:** Yes, the K most similar trajectories are injected as in-context examples specifically for generating function implementations, not reflections. As stated in the paper, the task-agnostic memory bank aims to enhance generation quality. \n\n\n----\n\nReferences\n\n[1] Metacognitive Capabilities of LLMs: An Exploration in Mathematical Problem Solving, Didolkar. et. al, NeurIPS 2024"
+            }
+        },
+        {
+            "title": {
+                "value": "Response 2/2"
+            },
+            "comment": {
+                "value": "**Q1:** Thank you for pointing this out. The missing reference in line 700 corresponds to Figure 7.\n\n**Q2:** We will cite Self-Refine and other related Reflexion based methods in our final version.\n\n**Q3:** We apologize for our oversight on inconsistent citations. We will fix them in our final version.\n\n**Q4:** We use Amazon\u2019s BedRock service to access Llama models APIs. The corresponding API pricing can be found here: https://aws.amazon.com/bedrock/pricing/"
+            }
+        },
+        {
+            "title": {
+                "value": "Response 1/2"
+            },
+            "comment": {
+                "value": "We thank the reviewer for their valuable feedback.\n\n**W1:** We disagree with the reviewer\u2019s comment regarding the practicality of reusing insights from previously solved tasks. Our empirical results underscore the practical value of DoT-Bank, showing a consistent **2-5%** performance improvement over the standard DoT approach\u2014validating that leveraging past insights enhances task-solving effectiveness. \n\nA recent concurrent study [1] demonstrates that Large Language Models (LLMs) can effectively use metacognitive abilities to leverage previous insights when approaching new tasks, leading to substantial performance improvements. Specifically, they show that curating in-context examples based on skill-exemplars\u2014i.e., insights from related tasks\u2014enhances performance. However, their approach relies on a predefined set of exemplars, requiring additional training data, which may limit adaptability across varied tasks. \n\nOur proposed task-agnostic memory bank variant, \"DoT-Bank,\" corroborates this observation but innovates by eliminating the need for explicit training data. Instead, DoT-Bank dynamically builds a memory bank during problem-solving, effectively capturing useful knowledge from previously solved tasks. This enables DoT-Bank to leverage cross-task insights without task-specific exemplars. \n\n---\n\n**W2:** As stated in Line 300, we use the recommended hyperparameters suggested by the authors of the respective baselines. Specifically, for Reflexion, we set max-iterations k=3 for HumanEval and MBPP, and k=5 for LeetCodeHardGym. For LATS, we use k=8 across all three datasets. For DoT and DoT-Bank, we set k=3 for HumanEval and MBPP, and k=5 for LeetCodeHardGym.\n\nTo further highlight DoT's effectiveness, we vary k in Reflexion and report both Pass@1 and associated costs on the HumanEval dataset with **Sonnet-3.5**. The results indicate that even with k=10, Reflexion lags behind **DoT** and **DoT-Bank**, which achieve Pass@1 scores of **91.46 ($1.14)** and **93.90 ($1.67)**, respectively\u2014demonstrating that DoT variants are both more effective and cost-efficient.\n\n| HumanEval | K=3           | K=6           | K=8           | K=10          |\n| --------- | ------------- | ------------- | ------------- | ------------- |\n| Reflexion | 88.41 ($0.89) | 89.02 ($1.36) | 89.63 ($1.64) | 89.63 ($1.87) |\n\nIf the reviewer is referring to sampling k-reflections per iteration, this approach is already implemented in LATS, which additionally uses an MCTS mechanism to select a potential solution (see Section 5.2 paragraph 2 in LATS). Our empirical results show that DoT outperforms LATS, and in the few cases of similar performance, DoT remains more cost-effective.\n\n---\n\n**W3:** We clarify that by \u201ccost\u201d, we refer solely to the dollar cost incurred by running the LLM APIs. The memory bank is implemented as a hash map, which does not contribute to this cost.\nIt appears there may have been a misunderstanding regarding our algorithm. The memory bank's size increases with each new solved task (Algorithm 1, Lines 17 and 35). DoT-Bank includes both phases of the algorithm: phase 1, which builds the memory bank and tags failed problems on visible or synthetic test cases, and phase 2, which reattempts these tagged problems using the memory bank. For all DoT-Bank experiments, both phases are run. This is why, in all relevant tables, DoT-Bank's cost is higher than DoT\u2019s\u2014reflecting the additional cost of reattempting failed problems with extra context tokens and the API cost for generating embeddings.\n\nThe memory bank is only applied to failed tasks, as shown on Line 32 of Algorithm 1.\n\n---\n\n**W4:** We use the same set of models for HumanEval and MBPP experiments. For the LeetCodeHardGym benchmark, consistent with Reflexion, we utilize powerful LLMs as base models, specifically GPT-o1 and Sonnet-3.5 in the main paper, and GPT-4o/4o-mini in Table 11 of Appendix.\n\nTable 5 highlights a bug in the LATS implementation that led to inflated performance results on some datasets. To illustrate this, we use the same setting from LATS with synthetic test cases. All baseline results in Table 5 are taken directly from the LATS paper, alongside our corrected results for LATS and DoT.\n\nLastly, we emphasize that, unlike previous works, our study evaluates a broad range of LLMs, demonstrating consistent performance gains across different model types.\n\n---\n\n**W5:** For ToT + DoT, we use one-shot-sampling along with the prompt mentioned in Figure 8. A recent concurrent study [2] supports our approach, demonstrating that one-shot sampling can produce semantically diverse outputs. \n\n---\n\nWe will update our final version to make these points clear and update our coverage on related work referred during the rebuttal phase.\n\n---\nReferences:\n\n[1] Metacognitive Capabilities of LLMs: An Exploration in Mathematical Problem Solving, Didolkar. et. al, NeurIPS 2024\n\n[2] How Far Can We Extract Diverse Perspectives from Large Language Models? Hayati. et. al.,  EMNLP 2024"
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank the reviewer for their valuable feedback.\n\n\n**W1:** We clarify that our method does not claim to *guarantee diverse reflections* but instead aims to promote them (L::71-73). To quantify the diversity, we calculate the average pairwise cosine similarity across generated self-reflections for each problem within a dataset, reporting both the mean and standard deviation. We use the \u2018all-Mini-LM-v6\u2019 model from SentenceTransformers [1] to generate embeddings for these reflections. This metric is presented for HumanEval and LeetCodeHardGym across two different LLMs. A lower similarity score indicates greater diversity.\n\nTo clarify further, in addition to using an explicit prompt, we also incorporate one-shot sampling to enhance the diversity of the generated self-reflections. Moreover, the prompt is supplemented by feedback from the environment, as well as context from previous implementations and self-reflections. A recent concurrent study [2] supports our approach, demonstrating that one-shot sampling can produce semantically diverse outputs. In the final version, we will include this diversity metric across all relevant tables and provide a citation for the referenced work.\nThe tables below demonstrate that both DoT and DoT-Bank exhibit lower similarity scores compared to baseline methods, further supporting the effectiveness of our approach in reducing redundancy within reflections. Figure-4 corroborates this observation.\n\n-----\n\n|               | **HumanEval**        |        |\n| ------------- | ---------------- | ------ |\n| **Llama-3.1-70B** | **Similarity Score** | **Pass@1** |\n| LATS          | 0.65 (0.41)      | 84.76  |\n| Reflexion     | 0.83 (0.09)      | 87.2   |\n| DoT           | **0.48 (0.11)**      | **89.63**  |\n| DoT-Bank      | **0.48 (0.12)**      | **93.29**  |\n|               |                  |        |\n|               |                  |        |\n|               | **LeetCodeHardGym**  |        |\n| **Sonnet3.5**  | **Similarity Score** | **Pass@1** |\n| LATS          | 0.70 (0.29)      | 42.5   |\n| Reflexion     | 0.83 (0.13)      | 42.5   |\n| DoT           | **0.62 (0.13)**      | **50**     |\n| DoT-Bank      | **0.61 (0.10)**      | **52.5**   |\n\n-----\n\n**W2 (Concerns on Contributions):** We believe that we are the first to identify repetition in reflections as a limitation in self-reflection-based frameworks\u2014a key contribution of our work. In Section 2.1, we clarify that DoT builds on Reflexion, but we observe that substituting M_sr with M_dsr to enhance diversity yields consistent improvements over both Reflexion and LATS across various base LLMs. Additionally, as shown in Algorithm 1 (lines 20-22), DoT differs subtly but critically: rather than generating a single reflection per iteration like Reflexion, DoT produces \u2018k\u2019 diverse reflections and selects the most promising one, effectively emulating a greedy BFS approach.\n\nOur Task Agnostic Memory Bank further complements DoT, enhancing generation quality. Section 4 provides a comparison with recent memory-based methods; if possible, we would appreciate specific references to any memory-related works the reviewer has in mind, as this could help further contextualize our contributions. We have also included code and logs of generated implementations and reflections in the supplementary files to allow for a qualitative examination of DoT's reflections.\n\nDoT variants address the identified shortcomings and consistently improve performance across various programming benchmarks. Notably, on the challenging LeetCodeHardGym dataset (introduced in Reflexion), where previous methods show minimal improvements over base LLMs, DoT variants achieve a significant performance boost across LLMs (GPT-o1, Sonnet-3.5, GPT-4o), with gains of up to 12.5%.\n\n**Q1.** Thank you for pointing this out. The missing reference in line 700 corresponds to Figure 7.\n\n-----\nReferences\n\n[1] https://sbert.net/docs/sentence_transformer/pretrained_models.html\n\n[2] How Far Can We Extract Diverse Perspectives from Large Language Models? Hayati. et. al.,  EMNLP 2024"
+            }
+        },
+        {
+            "summary": {
+                "value": "Motivated by the observation of repetitive reflections, this paper proposes a method to improve the diversity of generated reasoning by incorporating task-agnostic memory and diversity of thoughts (DoT) prompting (on top of reflexion). The experiment results show clear improvement with various LLMs."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The method is well-motivated. \n2. I appreciate the analysis and results in the Introduction to showcase the repetitive reasoning generation with existing methods, i.e., LATS, which is insightful and provides evidence.\n3. The paper is well-written and easy to follow.\n4. The results seem promising."
+            },
+            "weaknesses": {
+                "value": "1. I am still unsure if diverse reflections can be guaranteed if prompting the Mdr agent with \"Ensure your reflections are accurate and leverage previous reflections to avoid repetition. Aim for diversity in your explanations while prioritising the correctness of your hints.\". Can you provide empirical evidence or analysis demonstrating how your prompting approach leads to diverse reflections?  For example, you could include metrics quantifying the diversity of generated reflections compared to baseline methods. You can also explain the reason behind it.\nTo me, it is more like a magic prompt. Can you explain why this simple prompt works? \n2. The whole framework is built on reflection, with Msr replaced by Mdr. Given my first comment and considering that utilizing memory to improve response diversity is widely explored, the contribution of DoT is limited."
+            },
+            "questions": {
+                "value": "1. Line 700 has un-referred figure"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes Diversity of Thought (DoT), a method that enhances LLM reasoning through diverse reflections. The paper first identifies two limitations of existing methods: (1) limited exploration due to repetitive reflections, and (2) inability to reuse knowledge from similar tasks. To address these, DoT reduces repetitive reflections and incorporates a task-agnostic memory. Experiments on three programming benchmarks and the Game of 24 demonstrate improvements of DoT compared to baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper examines tasks requiring complex reasoning and proposes solutions to enhance LLMs' reasoning capabilities. Experiments show that DoT and DoT-bank outperform baselines across various benchmarks.\n- The paper provides some analysis, e.g. quantifying the redundancy of reflections generated using existing methods, to motivate the proposed method."
+            },
+            "weaknesses": {
+                "value": "- The proposed method is motivated by two observed limitations of existing methods: lack of exploration and inability to leverage cross-task knowledge. While the first limitation is analyzed and discussed in Table 1, the second lacks supporting analysis. Therefore, adding a task-agnostic memory component to DoT appears somewhat disconnected from the paper\u2019s discussion. Although intuitively it makes sense to reuse insights from previously solved tasks, whether it is useful in practice remains unclear. The authors need to provide more evidence to justify this proposed solution in order to create a more coherent story for the paper.\n- For the Reflexion baseline, is the number of reflections set to 1? If so, this may not be a fair comparison, as DoT uses many more reflections. A better comparison would be to Reflexion with k sampled reflections. This would more accurately indicate whether the proposed diverse reflection generation method (one-shot or iterative) is effective.\n- DoT-bank requires building a memory bank, and its size scales with the number of failed tasks using DoT based on Algorithm 1. Therefore, the reported cost of DoT-Bank is misleading, as it does not include the cost of building the memory bank. Also, for the DoT-Bank results in all tables, is the memory bank used for every task or only for failed tasks? \n- The choice of models used for different tasks seems arbitrary. Why are different models used across tasks? For example, why does HumanEval use Sonnet 3.5 and Llama-3.1, while LeetCodeHardGym only uses Sonnet 3.5? Additionally, why does GPT-3.5 have a different setting in Table 5 compared to other models in Table 4?\n- For incorporating DoT into ToT, is the only difference that ToT samples k thoughts in parallel, while ToT+Diversity samples k thoughts in one shot?"
+            },
+            "questions": {
+                "value": "- L700 Figure reference is missing \n- The paper uses Reflexion as a key baseline, but other similar self-reflection methods, e.g. [1], should also be cited.\n- Several citation formats are not proper, e.g. some \\citet, and \\citep are misused, e..g L41, L105, L350, etc. \n- How is the cost of the Llama-3.1 model calculated?\n\n[1] Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler Hallinan, Luyu Gao, Sarah Wiegreffe, Uri Alon, Nouha Dziri, Shrimai Prabhumoye, Yiming Yang, Shashank Gupta, Bodhisattwa Prasad Majumder, Katherine Hermann, Sean Welleck, Amir Yazdanbakhsh, Peter Clark. Self-Refine: Iterative Refinement with Self-Feedback"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces DoT (Diversity of Thoughts), a novel framework for improving language model agents's iterative reasoning tasks by addressing two key limitations in existing approaches: 1: redundant reflections that lead to inefficient exploration of the decision space, and 2:the inability to leverage insights across different tasks. The framework consists of a diverse-reflections model that reduces redundancy in reasoning paths and a task-agnostic memory bank that enables knowledge transfer between tasks. Through extensive experiments on programming benchmarks (HumanEval, MBPP, and LeetCodeHardGym) using various language models, DoT demonstrates up to 10% improvement in Pass@1 while maintaining cost-effectiveness compared to existing methods like LATS, and when integrated with Tree of Thoughts (ToT), its diverse reflection module improved performance by 13% on the Game of 24 benchmark."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper identifies and addresses concrete limitations in existing approaches (redundant reflections and isolated task solving) with a practical solution that shows consistent improvements across different models and benchmarks. The proposed modifications are simple to implement yet effective."
+            },
+            "weaknesses": {
+                "value": "1:The paper's two main components (Diverse-Reflection and Memory Bank) appear to be independent modules without a strong theoretical connection or necessity to be combined. This suggests the work is more of an engineering effort combining separate improvements rather than a cohesive theoretical advancement. The lack of comprehensive ablation studies makes it unclear which component truly drives the performance gains.\n\n2: The paper's positioning around efficiency improvement over LATS is problematic because LATS and similar resource-intensive methods primarily aim to maximize accuracy, not efficiency. The experimental validation has several limitations: improvements are incremental (2-10%), test sets are relatively small, and no statistical significance testing is reported to validate that improvements are meaningful rather than random variation.\n\n3: The paper lacks detailed analysis of why and how diversity in reflections leads to better results. There's insufficient discussion about the reliability of one-shot sampling for generating diverse reflections and potential failure modes. Also, key technical details about the memory bank implementation and retrieval mechanism are not fully explained, including specifics about how \"relevant trajectories\" are defined and retrieved and how the diversity in reflection generation is ensured; all of these make reproduction challenging.\n\n4: The evaluation focuses mainly on programming tasks with visible or synthetic unit tests, limiting the method's demonstrated applicability to domains where clear evaluation metrics are available. This leaves questions about generalizability to broader reasoning tasks."
+            },
+            "questions": {
+                "value": "How is cost calculated for different model types (especially for Llama models where costs are in GPU hours rather than API calls)? Why is the cost difference between iterative and one-shot sampling surprisingly small in Table 10?\n\nWhat specific mechanism is used for retrieving \"relevant trajectories\" from the memory bank? How is relevance defined and measured?\n\nWhile the method reduces LLM inference calls by avoiding redundancy, does it require more tokens per call due to longer context? Can you provide a quantitative analysis of average input/output token lengths compared to baselines?\n\nWhat's the effect of varying k in k diverse-reflections? How reliable is the one-shot prompt approach, and what's the sensitivity to the number of retrieved trajectories?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents an iterative prompting method for LLMs that aims to improve responses by repeatedly reflecting on its previous outputs similar to the recent Reflexion method. The key advance here over the Reflexion method is to encourage diversity in the outputs. The method also incorporates a task-agnostic memory component to enable knowledge retrieval from previously solved tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "The paper is well laid out and clearly describes the method and justification for it. The method is general and can be widely applied as well as supporting integration with other orthogonal approaches (the example being tree of thoughts). The experiments are varied and well chosen with appropriate choice of base LLMs and tasks. The results show a consistent and clear improvement over other recent SoTA methods: Reflexion, LATS and ToT (where appropriate).\n\nI am particularly impressed with the modular nature of DoT and its generality."
+            },
+            "weaknesses": {
+                "value": "The weaknesses are, in my opinion, minor. The following things came to mind:\n* The description of retrieval of previous trajectories could be a bit clearer, as could the experiment which produces the results in Table 9.\n* I am not sure that the t-SNE evaluation in Figure 4 is as robust as it could be. It may show that DoT produces more diverse self-reflections then LATS but as the embedding is done separately for the two sets of reflections it isn't entirely clear that this is the case. I would suggest embedding the two methods together and showing that the DoT reflections are more dispersed within the same space (maybe that is what was done but it isn't clear to me).\n* There are lots of results and space is at a premium but things do get less clear towards the end of these, perhaps partly due to the formatting."
+            },
+            "questions": {
+                "value": "It isn't clear how an evaluator can be an LLM. Is the LLM asked to produce a numeric score? Or is there space for a textual evaluation?\n\nWhen you say that MB trajectories are picked based on cosine-similarity, do you mean that the K most similar are chosen? Is there a risk that there isn't much diversity in these retrieved trajectories? Or am I missing something?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,167 @@
+{
+    "id": "B1nfjxZI6z",
+    "title": "Improving real-world sequence design with a simple meta-heuristic for detecting distribution shift",
+    "abstract": "Biological sequence design is one of the most impactful areas where model-based optimization is applied. A common scenario involves using a fixed training set to train predictive models, with the goal of designing new sequences that outperform those present in the training data. This by definition results in a distribution shift, where the model is applied to samples that are substantially different from those in the training set (or otherwise they wouldn\u2019t have a chance of being much better). While most MBO methods offer some balancing heuristic to control for false positives, finding the right balance of pushing the design distribution while maintaining model accuracy requires deep knowledge of the algorithm and artful application, limiting successful adoption by practitioners. To tackle this issue, we propose a straightforward meta-algorithm for design practitioners that detects distribution shifts when using any MBO. By doing a real-world sequence design experiment, we show that (1) Real world distribution shift is far more severe than observed in simulated settings, where most MBO algorithms are benchmarked (2) Our approach successfully reduces the adverse effects of distribution shift. We believe this method can significantly improve design quality for sequence design tasks and potentially other domain applications where offline optimization faces harsh distribution shifts.",
+    "keywords": [
+        "protein engineering",
+        "sequence design",
+        "model-based optimization"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "We demonstrate that a particular application of binary classification can filter out-of-distribution sequences in model based optimization and demonstrate the effectiveness of this technique in a real-world problem.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=B1nfjxZI6z",
+    "pdf_link": "https://openreview.net/pdf?id=B1nfjxZI6z",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces a method to detect and correct for feedback covariate shift in experimental design (such as protein sequence design), where training data distribution differs from the distribution of the new data candidates generated throughout the process. The method is based on softmax regression for binary classification of the domain, which is employed to discriminate between the training data and the data generated within the feedback loop. The logit score (here OOD score) represents the intensity of the covariate shift. The authors empirically validate their approach on three use-cases: synthetic function, biological simulation, and real-world application of protein sequence design. The domain classifier equipped with the OOD score is able to identify and reduce the distribution shift in the design loop in a real-world application."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The paper presents an application in biology of the method for addressing feedback covariate shift. It is indeed of crucial importance to be able to correct for this shift across many fields with the strong presence of automated experimental design, biology being only of them. The method is very simple to integrate into any existing experimental pipeline, and seems to be performing well in practice."
+            },
+            "weaknesses": {
+                "value": "To the best of my knowledge, I believe this way of addressing covariate shift is not novel; the novelty might lie in the aspect of applying this method to *feedback* covariate shift (see for example, https://doi.org/10.7551/mitpress/9780262170055.003.0008, or https://dl.acm.org/doi/10.5555/1577069.1755858, and references therein). Domain classification by means of logistic regression (with or without importance weighting) is one of the widely known methods, hereby just applied to the special case of feedback covariate shift in experimental design. In feedback covariate shift, it is assumed that the distribution of points generated within the feedback loop depends also on the training distribution. The paper lacks a clearer presentation of its methodological contributions, and does not fully allow one to appreciate the usefulness of the method in practice. Comparison with other baselines (e.g., other methods for unsupervised domain adaptation) would further highlight the strengths and weaknesses of the method. The running time of the method was not investigated, i.e., how much of the optimization budget needs to be dedicated to detecting and correcting for shifts in a real-world application. This could be done by comparing the computational overhead of the proposed method to the baseline optimization approach in real-world scenarios. The figures throughout the paper are not necessarily self-explanatory. Furthermore, a more rigorous technical and mathematical notation is missing."
+            },
+            "questions": {
+                "value": "Could you please clarify how your approach differs from or improves upon existing methods for addressing covariate shift, particularly in the context of feedback covariate shift in experimental design? It would help to highlight your exact contributions more clearly and position with greater care your approach within related work."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes an out-of-distribution (OOD) classifier to detect distribution shifts, guiding design selection to avoid adversarial results. The authors suggest multiple ways to guide or filter sequence generation based on the predictions of the OOD classifier. The proposed method is tested on three different tasks, including AAV sequence design, using two different search methods, AdaLead and beam search. The experimental results show that the proposed OOD classifier achieves lower regret scores compared to deep ensemble-based OOD detection."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- I agree with the motivation that trained models can be unreliable, and handling distribution shifts is crucial in model-based optimization (MBO).\n- The proposed method is straightforward and effective compared to deep ensembles\n- Simplicity and ease of implementation"
+            },
+            "weaknesses": {
+                "value": "- The novelty of this approach is limited: The idea of OOD classifier is not new, and the way of using the predicted OOD score is not particularly novel neither. OOD score is simply used to filtering out the sample with threshold or range.\n- The claim that \"the complexity of using MBO algorithms correctly... limits the adoption among practitioners. Selecting a trust region for any search algorithm can be an art rather than a science and risks wasting experimental resources\" may be overstated. Several studies have focused on discovering new sequence designs while maintaining close distances to known designs (wild types). For example, proximal exploration (PEX) [1] has made significant progress by effectively balancing the enforcement of in-distribution constraints and exploration in a practical and scientific way. Though they assume multiple query rounds in their original setting, PEX gives competitive results with a single round, which is the same as MBO. Including further discussion for other MBO approaches that consider distribution shift, such as RoMA [2] and BDI [3].\n\n#### Minor comments\n- Line 65: expansive \u2192 expensive\n- Line 71: In this work, propose (there is no subject)\n- For me, meta-heuristic sounds improper in this context\n- In Appendix E.  Fig Xa, Fig Xb, Fig Xc\n\n#### References\n[1] Ren, Zhizhou, et al. \"Proximal exploration for model-guided protein sequence design.\" International Conference on Machine Learning. PMLR, 2022.\n\n[2] Yu, Sihyun, et al. \"Roma: Robust model adaptation for offline model-based optimization.\" Advances in Neural Information Processing Systems 34 (2021): 4619-4631.\n\n[3] Chen, Can, et al. \"Bidirectional learning for offline infinite-width model-based optimization.\" Advances in Neural Information Processing Systems 35 (2022): 29454-29467."
+            },
+            "questions": {
+                "value": "- From my understanding, the optimization process seems to be conducted iteratively. Does it means multiple query rounds like the setting in AdaLead? If not, please clearly state the difference with AdaLead setting. If yes, the motivation and approach might be improper (even though I agree with the claim that we should carefully handle the unreliable surrogate model for the adversarial samples, as mentioned above), as a key assumption in MBO is that we cannot make additional queries to the black-box function. Allowing additional queries can lead to significant differences in the methodologies used. For instance, we need to explore the unreliable region for the subsequent iterations rather than filtering out these samples.\n- Regarding the AAV task, is the surrogate model the same as the one used in AdaLead? If not, I am concerned that the comparison between the OOD classifier and deep ensembles might not be entirely fair. I have checked Appendix A.2, but I am unsure whether the model capacity is sufficient to learn the fitness function of the AAV tasks and, consequently, whether deep ensemble-based OOD detection would be effective with an insufficiently trained surrogate model.\n- How many models are used for the deep ensemble?\n- What is the meaning of \"50 bootstrap data samples\" in line 472?\n- Additionally, I am curious whether the proposed OOD classifier could benefit search methods that already enforce in-distribution samples, such as PEX."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a binary classification model for detecting out-of-distribution (OOD) samples in the context of offline model-based optimization (MBO). The classification model is trained on a given offline dataset (labeled 0, in-distribution) and a generated dataset (labeled 1, OOD), where the generation algorithm is task-dependent. The learned classification model is used to calculate a score indicating the intensity of the distribution shift. Experiments were conducted in a synthetic problem, a simulated protein structure design, and a real-world Adeno-Associated Virus (AAV) capsid sequence design."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed algorithm is straightforward and also easy to implement.\n2. The paper was generally easy to understand and follow.\n3. The method achieved better results in OOD detection than the uncertainty-based method (deep-ensemble)."
+            },
+            "weaknesses": {
+                "value": "1. I'm not fully convinced by the proposed method. The paper says in line 921 that $1/p_{tr}(x)$ (where $p_{tr}$ is training distribution) is more suitable for detecting distribution shift. If so, there are several ways to achieve this, e.g., kernel density estimation (KDE) or neural autoregressive density estimation (NADE; [1]). A careful conceptual and experimental comparison with these density estimation methods seems crucial.\n2. I'm uncertain how the proposed method \"can significantly improve design quality\" (line 27). Choosing the right threshold seems critical to effectively balance the exploitation of the surrogate model and the OOD robustness. Moreover, I suspect that the optimal threshold for achieving the best design, regardless of whether a score-based or percentile-based method is used, will vary depending on the specific design task and the distribution of the training dataset. However, there has been limited discussion on threshold selection.\n3. Similarly, there is no experimental evidence showing that the proposed algorithm can actually improve design quality. The experiments were only about the ability to detect OOD, specifically in comparison to deep ensembles.\n4. The proposed algorithm relies on the MBO algorithm to generate the OOD dataset for classifier training. However, this paper only validates it using a single MBO algorithm, AdaLead, which raises concerns about the method\u2019s versatility and generalizability.\n5. A minor point, but the writing could be improved for better readability. For instance, it might be helpful to create a separate 'Preliminaries' section for the content in Sections 2.1 (offline MBO) and 2.2 (distribution shift), allowing the 'Method' section to focus solely on the main contribution. Additionally, the paper is somewhat verbose, particularly in the experiment section. A more concise presentation that highlights the main contributions and insights would strengthen the overall readability.\n\n[1] Uria, Benigno, et al. \"Neural autoregressive distribution estimation.\" JMLR (2016)."
+            },
+            "questions": {
+                "value": "1. (Related to weakness 1) Why should one use the proposed binary classification approach for OOD detection instead of simply approximating $p_{tr}(x)$ using, e.g., KDE or NADE?\n2. Similarly, I seems feasible to use the minimum distance between a sample $x$ and samples in the in-distribution dataset $D$\u2014often referred to as \"novelty\" [2] and easy to compute\u2014as an OOD score. Have you considered this approach? If so, is there a specific reason why the proposed method (the learned binary classifier) might be more effective for OOD detection?\n3. Could you explain why the proposed algorithm is called a \"meta-algorithm\"?\n4. Recent works have attempted to inject structural biases into surrogate models to improve OOD generalization in offline MBO settings [3, 4]. It would be interesting to explore how these structurally-biased surrogate models could synergize with the proposed OOD detection method, potentially opening up future research directions.\n\n[2] Kim, Minsu, et al. \"Bootstrapped training of score-conditioned generator for offline design of biological sequences.\" NeurIPS (2024).  \n[3] Grudzien, Kuba, et al. \"Functional Graphical Models: Structure Enables Offline Data-Driven Optimization.\" AISTATS (2024).  \n[4] Grudzien, Kuba, et al. \"Cliqueformer: Model-Based Optimization with Structured Transformers.\" arXiv:2410.13106 (2024)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a method for detecting distribution shifts in machine learning-guided biological sequence design design, specifically addressing model-based optimization (MBO) prediction reliability when exploring regions distant from training data, identifying distribution shift when it occurs. The work introduces:\n\n1. A binary classifier approach to detect out-of-distribution samples in MBO\n2. Empirical validation through AAV capsid engineering experiments\n3. Comparison between simulation benchmarks and real-world distribution shift severity\n4. A framework for identifying unreliable predictions during sequence optimization"
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Validation through wet-lab experiments, extending beyond simulation-based evaluation (which itself was also thorough)\n2. Straightforward implementation of the proposed method\n3. Demonstration that simulation benchmarks may not capture real-world distribution shift challenges\n4. Comprehensive ablation studies and baseline comparisons\n5. Technical foundation in density ratio estimation literature\n6. Direct applicability to real-world MBO applications in biological sequence design"
+            },
+            "weaknesses": {
+                "value": "1. Limited analysis of predictor architecture and training choices' effects on distribution shift detection. Understanding the method's robustness across different model choices would strengthen the results.\n2. While the method effectively identifies OOD samples, the paper provides limited guidance on what to do with these flagged sequences beyond excluding them. The practical impact would be enhanced by discussing mitigation strategies such as active learning, model retraining, or ways to incorporate OOD scores into exploration.\n3. The theoretical foundations could benefit from deeper analysis, particularly regarding how classifier architecture affects density ratio estimation accuracy and potential bounds on detection performance under various distribution shift scenarios."
+            },
+            "questions": {
+                "value": "1. Have you explored strategies for using the OOD scores beyond binary accept/reject decisions? Could the scores be incorporated into the optimization objective to guide exploration?\n2. How sensitive is the method to surrogate model architecture and training procedure choice? Additional experiments testing robustness across architectures would be informative.\n3. Could you elaborate on potential approaches to leverage the OOD scores for active learning or model refinement when significant distribution shift is detected?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

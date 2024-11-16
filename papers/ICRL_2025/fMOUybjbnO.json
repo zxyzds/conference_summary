@@ -1,0 +1,183 @@
+{
+    "id": "fMOUybjbnO",
+    "title": "BAdd: Bias Mitigation through Bias Addition",
+    "abstract": "Computer vision (CV) datasets often exhibit biases in the form of spurious correlations between certain attributes and target variables that are perpetuated by Deep Learning (DL) models. While recent efforts aim to mitigate such biases and foster bias-neutral representations, they fail in complex real-world scenarios. In particular, existing methods excel in controlled experiments on benchmarks with single-attribute injected biases, but struggle with complex multi-attribute biases that naturally occur in established CV datasets. Here, we introduce BAdd, a simple yet effective method that allows for learning bias-neutral representations invariant to bias-inducing attributes.  It achieves this by injecting features encoding these attributes into the training process. BAdd is evaluated on seven benchmarks and exhibits competitive performance, surpassing state-of-the-art methods on both single- and multi-attribute bias settings. Notably, it achieves +27.5% and +5.5% absolute accuracy improvements on the challenging multi-attribute benchmarks, FB-Biased-MNIST and CelebA, respectively.",
+    "keywords": [
+        "fairness",
+        "bias",
+        "spurious correlations"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=fMOUybjbnO",
+    "pdf_link": "https://openreview.net/pdf?id=fMOUybjbnO",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to the Reviewer JPua"
+            },
+            "comment": {
+                "value": "1. In such cases, existing bias identification methods [1, 2] can be employed to infer these biases. Once identified, BAdd can be applied to mitigate them. However, it is worth mentioning that the exploration of bias identification techniques falls outside the scope of this work. For more details on this concern, please refer to our response to reviewer iTN8.\n\n2. BAdd is indeed tailored to visual data. However, based on the theoretical analysis provided, BAdd could potentially be applied to any context involving a feature extractor (e.g., backbone) and a classifier. While exploring its applicability to other data modalities is beyond the scope of this work, we are open to conducting further experiments on other types of data in the camera-ready version of the paper, given the limited timeline of the discussion period.\n\n3. To clarify, the bias-capturing model is not trained concurrently with the main model; rather, it serves as a bias feature extractor. The main model is trained using standard deep learning practices, and the bias-capturing model provides features that are used to ensure that biases do not influence the final learned representations. We plan to include a relevant figure and a more detailed description in the paper to make this clearer to the reader.\n\n4. Thank you for pointing that out. \n\n[1] Kim, Y., Mo, S., Kim, M., Lee, K., Lee, J., & Shin, J. (2024). Discovering and Mitigating Visual Biases through Keyword Explanation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (pp. 11082-11092).\n\n[2] Zhao, Z., Kumano, S., & Yamasaki, T. (2024). Language-guided Detection and Mitigation of Unknown Dataset Bias. arXiv preprint arXiv:2406.02889."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer iTN8"
+            },
+            "comment": {
+                "value": "1. It seems the citation [1] was referenced without the actual paper being provided. Could you please share the complete reference for this work? This will help us include it in the related works section and discuss its differences compared to our proposed method.\n\n2. Loss spikes occur when the main model attempts to learn the correct features, as the loss temporarily increases for bias-aligned samples, which make up the majority of the training data. Injecting bias-capturing features helps prevent these loss spikes by ensuring the model continues to make correct predictions on these samples, leveraging the inherent biases in the data. This means that the bias-capturing features do not contribute to an increase in the loss; rather, they help reduce it. This allows the main model to explore other diverse features (i.e., the correct features) that further minimize the overall loss, without needing to \u201ccorrect\u201d any errors introduced by the bias-capturing module.\n\n   For bias-conflicting samples, which represent only a small fraction of the training data, the bias-capturing features do contribute to the loss. Although this contribution is minimal due to the small number of such samples, it aligns with our goal of bias mitigation, as it prompts the main model to place greater emphasis on these samples, requiring additional effort to shift predictions in the correct direction despite the noise introduced by the bias features. In addition, it is important to note that \u201cforcing zero loss\u201d is an edge case and does not typically occur during deep learning model training.\n\n   We believe that both theoretical analysis and experimental results presented in the manuscript support the described behavior but we are open to incorporate concrete suggestions if these help make our contribution clearer.\n\n\n3. In a biased dataset, bias-aligned samples are by definition more (in number) than bias-conflicting samples. If $\\mathcal{B}_c\u226b\\mathcal{B}_a$, this implies that $\\mathcal{B}_c$ represents the bias-aligned examples, while $\\mathcal{B}_a$ represents the bias-conflicting examples. However, the reviewer may be suggesting an investigation into BAdd's performance across varying levels of dataset bias (i.e., the ratio between $\\mathcal{B}_c$ and $\\mathcal{B}_a$). Such an analysis is provided in the Appendix (see Table 13) and shows that BAdd demonstrates consistent performance across all the levels of data bias.\n\n4. Indeed, BAdd requires knowledge of bias attributes, which is acknowledged as a limitation in the conclusion section of the paper. However, we would like to stress that the core contribution of the method lies in its ability to address multi-attribute biases, which remains a significant challenge in the field.\n\n   To better contextualize this, we can divide the existing literature into four broad categories. First, there are bias-label aware methods for single-attribute biases, where many effective approaches exist. Second, there are bias-label unaware methods for single-attribute biases, where many approaches are available, but they tend to be less effective than those in the first category. Third, there are only a few bias-label aware methods for multi-attribute biases, which remain an open challenge as the few available bias-label aware methods have not sufficiently solved the challenge. Finally, there are bias-label unaware methods for multi-attribute biases, which currently offer no effective solutions. This categorization highlights the difficulty in handling multi-attribute biases, underscoring the importance of BAdd\u2019s contribution.\n\n   Furthermore, it should be stressed that BAdd is more flexible than typical bias-label aware methods, as it allows for the use of a bias-capturing model that can be trained on different data, thus making it more practical to apply in real-world scenarios. For instance, models processing facial images are often required not to exhibit biases with respect to certain predefined attributes, such as race, gender, or age. In such cases, it is straightforward to extract the bias features from existing pretrained models.\n   Finally, in situations where even the bias types are unknown, existing bias identification methods can be employed to infer them [1,2]. Once the biases are identified, BAdd can be applied to mitigate them. However, the exploration of bias identification techniques is beyond the scope of this work.\n\n   We hope this clarification addresses the reviewer\u2019s concerns, and we believe that BAdd makes a meaningful contribution to the problem of multi-attribute bias mitigation in deep learning models.\n\n[1] Kim, Y., Mo, S., Kim, M., Lee, K., Lee, J., & Shin, J. (2024). Discovering and Mitigating Visual Biases through Keyword Explanation. In Proceedings of the IEEE/CVF CVPR (pp. 11082-11092).\n\n[2] Zhao, Z., Kumano, S., & Yamasaki, T. (2024). Language-guided Detection and Mitigation of Unknown Dataset Bias. arXiv preprint arXiv:2406.02889."
+            }
+        },
+        {
+            "summary": {
+                "value": "The document introduces BAdd, a method for mitigating bias in deep learning models by injecting bias-capturing features into the training process. This approach aims to create bias-neutral representations by incorporating features that encode bias-inducing attributes, thus preventing the model from relying on these biases during training. \n\n\nThe core idea is to divide the training loss between bias-aligned and bias-conflicting samples and study their behavior. To mitigate the loss spike due to underfitting on bias-aligned samples, the authors introduce the attributes themselves as features in the final layer, which mitigates the loss spikes and leads to proper training."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is clear and well-written.\n\n- The core idea seems interesting and is supported by various experiments."
+            },
+            "weaknesses": {
+                "value": "The idea of Bias Injection to Mitigate Bias has been used in the following work [1].\n\nAlthough the idea is that a bias injection module, can prevent the loss spike. However, when the loss is forced to be zero, it needs to overcorrect the bias injection module, does it lead to correct features?\n\nFor the bias-aligned examples, the network can probably take the shortcut. Hence, the learning needs to happen just which Bias Corrected samples. In case B_c >> B_a won\u2019t it affect the learning of diverse features? It would be great if the authors could clarify this aspect more.\n\n\nThe introduction section mentions that the method is more suitable for real-world. However, on closely examining the method, I found that BAdd also requires knowing the bias attributes. Could the authors please clarify on this aspect?"
+            },
+            "questions": {
+                "value": "Please see the questions in the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The model proposed in this paper learns unbiased features by adding specific elements that capture potential biases during training. This ensures that the model doesn\u2019t rely on biased information when making predictions. BAdd was tested on various datasets, including those with single and multiple biases, and showed strong improvements in reducing bias and overall model performance.\nSo,  this paper:\n1.Introduced BAdd, an easy and effective method for learning unbiased features by incorporating bias-detecting elements into training.\n2.Evaluated BAdd on several benchmarks, including different types of biased datasets, showing that it outperforms other state-of-the-art methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1.BAdd reduces bias effectively by adding bias-related features into the training, helping the model avoid being influenced by biased data.\n2.The authors showed that BAdd works well on different datasets, with consistent improvements in various bias situations, proving that the method is scalable and works in different applications."
+            },
+            "weaknesses": {
+                "value": "1.BAdd requires a classifier or labels that identify the bias, which may not always be available. The authors could consider ways to detect and handle biases automatically without needing predefined labels.\n2.The method mainly addresses visual biases, and it\u2019s unclear if it works for other types of biases, like those in text, limiting its use beyond visual data.\n3.The paper is clear, but lacks a detailed comparison to standard deep learning training. It\u2019s not explained how the bias-detecting classifier fits into the training process.\n4.In line 728, the tense is inconsistent\u2014\u201cwere\u201d should be changed to \u201care.\u201d"
+            },
+            "questions": {
+                "value": "please check the weakness part, and give some explanations."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a BAdd approach to mitigate the effects of biased data during model training. The idea is to incorporate captured bias features into the final layer of the model, which helps the model be invariant for these features and create a bias-neutral feature representation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1-\tThe problem is described clearly.\n\n2-\tThe investigated problem is important."
+            },
+            "weaknesses": {
+                "value": "1-\tThe BAdd approach seems similar to FLAC [1]. \n\n2-\tOn page 3, The author claims that BAdd is easily applied to any network architecture and to any CV dataset. This claim needs to be proven.\n\n3-\tThe paper does not discuss the computational complexity or scalability of the proposed approach in detail, which could be a concern for large-scale applications.\n\n4-\tLimited Ablation Studies: While the paper includes some ablation studies, more extensive ablations could strengthen the claims about the individual contributions of each component of the proposed method.\n\n[1] Ioannis Sarridis, Christos Koutlis, Symeon Papadopoulos, and Christos Diou. Flac: Fairnessaware representation learning by suppressing attribute-class associations. arXiv preprint arXiv:2304.14252, 2023a."
+            },
+            "questions": {
+                "value": "1-Describe the key differences between the BAdd and  FLAC [1].\n\n2-Conduct experiments using different architectures, such as ViT with BAdd, to prove that the approach works properly with different architectures. Also, use the ImageNet dataset to show the approach performance with the balanced dataset.\n\n3-Discuss the computational complexity of BAdd approach.\n\n4-We encourage the author to do more ablation studies on the proposed approach to show consistency, such as changing the batch size."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces BAdd (Bias Addition), a method for mitigating bias in deep learning models for computer vision tasks. Bias in datasets often arises from spurious correlations between certain attributes (e.g., gender, race, background) and target variables, leading models to make decisions based on these irrelevant features. Existing bias mitigation methods often struggle in complex, real-world scenarios, especially when multiple biases are present.\n\nBAdd addresses this issue by injecting bias-capturing features into the model's training process. Specifically, it involves adding features that encode the protected (bias-inducing) attributes into the penultimate layer of the model during training. This approach aims to decouple the learning of biased features from the optimization process, allowing the model to learn bias-neutral representations of the data.\n\nThe method is evaluated on seven benchmarks, including both artificially biased datasets (e.g., Biased-MNIST, Corrupted-CIFAR10) and more complex, multi-attribute biased datasets (e.g., FB-Biased-MNIST, CelebA, UrbanCars). Notably, it achieves accuracy improvements of +27.5% on FB-Biased-MNIST and +5.5% on CelebA."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Versatility: The approach is architecture-agnostic and can be easily integrated into any deep learning model without extensive modifications or pre-processing.\nVisualization of Results: Use of activation maps and GradCam visualizations helps to intuitively demonstrate how BAdd shifts the model's focus away from bias-inducing features."
+            },
+            "weaknesses": {
+                "value": "Assumption of Bias Representability: The method assumes that biases can be captured and represented explicitly. In cases where biases are subtle or unknown, this approach may be less effective.\nPotential Increase in Model Complexity: Adding bias-capturing features might increase computational overhead during training and potentially during inference if not properly managed.\nFine-Tuning Requirement: The necessity of a fine-tuning step adds an extra phase to the training process, which might not be ideal in time-constrained or resource-limited applications.\nLimited Analysis on Real-World Biases: While the paper includes evaluations on datasets like CelebA, further analysis on real-world datasets with complex, less-defined biases would strengthen the applicability of BAdd."
+            },
+            "questions": {
+                "value": "Availability of Protected Attributes: How does BAdd perform when protected attribute labels are unavailable or unreliable?\n\nHandling Unknown Biases: In real-world applications where biases may be unknown or multifaceted, how can BAdd be adapted to mitigate biases that are not explicitly identified?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

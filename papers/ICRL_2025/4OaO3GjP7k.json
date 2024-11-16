@@ -1,0 +1,167 @@
+{
+    "id": "4OaO3GjP7k",
+    "title": "Flat Reward in Policy Parameter Space Implies Robust Reinforcement Learning",
+    "abstract": "Investigating flat minima on loss surfaces in parameter space is well-documented in the supervised learning context, highlighting its advantages in model generalization. However, limited attention has been paid to the reinforcement learning (RL) context, where the impact of flatter reward in policy parameter space remains mostly unexplored. Beyond the naive guessing from the lesson of supervised learning, which makes us anticipate a link from flat rewards to the enhanced generalization, we here aim to formally bridge the flatness in reward surface to the robustness of RL models. For a policy model case, where the deep model determines actions, the flatter behavior of rewards against the parameter perturbations primarily leads to consistent rewards against perturbed actions. Moreover, the action robustness further affects to the robustness against other variations from the changes of state transition probabilities and reward functions. We extensively simulate various RL environments, confirming the consistent gains of flatter reward in bolstering the robustness of RL in varying circumstances, including action selection, transition dynamics, and reward functions.",
+    "keywords": [
+        "Reinforcement learning",
+        "Flat Minima",
+        "Robust Reinforcement learning"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "",
+    "creation_date": "2024-09-21",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=4OaO3GjP7k",
+    "pdf_link": "https://openreview.net/pdf?id=4OaO3GjP7k",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper investigates the relationship between flat reward maxima in policy parameter space and the robustness of reinforcement learning (RL) agents. It claims that flatter reward maxima lead to more robust policies, particularly against action perturbations. The paper presents a theoretical proposition linking flat reward to action robustness and supports this claim through empirical experiments in MuJoCo environments (e.g., Hopper-v3, Walker2d-v3, HalfCheetah-v3). The authors demonstrate that an RL algorithm enhanced with Sharpness-Aware Minimization (SAM), called SAM+PPO, consistently outperforms standard PPO and a recent robust RL baseline (RNAC) in various robustness tests, including action noise, transition probability changes, and reward function variations. The paper also provides visualizations and quantitative measurements of reward surfaces, further confirming the link between flatness and robustness."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper provides a formal link between flat reward surfaces and robustness in policy space. Proposition 1 establishes a clear theoretical foundation for the paper's main claim.\n- The authors comprehensively test SAM+PPO across multiple challenging environments and scenarios, including noisy actions and varying transition probabilities, to demonstrate robustness.\n- The authors compare SAM+PPO with RNAC, PPO, and RARL, which shows both performance and computational efficiency, which strengthens their findings.\n- The use of reward surface visualizations and flatness metrics strengthens the paper's argument by providing visual and quantitative evidence for the flatness achieved by SAM+PPO."
+            },
+            "weaknesses": {
+                "value": "- While SAM is shown to be effective, the paper lacks a discussion of its potential limitations, such as computational overhead or sensitivity to hyperparameter tuning.\n- The justification for reward noise being added during training for reward function robustness evaluation could be clearer: The paper mentions this difference in methodology but could expand on why this is necessary for a valid evaluation.\n- I don't know if the preliminary experiment is best placed in the introduction, it feels a bit out of place for me.\n- typos 234 \"objeective\", 249 \" funciton\""
+            },
+            "questions": {
+                "value": "- Do you have an intuition on why SAM doesn't perform better on Walker2d-v3 for high friction factor?\n- Have you tested SAM+PPO on non-MuJoCo environments to assess robustness in discrete action spaces or varying reward structures?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a study on using sharpness-aware regularization to obtain robust reinforcement learning policies. Drawing a theoretical connection between flatness in the reward, action and parameter space to action-robust RL, the authors present both a theoretical justification and experiments to show that the proposed method achieves good robustness properties."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The authors propose a simple yet intuitive approach for robust RL. I was somewhat surprised that this combination has apparently not been tried in the literature, but a brief literature survey has not brought up any similar algorithms. I actually think the authors are somewhat underselling their contributions here! While SAM has been used to train PPO before, the authors appropriately cite prior work here, previous papers have not drawn any connections to robust RL at all and the authors should feel entitled to proudly claim this connection as their connection! They do not merely provide theoretical backing, as far as I can tell, they make a connection that was wholly absent in cited work.\n\nThe theoretical statements are mostly correct as far as I can tell. See questions below however."
+            },
+            "weaknesses": {
+                "value": "The main problem with the paper as it stands are writing problems and baseline comparisons.\n\nEspecially the beginning of the paper, abstract and introduction, suffer from very frequent grammar mistakes which make the paper much harder to read. I strongly encourage the author to revise the paper wrt to the writing.\n\nIn definition 1, I'm unsure if $\\epsilon$ is added to the policy, parameters or action? From the proof it seems this is a parameter perturbation, this should be stated directly. I think adding parentheses in the equation would already make this much clearer, as we have two nested subscripts here.\nIn addition, the state is sampled from the policy, which seems strange?\n\nAs the theoretical statement depends on the Jacobian of the policy network, which is not bounded anywhere, I'm slightly skeptical that the theoretical results are sufficient to practically guarantee robust RL. Does the SAM objective guarantee or incentivize a flat Jacobian?\n\nGiven the surprisingly (?) bad results of RNAC - it barely seems to outperform PPO - I think it would be appropriate to apply SAM+PPO in the same environments as used in the RNAC paper. As far as I can tell, the code is available, so this should be feasible within the rebuttal timeline? If not, I will not hold this against the authors. I think it is important to verify that used examples are not cherry-picked to make the presented algorithm look stronger. This is the higher priority comment in terms of baseline comparisons.\n\nI would encourage the authors to present some additional baselines. I acknowledge that more baselines is a somewhat lazy comment. However, given that there are several different formulations of robust RL, I believe it would be helpful to pick a variety of environments and algorithms presented with different robust formulations for comparison to understand how well the algorithm does in comparison to others. This doesn't have to be many or complex environments, just a larger variety of formalisms. This is a soft concern and not a large barrier to acceptance for me.\nBoth safe-control-gym [1] and Safety Gymnasium [2] provide a variety of tasks and implemented baselines to speed up experimentation.\n\n[1] https://github.com/utiasDSL/safe-control-gym\n[2] https://github.com/PKU-Alignment/safety-gymnasium"
+            },
+            "questions": {
+                "value": "Is there a specific advantage to using PPO with SAM, or could any PG or even AC algorithm be used? It might be that the clipping approximation to the trust region synergizes well with the SAM objective? I think this is an optional extension to the paper."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper explores the impact of flat minima in reinforcement learning (RL), linking flatter reward surfaces to improved model robustness. The authors show that flatter rewards lead to more consistent actions despite parameter changes, enhancing robustness against variations in state transitions and reward functions. The authors show through extensive experiments to confirm that flatter rewards significantly bolster RL model performance across diverse scenarios."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Provide a link of flat reward to action robustness. The authors show this through both theoretical results in section 4, and various experiment results. The motivation of having a robust objective is good. The theoretical result seems correct.\n\n- Positive experiment results showing the benefit of optimizing for a flat reward maxima. The authors show this through different experiment settings: variation to physics properties of the underlying MDP, and visualization of the reward surface."
+            },
+            "weaknesses": {
+                "value": "- The performance of SAM + PPO is mixed in comparisons to the baselines, e.g. some visible ones at Fig 5.c, 4.b.\n\n- Ablations are not provided to understand how such an objective can bring benefits in comparisons to similar approaches, e.g. RNAC or robust RL."
+            },
+            "questions": {
+                "value": "- Is the perturbation domain $\\rho$ in Eq.8 known to the agent? Probably the optimization of the objective in Eq.8 needs elaboration, and with pseudo-code.\n\n- Why in \"Nominal\"  SMA+PPO still has a higher reward, e.g. Table 1+2, Fig. 3,4. Similarly,  experiment in 5.2, why when action noise is small, i.e. even equal to 0, SAM+PPO still performs better than the others, because the objectives of PPO and SAM+PPO would converge to the same one? And in 5.3, SAM+PPO has a higher return, while with variation in Friction Coefficient shows mixed results. \n\n- Joint variation of friction and mass shows quite clear that SAM+PPO is performing better than baselines, except on Walker2d-v3 with a mixed result. Can the authors elaborate on why or provide ablation to explain the mixed performance of SAM+PPO?\n\n\n- The proof of proposition 1 is a bit not standard. The policy is sometimes referred as a distribution, but sometime used as a deterministic mapping. It needs revised."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a new method to ensure robustness in RL based on variations in the loss landscape: \"SAM\": Sharpness-Aware Minimization. By posing the policy optimization as a min/max objective with respect to perturbations in the parameter space, the authors show robustness to changes in reward and dynamics. A theoretical result is given, linking parameter and reward robustness, and a diverse set of experiments on 3 MuJoCo environments is provided."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This use of robustness in policy parameter space seems to be fairly new\n- The experiments demonstrate a strong performance boost across a range of perturbations \n- The visualizations in Figure 6 offer an interesting insight into the optimizations produced by PPO vs SAM+PPO. The Hopper example is quite striking. Could you elaborate on the distinction and sharp dropoffs seen there?\n- Theory provides a potential link between flatness in parameter space and action robustness\n- Provided a solid comparison wrt computational overhead / sample complexity and wall time versus other algorithms\n- Figure 5 is quite nice, I think it should be emphasized\n\nOverall, the paper seems like a nice first step in the direction of understanding the relationship between robustness in reward, policy parameter, and dynamics spaces. The notion of \"flat rewards\" is an interesting one."
+            },
+            "weaknesses": {
+                "value": "**Writing:**\n\n- Overall, I think the clarity of the paper can be enhanced with a re-write fixing grammar and overall structure:\n- It would be helpful for example, to also include some visualizations of the definitions 1 & 2.\n- Also, Proposition 1 and the following remarks are not very clear. As an example, for Prop1, if I understand correctly, the result would be better phrased as \"if $\\mathcal{E}$-flat, then $\\Delta$-robust, with $\\Delta \\leq ...$ otherwise the current phrasing is a bit confusing.\n\n\n**Discussion:**\n\n- The discussion of the main idea, \"SAM\" is lacking:\n- After it is introduced in Sec 3.3, the authors give a way to solve the optimization problem in Eq (3) by their steps (i)-(iv). However, (to me at least), it is not clear why this method is used. Is there prior work demonstrating the efficacy of this method? Are there experiments or maybe some minimal example illustrating the utility of this setup? E.g. why is $\\epsilon$ chosen to be in the direction of the previously computed gradient, if theoretically it should represent an arbitrary direction in the ball. \n- At the very least, can the authors provide some visual demonstration as to what is happening here in the loss landscape? Getting a better intuition would help to understand the core method of the paper. \n- Remark 1.1 seems to be a restatement of Prop 1 unless I am missing something. Could you please explain?\n- Remark 1.2 can be improved by using more technically accurate statements (i.e. what is meant by \"when a reward function slightly changes\")? What is meant by the \"direct [correspondence] to the changes of loss function in the supervised learning case\"? I think the latter is very unclear, and maybe even misleading.\n\n\n**Experiments:**\n- My only issue with the experiments (minor) is that you are missing RNAC in Table 2 (why?). Also why not compare against RARL? Missing explanation of the shaded regions in each figure caption."
+            },
+            "questions": {
+                "value": "I'm really curious about \"flat rewards\" in general. Definitions 1 and 2 seem too strict at first glance (the equalities therein), so it is actually a bit surprising to me that they are even possible at all; however IIUC, Fig 6 does give evidence of this. I think that these definitions can be further elaborated on (do you have a toy example where it is easy to see in parameter or action space?) Realistically, what values of $\\epsilon$ do you think are reasonable? Something like $10^{-11}$ or $10^{-2}$? (I might've missed it somewhere, sorry.) If these are novel definitions not previously given in the literature, that can be stated as a contribution of the paper. I think it can spark future work in both theory and experimental directions.\n\nHere are some follow up questions/comments:\n\n- In Sec 5, how long are those agents trained for? Equal number of env steps for each? How were hparams tuned for each algo?\n- What is the agent's action scale for these environments (cf L337)? What do you do if the noise added is outside the action range?\n- Do you have any ideas about the sharp dropoff in Fig 3b for SAM PPO? it looks interesting, but I'm not sure what to make of it... is there some \"critical\" mass ratio? I.e., if we zoom in, how sharp is that transition, and have you averaged over enough random seeds?\n- you mention \"flatter reward maxima\" in L70. I think a formal definition or good visualization of this phenomenon early on would really improve the paper.\n- How does this work relate at all to other trust region methods like TRPO? How about e.g. [1]\n\n[1]: https://arxiv.org/abs/2103.06257\n\nTypos/minor\n\n- Fig 3 caption \"nomial\"\n- some missing +/- signs in Table 1 (in parens)\n- citations in sec 2 often have a missing leading space.\n- can you improve the visual in Fig 1? I think it's important but not quite capturing the essence. Maybe just to remove axes and grid and zoom in a bit: is there indeed a channel for the agent? It's hard to see\n- The introduction paragraphs have some grammatical issues. A cleanup/re-write here can help to crystallize the main message early on\n\nWith a rewrite to clean up the presentation, deeper explanation for SAM (i)-(iv), and perhaps a few more visualizations, this could be a really strong paper; but unfortunately I don't think it's quite there yet."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

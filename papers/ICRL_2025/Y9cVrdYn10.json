@@ -1,0 +1,171 @@
+{
+    "id": "Y9cVrdYn10",
+    "title": "Delay-Aware Reinforcement Learning: Insights From Delay Distributional Perspective",
+    "abstract": "Although deep reinforcement learning (DRL) has achieved great success across various domains, the presence of random delays in real-world scenarios (e.g., remote control) poses a significant challenge to its practicality. Existing delay-aware DRLs mainly focus on state augmentation with historical memory, ensuring that the actions taken are aligned with the true state. However, these approaches still rely on the conventional expected $Q$ value. In contrast, to model delay uncertainty, we aim to go beyond the expected value and propose a distributional DRL to represent the distribution of this $Q$ value. Based on the delay distribution, we further propose a correction mechanism for the distributional $Q$ value, enabling the agent to learn accurate returns in delayed environments. Finally, we apply these techniques to design the delay-aware distributional actor-critic (DADAC) DRL framework, in which the critic is the corrected distributional value function. Experimental results demonstrate that compared to the state-of-the-art delay-aware DRL methods, the proposed DADAC exhibits substantial performance advantages in handling random delays in the MuJoCo continuous control tasks. The corresponding source code is available at https://anonymous.4open.science/r/DADAC.",
+    "keywords": [
+        "Reinforcement Learning",
+        "Random Delays",
+        "Value Correction",
+        "SAC"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Y9cVrdYn10",
+    "pdf_link": "https://openreview.net/pdf?id=Y9cVrdYn10",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a reinforcement learning algorithm for environments with random delays. In real-world scenarios, feedback delays and actuator delays frequently occur due to limited computing resources and bandwidth constraints. Thus, it is crucial to develop a robust algorithm capable of performing well under challenging, low-bandwidth conditions. The proposed algorithm, DADAC, addresses these random delays through two primary components: (1) a Distributional Critic and (2) Delay-Aware Value Correction. The Distributional Critic enhances the agent's robustness by more accurately modeling the uncertainty associated with random delay environments. Meanwhile, Delay-Aware Value Correction adjusts the Bellman equation to account for the probabilistic nature of delays, helping the agent to accurately compute the returns."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper is well-structured and the contributions are clear.\n\nThe novel use of Delay-Aware Value Correction, which applies Bellman updates based on delay-adjusted expectations.\n\nThe proposed algorithm shows clear improvement compared to other approaches.\n\nWhile many conventional methods only handle fixed delays, the proposed algorithm effectively handles random delays, making it a more practical solution."
+            },
+            "weaknesses": {
+                "value": "Theorem 1 lacks rigorous proof.\n\nMore thorough ablation experiments are needed to illustrate how the Delay-Aware Value Correction approach contributes to handling random delays.\n\nBased on my understanding, the proposed method requires prior knowledge of the delay distribution, which may limit its applicability."
+            },
+            "questions": {
+                "value": "**[Q1]**\nIn Equation (3), $\\gamma$ is expressed with exponential terms for each i. Why is $\\gamma$  not expressed this way in Equation (5)?\n\n**[Q2]**\nIn the proof of Theorem 1, for which distance is the distributional Bellman operator a contraction? Is it KL-divergence, Wasserstein distance, or Cram\u00e9r distance? Given that your method relies heavily on KL-divergence for the critic loss (Line 200), it is natural to show that the distributional Bellman operator is a contraction with respect to KL-divergence; however, it does not (Bellemare, 2017). Could you elaborate further on the proof of Theorem 1?\n\n**[Q3]**\nWhy does the \"SAC+Value Correction\" method perform so poorly on some tasks? It looks like the only difference between DADAC and SAC+Value Correction is whether or not a distributional critic is used. Especially in Humanoid-v4 and Ant-v4, there was no performance improvement at all.\n\nIt\u2019s surprising that DSAC and \"SAC+Value Correction\" show pretty much the same performance across almost all tasks, even though DSAC naively uses the delayed observation. Could you explain why this is happening? It seems like Delay-aware Value Correction does not contribute significantly to DADAC.\n\n**[Minor]**\nTypically, many reinforcement learning algorithms conduct experiments using 10 random seeds. Why did you use 8 random seeds instead of 10? Was it to exclude outlier seeds for a more reliable comparison?\n\n\n[1] Bellemare, Marc G., Will Dabney, and R\u00e9mi Munos. \"A distributional perspective on reinforcement learning.\" International conference on machine learning. PMLR, 2017."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces an innovative approach that integrates distributional value function and value correction mechanism to handle random and unpredictable delay environments. Experiments are conducted on MuJoCo, comparing with baselines of State Augmentation-MLP and BPQL."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "\u2022\tOverall, the concept presented in the paper is simple and straightforward. It is interesting to use a value correction mechanism targeting the value function.\n\n\u2022\tThe results show that DADAC generally surpasses two baselines, and achieves outstanding performance in some environments. The ablation study shows the effectiveness of both the distributional value function and value correction mechanism."
+            },
+            "weaknesses": {
+                "value": "\u2022\tThe authors mentioned that observation and action delays are considered. However, there is a lack of relevant experiments to support their claims. The absence undermines the credibility of the proposed method's robustness in scenarios where both types of delays occur simultaneously.\n\n\u2022\tIt seems that the authors do not discuss the reason why using the correction mechanism on the distribution of return, although the ablation study shows its effectiveness. Besides, this mechanism assumes precise estimation of delay dynamics, which might not be easy to obtain in practice.\n\n\u2022\tThe experiments are insufficient. Only two baseline models are compared, and the results are primarily visualized through training curves, lacking other forms of analysis. And the two random delay distributions are not sufficiently varied to capture the true random delays. Also, the algorithms employed in the ablation study can be replaced with more advanced ones.\n\n\nMinor comments:\n\n\u2022\tThere is a typo \"a gama distribution\", it should be \"a gamma distribution\".\n\n\u2022\tThe presentation of related work could be more concise. Specifically, the discussion of prior methods could be less detailed in the introduction and moved to the related work."
+            },
+            "questions": {
+                "value": "1.\tWhy focus on correcting the distribution of return rather than simply correcting the expected value of return? \n\n2.\tHow do you calculate $p_i$ in Equation (3)? If $p_i$ is constant, Equation (3) is essentially the same as the Bellman equation.\n\n3.\tIn Experimental Results, how do you determine the mean of gamma distribution and double Gaussian distribution? Why do you use these two distributions? Can you use a different distribution with a random mean to re-implement the experiment? \n\n4.\tConsidering fixed delays are still common in the real world, can you implement DADAC under fixed delays?\n\n5.\tHow does DADAC compare to a delay-free algorithm like robust RL?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel approach to solve the random delay problem in the delayed reinforcement learning by using distributional RL techniques to capture both state and action delays in the observation signals."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Author did a great job illustrating the motivation of the work, making it intuitive and easy to understand. Most parts of the paper is well-written and structured with logic coherence."
+            },
+            "weaknesses": {
+                "value": "### Related Works\n1, Missing some recent benchmarks: DC/AC[1], AD-RL[2], DIDA[3], VDPO[4], RTAC[5]\n\n### Section 4\n1, Assumptions should be clearly stated either in the prelim part or the start of this section.\\\n2, the reward defined in Eq 2, 3, and 4 are all different, which is quite misleading for interpretation. \\\n3, Proof of Thm 1 is not rigorous: a) Reviewer expect the author to write out a few more steps on bellman property of newly defined bellman operator for both stationary and non-stationary delay distribution if stationarity of delay distribution is not universal. Otherwise Thm1 seems not be sufficient enough as an independent theorem. \\\n4, Following up to the convergence, it would be more technical solid to analyze optimality of the method, since convergence itself cannot provide any info on optimality. In [2,3,4], their optimality is investigated through study on the fixed point of optimization, which could be a possible direction of extension.  \n\n### Experiments\n1, The review suggests to involve more baselines for comparison aside from mentioned approaches, at least the recent works DIDA, AD-RL, DC/AC, etc. Current experiments seem not be sufficient enough to support author's arguments.\\\n2, All the experiments are conducted in the deterministic MDP. It would be interesting to have some analysis/ablation studies on the stochastic setting, since the proposed method seems to support the stochastic MDPs.    \n\n[1]Bouteiller, Y., Ramstedt, S., Beltrame, G., Pal, C., and Binas, J. Reinforcement learning with random delays. In International conference on learning representations, 2020.\\\n[2]Qingyuan Wu, Simon Sinong Zhan, Yixuan Wang, Yuhui Wang, Chung-Wei Lin, Chen Lv, Qi Zhu, J\u00fcrgen Schmidhuber, and Chao Huang. Boosting reinforcement learning with strongly delayed feedback through auxiliary short delays. In Forty-first International Conference on Machine Learning.\\\n[3]Liotet, P., Maran, D., Bisi, L., and Restelli, M. Delayed reinforcement learning by imitation. In International Conference on Machine Learning, pp. 13528\u201313556. PMLR, 2022.\\\n[4]Qingyuan Wu, Simon Sinong Zhan, Yixuan Wang, Yuhui Wang, Chung-Wei Lin, Chen Lv, Qi Zhu, and Chao Huang. Variational delayed policy optimization. In Advances in Neural Information Processing Systems 37 (2024).\\\n[5]Simon Ramstedt, et al. Real-Time Reinforcement Learning. In Advances in Neural Information Processing Systems 32 (2019).\\\n[6]Bellemare, Marc G., Will Dabney, and R\u00e9mi Munos. \"A distributional perspective on reinforcement learning.\" International conference on machine learning. PMLR, 2017."
+            },
+            "questions": {
+                "value": "1, Is the delay distribution a required prior knowledge and also stationary? If so, what is the rationale picking gamma and double gaussian? What if an uniform distribution? \\\n2, How the prior delay distribution will affect the final return distribution of the DRL in both theoretical and empirical way, since no matter what the return of DRL seems to be assumed as a Gaussian? Only mean and log_std of Gaussian are affected or the way to choose value instead of expectation? \\\n3, Out of curiosity, the observation-delayed MDP have been proved to be the superset of the action-delayed MDP problem[7,8] also stated in Thm 2. Why not simplify the Eq (4) where both delay are considered to some form of Eq (3) for simplicity of unification?    \n\n\n[7]Katsikopoulos, K. V. and Engelbrecht, S. E. Markov decision processes with delays and asynchronous cost collection. IEEE transactions on automatic control, 48(4):568\u2013574, 2003.\\\n[8]Nath, S., Baranwal, M., and Khadilkar, H. Revisiting state augmentation methods for reinforcement learning with stochastic delays. In Proceedings of the 30th ACM International Conference on Information & Knowledge Management, pp. 1346\u20131355, 2021."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a distributional delayed RL method named DADAC from the perspective of distributional RL. The theoretical result shows that the proposed Distributional Value Correction Bellman Equation has the convergence guarantee. The experimental results show that the"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The motivation behind the proposed method is straightforward.\n2. The theoretical analysis of the convergence makes sense."
+            },
+            "weaknesses": {
+                "value": "The proposed method's motivation is straightforward. However, this paper ignores too many closely related references and/or important baselines. Therefore, the reviewer must point out these issues.\n\n## Writing\n1. The description should be unified across the paper. For instance, times $t+1$ (lines 232), $i$ timesteps (lines 239), $i$-th step (lines 240), and $(t+i+j)$-th time step (lines 250).\n2. There are multiple different definitions of the reward function. For instance, $r(s,a)$ in Eq.(1), $r(s,a,s')$ in Eq.(2), $r_{t+i}(s_t, a_t, s_{t+i})$ in Eq.(3). Especially, what's the meaning of $r_{t+i}(s_t, a_t, s_{t+i})$.\n3. Typo issues. $i$-th step (lines 240). $(t+i+j)$-th time step (lines 250).\n\n## Theorem\n1. The theorem 1 just shows the contraction property based on the existing literature, but the reviewer looks forward to the authors giving the analysis on the fixed point which can measure the performance of the proposed operator in the delayed RL settings.\n2. The equivalent of different delays (theorem 2) has been proven by previous works [1, 2] experimentally and theoretically. The authors should highlight the difference with previous works if providing novel theoretical contributions.\n\n## Experiment\n1. The performance of BPQL[8] and State-Aug-MLP[9] is doubtful. The setting for the constant delayed RL methods is not fair somehow (using the expectation of the delay distribution). From the perspective of the reviewer, using the maximum delay is more fair. Specifically, based on the experimental results provided in the BPQL paper, the performance in Walker2d-v3 with the 9 constant delays is 4104.3, showing a serious performance drop (around 2700.0 in Walker2d-v4) in this paper (Figure 4).\n2. DATS[5], DIDA[6], and AD-RL[7] should be considered as baselines in the constant delay settings.\n3. RTAC[3], DC/AC[4] and VDPO[10] should be considered as baselines in the stochastic delay settings. In particular, VDPO[10] can be regarded as a recent work, the performance comparison is not compulsory.\n\n\n[1] Katsikopoulos, Konstantinos V., and Sascha E. Engelbrecht. \"Markov decision processes with delays and asynchronous cost collection.\" IEEE transactions on automatic control 48.4 (2003): 568-574.\n\n[2] Nath, Somjit, Mayank Baranwal, and Harshad Khadilkar. \"Revisiting state augmentation methods for reinforcement learning with stochastic delays.\" Proceedings of the 30th ACM International Conference on Information & Knowledge Management. 2021.\n\n[3] Simon Ramstedt, et al. Real-time reinforcement learning. In NeurIPS, 2019.\n\n[4] Bouteiller, Yann, et al. \"Reinforcement learning with random delays.\" International conference on learning representations. 2020.\n\n[5] Chen, Baiming, et al. \"Delay-aware model-based reinforcement learning for continuous control.\" Neurocomputing 450 (2021): 119-128.\n\n[6] Liotet, Pierre, et al. \"Delayed reinforcement learning by imitation.\" International Conference on Machine Learning. PMLR, 2022.\n\n[7] Wu, Qingyuan, et al. \"Boosting Reinforcement Learning with Strongly Delayed Feedback Through Auxiliary Short Delays.\" Forty-first International Conference on Machine Learning.\n\n[8] Kim, Jangwon, et al. \"Belief projection-based reinforcement learning for environments with delayed feedback.\" Advances in Neural Information Processing Systems 36 (2023): 678-696.\n\n[9] Wang, Wei, et al. \"Addressing Signal Delay in Deep Reinforcement Learning.\" The Twelfth International Conference on Learning Representations. 2023.\n\n[10] Wu, Qingyuan, et al. \"Variational Delayed Policy Optimization.\" Advances in Neural Information Processing Systems 37 (2024)."
+            },
+            "questions": {
+                "value": "See Weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

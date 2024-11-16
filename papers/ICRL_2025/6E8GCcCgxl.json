@@ -1,0 +1,166 @@
+{
+    "id": "6E8GCcCgxl",
+    "title": "Eidetic Learning: an Efficient and Provable Solution to Catastrophic Forgetting",
+    "abstract": "Catastrophic forgetting -- the phenomenon of a neural network learning a task and losing the ability to perform it after being trained on some other task -- is a long-standing problem for neural networks \\citep{mccloskey1989catastrophic}. We introduce Eidetic Learning and prove that it guarantees networks do not forget. When training an EideticNet, accuracy on previous tasks is preserved because the neurons important for them are fixed and, most importantly, the hidden states that those neurons operate on are guaranteed to be unchanged by \\textit{any} subsequent tasks for \\textit{any} input sample. EideticNets are easy to implement, their complexity in time and space is linear in the number of parameters, and their guarantees hold for normalization layers during pre-training and fine-tuning. We show empirically with a variety of network architectures and sets of tasks that EideticNets are immune to forgetting. While the practical benefits of EideticNets are substantial, we believe they can be of benefit to practitioners and theorists alike. They have the potential to open new directions of exploration for lifelong and continual learning. We will release the code repository containing the EideticNet PyTorch framework upon publication.",
+    "keywords": [
+        "catastrophic forgetting",
+        "continual learning"
+    ],
+    "primary_area": "transfer learning, meta learning, and lifelong learning",
+    "TLDR": "We present a provable, scalable method for solving catastrophic forgetting.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=6E8GCcCgxl",
+    "pdf_link": "https://openreview.net/pdf?id=6E8GCcCgxl",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors propose the Eidetic Learning method aimed at solving catastrophic forgetting. This approach leverages the concept of EideticNet, a neural network architecture that allocates and reuses neurons through structured pruning. By freezing neurons critical to earlier tasks and reinitializing less important ones for subsequent tasks, it effectively ensures task retention without the need for rehearsal or replay."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The use of structured pruning in Eidetic Learning for addressing catastrophic forgetting is unique. This theoretically sound solution offers clear guarantees for preventing forgetting. Additionally, the authors plan to release a PyTorch framework, which will facilitate adoption and further experimentation by the research community."
+            },
+            "weaknesses": {
+                "value": "While the proposed method shows competitive performance against the compared baselines, it only evaluates against other approaches on PMNIST and does not include comparisons with CIFAR-100 or Imagenette. This lack of a comprehensive evaluation makes it hard to measure the true efficacy of Eidetic Learning.\n\nFurthermore, there is no comparison using larger datasets like ImageNet-100 or Tiny ImageNet, which again makes it impossible to assess how the method performs with datasets containing more than 10 classes, the maximum number tested in the study."
+            },
+            "questions": {
+                "value": "Did the authors attempt to convert EideticNet to use transformers or attention mechanisms? I ask because most state-of-the-art (SOTA) methods are based on attention models.\n\nSimilarly to Table 3, could the authors provide comparable results for CIFAR-100 and Imagenette in Tables 4 and 5, respectively?\n\nThe authors claim that EideticNet is efficient and robust, but without experimentation on large-scale datasets, this claim is unsubstantiated. How would EideticNet perform against other approaches on datasets with 100 classes like ImageNet-100 or 200 classes like Tiny ImageNet?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a method for continual learning that prunes weights after each task is trained. The pruned weights are `disconnected\u2019 from the active nodes for a task, such that later training of the pruned weights doesn\u2019t influence previous tasks. This allows to have zero forgetting, but loses capacity for later tasks. To prevent the requirement of a task-id at inference, a task classifier is trained which is used to select the appropriate head at inference time. The proposed method is tested on several benchmarks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "* Pruning is an approach in continual learning that makes sense, so it is good to further research it.\n* The experiments that are carried out make sense\n* What is in the paper is well written, although some important information is missing"
+            },
+            "weaknesses": {
+                "value": "* The proposed method relies on task-id prediction to select the appropriate head. Except for benchmarks where there is a clear difference between the tasks, it is not possible to train a network that can predict a task-id, without already being able to predict the class itself. Let\u2019s assume two simple tasks with e.g. horses and cats in task one, and deer and dog in task two. If a task-id predictor would be able to tell that an example belongs to task one, it must also know that it is either a horse or a cat. The inverse would imply that you know that the you don\u2019t know whether it is a horse or a cat, but do know that it is definitely not a deer or a dog. Only when the first two have some common characteristic this is possible, e.g. when the first task would all be vehicles with wheels and the second one all animals on four legs. For instance, in permuted MNIST this is true, as the permutation mask is shared within a task, but for the other benchmarks there is no stronger relation between classes within a task than across tasks hence the task-id prediction is not feasible. To convince me that task-id prediction is possible it would be good to at least show the accuracy of the task predictor and compare it with how well the individual classes are separated in the representation (e.g. by linear probing the representation with the entire dataset). \n\n* Several key elements in the paper are almost not explained or discussed, while other more technical details are discussed at length. It would make the paper better to move section 3.1 to the appendix, and instead discuss details of the pruning method and how the task-id prediction works.  The technical details are relevant if someone would want to reimplement the method, but they don\u2019t learn me a lot of how and why the method works. Right now, there is barely any information about how those work, while they are the most important aspects of the proposed method. Similarly, the ablations that are discussed in the paragraph of line 463 are important results to learn about the method and thus it would be better to condense those tables and add them to the main paper. \n\n* There is only little comparison to other methods that rely on similar techniques. This is problematic, as the proposed method is very similar to e.g. PackNet. Table 1 lists some differences, but it is unclear how they make the proposed algorithms actually different. For instance, PackNet masks out activations of neurons that belong to later tasks, while here the weights between those connections are removed. That is a difference, but only a technical one that doesn\u2019t impact the results. Only for Permuted MNIST there is a comparison with some other methods, while all the other benchmarks are not compared to other methods. Other methods that are very similar are not considered (PackNet and Piggyback). It would have been insightful to test those methods both with and without the proposed task-id prediction mechanism. In the current paper, there is no proof that the proposed method works any better than older methods.\n\n* The paragraph at line 349 contains main spelling and grammar mistakes, as well as a question. It seems like this is from a draft version. At the start of section 3 (line 291), there is a sentence about attention layers, but the referred text is not included as far as I can tell."
+            },
+            "questions": {
+                "value": "* Do you have any justification for why the task-id predictor should work?\n* Why did you not compare the results to similar methods, like PackNet?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Eidetic Learning, a novel continual learning method aimed at eliminating catastrophic forgetting. Eidetic Learning, implemented in neural networks called EideticNets, operates by iteratively pruning less important neurons for a given task. The weights of the remaining, important neurons are then frozen, ensuring that subsequent training on new tasks does not alter their functionality. A central claim made by the paper is that it \u201cprovably solves catastrophic forgetting\u201d. This claim seems to be derived from the fact that, when moving to the next task, the method avoids training connections that could affect the activity of neurons considered important for the performance on previous tasks. Indeed, the pruned neurons are reinitialized and their connections towards the frozen neurons are severed, allowing this freed capacity to be used for learning the next task without interfering with previously learned representations. Experiments on Permuted MNIST with fully connected networks show that Eidetic Learning achieves accuracy competitive with state-of-the-art methods like Golkar et al. The method's scalability is also assessed on Imagenette and CIFAR-100 with ResNet architectures, although no comparative results are provided for these datasets. To facilitate adoption, the authors plan to release a PyTorch implementation of their EideticNet framework."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Originality: The paper demonstrates a degree of originality by explicitly highlighting the importance of severing connections from reinitialized (previously pruned) neurons to frozen neurons crucial for prior tasks. While pruning has been explored in continual learning before, this precise mechanism for guaranteeing resistance to interference and preserving performance on past tasks appears novel. \n\nQuality: The paper presents a reasonably clear method with an intuitive justification for its ability to prevent forgetting. The experimental validation on the Permuted MNIST benchmark, while limited in scope, goes some way towards supporting the central claim on addressing catastrophic forgetting. The reporting of confidence intervals in the results are appreciated. The commitment to releasing a PyTorch library also enhances the potential for reproducibility.\n\nClarity: The paper is reasonably well-written and explains the Eidetic Learning procedure in a concise manner. \n\nSignificance: The paper addresses an important problem, that of the significant challenge of catastrophic forgetting in continual learning, a problem with substantial implications for developing more adaptable and robust AI systems. The proposed method, with its guarantees and relatively simple implementation, has the potential to influence future research in this area. If the empirical results generalize to a wider range of tasks and architectures, Eidetic Learning could become a valuable ingredient for practitioners seeking to deploy continual learning models in real-world applications. The promised open-source library could contribute to adoption as well."
+            },
+            "weaknesses": {
+                "value": "Unfortunately, I have a number of concerns regarding the readiness for publication of this work, touching on all aspects of originality, quality, clarity and significance.\n\nOriginality: Generally, the originality of the work is quite limited. The idea of leveraging sparsity of network connectivity for continual learning is certainly not unheard of. Notably, prior work \u201cCompacting, Picking and Growing for Unforgetting Continual Learning\u201d (NeurIPS 2019) seem to propose the same mechanism of pruning weights learned so far to free capacity for training the pruned weights on future tasks. However, that work doesn\u2019t seem to showcase the \u201cresistance\u201d mechanism that ensures there is no backward interference with previous tasks, as in this submission.\n\nQuality: The paper makes a number of fairly bold claims on the importance of the work, but doesn\u2019t provide a lot of experimental comparisons with prior work, providing comparisons on only 1 dataset, which I would argue falls short of the experimentation quality standard of ICLR.\n\nClarity: \n* The paper mentions that \u201cWe also propose an argument for why making self-attention layers of Transformers (Vaswani et al., 2017) immune to catastrophic forgetting is challenging if not impossible\u201d. However, I don\u2019t think the paper actually does that\u2026 is it missing from the text?\n* The paper mentions that the method \u201ctrains a final task classifier on a meta task dataset\u201d. But, doesn\u2019t this require actually knowing the total number of tasks that are coming, if the task classifier is a softmax (i.e. multi-class) classifier? Generally, more clarity regarding how the corresponding experiments were conducted would be appreciated.\n* The paper claims that \u201can EideticNet can be trained on significantly different subsequent tasks without harming performance on existing tasks and \u2013 unlike regularization approaches to catastrophic forgetting \u2013 **without requiring a additional hyperparameter search** just to preserve the tasks for which the network has already been trained\u201d. However, don\u2019t you need to specify how much pruning you\u2019re willing to do, i.e. how low the accuracy can drop on previous tasks? Wouldn\u2019t this be a hyper-parameter to tune?\n* The paper also has a number of typos and unclear statements:\n  * seteting => setting\n  * a additional hyperparameter => an additional hyperparameter\n  * A approach => An approach\n  * we also need to pruning => we also need to prune\n  * we also to => we also need to\n  * An evaluation of recurrent networks is out of scope for the current work? => change \u201c?\u201d with \u201c.\u201d\n  * \u201cr is a neuron in Wl and nti is a neuron in Wl+(k\u22651)\u201d => but W is not a set of neuron, but a matrix of weights\u2026 so \u201cr is a neuron in W\u201d doesn\u2019t really make sense\n  * delete the synapses from pruned to unpruned neurons (directionally) => not sure what this is supposed to mean\u2026.\n\nSignificance: \n * A central claim made in the paper is that \u201cEidetic Learning [...] provably solves catastrophic forgetting\u201d. However, taken literally, this statement is inaccurate, and at a minimum exaggerated. First, prior work such as on \u201cProgressive Neural Networks\u201d by Rusu et al. (2016) has already \u201csolved\u201d catastrophic forgetting, simply by adding neurons for each new task and keeping previous neurons fixed. The authors might argue that their work is an improvement because it does not require the explicit addition of neurons, however this implies that, on a large scale with lots of tasks, EideticNets could eventually saturate and have no capacity left for new tasks, making them an incomplete solution to the problem of continual learning.\n * The limited experiments presented does not allow me to confirm that this work is a significant departure from the state-of-the-art, since it presents a comparison on only one dataset and the performance is statistically indistinguishable from the prior work of Golkar et al."
+            },
+            "questions": {
+                "value": "I would appreciate it if the authors could answer the questions mentioned in the weakness section, notably regarding clarity.\n\nI would also like the authors to report additional experimental comparisons based on at least one other dataset. For example, the authors could do a comparison on the CIFAR-100 20 tasks setting found in \u201cCompacting, Picking and Growing for Unforgetting Continual Learning\u201d.\n\nThe paper would also require rewording to soften some of its claims, though unfortunately this would require submitting a revision, which I don\u2019t think the ICLR review process allows for."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a framework called EideticNet, a novel approach aimed at solving the problem of catastrophic forgetting in neural networks. The approach utilizes a network\u2019s excess capacity to ensure that once a task is learned, it is not forgotten, regardless of subsequent tasks. The methodology involves iterative pruning and selective freezing of neurons critical to previously learned tasks, thus preserving their functionality while continuing to train on new tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The introduction of Eidetic Learning provides a fresh perspective on addressing catastrophic forgetting by leveraging the concept of memory retention through structural network adjustments."
+            },
+            "weaknesses": {
+                "value": "**I am not familiar with related fields. After reading the paper, I can probably understand the motivation and technical content.**\n\n---\n\n1. There is a lack of ablation study, recent baselines (post-2020) and the well-time cost of EideticNet required.\n\n2. The authors do not conduct large-scale experiments on ImageNet 1K or transformer-based networks."
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 1
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

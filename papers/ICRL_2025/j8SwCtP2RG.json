@@ -1,0 +1,174 @@
+{
+    "id": "j8SwCtP2RG",
+    "title": "Flexible Heteroscedastic Count Regression with Deep Double Poisson Networks",
+    "abstract": "Neural networks that can produce accurate, input-conditional uncertainty representations are critical for real-world applications. Recent progress on heteroscedastic $\\textit{continuous}$ regression has shown great promise for calibrated uncertainty quantification on complex tasks, like image regression. However, when these methods are applied to $\\textit{discrete}$ regression tasks, such as crowd counting, ratings prediction, or inventory estimation, they tend to produce predictive distributions with numerous pathologies. Moreover, discrete models based on the Generalized Linear Model (GLM) framework either cannot process complex input or are not fully heterosedastic. To address these issues we propose the Deep Double Poisson Network (DDPN). In contrast to networks trained to minimize Gaussian negative log likelihood (NLL), discrete network parameterizations (i.e., Poisson, Negative binomial), and GLMs, DDPN can produce discrete predictive distributions of arbitrary flexibility. Additionally, we propose a technique to tune the prioritization of mean fit and probabilistic calibration during training. We show DDPN 1) vastly outperforms existing discrete models; 2) meets or exceeds the accuracy and flexibility of networks trained with Gaussian NLL; 3) produces proper predictive distributions over discrete counts; and 4) exhibits superior out-of-distribution detection. DDPN can easily be applied to a variety of count regression datasets including tabular, image, point cloud, and text data.",
+    "keywords": [
+        "Predictive uncertainty",
+        "Heteroscedastic regression"
+    ],
+    "primary_area": "probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",
+    "TLDR": "A novel method to flexibly model predictive uncertainty for heteroscedastic, discrete count regression problems",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=j8SwCtP2RG",
+    "pdf_link": "https://openreview.net/pdf?id=j8SwCtP2RG",
+    "comments": [
+        {
+            "title": {
+                "value": "Discussion with reviewer dvqi"
+            },
+            "comment": {
+                "value": "We thank the reviewer for the thoughtful review and helpful comments! Below is our discussion and answers to key questions.\n\n# Modest Improvements over baselines on Amazon dataset\n\nWhile some of the more modern Gaussian regressors (i.e., Stirn, Seitzer, Immer), are indeed competitive with DDPN, they are still subject to the pathologies and mis-specification issues discussed in Section 1. Our claimed contributions are not that DDPN outperforms all baselines all of the time. Rather, we claim that DDPN can meet or exceed the performance of modern Gaussian regressors, and also produce a properly specified predictive distribution over discrete count data, which the Gaussian does not. If we truly believe that the data are discrete, we should incorporate that belief into our modeling approach.\n\n# Comparison to simpler distributions\n\nIn all of our experiments we compare to simpler distributions (Table 2, Table 3). Specifically, we compare DDPN to the Poisson DNN and the Negative Binomial (DNN), which are both simpler distributions. Poisson has a single parameter for mean and variance, while the NB DNN has two parameters, but is restricted to variance >= mean, and is therefore less flexible. \n\nWe see on tabular data with naturally high dispersion conditioned on the observations (i.e., Bikes in Table 2), Poisson is comparable to DDPN. However, on lower dispersion Tabular data (i.e., Collision in Table 2) and in the more high dimensional data in Table 3, DDPN outperforms existing discrete approaches. In general, DDPN can fit data of all dispersions, even when technically \u201cmisspecified\u201d as we demonstrate in Appendix A.2.\n\n# Sensitivity to choice of $\\beta$\n\nIn appendix A.4 we perform a hyperparameter study of the effect of Beta on the COCO-people dataset.\n\n# Why does $\\beta=0.5$ seem to work particularly well for ensembles?\n\nIt is possible that $\\beta=0.5$ yields more diverse independently trained models. Thus we capture a greater variety of plausible minima in weight space. In this scenario each mode's mistakes cancel the others out, resulting in a stronger ensemble. If $\\beta=1$, it\u2019s likely that the models all tend towards similar solutions where they fit the mean with high (sometimes too-high) confidence. Conversely, if $\\beta=0$ the models all tend towards similar solutions with high uncertainty explaining away poor mean fit. A follow-up work should study this more in-depth."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Deep Double Poisson Networks (DDPN) for heteroscedastic regression on discrete count data. \nThe key contributions is using the double Poisson distribution as the output distribution, which provides more flexibility than Poisson or negative binomial distributions while maintaining proper support over integers (unlike Gaussian which has pathologies behavior because of this). \nThe authors also propose a $\\beta$-modification to the loss function to better balance mean fit and uncertainty calibration. \nComprehensive experiments across tabular, image, point cloud and text data demonstrate DDPN's superior performance in terms of both prediction accuracy and uncertainty quantification."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Clear motivation and principled solution to discrete regression with uncertainty estimation\n- Strong theoretical analysis of the relationship between different discrete distributions and why double Poisson is more flexible\n- Comprehensive empirical evaluation across diverse datasets and modalities\n- Excellent ablation studies demonstrating the impact of the $\\beta$ parameter\n- Strong out-of-distribution detection capabilities compared to baselines\n- Good reproducibility with code provided"
+            },
+            "weaknesses": {
+                "value": "- Some empirical results (e.g., on Amazon review dataset) show relatively modest improvements over strong baselines\n- Could benefit from more analysis of when simpler distributions might be sufficient"
+            },
+            "questions": {
+                "value": "1. How sensitive is the method to the choice of $\\beta$? Are there heuristics for selecting it for different applications?\n2. Could you elaborate on why $\\beta$=0.5 seems to work particularly well for ensembles?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors proposed DDPN for heteroscedastic count data along with a $\\beta$-modification to enhance prediction performance. While the introduction of heteroscedasticity into neural networks and the focus on discrete data are appreciated, there is a lack of investigation into existing methods, and one of the two presented measures seems not suitable for comparing the methods."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The introduction of heteroscedasticity into neural networks is a notable strength, as it enables more flexible and accurate modeling of data with varying dispersion. Additionally, the focus on discrete data addresses a gap in existing research, highlighting the method's practical relevance for count-based outcomes."
+            },
+            "weaknesses": {
+                "value": "**1. Insufficient discussion of existing methods** \n\nThe authors identify the limitations of several approaches to representing heteroscedasticity in Poisson distributions, providing motivation for their proposed method. However, the authors did not mention Joint GLM, which has been widely discussed in the literature. For example, Chapter 10 of *Generalized Linear Models* (McCullagh and Nelder, 1989)\u2014which the authors cited as McCullagh (2019)\u2014discusses \"Joint modeling of mean and dispersion\" within the GLM family. *Generalized Linear Models with Random Effects* (Lee, Nelder, and Pawitan, 2017) also examines Joint GLM for mean and dispersion, which is a natural extension of heteroscedastic model for Gaussian cases to the GLM family. As far as I know, linear components of Joint GLM can be replaced with neural networks, but the authors did not clarify how the use of the Double Poisson distribution offers distinct advantages over this approach.\n\n**2. Concerns with comparing likelihoods across different distributions**\n\nThere is a fundamental issue with the presentation. The authors directly compared likelihood values under different distributional assumptions. However, such comparisons are strongly discouraged as they can lead to misleading conclusions. The authors should acknowledge this and include the necessary methodological context or justification.\n\n**3. Need for theoretical support and further investigation of $\\beta$-DDPN**\n\nThe introduction of the $\\beta$-DDPN and its demonstration in Figure 5 is interesting, but the method currently lacks sufficient theoretical support. A more comprehensive and foundational investigation into convergence could provide deeper insights. For instance, an ablation study on the bias and variance of weight estimates in linear models could help clarify the influence of the $\\beta$ value on convergence behavior."
+            },
+            "questions": {
+                "value": "**1.  On Existing Methods:**\n- The authors omitted a discussion on Joint GLM, which is widely acknowledged in the literature and even appears in McCullagh (2019), cited by the authors. Clarification on this omission would be required.\n- Could the authors elaborate on how the Double Poisson distribution provides distinct advantages over Joint GLM?\n\n**2. On Comparing Likelihoods:**\n- Could the authors justify comparing likelihood values across different distributional assumptions?\n- If such justification is not possible, considering alternative measures for comparison would be required.\n- For certain datasets, differences in MAE does not seem significant. Providing statistical test results would support the analysis.\n\n**3. On Theoretical Support for $\\beta$-DDPN:**\n- An ablation study on the bias and variance of weight estimates in simpler (linear) models could provide insights into the impact of the $\\beta$ value on convergence.\n- It seems that the influence of the $\\beta$ value might depend on whether the initial value of $\\phi$ is set high or low. Could the authors explain or provide insight into this potential dependency?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work attempts to improve discrete heteroscedastic regression by predicting the parameter for a double poison distribution. \n\nThe contributions include: 1) the method outperforms the baselines on some datasets; 2) the authors modify the NLL loss to leverage between mean and distribution prediction; 3) the method exhibits superior out-of-distribution detection functionality."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is easy to follow, with a clear presentation.\n\nThe proposed method:\n1) shows superior results regarding MAE or NLL on some of the datasets.\n2) provides the $\\beta$ modification to the loss to enable prioritizing either the mean or the distribution prediction.\n3) exhibits superior OOD detection behavior.\n4) shows how the $\\beta$ trick effects the convergence of DDPN."
+            },
+            "weaknesses": {
+                "value": "The novelty of the paper: the method changes the output distribution compared to previous work. For example, while previous work predicts the parameter for a Gaussian distribution, this work predicts the parameter for a Double Poison distribution. However, the connection between the new distribution and the superior performance is not clearly analyzed. It remains possible that one can try different distributions for different datasets. Thus, the method is not innovative from the methodology perspective. Other than the distribution change, the method also relies on the $\\beta$ trick proposed by Seitzer et al, which further reduces the originality of the work. \n\nExperiment results: while the method shows superior performance for one of the metrics in most cases, it does not necessarily indicate the significance of the model. Instead, tuning and applying the $\\beta$ trick to some of the baseline methods may lead to better performance. However, it is not explored. Thus, it remains unclear whether it is the introduction of a new distribution or the $\\beta$ trick that leads to the improvement. I recommend the author to further explore the trick with baseline methods and make a fair comparison to show what is behind the improvement. \n\nFor the OOD detection, the DDPN and variants indeed show better behavior compared to some of the results. However, it does not seem to be better than Immer et al."
+            },
+            "questions": {
+                "value": "1. Could you explain why Double Poison is more appropriate compared to the other distributions? Or in which case, this distribution should show superior performance?\n\n2. Could you show how $\\beta$ affects the performance of the baseline methods and explore them also in the same space ($\\beta \\in [0,1]$)?\n\n3. Are DDPN and the variants better in OOD detection compared to Immer et al? It is not obvious from Fig.4. Could you further illustrate the reason why you claim \"DDPN shows the greatest ability of all benchmarked regression models to differentiate better ID and OOD inputs\"?\n\n4. Could you explain why some of the baselines are missing from the boosting experiments?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents Deep Double Poisson Network (DDPN), a probabilistic Deep Neural Network (DNN) method by predicting the mean and inverse dispersion of the Double Poisson (DP) distribution for heteroscedastic and discrete count regression problems. DPPN is trained by using the Maximum Likelihood of DP with a \u201ctunable mean fit\u201d parameter $\\beta$. The authors show that DDPN and its ensemble version achieve lower Mean Absolute Error (MAE) and Negative Log-Likehood (NLL) than other baselines on regression data and higher predictive entropy in the Out-of-Distribution (OOD) detection setting."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is well-written, and it is easy to understand the important aspects of the algorithm.\n- I like the motivation of this paper, the proposed method aims to contribute to discrete regression tasks, such as crowd counting, rating prediction, etc.\n- The experimental results show the proposed method is better than some baselines in terms of MAE and NLL on tabular and complex datasets, as well as useful for OOD detection."
+            },
+            "weaknesses": {
+                "value": "- From my point of view, the proposed method is somewhat not novel enough. Given the literature on the heteroscedastic Gaussian distribution with DNN [1, 2, 3], DDPN simply replaces Gaussian with the DP distribution to tackle the discrete count regression problem.\n- The training algorithm depends on the additional tunable parameter $\\beta$. There is a trade-off between mean-focused and variance-focused regarding the selection of $\\beta$. And, tunning $\\beta$ is non-trivial in practice.\n- There is no theoretical contribution in this paper. For instance, no theoretical guarantees show that DDPN can achieve better performance (e.g., generalization bound, uncertainty quality bound, etc.) than other methods.\n- The experiments are also not convincing. Firstly, DDPN depends on the tunable parameter $\\beta$, and its results vary significantly and do not consistently outperform other baselines. Secondly, a lot of measurements to assess model uncertainty quality are missing, e.g., calibration \\& sharpness [4], AUPR/AUROC, ROC curve [5], etc.\n- Miscellaneous: I feel some sentences are over-claimed. For instance in the abstract, \"..4) exhibits superior out-of-distribution detection.\". This is not convincing me when seeing the experimental evidence in OOD detection."
+            },
+            "questions": {
+                "value": "1. In Figure 4, the density across the entropy value of DDPN is uniformly small. Why is this? Can you report the calibration and sharpness value [4] between methods?\n\n2. There is a trade-off between mean-focused and variance-focused regarding the selection of $\\beta$. Given the test set is unavailable in the world, how can we choose the best-fit $\\beta$ in training to balance this trade-off?\n\n3. Let's consider with only a single forward pass, how DDPN can estimate epistemic uncertainty? And, how DDPN can disentangle aleatoric and epistemic uncertainty?\n\nReferences:\n\n[1] Lakshminarayanan et al., Simple and scalable predictive uncertainty estimation using deep ensembles, NeurIPS, 2017.\n\n[2] Nix et al., Estimating the mean and variance of the target probability distribution, International Conference on Neural Networks, 1994.\n\n[3] Chua et al., Deep reinforcement learning in a handful of trials using probabilistic dynamics models, NeurIPS, 2018.\n\n[4] Kuleshov et al., Calibrated and sharp uncertainties in deep learning via density estimation, ICML, 2022.\n\n[5] Nado et al., Uncertainty Baselines: Benchmarks for Uncertainty & Robustness in Deep Learning, arXiv preprint arXiv:2106.04015, 2021."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

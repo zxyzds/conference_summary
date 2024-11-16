@@ -1,0 +1,167 @@
+{
+    "id": "PxRATSTDlS",
+    "title": "Predicting the Energy Landscape of Stochastic Dynamical System via  Physics-informed Self-supervised Learning",
+    "abstract": "Energy landscapes play a crucial role in shaping dynamics of many real-world complex systems. System evolution is often modeled as particles moving on a landscape under the combined effect of energy-driven drift and noise-induced diffusion, where the energy governs the long-term motion of the particles. Estimating the energy landscape of a system has been a longstanding interdisciplinary challenge, hindered by the high operational costs or the difficulty of obtaining supervisory signals. Therefore, the question of how to infer the energy landscape in the absence of true energy values is critical. In this paper, we propose a physics-informed self-supervised learning method to learn the energy landscape from the evolution trajectories of the system. It first maps the system state from the observation space to a discrete landscape space by an adaptive codebook, and then explicitly integrates energy into the graph neural Fokker-Planck equation, enabling the joint learning of energy estimation and evolution prediction. Experimental results across interdisciplinary systems demonstrate that our estimated energy has a correlation coefficient above 0.9 with the ground truth, and evolution prediction accuracy exceeds the baseline by an average of 17.65\\%. The code is available in the anonymous repository: https://anonymous.4open.science/r/PESLA-0D9A/README.md",
+    "keywords": [
+        "dynamical system",
+        "energy landscape",
+        "deep learning"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "We propose a self-supervised learning framework to predict the energy landscape of stochastic dynamical systems without supervisory signals for energy, while collaboratively achieving accurate energy estimation and evolution prediction.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=PxRATSTDlS",
+    "pdf_link": "https://openreview.net/pdf?id=PxRATSTDlS",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes to infer the energy landscape of complex, stochastic dynamical systems. A distinguishing feature is the adoption of vector quantization techniques for dimension reduction. Dynamical information was inferred via a graph neural Fokker-Planck equation method. A regularization term was introduced to constrain the long-term prediction behavior between the empirical distribution p and the Boltzmann distribution. The novelty of bringing together these ideas is appreciated. Experiments were performed on 3 tests: 2d Prinz potential, ecological evolution, and fast-folding peptides. The method part of the paper is not very clear and somewhat difficult to follow. There is no ablation tests, so it's hard to see what the various loss terms or model designs offer. There is no discussion of the limitations of the method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The idea of bringing together several novel methods for modeling stochastic dynamical systems is very interesting. Three different examples cover different application areas and add to the credibility of the method. The capability to learn unknown energy landscape from stochastic dynamical systems is a potentially high-impact contribution."
+            },
+            "weaknesses": {
+                "value": "* The description of the overall model is not clear to me. At least not easy to follow. For example, the encoder, decoder, Phi, Psi, Xi,... were defined in different places and some were not clearly defined. What space and dimension does Phi map from and to? Please make it easier to follow. And the dimension of latents such as H is not clear. Please collect the equations in a coherent way, e.g. all the different losses, and what are the losses sampled over?\n\n* Overall, the writing of the paper is too hand-waving. As a referee I don't like guesswork."
+            },
+            "questions": {
+                "value": "* Please discuss the issue of transferrability. Can the trained model be transferred to unseen structures? Was a separate model trained for each protein? Which of the sub-modules, encoder, decoder, etc, can be reused?\n\n* Scalability. To model a bigger protein, how large does the codebook need to be? What about training and inference cost for longer sequences?\n\n* Spell out KNN (k-nearest neighbor?)\n\n* How are encoder \u039e, decoder \u03a9 implemented? GCNN was mentioned but I still have no idea what's in the model.\n\n* There is no ablation tests, so it's hard to see what the various loss terms or model designs offer. \n\n* There is no discussion of the limitations of the method.\n\n* Consider adding some explanation of the graph FPE method. FPE models the evolution of the probability p, not its encoding Phi(p) as in eq (4). I suppose it is explained in the cited reference. But since it is a central piece of this paper, please explain how this works."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose an algorithm for discovering the energy function that may explain data trajectories assumed to be driven by the gradient of the energy plus noise. Their model learns a partitioning of the space with one discrete symbol per region and an associated energy value, along with a decoder (and associated encoder) mapping to the observed continuous space. They assume that the dynamics is driven by the energy difference between nearby partitions and Markovian transitions between regions. The model is evaluated on three tasks and compared with several baselines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This is an interesting learning problem, also requiring to learn a latent explanatory space for sampled continuous time trajectories. The authors compare against multiple baselines across everal environments. The results appear encouraging."
+            },
+            "weaknesses": {
+                "value": "(1) I do not see how such an approach can generalize outside of the visited regions, i.e., the cluster centers corresponding to the codebook entries; in general, the most interesting energy functions can have a very large (if not exponential) number of energy wells, and one needs to generalize from the visited wells to new ones. The reason is that many factors may be composed that give rise to stable solutions. Hence a multivariate representation of the discrete identities must be constructed (think about language, which is discrete but allows generating a huge number of legal combinations of words).\n\n(2) It is not clear to me that g in general will preserve all information about the energy of the state, so it may be necessary for the encoder (from observations to states) to look at the whole past trajectory in order to make a probabilistic guess about the state proxy.\n\n(3) the main model (sec 3.2) is not sufficiently understandable and could use more motivation for its different parts. Why these equations in particular (4 and 5).\n\n(4) The experimental setup seems to lack comparisons with *published results* from earlier work, which makes it difficult to know if the comparisons are fair.\n\n(5) The test set includes only trajectories from the same system for which a training trajectory is given, i.e., there is no form of generalization to new systems (e.g., new molecules)."
+            },
+            "questions": {
+                "value": "* to address (3) above, please provide better justifications for the main model and the associated training losses\n\n* to address (4) and (5), please compare with published results on recovering the energy and fitting new trajectories of new molecules or systems"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Estimating the energy landscape is challenging because obtaining direct energy measurements is costly. To bypass this process, the paper proposes a physics-informed self-supervised learning approach, where the energy landscape is estimated from historical evolution trajectories instead of direct energy signals. This method uses discrete codebook embeddings, assuming that energy landscapes generally have low intrinsic dimensionality. Additionally, a physics-informed graph neural Fokker-Planck architecture and physics-inspired regularization are employed to predict system states more accurately."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper begins with a strong motivation, highlighting the challenges in obtaining direct energy values. Additionally, it provides a solid rationale for incorporating discrete codebook embeddings into their method, based on the inherently low dimensionality of energy landscapes."
+            },
+            "weaknesses": {
+                "value": "1. The ablation studies in this paper seem too limited. Since multiple modules are introduced in their method, additional experiments are needed to clarify the individual contributions of each component to the overall performance. For instance, it would be helpful to examine the effect of using discrete versus continuous embeddings. Similarly, given that five types of losses are included, an analysis of each loss\u2019s specific impact would provide valuable insights. If these results were included, I would increase my rating.\n\n2. Regarding  $L_{phy}$, could you explain in more detail why this loss is referred to as \u201cphysics-inspired\u201d?\n\n3. here are five types of losses in total. Could you clarify the exact meaning of the terms $\\mathbf{p}$ and $\\mathbf{q}$ in each loss?"
+            },
+            "questions": {
+                "value": "See Weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposed a new framework PESLA to estimate the energy landscapes from the evolution trajectories of the system. The framework includes two stage, first it uses an adaptive codebook to obtain a discrete landscape space from the observation trajectories. Second, it uses a graph neural ODE based on the Fokker-Planck equation to predict system evolution."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is clearly written. \n\n- The method is trained in a self-supervised manner, hence it can conduct estimation without knowing true energy landscape.\n\n- The methods were evaluated on three interdisciplinary systems and all demonstrated an improvement compared with SOTA baselines."
+            },
+            "weaknesses": {
+                "value": "- The author mentioned that \u201cobservable evolutionary trajectories typically cover only a limited portion of the vat state space\u201d, however, the paper did not explain how the purposed method perform in the situation when the available data is biased or very sparse.\n\n- The method relies on the assumption that the system is driven by energy and a well-defined low dimensionality energy landscape exists. Therefore, the assumption might limit the applicability, which was not discussed in the paper.\n\n- The method is lack of interpretablity. The training fully relies on the final trajectory prediction errors to avoid knowing true energy landscape, however, it is not discussed how reliable or meaningful of the predicted trajectory and the estimated energy landscape. For example, dose the correlation of the estimated energy landscape and true energy landscape influence the final trajectory prediction?"
+            },
+            "questions": {
+                "value": "- What is the computational complexity of the proposed methods and its comparison to existing methods? \n\n- Are the estimate energy landscape consistent under different hyperparameters?\n\n- Does the granularity of the discretization of the energy landscape influence the accuracy of system evolution estimation?\n\n- Considering that real-world trajectory data is usually noisy and sparse, how robust is the method to such data?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

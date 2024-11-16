@@ -1,0 +1,130 @@
+{
+    "id": "ZQ9SF5eUHZ",
+    "title": "Learn from the Past: Dynamic Data Pruning with Historically Weighted Bernoulli Sampling",
+    "abstract": "Dynamic data pruning, which also known as data importance sampling, has been proposed to improve training efficiency. For the case of sampling with replacement, the optimal sampling distribution to minimize the variance is to sample proportional to the gradient norm, which can be approximated by the gradient norm of the logits from an extra forward pass. However, this could result in repeated samples, which can be an undesirable property. Noticing that most dynamic data pruning methods that avoids repeated samples can be seen as weighted Bernoulli sampling, in this work we study the optimal distribution to reduce its variance. Furthermore, to avoid an extra forward pass, we study the use of historic statistics. We propose the use of exponential moving average and probability smoothing to improve the performance.",
+    "keywords": [
+        "data selection",
+        "dynamic data pruning",
+        "importance sampling"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "Efficient dynamic data pruning using Bernoulli sampling weighted by historical statistics",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ZQ9SF5eUHZ",
+    "pdf_link": "https://openreview.net/pdf?id=ZQ9SF5eUHZ",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a weighted Bernoulli sampling method, called Omission, for dynamic data pruning, which can minimize the variance of the gradient estimate without the problem of repeatedly selected samples in sampling with replacement. Aside from this theoretical motivation, the method Omission is also made more practically robuste and implementable through techniques of score smoothing, score normalisation, and estimation of the sample gradient squared norm from historical statistics. The provided experimental results on tasks of image classification and LLM instruction finetuning attest to the competitive performance of Omission. An ablation study was carried out to investigate the importance of the practical techniques used in the implementation of Omission."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The proposition of a dynamic data pruning method that yields an unbiased gradient estimate of minimal variance while avoiding the selection of repeated samples is a valuable theoretical contribution.\n\n* In addition to the solide theoretical foundation, several practical techniques are employed for a more efficient and robust implementation of the proposed weighted Bernoulli sampling scheme.\n\n* An extensive empirical study is provided, where the proposed algorithm is observed to perform competitively against a range of related algorithms."
+            },
+            "weaknesses": {
+                "value": "* Considering that the empirical results are reported over only four trials, the observed performance gains of Omission, which are not always significantly large with respected to the error bars, may be induced by the randomness of trials."
+            },
+            "questions": {
+                "value": "* Would the empirical performance gains of Omission remain stable when the number of trials is increased?\n\n* Why is the performance of full training not provided for the experiments reported in Table 4? And what is the pruning ratio used in these  experiments?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies dynamic data pruning, also known as data importance sampling, which has been proposed to improve the efficiency of training large machine learning models. In Section 2, Background, the reason for dynamic sampling is well explained by establishing the inequality (2). The main point of this paper is to propose a new way to choose p_i as in Theorem 1 (similarly in Theorem 2) so that a smaller upper bound in inequality (2) can be achieved. The rest of the paper details how to implement the formula in Theorem 1 and 2."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Overall, a well written paper. It's easy to follow the main idea."
+            },
+            "weaknesses": {
+                "value": "Section 3.2.1 EXPONENTIAL MOVING AVERAGE OF GRADIENT NORM SQUARED is not clearly written. This reviewer has difficulty to see the value of this subsubsection. It should be better motivated. \n\nIn theorem 1 and 2, the determination of p_i requires ||g_i||, for all i=1,\\ldots, n (or B), which may not be realistic. It seems that this will be the limitation of the proposed approach. The authors tend to address it in the paper. However, there doesn't seem to be a convincing solution. If one can't compute ||g_i|| for all observations (samples), then the proposed method doesn't seem sensible. Nevertheless, I am unsure how we should consider this in our evaluation..."
+            },
+            "questions": {
+                "value": "No"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper focuses on improving dynamic data pruning or data importance sampling,\nwith the goal of enhancing the training efficiency of large machine learning\nmodels by skipping less critical samples during training. The authors adopt\nBernoulli sampling to avoid repeated samples and derive the optimal distribution\nto minimize variance. They propose a method called Omission for implementation.\nNumerical experiments were conducted on image classification tasks (CIFAR-10,\nCIFAR-100, ImageNet-100) and large language model (LLM) fine-tuning tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Numerical experiments were conducted on image classification tasks and large language model fine-tuning."
+            },
+            "weaknesses": {
+                "value": "The paper lacks novelty and originality. The optimal sampling distribution has\nalready been derived more rigorously and investigated more deeply in previous\nworks for various settings. Some relevant earlier references are listed below,\nand there have been additional developments since then:\n\n- Ting, D., Brochu, E. Optimal subsampling with influence functions. *Advances in Neural Information Processing Systems*, 2018; 31. \n- Wang, H., Zou, J. A comparative study on sampling with replacement vs Poisson sampling in optimal subsampling. In *International Conference on Artificial Intelligence and Statistics*, 2021 Mar 18 (pp. 289-297). PMLR.\n\nThe statement \"in practice we can keep sampling until a fixed batch size is\nreached\" is scientifically incorrect. Doing so changes the distribution of the\nselected samples, rendering all theoretical results invalid.\n\nNotations are poorly defined, leading to many confusing statements. For example,\nwhat are the relationships among $n$, $B$, and $b$? How does the batch variance\nrelate to the empirical loss? Additionally, from the second sentence of Section\n3.2, it appears that you are only focusing on the logit loss, which could easily\nconfuse readers who are not already experts in the field. Clearer explanations\nand definitions are needed to make the content more accessible."
+            },
+            "questions": {
+                "value": "1. Do you mean an argument in an existing software package when you say \"drop_last=True\"?  \n2. What is the meaning of the numbers in the tables?  \n3. Why discuss Table 1 and Table 5 first, before the other tables? Why not move Table 5 to be Table 2?  \n4. What is the \"Prune Ratio\"?  \n5. The lines in the figures are not distinguishable in grayscale."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

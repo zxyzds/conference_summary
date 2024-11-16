@@ -1,0 +1,153 @@
+{
+    "id": "mMzp3ImIco",
+    "title": "Mini-batch kernel $k$-means",
+    "abstract": "We present the first mini-batch kernel $k$-means algorithm, offering an order of magnitude improvement in running time compared to the full batch algorithm. A single iteration of our algorithm takes $\\widetilde{O}(kb^2)$ time, significantly faster than the $O(n^2)$ time required by the full batch kernel $k$-means, where $n$ is the dataset size and $b$ is the batch size. Extensive experiments demonstrate that our algorithm consistently achieves a 10-100x speedup with minimal loss in quality, addressing the slow runtime that has limited kernel $k$-means adoption in practice. We further complement these results with a theoretical analysis under an early stopping condition, proving that with a batch size of $\\widetilde{\\Omega}(\\max \\set{\\gamma^{4}, \\gamma^{2}}\\cdot k \\epsilon^{-2} )$, the algorithm terminates in $O(\\gamma^2/\\epsilon)$ iterations with high probability, where $\\gamma$ bounds the norm of points in feature space and $\\epsilon$ is a termination threshold. Our analysis holds for any reasonable center initialization, and when using $k$-means++ initialization, the algorithm achieves an approximation ratio of $O(\\log k)$ in expectation. For normalized kernels, such as Gaussian or Laplacian it holds that $\\gamma=1$. Taking $\\epsilon = O(1)$ and $b=\\Theta(k \\log n)$, the algorithm terminates in $O(1)$ iterations, with each iteration running in $\\widetilde{O}(k^3)$ time.",
+    "keywords": [
+        "kernel k-means",
+        "mini-batch"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "We introduce mini-batch kernel k-means, provide extensive experimental evaluation and theoretical analysis.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-15",
+    "forum_link": "https://openreview.net/forum?id=mMzp3ImIco",
+    "pdf_link": "https://openreview.net/pdf?id=mMzp3ImIco",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to questions"
+            },
+            "comment": {
+                "value": "Thank you for your review. Below are our responses to your questions.\n\n1) Thank you for taking a careful look at the results, however, these are not inconsistencies. \n- It is common for mini-batch algorithms to outperform full batch algorithms (e.g., stochastic gradient descent outperforms non-stochastic gradient descent). This is because the stochastic nature of the algorithm allows it to escape local minima. Recall that (kernel) k-means only arrives at a local minima, which means noise can lead to improvements.\n\n- The runtime improvement of using truncation is more visible with larger datasets. Compared to the other datasets, the ratio of the number of points to the number of classes is smallest for Letter. This means that with even moderately large values of tau such as 300, we end up doing more work per iteration than the untruncated version.\n\n2) A batch size of 1024 seems reasonable across our experiments and aligns with the default batch size for sklearn's implementation of mini-batch k-means. We didn't see any significant improvements with tau above 300 and note that raising it further can have a significant effect on the runtime due to the quadratic dependence on tau."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to questions"
+            },
+            "comment": {
+                "value": "Thank you for your review. Here are our responses to your questions.\n\nQ1) Great observation! Indeed $\\bar{C}_{i+1}$ is not independent of $C_i$ due to the learning rate. We've fixed Lemma 15 in the updated paper (changes are in red). This results in an extra multiplicative k-factor in the batch size.\n\nQ2) The motivation for this analysis was indeed because the stopping condition is used in practice. However, our main contribution is not the theoretical guarantees, but the actual algorithm which reduced the running time per iteration from $O(n^2)$ to $\\tilde{O}(bk^2)$. We consider our result to be an analogue to Sculley's classical mini-batch k-means algorithm which is widely used in practice. The truncation was essential for breaking the linear dependence on $n$, bringing the per iteration cost closer to that of classical k-means - $O(kb)$.\n\nQ3) You are right. We remove \"w.h.p\" from the statement.\n\nQ4) We've added the definition explicitly in the algorithm. Please let us know if you would like it to be highlighted elsewhere."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to questions"
+            },
+            "comment": {
+                "value": "Thank you for your review. Although the theoretical guarantees are nice to have, our main contribution is introducing the first mini-batch algorithm for kernel k-means. We would like to emphasize that before our algorithm, kernel k-means was simply too slow to execute on large datasets. \n\nUsing our algorithm we get an order of magnitude speed up, which is our main contribution. You can see our algorithm as an analogue to the widely used (non-kernel) mini-batch algorithm (the one implemented in sklearn). We believe that our result is a step towards making kernel k-means applicable in practice.\n\nAs for the analysis, we needed to overcome the fact that we cannot represent centers explicitly in kernel spaces (as Schwartzman does), we do this by introducing $\\gamma$ and using Hilbert space-valued martingales (while Schwartzman uses Hoeffding bounds). But again, our main contribution is in the design of the algorithm and runtime analysis. Please also note that the running time per iteration only has a logarithmic dependence on $n$, which is very difficult to achieve in kernel spaces and wouldn't be possible without our truncation procedure."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a kernel mini-batch $k$-means algorithm. The authors provide theoretical analysis that shows that the number of iterations of their algorithm is dimension-independent. In addition, they provide experimantal results that suggest that their algorithm might be useful in practice."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The dimension-independent result seem to be interesting, though I'm not an expert in the field."
+            },
+            "weaknesses": {
+                "value": "I'm not an expert in the area, and I might get some things wrong. So far it seems to me that the main difference of your analysis and the analysis of [Schwartzman (2023)] is your Lemma 12, that is very similar to their Lemma 10. These lemmas have almost identical proofs, except the last step, where both proofs use the Cauchy-Schwartz inequality, but in different spaces. This corresponds to your $\\gamma^2$ and their $d$ in the number of iterations. Could you tell what are other important differences between your proof and their proof? If there are no other crucial differences, the technical contribution of this paper is not strong enough for ICLR."
+            },
+            "questions": {
+                "value": "see Weaknesses above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies efficient implementations of the kernel k-means problems. In this problem, we are given $n$ datapoints $x_1, \\ldots, x_n \\in X$ and a kernel function $K : X \\times X \\to \\mathbb{R}$ such that there exists a function $\\varphi: X \\rightarrow \\mathcal{H}$, where $\\mathcal{H}$ is a Hilbert space, satisfying $K(x, y) = \\langle \\varphi(x), \\varphi(y)\\rangle$ for all $x, y \\in X$. The goal is to cluster the set of points $\\varphi(x_1), \\ldots, \\varphi(x_n)$ using the usual $k$-means objective. One key issue here is that the outputs of $\\varphi(\\cdot)$ can be infinite dimensional. So, we would ideally want to work without ever needing to map the input points into the Hilbert space $\\mathcal{H}$, The authors argue that, the $k$-means++ initialization and further iterations of Lloyd's can be implemented without ever needing to apply the map $\\varphi(\\cdot)$ on the input points. A key issue is that each iteration of the Lloyd's algorithm can take $O(n^2)$ time, since the centers in the intermediate iterations are possibly linear combinations of all the input points. \n\nThus, the authors propose using mini-batches in each iteration. Instead of using all the points in every iteration, sample only $b$ points in each iteration and update the centers slightly in the centers determined by the Lloyd's update rule. The learning rate parameters set as $\\sqrt{b^j/b}$, where $b^j$ is the number of points sampled from the cluster $j$. This was proposed in an earlier work by Schwartzman et al. Using a dynamic programming algorithm, the authors show that this update rule can then be implemented in $O(n \\cdot b)$ time. To improve the run time further, the authors propose truncation, whereby a truncated representation of centers is stored instead of storing them all as linear combinations of (possibly all the $n$ points). They show that the quality hit with truncation is not large."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The main contributions of the work:\n1. A simple dp algorithm to decrease the cost of mini-batch lloyd's iterations.\n2. Truncation to further decrease the cost of each iteration.\n3. Experiments implementing their algorithm."
+            },
+            "weaknesses": {
+                "value": "Utility and correctness issues I describe in the section below,"
+            },
+            "questions": {
+                "value": "1. I do not think the proof of Lemma 15 is correct. The way $\\bar{\\mathcal{C}}\\_{{i+1}}$ is defined in line 379 uses, $\\alpha_j^i = \\sqrt{b^i_j / b}$ values which themselves are functions of the samples $B_i$. So how can you claim that $\\bar{\\mathcal{C}}_{i+1}$ is independent of $B_i$? Please clarify if I misunderstood anything. I'm willing to update my evaluation after this clarification.\n2. While the experimental results do show that the algorithm generates reasonable clusters, I am unconvinced that the iteration bound for minibatch algorithms is super illuminating. Consider an algorithm which outputs the cluster centers unchanged. That algorithm will always terminate in a single iteration by this stopping criteria. So, why should someone (theoretically) care about iteration bound with respect to this stopping criteria (i.e., the value decrease is small) though I understand that the sklearn library uses this stopping criteria and since we are sure that the Lloyd's algorithm only makes progress in terms of the loss, it is a useful criteria to stop the algorithm when the progress is small.\n3. In Lemma 13, where is probability coming from? \n4. Definition of $\\alpha^j_i$ must be highlighted. \n\nI will update my evaluation based on the answers for these questions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a mini-batch kernel k-means algorithm designed to accelerate the clustering process by operating on small, randomly selected data subsets rather than the entire dataset in each iteration. A detailed theoretical analysis of the per-iteration computational complexity is provided, along with an examination of the algorithm's convergence behavior under early stopping criteria, batch size considerations, and kernel selection. The findings demonstrate that the proposed method achieves accuracy comparable to that of full-batch kernel k-means, particularly when initialized with k-means++. Empirical results across multiple datasets validate the significant performance gains in terms of execution speed."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1\\. The paper is well-structured and easy to follow.\n\n2\\. The work represents a natural extension of mini-batch k-means to its kernelized version, incorporating tailored analysis for infinite-dimensional feature spaces."
+            },
+            "weaknesses": {
+                "value": "- 1\\. Inconsistencies in the Empirical Results:\n    \n    \u00a0 - For the \\`mnist_784\\` dataset, the Adjusted Rand Index (ARI) and Normalized Mutual Information (NMI) scores of the mini-batch kernel method surpass those of the full-batch kernel method, which seems counterintuitive. Is there any explanation for this anomaly?\n    \n    \u00a0 - In the case of the \\`letter\\` dataset, the truncated \\(\\beta\\)-mini-batch kernel method did not achieve significant acceleration in runtime as shown in Figure 1. Moreover, it appears slower in Figure 9 when \\(\\tau = 300\\). Could you provide an explanation for this inconsistency?\n\n - 2\\. The theoretical analysis on batch size for termination guarantees is well-constructed. However, given the wide range of batch sizes available for practical use, do you have any recommendations for selecting an appropriate batch size in real-world implementations?"
+            },
+            "questions": {
+                "value": "See the weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,167 @@
+{
+    "id": "suz4utPr9Y",
+    "title": "How efficient is LLM-generated code? A rigorous & high-standard benchmark",
+    "abstract": "The emergence of large language models (LLMs) has significantly pushed the frontiers of program synthesis. Advancement of LLM-based program synthesis calls for a thorough evaluation of LLM-generated code. Most evaluation frameworks focus on the (functional) correctness of generated code; efficiency, as an important measure of code quality, has been overlooked in existing evaluations. In this work, we develop ENAMEL (EfficeNcy AutoMatic EvaLuator), a rigorous and high-standard benchmark for evaluating the capability of LLMs in generating efficient code. Firstly, we propose a new efficiency metric called eff@k, which generalizes the pass@k metric from correctness to efficiency and appropriately handles right-censored execution time. Furthermore, we derive an unbiased and variance-reduced estimator of eff@k via Rao\u2013Blackwellization; we also provide a numerically stable implementation for the new estimator. Secondly, to set a high-standard for efficiency evaluation, we employ a human expert to design best algorithms and implementations as our reference solutions of efficiency, many of which are much more efficient than existing canonical solutions in HumanEval and HumanEval+. Moreover, to ensure a rigorous evaluation, we employ a human expert to curate strong test case generators to filter out wrong code and differentiate suboptimal algorithms. An extensive study across 30 popular LLMs using our benchmark ENAMEL shows that LLMs still fall short of generating expert-level efficient code. Using two subsets of our problem set, we demonstrate that such deficiency is because current LLMs struggle in designing advanced algorithms and are barely aware of implementation optimization.",
+    "keywords": [
+        "Large Language Model",
+        "Code Generation",
+        "Efficiency Evaluation"
+    ],
+    "primary_area": "datasets and benchmarks",
+    "TLDR": "We develop ENAMEL, a rigorous and high-standard benchmark to evaluate the capability of LLMs in generating efficient code.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=suz4utPr9Y",
+    "pdf_link": "https://openreview.net/pdf?id=suz4utPr9Y",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper presents a systematic benchmark for efficiency of LLM generated code. The paper presents the eff@k metric, which captures efficiency of generated code (the expected maximum efficiency score of $k$ independent code sample). The presented metric is the first that can capture the relationship between code efficiency and the sample size k. Expert solutions and expert test cases make this benchmark a compelling baseline."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Very nice and clear presentation \n- A clear and rigorous technical treatment of evaluation timeout (right censoring)\n- Human expert solutions as an efficiency target \n- Human expert test cases covering tricky corner cases"
+            },
+            "weaknesses": {
+                "value": "- I would appreciate a comparison with previous metrics, even the naive ones, to see whether the empirical effect of this new metric is that models/problems are given a different ranking. \n- Not evaluated with a prompt that asks for an efficient solution, I suspect that a better prompt would make this entire suite too weak for being a competitive benchmark"
+            },
+            "questions": {
+                "value": "- I understand the theoretical importance of Rao-Blackwellization in this case, but what is the empirical effect? \n\n- Effibench presented an efficiency-benchmark with 1,000 coding problems, where ach problem is paired with an executable human-written canonical solution, which obtains the SOTA efficiency on the LeetCode solution leaderboard. I would not classify it as a sporadic attempt, what makes you view it as such?\n\n- Does it make sense to also consider space complexity in your benchmarks? For example: \n\nYour optimized solution for #40: \n```\ndef has_triplet_sum_zero(l):\n\tn = len(l)\n\tif n < 3:\n\t\treturn False\n\tfor i, x in enumerate(l[: n - 2]):\n\t\tbuf = set()\n\t\tfor y in l[i + 1 :]:\n\t\t\tif y in buf:\n\t\t\t\treturn True\n\t\tbuf.add(-x - y)\n\treturn False\n```\n\nSuggested solution: \n```\ndef has_triplet_sum_zero(l):\n    l.sort()  # Sort the list first\n    n = len(l)\n    \n    for i in range(n - 2):\n        # Use two pointers to find if there's a pair with sum -l[i]\n        left, right = i + 1, n - 1\n        target = -l[i]\n        \n        while left < right:\n            current = l[left] + l[right]\n            if current == target:\n                return True\n            elif current < target:\n                left += 1\n            else:\n                right -= 1\n    \n    return False\n```\n\nUses two pointers, has the same time complexity, and reduces space complexity from $O(n)$ to $O(1)$."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a new benchmark for evaluating the efficiency of code generated by LLMs. The authors select 142 problems out of the 164 problems in HumanEval and HumanEval+ (they excluded trivial problems with \u0398(1) time complexity). They propose a metric that they call eff@k which is the equivalent for pass@k but adapted to the problem of evaluating the performance of code. They then evaluate 30 LLMs (closed and open-source LLMs) on their benchmark using the eff@k metric. They show that state-of-the-art LLMs achieve an eff@1 score of 0.47 and an eff@100 score of 0.575. They also propose a hand-optimized version of each of the 142 problems in their benchmark to set a new standard for LLMs."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "-\tEvaluating whether LLMs can generate efficient code is an important problem, especially with the increasing amount of research on the topic of code synthesis using LLMs and the wide use of LLMs for coding.\n-\tThe authors provide a comprehensive evaluation of 30 LLMs using the proposed benchmark and more importantly, provide a hand-optimized version of each one of the codes in their benchmark which opens the door for more research on the topic."
+            },
+            "weaknesses": {
+                "value": "While the proposed work is important, and while the results are interesting, I don\u2019t believe the contribution and novelty of the work are strong enough. There is clearly a degree of novelty in this paper though, and the proposed benchmark is very valuable from a practical point of view.\n\nThe problem of measuring the performance of code is well-studied in the compiler community. There are decades of work on the development of methods for automatic code optimization in compilers and methods to measure the success of such methods. Any paper about automatic code optimization. Here is one example of such work:\n\n       \u201cTowards a Statistical Methodology to Evaluate Program Speedups and their Optimisation Techniques\u201d, Sid Touati.\n\nIt would be interesting to include examples of such work in the related work section and also include a detailed discussion in the paper about why a simple metric such as \u201cthe speedup\u201d (ratio between the execution time of the reference code over the execution time of the synthesized code) is not enough for this problem and a new metric needs to be proposed."
+            },
+            "questions": {
+                "value": "-\tCan you please include a detailed discussion of why the the speedup metric classically used by the compiler community when evaluating automatic code optimization methods is not enough for your task?\n-\tFor more completeness, can you also include a discussion of such work in the related work section? A starting point would be:  \u201cTowards a Statistical Methodology to Evaluate Program Speedups and their Optimisation Techniques\u201d, Sid Touati."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents ENAMEL, a benchmark for evaluating the efficiency of LLM-generated code, a quality largely overlooked in current assessments. ENAMEL introduces a new efficiency metric, eff@k, and includes expert-designed reference solutions and rigorous test cases to set high standards. Evaluating 30 popular LLMs, the authors find that while many models generate correct code, they fall short in efficiency, particularly with advanced algorithms and optimizations, underscoring the need for further improvements in LLM code synthesis."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Clear and fluent presentation. The metric is carefully designed.\n2. The evaluation is convincing and indicative."
+            },
+            "weaknesses": {
+                "value": "1. The method is very manual. It is hard to scale.\n2. The dataset is small. Humaneval was a good metric several years ago at the early stage of code generation. But now, serious evaluation needs a larger scale dataset.\n\nDespite the above, the dataset is still reasonably valuable due to its high quality."
+            },
+            "questions": {
+                "value": "1. Why didn't you consider problems from online judges like codeforces? There are plenty of problems with expert-level efficient solutions as a competition-oriented platform.\n2. Did you consider a more automatic way of measuring the complexity? It might not be hard to find out that multiple layers of input scale, simply considering log scales, polynomial scales, and exponential scales."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a benchmark suite, named `ENAMEL`, to evaluate the efficiency of code generated by LLMs. The authors propose a novel metric eff@k that measures the efficiency of the generated code accounting for different input sizes. A human expert provides the reference implementation for each task in the benchmark suite. The evaluation with regard to the eff@k metric demonstrates the large gap between the LLM-generated code and the reference implementation."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. Human expert-provided reference implementations for the benchmark are of high quality.\n2. Evaluation provides insights into the efficiency of LLM-generated code.\n3. Clear presentation that is easy to follow."
+            },
+            "weaknesses": {
+                "value": "1. The novelty of the proposed eff@k metric is not convincing.\n\nThe authors mention the insufficiencies of existing efficiency benchmarks in C1 and C2.\n\na) For C1, the authors mention that if the code execution exceeds the time limit, the actual efficiency is unknown. However, the authors do not demonstrate how frequently this happens in practice. If this is a rare case, then existing benchmarks are still useful. The authors should provide experimental evidence to demonstrate that existing works do give wrong efficiency measurements due to the presence of such cases.\n\nb) For C2, the authors argue that existing works fail to capture the relationship between code efficiency and the sample size k. By looking at Eq. (5), the proposed solution of ENAMEL is to take the maximum of the efficiency value, while the existing works take the average. The authors do not justify why taking the maximum is a better choice than taking the average. Such a difference in the metric definition seems to be a minor difference.\n\n2. Lack of evaluation on different test case generation strategies.\n\nThe code efficiency can be affected by the testing inputs. Ideally, the efficiency should be measured against the worst-case inputs, which can be hard to define in practice. A practical approximation is to take the maximum execution time over a set of testing inputs. As such, the testing input generation is crucial for the efficiency evaluation. It is not clear how strong the test case generation strategy adopted in this paper is. The authors should evaluate the robustness of the proposed eff@k metric against different test case generation strategies.\n\n3. Lack of guidance on setting the hyperparameters for the eff@k metric.\n\nThe eff@k metric has a set of hyperparameters, such as $\\alpha$ and $h$. The value of these hyperparameters directly affects the efficiency measurement. Without guidance on how to set these hyperparameters, the practical usage of the eff@k metric is limited. It would be better if automatic hyperparameter selection methods were provided; or at least, empirical studies on how the eff@k metric is affected by different hyperparameters.\n\n4. The benchmark suite is limited only to the HumanEval dataset.\n\nThis concerns about the generalizability of ENAMEL. The HumanEval dataset contains many simple tasks that require $\\mathcal{O}(1)$ time complexity. A potential concern is that the dataset after filtering out those simple tasks may not be large enough to provide a comprehensive evaluation of the efficiency of LLM-generated code.\n\na) The authors should provide the size and proportion of the remaining tasks after filtering out the simple tasks.\n\nb) The authors can consider extending the benchmark suite to more competitive datasets, such as the CodeContests dataset."
+            },
+            "questions": {
+                "value": "1. Why is the maximum efficiency value chosen in the eff@k metric, rather than the average efficiency value?\n2. Do the eff@k metric and the existing efficiency metrics give different efficiency rankings for the same LLM-generated code?\n3. How sensitive is the eff@k metric to the hyperparameters?\n4. What is the size of the ENAMEL benchmark suite?\n5. How does the ENAMEL benchmark perform on more competitive datasets, such as the CodeContests dataset?\n6. How does the eff@k metric perform on different test case generation strategies?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

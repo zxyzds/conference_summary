@@ -1,0 +1,171 @@
+{
+    "id": "4vzGQcVUG8",
+    "title": "Provable weak-to-strong generalization via benign overfitting",
+    "abstract": "The classic teacher-student model in machine learning posits that a strong teacher supervises a weak student to improve the student's capabilities.\n    We instead consider the inverted situation, where a weak teacher supervises a strong student with imperfect pseudolabels. \n    This paradigm was recently brought forth by \\citet{burns2023weak} and termed \\emph{weak-to-strong generalization}. \n    We theoretically investigate weak-to-strong generalization for binary and multilabel classification in a stylized overparameterized spiked covariance model with Gaussian covariates where the weak teacher's pseudolabels are asymptotically like random guessing.\n    Under these assumptions, we provably identify two asymptotic phases of the strong student's generalization after weak supervision: (1) successful generalization and (2) random guessing. \n    Our techniques should eventually extend to weak-to-strong multiclass classification. \n    Towards doing so, we prove a tight lower tail inequality for the maximum of correlated Gaussians, which may be of independent interest.\n    Understanding the multilabel setting reinforces the value of using logits for weak supervision when they are available.",
+    "keywords": [
+        "benign overfitting",
+        "spiked covariance models",
+        "overparameterized models",
+        "interpolation",
+        "pseudolabeling",
+        "weak-to-strong generalization",
+        "alignment"
+    ],
+    "primary_area": "learning theory",
+    "TLDR": "We use recent advances in benign overfitting for classification to prove weak-to-strong generalization in a toy setting.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=4vzGQcVUG8",
+    "pdf_link": "https://openreview.net/pdf?id=4vzGQcVUG8",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper investigates weak-to-strong generalization in the setting of an overparameterized spiked covariance model with Gaussian covariates. The paper identifies an asymptotic phase transition between successful and unsuccessful generalization."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "The math appears correct to me; the problem is significant, and desiderata 1 and desiderata 2 make sense."
+            },
+            "weaknesses": {
+                "value": "The paper is rather technical, and the clarity could be improved significantly to make it more readable. (see questions)"
+            },
+            "questions": {
+                "value": "1. The main setup is quite confusing to me. The paper first states that \"$f_{weak} \\in \\mathbb{R}^d$\" is the object we learn. Normally, the model is a function, not a vector, so this was not immediately clear. It is defined later in line 347 how we learn $ f $, which is quite far from where it was introduced (line 184). It would be better to define that we train $f$ by MNI earlier.\n\n2. In line 201, it says, \"As a consequence of our main results in Section 3, we will show that the above desiderata are achievable in a simple toy model; see Theorem 3.3 for a formal statement.\" However, Theorem 3.3 only considers desiderata 1.2 and 2.1, not the entirety of the desiderata.\n\n3. What is \"$t$\" in Equation (3) of Theorem 3.1?\n\n4. The notation $ u, p, q, r $ used is not very intuitive, and it makes the result difficult to interpret. Is there a simpler way to rephrase the result?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The papers identifies a specific setting under which weak to strong generalization occurs. Consider a strong model that learns a classifier on strong features of the data by supervised learning on $m$ weak labels given by a weak model that was trained on weak features on $n$ clean labels. Then weak to strong generalization implies that \n\nCondition 1):  The strong model has perfect classification accuracy whereas the weak model has close to random accuracy. \n\nCondition 2): The generalization is due to weak labels, i.e. if the strong model was only trained on $n$ clean labels, there is no generalization.\n \nThe setting is as follows: A learner observes features distributed according to a Gaussian distribution, $x \\sim N(0, \\Lambda)$ where $\\Lambda$ is diagonal covariance matrix following a bilevel ensemble parameterization \n\\begin{equation}\\lambda_j = \\lambda_F =  \\frac{ad}{s} \\text{ for } 1 \\leq j \\leq s \\text{ otherwise } \\lambda_j = \\lambda_U = \\frac{(1-a)d}{d-s}\\end{equation}\nwhere $d = n^p, s= n^r, a = n^{-q}$ and $p > 1; q, r >0; q+ r < p$. For multiclass setting, classes are further scaled as $k = c_k n^t$ for some $t<r$.  The strong model observes features given by some $p, q, r$ and weak model observes features  characterized through $p_{weak}, q_{weak}, r_{weak}$. In particular the strong features $x_{strong}$ and weak features $x_{weak}$ are given as \n$$ x_{strong} = N(0, \\lambda_F I_{[s]} + \\Lambda_U I_{[d]/[s]}) $$\n$$ x_{weak} = N(0, \\lambda_{F, weak} \\Pi_S + \\Lambda_{U, weak} \\Pi_T)$$\nfor some subsets $S \\subseteq [s], T \\subseteq [d]/[s]$ and $\\Pi_S$ denotes projection onto axis aligned subspace indexed by $S$. $\\lambda_{F, weak}  = \\frac{a_{weak}d_{weak}}{s_{weak}}$ and $\\Lambda_{U, weak} =  \\frac{(1-a_{weak})d_{weak}}{d_{weak}-s_{weak}}$.\n\n The true labels are given by $y = \\text{sign}(x_1)$ for binary classification and $y = \\arg\\max_k (x_1, \\dots x_K)$ for $K$ way classification. \n\n\n \nIn this parameterized setting, the authors show that there is a particular regime of number of weak labels $m$ provided by the weak model (for certain regimes of $p, q, r, p_{weak}, q_{weak}, r_{weak}$) where weak to strong generalization occurs (condition 1) holds). The conditions (for binary classification) are given by (assuming $m = n^u$)\n\n1. $u + \\min(1 -r,  p + 1 - 2(q + r)) > q_{weak}+r_{weak} > (p_{weak} + 1)/ 2$\n2. $p + 1   >  (q + r + q_{weak} + r_{weak})$\n3. $u < (p + 1 + q + r  - (q_{weak} + r_{weak})/ 2)$ \n\nFurther the classification error of strong learner trained on $n$ cleaned labels is shown to be depend as \n$$1/2 - 1/\\pi \\arctan (\\Theta(n^{p+1 - 2(q+r)}))$$\n\nThus they claim one can identify regimes under which condition 2) also holds (possibly when $p+1 - 2(q+r) << 1$) although no details are provided).\n\nFurther they provide an informal claim and details in appendix that there exists some regime for multi class setting."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Exact characterization of the regime where weak to strong generalization occurs in terms of parameters of the covariance matrix of strong and weak features."
+            },
+            "weaknesses": {
+                "value": "Most of the important details are pushed into appendix. The main body only contains one useful theorem which identifies a certain condition where condition 1) of weak to strong generalization holds. Setting for condition 2) and multi class settings are merely mentioned as claims. The main body also does not provide proof sketch or provide insights into the proof of the theorem."
+            },
+            "questions": {
+                "value": "Suggestions:\n\n1. Reduce the introduction - it currently spans 2 pages. \n2. Figure 1 is useless.\n3. The section on data model was not particularly needed. Page 5 and 6 can be compressed into 1 or 2 paragraphs.\n4. Include some experiments in main body.\n\nIn general the paper is quite verbose, it can be compressed substantially and content moved back into main body."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this work, the authors provide theretical justification for the empirically observed phenomenon of weak to strong generalization. In this setting, a weak learner is used to created labelled examples (from unlabelled training data) that is used to further train a stronger model. The intuition is that the weak learner has learnt some useful information about the ground truth and hence the pseudolabels it generates will actually enable generalization. The authors prove that this weak to strong generalization has two phases: (1) when the number of pseudolabelled examples is less than some threshold, the strong learner behaves like a random guesser, (2) beyond the threshold the strong learner achieves perfect generalization. A technically interesting tool that they use is a new lower tail for the max of correlated gaussians which could be of independent interest."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1) This work addresses the important problem of obtaining theoretical justification for a frequently encountered empirical phenomenon\n2) The lower tail for max of correlated gaussians is an interesting result."
+            },
+            "weaknesses": {
+                "value": "See questions."
+            },
+            "questions": {
+                "value": "21) What the the word \"represent\" mean in Desiredata 1.(ii).\n2) What is the significance of the bi-level-ensemble? \n3) What is $t$ in Theorem 3.1?\n4) Is there a reason for choosing a halfspace for the ground truth? Does this analysis extend to other concepts. Is there a similar notion for regression (rather than classification)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies a toy-model for weak-to-strong generalization. They show that under the assumptions of their toy-model, two asymptotic phases occur for the student: (1) it is able to successfully generalize or (2) the student resorts to effectively random guessing. The authors also try to extend their results to weak-to-strong multiclass classification and derive new lower tail inequalities for the max of correlated gaussians."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper studies a phenomenon that has been empirically observed and thus relevant to practice\n- The results and proof techniques seem non-trivial and interesting"
+            },
+            "weaknesses": {
+                "value": "I find the organization and presentation a bit confusing and hard to parse. In particular, Theorem 3.3 is hard to interpret without referencing the Desiradatum outlined in Section 2. Ideally, Theorem 3.3 should be standalone and at the very least, the variables in Theorem 3.3 like $\\tau_{weak}, p_{weak}, ...$ should be defined. In addition, and in my opinion, the notation and current presentation of the result doesn't really make it seem like this is a \"simple, toy model\", given how many free variables there are to keep track of.  One possible fix is to give more intuition and less notation about the toy-model in the main text, and push the details into the Appendix. For example, I think it would be really helpful to have an informal, non-rigorous theorem summarizing the main result in the Main Contributions section.\n\nIn addition, I am not sure what to take away from this paper. It is nice that you found a toy example, where you can provide rigorous evidence of the empirical phenomena of weak-to-strong generalization. However, I am not convinced this toy model is realistic/relevant to practice, even after reading the Modeling assumptions in the Discussion. In short, it would be nice if the authors can answer:\n-  **why** one should care about finding a \"simple, concrete theoretical setting where we can provably exhibit different phases of weak-to-strong generalization?\" \n- what can I take away from this result?"
+            },
+            "questions": {
+                "value": "See weaknesses above. It would be nice if the authors can address these."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

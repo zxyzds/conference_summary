@@ -1,0 +1,203 @@
+{
+    "id": "QqziJAdev9",
+    "title": "$\\alpha$-DPO: Adaptive Reward Margin is What Direct Preference Optimization Needs",
+    "abstract": "Aligning large language models (LLMs) with human values and intentions is crucial for their utility, honesty, and safety. Reinforcement learning from human feedback (RLHF) is a popular approach to achieve this alignment, but it faces challenges in computational efficiency and training stability. Recent methods like Direct Preference Optimization (DPO) and Simple Preference Optimization (SimPO) have proposed offline alternatives to RLHF, simplifying the process by reparameterizing the reward function. However, DPO depends on a potentially suboptimal reference model,\nand SimPO's assumption of a fixed target reward margin may lead to suboptimal decisions in diverse data settings.\nIn this work, we propose \\(\\alpha\\)-DPO, an adaptive preference optimization algorithm designed to address these limitations by introducing a dynamic reward margin. Specifically, \\(\\alpha\\)-DPO employs an adaptive preference distribution, balancing the policy model and the reference model to achieve personalized reward margins. We provide theoretical guarantees for \\(\\alpha\\)-DPO, demonstrating its effectiveness as a surrogate optimization objective and its ability to balance alignment and diversity through KL divergence control. Empirical evaluations on AlpacaEval 2 and Arena-Hard show that \\(\\alpha\\)-DPO consistently outperforms DPO and SimPO across various model settings, establishing it as a robust approach for fine-tuning LLMs. Our method achieves significant improvements in win rates, highlighting its potential as a powerful tool for LLM alignment.",
+    "keywords": [
+        "Direct Preference Optimization",
+        "LLM's alignment"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=QqziJAdev9",
+    "pdf_link": "https://openreview.net/pdf?id=QqziJAdev9",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes a new loss for fine-tuning language models based on preference data in a reward-free fashion along the lines of DPO and SimPO. In particular, the paper aims to address the limitations of the DPO and SimPO loss by introducing an instant dependent offset in the SimPO loss. The loss and relations to SimPO and token-level DPO loss have been studied. Experiments have been conducted using standard benchmarks and ablations with various hyperparameters."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Strength:\n1.\tConsidering an instant-specific margin compared to SimPO is interesting.\n2.\tExperimental Setup, analysis along ablations is exhaustive\n3.\tReward differences between chosen and rejected responses and Log probabilities of the chosen response w.r.t. the fine-tuned model is shown. Further, KL divergence from the base model has been studied. \n4.\tLimitations of DPO and SimPO are -discussed."
+            },
+            "weaknesses": {
+                "value": "1.\tTo the best of my understanding, Theorem 3.1 seems not correct? In particular, $\\gamma$ has been defined to be log-difference of the chosen vs rejected response w.r.t. uniform policy. However, as uniform policy assigns equal probabilities to all responses, this directly implies $\\gamma=0$. As the entire Theorem 3.1 depends on this to connect SimPO to a uniform reference distribution, this theorem seems meaningless. Can the authors please elaborate and explain this point? Maybe I misunderstood something?\n2.\tIn their derivation of $\\alpha-$DPO objective, they again use $\\gamma$ to be log-difference of the chosen vs rejected response w.r.t. uniform policy and then claim that when $\\alpha$ is 0, they get back the SimPO loss. That is again confusing, as detailed above. Can you kindly elaborate? \n3.\tTheir Margin term $M$ is the same as the inner term in DPO loss. So essentially, their proposed loss in Eqn.12 combines SimPO and DPO loss with an extra stop gradient on the DPO loss. Is this correct?\n4.\tIn Section 4.1, they aim to connect $\\alpha-$DPO with SimPO loss. However, they introduce an importance sampling correction term for the online SimPO loss. It is unclear how that is relevant to Lemma 4.2 or any other aspect of the paper. Can you please help me better understand this part?\n5. I am not sure how Lemma 4.3 contributes. The margin term M is same as inner term of DPO. Hence, it is evident that is close to $\\delta$ from token-level DPO loss. Further, their claim that they improve upon token-level DPO is not correct. Token-level DPO was proposed to improve upon DPO but with more computational cost. One can\u2019t revert back to sequence-level loss as in DPO from token-level loss and claim improvement/novelty. All the previous works use this sequence-level loss.\n6. It feels that several parts of the paper, including discussions, seem to be written using AI tools, e.g., a discussion of Theorem 3.1 and Lemma 4.1. I could be very well wrong, just trying to understand"
+            },
+            "questions": {
+                "value": "Please see above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper finds that SimPO shares the same offset across all samples, which leads to suboptimal performance. To address this limitation, the authors construct a novel reference model based on SimPO and DPO, resulting in a novel method \n$\n\\alpha\\text{-DPO}.\n$\nThe authors provide theoretical analysis on the lower bound and its connections to TDPO. Extensive experiments reveal the effectiveness of the proposed methods over various baselines and across different LLM structures."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Extensive experiments reveal that the $\\alpha$-DPO outperforms various baselines across different LLM structures.\n\n2. The authors try to connect the proposed methods with other existing alignment methods, which is interesting."
+            },
+            "weaknesses": {
+                "value": "1. My major concerns is that the motivation of the proposed reference policy Eq.(8)  is not so clear. I understand that the authors want to construct a new reference policy that takes the advantages of DPO and SimPO. However, I think the authors should discuss more details why it is this form and how is its advantage. I understand that the authors provide some theoretical analysis to convince the readers. But I also think the motivation is also important.\n\n\n\n2. The proofs should be discussed in more details. For example, in Lemma 4.2, in line 862, the authors use the Taylor expansion w.r.t \n$\n\\log (A-\\sigma B)\n$\non \n$\n\\alpha = 0.\n$\nThis makes the lower bound only establishes around zero, which limits the theoretical contribution. Moreover, if \n$\n\\alpha = 0,\n$\nthen according to (8), we have \n$\n\\hat{\\pi}_{ref}(y \\mid x)=U(y \\mid x).\n$\nBut as discussed lines 152-153, this is the reference function in SimPO? Then, does \n$\n\\alpha\n$-DPO degenerates to SimPO? If so, I think the Lemma 4.2 does not provide sufficient lower bound details over \n$\n\\alpha\n$-DPO.\n\nMoreover, in lines 913 and 914, the authors state that \"under the assumption that the reference policy \n$\n\\pi_{ref}\n$\nhas large errors\", but it seems that I do not find it in the lemma, the authors mention it directly on the lemma and discuss why this assumption is mild."
+            },
+            "questions": {
+                "value": "Please answer my questions mentioned above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies how to align LLMs with human preferences. The authors propose a new algorithm $\\alpha$-DPO which adaptively set the reward margin based on the ratio between the preference model and the policy model. They prove that the objective of $\\alpha$-DPO is a lower bound on the online SimPO loss. They also conduct experiments on AlpacaEval 2 and Arena-Hard to validate the empirical performance of $\\alpha$-DPO."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "a. The authors propose a new objective for LLM alignment and conduct extensive experiments on several benchmarks. The proposed algorithm outperforms baselines on these benchmarks.\n\nb. The presentation is clear and easy to follow."
+            },
+            "weaknesses": {
+                "value": "a. The proposed method is not technically sound. The derivation begins with an implicit reference model, but this model is neither well-motivated nor justified. First, Equation 8 does not have a normalization factor, and tuning the hyperparameter $\\alpha$ very likely results in an invalid distribution. Additionally, it\u2019s unclear why this implicit reference model is necessary instead of using a standard SFT model. The authors consider a special case with $\\alpha=1$, incorporating the ratio between the policy model and the reference model, but there is no clear rationale for why such a ratio is required.\n\nb. The theoretical analysis is problematic. First, relating the objective to the online SimPO loss is not meaningful, as the online SimPO loss itself lacks theoretical guarantees. Second, Lemma 4.2 claims that the objective of $\\alpha$-DPO provides a lower bound on the online SimPO loss. However, minimizing a lower bound is questionable since the gap between the true value and the lower bound is unknown. Minimizing an upper bound would be more meaningful. The statement, \u201cthe lower-bounding property provides theoretical guarantees that \u2026 not perform worse than online SimPO loss, ensuring convergence to a well-generalized policy,\u201d is confusing. How can minimizing a lower bound provide such a strong theoretical guarantee?\n\nc. The experimental improvement is marginal, typically less than 1.5%. Given that benchmark evaluations such as AlpacaEval 2 and Arena-Hard rely on GPT-4\u2019s judgment, which can vary by 1-2%, these improvements may not be convincing, especially when the method involves at least one more hyperparameter than the baselines. Furthermore, the authors evaluate performance on only two benchmarks, which is limited, particularly in LLM alignment experiments. More evaluations on academic benchmarks like MT-Bench, MMLU, GSM8K, and TruthfulQA are required. Additionally, most experiments involve models already trained using RLHF methods. Testing on models without RLHF, such as Llama-3-8B, would be necessary to confirm that the proposed algorithm does not rely on pre-existing alignment."
+            },
+            "questions": {
+                "value": "See Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "DPO and SimPO are two popular offline methods for LLM alignment. The authors demonstrate through theoretical analysis that SimPO is a special case of DPO where the reference model is assumed to be a uniform policy. As a result, DPO does not use an optimal reference policy while SimPO does not take into account data specific variances in defining a target margin. The authors address these limitations by proposing a novel loss function ($\\alpha-DPO$) that relies on data specific differences to compute a dynamic reward margin. They theoretically demonstrate  ($\\alpha-DPO$) is the lower bound of SimPO. They demonstrate through empirical results that the performance of ($\\alpha-DPO$) is better than the baselines on multiple alignment benchmarks"
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is easy to understand. The theoretical analysis showing the limitation of DPO and SimPo along with the proposed improvements seems logical\n2. The empirical results show that this method outperforms DPO and SimPO with minimal additional complexity\n3. The ablation studies are very useful in understanding the contributions of different changes to the loss functions"
+            },
+            "weaknesses": {
+                "value": "1. As discussed in the limitations, this requires tuning an additional parameter $\\alpha$. It is not clear if a single $\\alpha$ value is used for each pair of benchmark and model. If LC and raw WR values comes from different $\\alpha$ values then the results are slightly misleading since it's not just one model being used for comparison against the benchmarks."
+            },
+            "questions": {
+                "value": "N/A"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper extended the SimDPO to an adaptive setting where the reference model is a mixture of the uniform distribution and the original reference model $\\pi_{\\text{ref}}$. The authors provide some theoretical justification and experiments demonstrate the performance of the proposed algorithm."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This paper is well-written and easy to follow, the author provide a good motivation to extend the SimPO to a mixture setting\n- The authors tried to provide some justification building the connection between the SimPO and the proposed method\n- Extensive experiments are conducted on verification"
+            },
+            "weaknesses": {
+                "value": "- It seems to me that this method is just a one-step extension to the SimPO to make the reference model a tunable mixture of the uniform distribution and original reference model. The authors might want to demonstrate the technical challenges more in order to make this extension trivially 'tuning the parameter in a super set'\n- The theoretical justification in Definition 4.1 and later is not well supported. For example, in definition 4.1, the authors write the expectation as $(x, y_w, y_l) \\sim \\pi_{\\text{old}}$. I assume that the authors are trying to say $x$ is from the prompt dataset and $y_w, y_l$ are *independently* sampled from the $\\pi_{\\text{old}}(\\cdot | x)$, according to this definition. Even regardless of the flaw of this notation, there are still some issue in this definition: the role that $y_w$ and $y_l$ plays are not equal, so in online DPO, another oracle needs to be called to compare between $y_l$ and $y_w$ and generate the preference label. Also, an online DPO justification might not be convincing enough to justify the offline DPO methods. \n- Following up withe the previous theoretical justification, the transit between eq(15) and eq(16) is not convincing. It seems that from Definition 4.1, eq (15) is well supported, but eq (16) is connected with the proposed algorithm, thus the authors directly draw the connection by flipping the $\\pi_{\\text{ref}}$ and $\\pi_{\\text{old}}$. I would suggest the authors to improve the justification for section 4, and reconsider the contribution of this part from over claimed."
+            },
+            "questions": {
+                "value": "- It seems that when $\\alpha = 0$, the algorithm becomes the SimDPO. I wonder when the algorithm becomes DPO?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

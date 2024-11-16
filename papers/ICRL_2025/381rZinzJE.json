@@ -1,0 +1,186 @@
+{
+    "id": "381rZinzJE",
+    "title": "Physics-Informed Autoencoder for Enhancing Data Quality to Improve the Forecasting Reliability of Carbon Dioxide Emissions from Agricultural Fields",
+    "abstract": "Missing values in measurements for carbon dioxide emissions on drained peatlands remains an open challenge for training forecasting techniques to achieve net zero. At the field scale, existing methods struggle to model $\\ce{CO_2}$ emissions to fill gaps, especially in nighttime measurements. We propose robust Physics-Informed Autoencoders (PIAEs), which combine the generative capabilities of Autoencoders with the reliability of physical models of Net Ecosystem Exchange (NEE) that quantify $\\ce{CO_2}$ exchanges between the atmosphere and major carbon pools. Our method integrates equations describing the physical processes and associated uncertainties to fill gaps in NEE measurements from eddy covariance (EC) flux towers. In the PIAE, various sensor measurements are encoded into the latent space, and a set of decoders is then used to approximate the ecosystem parameters and the optimal NEE forecast, directed by dynamics described by a stochastic differential equation. These decoders utilize nighttime and daytime NEE models that describe carbon transfer as a Wiener process. Finally, we use a two-phased training routine with two loss functions describing each phase: Mean Squared Error (MSE) and Maximum Mean Discrepancy (MMD) between the measurements and the reconstructed samples. PIAE outperforms the current state-of-the-art Random Forest Robust on the prediction of nighttime NEE measurements on various distribution-based and data-fitting metrics. We present significant improvement in capturing temporal trends in the NEE at daily, weekly, monthly and quarterly scales.",
+    "keywords": [
+        "physics-informed machine learning",
+        "autoencoders",
+        "gap-fillling",
+        "net ecosystem exchange",
+        "noise",
+        "stochastic differential equation"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "We introduce a Physics-Informed Autoencoder in order to fill the gaps and improve the training of the Net Ecosystem Exchange measurements at farm scale.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=381rZinzJE",
+    "pdf_link": "https://openreview.net/pdf?id=381rZinzJE",
+    "comments": [
+        {
+            "title": {
+                "value": "Initial Response"
+            },
+            "comment": {
+                "value": "Thank you for sharing your comprehensive review on the manuscript. We are working on addressing each comment and improving the manuscript accordingly. We will share the updates with you soon.\n\nMeanwhile, we have a question on one of the comments:\n\n_\u201cIn section 4.4, it is mentioned that the integration of the SDE in the training of the autoencoder follows previous work [Raissi 2017], but it is not sufficiently described to make the paper self-contained.\u201d_\n\nThe SDE is directly made part of the neural architecture, with the mathematical operators in the SDE are direct nodes in the computation graph. We can view this as a non-trainable physics layer in the neural network architecture. Should we reflect this better in Figure 1?"
+            }
+        },
+        {
+            "title": {
+                "value": "Initial Response"
+            },
+            "comment": {
+                "value": "Thank you for sharing your comprehensive review on the manuscript. We are working on addressing each comment and improving the manuscript accordingly. We will share the updates with you soon.\n\nMeanwhile, we have a question on one of the comments:\n_\u201cThe SDE formulation in Section 3.2 assumes specific forms for the drift and diffusion terms. The justification for these choices comes from prior work, but the implications of these modelling choices should be discussed. What happens when these assumptions are violated?\u201d_\n\nOur formalization of NEE in terms of an SDE is based on the two papers referred to in line 165 (White & Luo 2008; Weng (2011)), with a drift term and a noise term. According to both of them, the noise term can be defined as a Gaussian process.  The drift equations in Equation 5 are derived from the model defined in Equations 1,2 and 3. The parameters inside the drift term are predicted by the decoders in the main PIAE model, described in section 4 later. \nIs your question specifically around the parameters \u03c3night and \u03c3day in the noise term and the drift? Do you mean we need to do more precise study on each term? Are you referring to the state-of-the-art assumptions?"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes Physics-Informed Autoencoders (PIAEs) to address gaps in CO2 emission measurements from agricultural fields. The method combines autoencoder architectures with physical Net Ecosystem Exchange (NEE) models, integrating equations that describe CO2 exchanges between the atmosphere and carbon pools (i.e., utilizing\nthe SDE defined as a Wiener process). Their main contribution is extending standard autoencoders with a stochastic differential equation framework that models NEE changes over time, particularly addressing nighttime measurement gaps. Their method also provides forecasting capabilities and enhances performance on NEE gap-filling by accurately learning the NEE distribution and associated parameters. They evaluate their approach on 8 years of flux tower data from East Anglia, showing improvements over current state-of-the-art methods, especially for nighttime predictions, where they achieve a 22% higher R2 score than Random Forest approaches."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Introducing a stochastic differential equation for NEE measurements combining daytime\nand nighttime models with Gaussian noise.\n2. Demonstrating that PIAE improves gap-filling robustness compared to state-of-the-art\nmethods, handling gaps from months to years.\n3. Better Maximum Mean Discrepancy (MMD), Wasserstein distance, and Kullback-Leibler (KL) divergence validated significant improvements in NEE distribution learning.\n4. Achieving better fit to NEE measurements validated by lower MAE and higher R2 scores.\n5. Accurately predicting SDE parameters, enhancing interpretability.\n6. Consistent improvement in nighttime predictions across metrics\n7. Strong performance on distribution-based measures (MMD, Wasserstein, KL)\n8. Ability to capture unusual events (e.g., downward NEE spikes)\n9. Effective parameter estimation for both day and night models"
+            },
+            "weaknesses": {
+                "value": "1. While the supplementary material adequately explains the SDE derivation and diffusion coefficient determination, key points should be summarized in the main text. A brief note about how \u03c3night and \u03c3day are derived from empirical error distributions would help readers understand the transition from Eq. 5 to 6 without requiring supplementary material consultation\n2. AE is better than PIAE for all model parameter estimation across all metrics, contrary to their claim that their method enhances performance on NEE gap-filling by accurately learning the NEE distribution and associated parameters.\n3. The computational requirements compared to simpler approaches like RF are not discussed. \n4. The two-phase training procedure (MSE then MMD) has no convergence guarantees.\n5. The claimed 22% improvement in R2 score lacks context - no variance was reported (Error bars or confidence intervals for the reported metrics would help). The hyperparameter selection process for PIAE and baseline models (including random forest) is not described. A fair comparison requires careful tuning of all methods.\n6. Missing critical details:\n    1. How were hyperparameters selected for PIAE and baselines?\n    2. What are the network architectures (layer sizes, activation functions)?\n    3. Where are the error bars and statistical significance tests?\n    4. How does computational cost compare to simpler methods\n7. The implementation details are insufficient for the reproduction\n8. The comparisons in Figures 2 and 3 show selective periods without justification for their choice\n\nMinor comments:\n1. Section 4.5's description of the loss function uses inconsistent notation compared to earlier sections. \n2. There are some writing clarity issues, like in lines 50 and 98.\n3. The paper shows results across different timescales but doesn't systematically evaluate performance as a function of gap length. This would be valuable for understanding the method's practical utility.\n4. The NEE parameter estimation details might fit better in methods"
+            },
+            "questions": {
+                "value": "1. The SDE formulation in Section 3.2 assumes specific forms for the drift and diffusion terms. The justification for these choices comes from prior work, but the implications of these modeling choices should be discussed. What happens when these assumptions are violated?\n2. The two-phase training procedure using MSE then MMD requires more theoretical grounding:\n    1. Why this specific sequence? How is convergence of the first phase determined before switching to MMD?\n    2. Were other training strategies considered?\n3. The choice of MMD kernels isn't discussed - how sensitive is the method to this choice?\n4. How sensitive is the model to SDE parameter initialization?\n5. What's the computational overhead versus RF/XGBoost?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper studies the application of autoencoders for the problem of imputing missing values in Co2 Net Ecosystem Exchange (NEE) measurements. The autoencoder takes in several covariates, such as temperatures and radiations, at a given timestep $t$ and predicts the next-step NEE, along with several variables of a Stochastic Differential Equation that models changes in NEE."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper applies ML techniques to enhance NEE measurements, which has the potential to improve the estimation of Co2 emissions, resulting in reduced uncertainty in our projections. **This is an important problem with high societal and environmental impact.**"
+            },
+            "weaknesses": {
+                "value": "1. **The presentation of the paper is convoluted, and requires a degree of familiarity with the NEE problem that is uncommon in the ICLR community**. It is then hard for me to judge the significance, originality and potential impact of the work.\n More precisely, these are some points that are not sufficiently explained or that make the paper hard to read and understand:\n- In the introduction, it is mentioned that missing NEE values are due to e.g. power shortages. I assume that in such scenarios, the values of the covariates (temperature, radiation, etc) are also missing due to the same issue. However, the proposed model requires having access to all covariate values at a given time. How can the model be applied in practice without these values?\n- In the introduction, the first highlighted contribution is the introduction of a SDE for NEE measurements. Put it that way, it sounds like the SDE is novel also in the physics. However this point is not stressed again later on, so I wonder whether the SDE is known and the novelty is in its use as supervision for learning ML models.\n- Line 157, it is mentioned that the $E_0$ parameter is estimated with the nighttime model and used in the daytime one, but it is not explained why.\n- In section 4.4, it is mentioned that the integration of the SDE in the training of the autoencoder follows previous work [Raissi 2017], but it is not sufficiently described to make the paper self-contained.\n- The related work is not sufficiently described. In particular, it is not clear whether the reported baselines RFR and XgBoost variant based on the work of [Moffat 2007] are also physics-informed or only statistical.\n- Second and third lines of Equation 5: do the second (from the left) commas separate two different definitions or do they indicate the continuation of the variable suffices?\n\n2. The tables do not report standard errors, which makes impossible to judge the significance of the improvements.\n\n3. The paper does not discuss limitations nor future work."
+            },
+            "questions": {
+                "value": "1. Could the work be applied to other physical systems? Would that require knowledge of the DFE governing the system?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper addresses the problem of forecasting CO2 emission from agricultural fields based on measurement data. In particular, the problem of predicting missing data is addressed. The authors present a set of stochastic differential equations that govern the net ecosystem exchange (NEE) that are used in a physics-informed autoencoder for data imputation."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The proposed method seems a good fit to the application."
+            },
+            "weaknesses": {
+                "value": "The paper was challenging to follow, primarily due to unclear notation and insufficient definitions of certain terms. Additionally, some design choices, such as the two-phase loss, are described but lack clear justification.\n\nThe main contribution appears to be a relatively straightforward application of an existing methodology to a specific domain. The novelty largely lies in application-specific details, which may not align closely with the primary interests of the ICLR community."
+            },
+            "questions": {
+                "value": "Why is latent heat (L) excluded? Having a high correlation to the target variable would seem to be a good thing when the goal is to predict missing values?\n\nThe notation in equation 4-5 is difficult to read. Would it not be more clear to write this in terms of partial derivatives?\n\nFor improved readability, consider to use italics for variables and roman (upright) type for named functions, as subscripts in equations, and for units of measurement. Consider that multi-letter abbreviations can be confusing in equations: For example, it can be unclear if rb is a single variable or the product of r and b.\n\nrb (night/day) is not defined in the main text as far as I can see. rb is mentioned in the text in the appendix but not in the mathematical derivations.\n\nIn equation 9, should is there not a difference between dt on the left and right hand side? On the left hand side, it seems to denote an infinitessimal element, and on the right side it is 30 minutes?\n\nI am not sure how this approach is an autoencoder. As I understand the written description, the model predicts one timestep ahead with a latent encoding, and thus does forecasting rather than reconstruction. However, Figure 1 does seem to imply that the decoders predict for the same timestep.\n\nIs there something wrong with the linebreaks in Algorithm 1, step 4?\n\nWhat is the reason for the choice of the two loss phases?\n\nI am not familiar with the literature on physics-informed autoencoders, but I would like to ask whether this paper introduces any technical contributions to the framework itself, or if the contribution is primarily the application of an existing modeling framework to significant applications."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this study, the authors utilized physics-informed neural network framework (PINN) to develop an auto-encoder for the forecasting of carbon dioxide emission. First, the overall physical process is modeled by using a set of ordinary differential equations and PINN is used to train a neural network. The authors proposed a two-stage training method, that in the first stage the neural network is trained by minimizing the mean absolute error and, then, in the second phase, the maximum mean discrepancy score is minimized. It is shown that the proposed method outperforms some of the naive baselines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "It is shown that the proposed method outperformed some of the baseline methods that are used in the domain. It seems to suggest a potential of replacing the conventional machine learning models with the PINN models."
+            },
+            "weaknesses": {
+                "value": "First of all, the study is mainly focused on the application of the widely used PINN to a physical process for a specific domain. It does not look like there are novel algorithms or problem setups that can be of interest to a broader machine learning community. I would like to suggest the authors to submit this manuscript to a more domain specific venue.\n\nThe paper is not very well written. It is unclear how the SDE formulation is treated in the modeling, how the SDE and model are used for uncertainty quantification, how the evaluations were made by using what variables as inputs and predict how long in the future, and so on. I assume that this is due to the page limitation. It would have been better if the authors had put all the domain specific modeling sections in the appendix and focused more  on the generic problem set up in the main body."
+            },
+            "questions": {
+                "value": "The use of MMD seems a little bit odd. MMD is essentially a two-sample statistical test to identify of those samples are from the same probability distribution. We usually expect the two samples are from two independent realizations. But, based on the loss function, two samples are from the same realization, just one is the data and the other is a model prediction. If they are from the same realization ($\\omega^j$ in author's notation), minimizing the distance would make more sense, like the first phase of the training. In the end of day, for two samples from the same realization, minimizing MMD corresponds to minimizing MSE. But, all the hyperparameters (like the RBF kernel) makes it much less straightforward."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

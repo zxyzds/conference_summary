@@ -1,0 +1,218 @@
+{
+    "id": "ClkfwM3STw",
+    "title": "Evaluating the Generalization Ability of Quantized LLMs: Benchmark, Analysis, and Toolbox",
+    "abstract": "Large language models (LLMs) have exhibited exciting progress in multiple scenarios, while the huge computational demands hinder their deployments in lots of real-world applications. As an effective means to reduce memory footprint and inference cost, quantization also faces challenges in performance degradation at low bit-widths. Understanding the impact of quantization on LLM capabilities, especially the generalization ability, is crucial. However, the community's main focus remains on the algorithms and models of quantization, with insufficient attention given to to the impact of data on the generalization abilities of quantized LLMs.\nIn this work, we fill this gap by providing a comprehensive benchmark suite for this research topic, including an evaluation system, detailed analyses, and a general toolbox. Specifically, based on the dominant pipeline in LLM quantization, we primarily explore the impact of calibration data distribution on the generalization of quantized LLMs and conduct the benchmark using more than 40 datasets within two main scenarios. Based on this benchmark, we conduct extensive experiments with well-known LLMs (LLaMA and Baichuan) and four quantization algorithms to investigate this topic in-depth, yielding several counter-intuitive and valuable findings, e.g., models quantized using a calibration set with the same distribution as the test data are not necessarily optimal. Besides, to facilitate future research, we also release a modular-designed toolbox, which decouples the overall pipeline into several separate components, e.g., base LLM module, dataset module, quantizer module, etc. and allows subsequent researchers to easily assemble their methods through a simple configuration. \nOur code is submitted in the supplementary materials and will be publicly available.",
+    "keywords": [
+        "LLM",
+        "Quantization",
+        "Evaluation",
+        "OOD"
+    ],
+    "primary_area": "datasets and benchmarks",
+    "TLDR": "In this paper, we evaluate the generalization ability of quantized models by providing a comprehensive benchmark suite for this research topic, including an evaluation system, detailed analyses, and a general toolbox.",
+    "creation_date": "2024-09-20",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ClkfwM3STw",
+    "pdf_link": "https://openreview.net/pdf?id=ClkfwM3STw",
+    "comments": [
+        {
+            "comment": {
+                "value": "> W1: This paper does not propose new algorithms but rather tests quantization algorithms proposed by other researchers before. Can the authors provide some more insights, such as: does the generalization performance of different quantization algorithms differ?\n\nThank you for your suggestion!\n\nThis paper primarily focuses on evaluating the effects of distribution shifts from calibration to test sets on quantized LLMs, rather than on algorithm design. In future work, we will build on this research to develop algorithms that improve calibration set selection, optimizing quantized model performance from a data perspective\u2014an aspect that has not been explored in the quantization field thus far.\n\nDue to space constraints, we did not elaborate on additional findings in the paper, so I\u2019ll provide some supplementary insights here.\n\nFor experiments in S1 (Figure 2), we observe that GPTQ experiences significant performance drops at lower bits, such as 2-bit, whereas SPQR does not exhibit this issue and may even show performance gains. SPQR is specifically designed for low-bit scenarios, which may be related to its capability to identify and isolate outlier weights.\n\nIn the cross-dataset distribution shift experiments in S2 on BOSS (Table 2), we find that at 4-bit, GPTQ, SPQR, and AWQ achieve performance close to full precision, but at 3-bit, both GPTQ and AWQ suffer notable performance losses. Additionally, SmoothQuant consistently shows a greater performance drop relative to full precision, likely due to activation quantization, indicating that activation quantization remains a challenging issue. It is also noteworthy that while 3-bit shows minimal performance drop in S1, it encounters significant losses on BOSS, suggesting that quantized LLMs generally exhibit lower generalization on the BOSS dataset compared to datasets in S1.\nFrom the prompt paradigm perspective, few-shot settings significantly recover model performance, restoring accuracy by up to 40%, demonstrating the performance-boosting effect of in-context learning for LLMs.\nRegarding distribution shift characteristics, we observe that calibration dataset suitability varies across algorithms. For example, with GPTQ, the SQA dataset performs better on SQ tasks, while no single dataset stands out for AWQ. This variation may stem from differences in how each algorithm leverages calibration data internally.\n\nOverall, from an algorithmic perspective, **generalization capability varies significantly across quantization algorithms**."
+            }
+        },
+        {
+            "comment": {
+                "value": "> W2: Visualization Issues: \nRadar charts (Figures 2, 5, and 6) lack marked magnitudes for the scores on the radius, and text overlays reduce clarity.\nThe task types, while indicated by background colors, are not explicitly labeled. An additional legend would make the visualizations more intuitive.\n\nThank you very much for your valuable suggestion!\n\nIn future versions, we will optimize these images to enhance clarity and readability, allowing readers to more easily see specific values and task types."
+            }
+        },
+        {
+            "comment": {
+                "value": "> Q: Did the authors experiment with different samples from the C4 dataset? Did authors measure variance even when using the same dataset, like C4, but with different examples? Understanding these aspects would provide deeper insights into the robustness and reliability of the quantization process.\nIn line 1249, the authors mentioned: We present the average results with random seeds 42 and 567. Why particular choose 42 and 567 as random seed? What if we use other random seeds, like 0 or 1?\n\nThank you for your question and suggestion!\n\nIn our experiments, we used C4 as the calibration set for the S1 scenario. For this experiment, we selected two random seeds, 42 and 567, to perform two different samplings on C4, with the results shown in **Figure 6**. By comparing the outcomes from the two different random seeds, we found that the experimental results showed almost no variation, aside from a few isolated cases.\n\nTo avoid further increasing our already extensive workload, we initially conducted the experiment with only two random seeds. However, to ensure rigor, we are currently expanding the experiment with additional random seeds, such as 0 or 1."
+            }
+        },
+        {
+            "comment": {
+                "value": "> W3: This article appears to be a superficial description and summary of experimental phenomena, lacking in-depth discussion.\n\nThank you for your suggestion!\n\nIn **Section 3.3**, we conducted an in-depth analysis that includes summarizing conclusions, formulating hypotheses, and conducting validations. First, we concluded from the experiments that: Consistency between calibration data and test distribution does not always yield optimal performance. Then, we proposed the hypothesis that LLMs may not require highly relevant data related to downstream tasks to recover performance loss due to quantization. Subsequently, we compared results using C4 as the calibration set against those using I.I.D downstream task datasets as the calibration set. We found that I.I.D downstream tasks as calibration sets do not outperform high-quality pretraining corpora as calibration sets, with both yielding comparable performance. This further supports our hypothesis that, unlike fields such as CV, highly relevant data as calibration sets do not significantly enhance performance."
+            }
+        },
+        {
+            "comment": {
+                "value": "> W2: The number of LLMs using for quantizing in the experiment is too small, and their size is relatively small (7B). This limits the generality of the experimental results to a certain extent.\n\nThank you for your comment!\n\nFirst, we would like to note that we have also tested **LLaMA2-13B** and presented the results in **Table 15**, thereby expanding the range of models. Additionally, we are currently supplementing experiments with larger models to ensure a more comprehensive and robust evaluation."
+            }
+        },
+        {
+            "comment": {
+                "value": "> W1: A serious issue is that the authors claim that this article is the first to study the impact of the calibration set on the generative capacity of quantized large models. However, to my knowledge, similar work has already been done previously [1]. Therefore, the authors' statement is quite inappropriate.\n\nThank you for your careful review!\n\nWe would like to emphasize that we do not claim to be the first to study the impact of calibration datasets on quantized LLMs. Rather, we are the first to investigate distribution shifts between calibration and test datasets on quantized LLMs, as well as to conduct cross-subject distribution shift experiments, filling a gap in evaluating the generalization ability of quantized LLMs. If there is content suggesting otherwise, please indicate the specific location. We also discuss this paper [1] on lines 490 and 505 in Section 5, and Table 7 highlights the distinctions between our work and all prior studies, as noted in our response to Q1.\n\n[1] Miles Williams and Nikolaos Aletras. 2024. On the Impact of Calibration Data in Post-training Quantization and Pruning. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 10100\u201310118, Bangkok, Thailand. Association for Computational Linguistics."
+            }
+        },
+        {
+            "comment": {
+                "value": "> Q2: Given that the evaluation could potentially be performed by extending existing toolboxes, what is the necessity of developing a new quantization and evaluation framework?\n\nThank you for your question!\n\nTo the best of our knowledge, no existing toolbox provides a framework for evaluating distributional shifts from calibration to test sets to assess the generalization ability of quantized models. Additionally, our toolbox implements a wider range of algorithms and datasets, enabling more extensive testing of quantized models. Our toolbox also supports the combination of multiple quantization algorithms, achieving better performance than using any single algorithm alone."
+            }
+        },
+        {
+            "comment": {
+                "value": "> Q4: The athors should further describe the definition of IID and OOD which appears abruptly. Does IID means the different or the same dataset under the same subject?\n\nThanks for this suggestion.\n\nI.I.D (Independent and Identically Distributed) refers to a set of random variables that are both independent and follow the same probability distribution, meaning that each data point's value is unaffected by others and all data points come from the same distribution. OOD (Out-of-Distribution) refers to data whose distribution lies outside the range of the distribution seen by the model during training, meaning that the features or distribution of the test data differ from the training data, often leading to poor performance on such data. The concepts of I.I.D and OOD are well-established in the CV field but are relatively underdeveloped in NLP.\n\nIn this paper, our definitions of I.I.D. and OOD settings follow the settings in [1] and are extended to consider the distribution shift from the calibration set to the test set. We explain the I.I.D. and OOD settings used in this experiment in **Section 1** and **Figure 1**. The definition of the I.I.D. setting is: samples are drawn using the same sampling strategy from the same sample space. The definition of the sample space is: consisting of data from the same dataset or from the same domain within the same dataset. Data that does not meet this criterion is considered to belong to the OOD setting.\n\nFor the cross-dataset distribution shift experiment conducted on BOSS in Section 2, data from the same dataset is considered I.I.D. data. For example, in the EQA task, when using SQ as the calibration set, the test set using SQ is an I.I.D. setting, while the rest are OOD settings.\n\nFor the cross-dataset distribution shift experiment on Chinese domain-specific datasets in S2, data from the same dataset is also I.I.D. data. For example, when using C-EVAL as the calibration set, the test set using C-EVAL is an I.I.D. setting, while the rest are OOD settings.\n\nFor the cross-subject distribution shift experiment on Chinese domain-specific datasets in S2, data from the same dataset and the same domain is considered I.I.D. data. For example, when using the HM subject from C-EVAL as the calibration set, the test set using the HM subject from C-EVAL is an I.I.D. setting, while all other settings are OOD settings.\n\n[1]LifanYuan,YangyiChen,GanquCui,HongchengGao,FangyuanZou,XingyiCheng,HengJi,ZhiyuanLiu,andMaosongSun.Revisiting out-of-distribution robustness in nlp: Benchmarks,analysis,and llms evaluations. AdvancesinNeuralInformationProcessingSystems,36,2024."
+            }
+        },
+        {
+            "comment": {
+                "value": "> Q3: For W3, one of the main contributions of a benchmark is to provide guidance for future work. Therefore, the authors should offer some appropriate suggestions based on the experimental results. For example, they should recommend which dataset is best suited as a calibration set for future quantization methods to achieve optimal results. In more detail, although different calibration sets may yield varying results, a comprehensively optimal dataset should be selected for calibration.\n\nThanks for this comment.\n\nOur suggestion is that, if you want to obtain a golden dataset, it is better to look for a dataset whose distribution is closer to that of high-quality pretraining corpora, rather than one that is more similar to the test data. This approach can yield better average performance. Using high-quality corpora as the calibration set can recover the loss caused by quantization in large models. We discuss this in detail in **Section 3.3** and provide guidance for future work. In **Table 4**, we show the performance difference between using high-quality corpora and using downstream task datasets as calibration sets. The results are almost identical, suggesting that using a calibration set with the same distribution as the test set does not significantly improve performance. The selection of the calibration dataset for large models is relatively robust in terms of distribution.\n\nFor those aiming to obtain an optimal calibration dataset, several factors need to be considered: the quantization algorithm, model, and task. Only by carefully considering these factors can you achieve the best possible calibration dataset and optimize performance. However, this also incurs significant costs. Therefore, there is a trade-off between the performance of the calibration dataset and its associated costs."
+            }
+        },
+        {
+            "comment": {
+                "value": "> Q1: For W1, apart from revising their statement, the authors also need to provide a detailed description of the differences between their research and the mentioned paper. Since the objectives and main content of this work and the mentioned one are extremely similar, failing to provide clear distinctions is a significant issue.\n\nThank you for your comment!\n\nFirst, we want to clarify that we **did not claim to be the first to study the impact of calibration datasets**. Could you please indicate the specific location where this may have been misunderstood? Our work is the *first to investigate distribution shifts between calibration and test datasets on quantized large LLMs, as well as the first to explore cross-subject distrbution shift experiments*. This fills a gap in assessing the generalization capability of quantized LLMs.\n\nAdditionally, we discuss this paper in **lines 490 and 505 in Section 5** and cite it in **line 745**, and **Table 7** highlights the distinctions between our work and prior studies. In particular, [1] primarily uses datasets from the pre-training corpus, employing different samples as calibration datasets for downstream tasks. However, their work does not include evaluations under I.I.D and OOD setting, nor does it extend calibration datasets from pre-training corpus data to downstream task datasets. It also does not address the distribution shift between calibration and test datasets, remaining limited to the S1 setting in our study. In contrast, our work not only varies the use of calibration datasets but also considers how distribution shifts between calibration and test datasets impact quantized LLMs, covering both the S1 and S2 settings outlined in our text.\n\n[1] Miles Williams and Nikolaos Aletras. 2024. On the Impact of Calibration Data in Post-training Quantization and Pruning. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 10100\u201310118, Bangkok, Thailand. Association for Computational Linguistics."
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors proposed a benchmark for evaluating the post-training quantized large language models (LLMs) generalization ability. They considered two scenarios and utilized 40 datasets. Additionally, they released a modular-designed toolbox."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors conducted comprehensive experiments, providing meaningful results that highlight the impact of calibration data on post-training quantization accuracy."
+            },
+            "weaknesses": {
+                "value": "compared to post-training quantization, the influence of data on quantization finetuning methods, such as Q-LoRA, is more significant. This is because the calibration data for post-training quantization is limited, making the model more susceptible to overfitting and data influence in Q-LoRA. \n\nRegarding the accuracy numbers presented in the table, it's important to know whether they represent a single trial or are averaged across multiple trials. Quantized networks can exhibit variance, and relying on a single trial may not provide reliable guidance. It is crucial to comprehend the inherent variability of a specific PTQ method prior to drawing conclusions regarding the impact of data on quantization accuracy."
+            },
+            "questions": {
+                "value": "Did the authors experiment with different samples from the C4 dataset? \nDid authors measure variance even when using the same dataset, like C4, but with different examples? \nUnderstanding these aspects would provide deeper insights into the robustness and reliability of the quantization process.\n\nIn line 1249, the authors mentioned: We present the average results with random seeds 42 and 567. Why particular choose 42 and 567 as random seed? What if we use other random seeds, like 0 or 1?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper delves into the impact of the calibration set on the generative capacity of quantized LLMs through extensive experiments. In addition, a novel modular-designed toolbox is proposed to decouple the model quantization pipeline into seperate components to help investigate the different modules."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper thoroughly considers a vast array of datasets and scenarios, which make clear and effective distinctions, to support its experimental conclusions.\n\n2. The quantization methods adopted are all currently mainstream, demonstrating the universality of the experimental discoverages."
+            },
+            "weaknesses": {
+                "value": "1. A serious issue is that the authors claim that this article is the first to study the impact of the calibration set on the generative capacity of quantized large models. However, to my knowledge, similar work has already been done previously [1]. Therefore, the authors' statement is quite inappropriate.\n\n2. The number of LLMs using for quantizing in the experiment is too small, and their size is relatively small (7B). This limits the generality of the experimental results to a certain extent.\n\n3. This article appears to be a superficial description and summary of experimental phenomena, lacking in-depth discussion."
+            },
+            "questions": {
+                "value": "1. For W1, apart from revising their statement, the authors also need to provide a detailed description of the differences between their research and the mentioned paper. Since the objectives and main content of this work and the mentioned one are extremely similar, failing to provide clear distinctions is a significant issue.\n\n2. For W2, in the past research, it has been proven that larger LLMs are less sensitive to quantization. Therefore, due to the time constraint of the rebuttal, there is no need to extend the experimental models to various sizes. It suffices to provide experimental data on the largest model (e.g., llama2-70B) to demonstrate that the current conclusions remain valid.\n\n3. For W3, one of the main contributions of a benchmark is to provide guidance for future work. Therefore, the authors should offer some appropriate suggestions based on the experimental results. For example, they should recommend which dataset is best suited as a calibration set for future quantization methods to achieve optimal results. In more detail, although different calibration sets may yield varying results, a comprehensively optimal dataset should be selected for calibration.\n\n4. The athors should further describe the definition of IID and OOD which appears abruptly. Does IID means the different or the same dataset under the same subject?\n\n\n[1] Miles Williams and Nikolaos Aletras. 2024. On the Impact of Calibration Data in Post-training Quantization and Pruning. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 10100\u201310118, Bangkok, Thailand. Association for Computational Linguistics."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper explores the generalization performance of quantized LLMs and introduces a comprehensive benchmark suite alongside a modular toolbox. The study examines how calibration data distribution affects generalization, revealing two key insights:\n1. Tasks exhibit varying sensitivity to quantization, with some tasks showing improved performance under low-bit quantization.\n2. Consistency between calibration and test data distributions does not consistently yield optimal performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- **Extensive Empirical Evaluation**: The study conducts comprehensive experiments across multiple datasets and quantization methods, providing valuable insights into LLM generalization under different calibration scenarios.\n- **Practical Contribution**: The proposed modular toolbox is a significant resource for the evaluation and application of quantized LLMs, potentially benefiting the broader research community."
+            },
+            "weaknesses": {
+                "value": "1. **Lack of Guidance on Calibration Data Selection**: Although the paper presents intriguing findings, it does not offer concrete criteria or methods for selecting calibration data to enhance the generalization of quantized LLMs. This limits its practical impact and novelty.\n2. **Visualization Issues**:\u00a0\n    - Radar charts (Figures 2, 5, and 6) lack marked magnitudes for the scores on the radius, and text overlays reduce clarity.\n    - The task types, while indicated by background colors, are not explicitly labeled. An additional legend would make the visualizations more intuitive."
+            },
+            "questions": {
+                "value": "1. The paper highlights task-specific sensitivities to quantization. Could the authors provide more detailed analysis or theoretical insights into why some tasks are more robust than others?\n2. Given that the evaluation could potentially be performed by extending existing toolboxes, what is the necessity of developing a new quantization and evaluation framework?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the gap in understanding how data impacts the generalization abilities of quantized large language models (LLMs). By benchmarking with over 40 datasets and experimenting with popular LLMs, the study reveals the non-optimal performance of models quantized with calibration data matching the test data distribution. Additionally, the authors provide a modular toolbox to support future exploration into LLM quantization."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Very large experimental workload. The authors implemented a Python package integrating various LLM quantization models, based on which a large number of experimental results were measured. \n2. From the perspectives of IID and OOD, detailed experimental data provide useful insight into the generalization performance of quantifying LLM."
+            },
+            "weaknesses": {
+                "value": "1. This paper does not propose new algorithms but rather tests quantization algorithms proposed by other researchers before. Can the authors provide some more insights, such as: does the generalization performance of different quantization algorithms differ?\n2. Eq1 simply uses the number of samples where the performance of the I.I.D calibration set exceeds that of the OOD to evaluate, which is actually a little crude. LLM evaluation is a dirty task, and the accuracy of only higher a little does not mean that the model is better. This will weaken the validity of the paper's conclusions. It is recommended to have some statistical technical hypotheses and tests (like the Box-and-Whisker Plot or standard deviation)."
+            },
+            "questions": {
+                "value": "1. Will MI continue to be developed to support new LLM quantization algorithms? \n2. L462-L464, the authors utilize a dataset consisting of 128 random segments and each containing 512 tokens. This is actually a bit odd, as 128*2048 token length calibration sets are more common. Therefore, does the size of the calibration set affect the generalization performance of the quantization model? For example, different sequence numbers (e.g. 1,16, 128, 512, 1024) and lengths (e.g. 128, 512, 1024, 2048). \n3. Similarly, the author mainly discusses the 7B-13B size model in this paper. Will the conclusion change for the 70B+ model? Intuitively, the 70B model would be more redundant and easier to quantify."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

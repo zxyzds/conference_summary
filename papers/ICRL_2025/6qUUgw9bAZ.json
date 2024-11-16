@@ -1,0 +1,168 @@
+{
+    "id": "6qUUgw9bAZ",
+    "title": "Learning How Hard to Think: Input-Adaptive Allocation of LM Computation",
+    "abstract": "Computationally intensive decoding procedures---including search, reranking, and self-critique---can improve the quality of language model (LM) outputs in problems spanning code generation, numerical reasoning, and dialog.\nExisting work typically applies the same decoding procedure for every input to an LM. But not all inputs require the same amount of computation to process. Can we allocate decoding computation adaptively, using more resources to answer questions whose answers will be harder to compute? We present an approach that predicts the distribution of rewards given an input and computation budget, then allocates additional computation to inputs for which it is predicted to be most useful. We apply this approach in two decoding procedures: first, an adaptive best-of-$k$ procedure that dynamically selects the number of samples to generate as input to a reranker; second, a routing procedure that dynamically responds to a query using a decoding procedure that is expensive but accurate, or one that is cheaper but less capable. Across a suite of programming, mathematics, and dialog tasks, we show that accurate computation-allocation procedures can be learned, and reduce computation by up to 50% at no cost to quality.",
+    "keywords": [
+        "LLM",
+        "inference",
+        "scaling",
+        "test-time compute"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We introduce a method for input-adaptive allocation of test-time computation",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=6qUUgw9bAZ",
+    "pdf_link": "https://openreview.net/pdf?id=6qUUgw9bAZ",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents an approach to adaptively allocate computational resources for language model (LM) decoding based on input difficulty. The authors propose a framework that predicts the marginal benefit of additional computation for each query, enabling dynamic adjustment of decoding procedures to maximize efficiency without sacrificing output quality. They demonstrate their method across tasks in math, code generation, and dialogue, achieving up to 50% reduction in compute usage in some cases. The paper also introduces two adaptive procedures\u2014best-of-k sampling and routing between models of varying complexity\u2014and provides a thorough evaluation using both online and offline allocation strategies."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper adeptly formulates the \"adaptive computation scaling allocation\" in the context of LM decoding, addressing a topic that is both timely and relevant.\n- The proposed computation-allocation framework is comprehensive, covering various cases and scenarios, including binary reward, pairwise optimization in routing, and both online and offline design considerations.\n- The experiments conducted on three diverse and representative domains demonstrate the efficiency and efficacy of the proposed computation-allocation strategies."
+            },
+            "weaknesses": {
+                "value": "- The main concern is that the current computation-allocation solution is only evaluated in scenarios with identical distributions (i.e., the training data used to train the difficulty model comes from the same distribution as the test set). It is unclear whether the trained difficulty model generalizes to other distributions. The generalizability of the difficulty model is crucial for determining the practicality of the proposed computation-allocation framework.\n- Following from the above, since the choice of LLMs does not seem to affect the evaluation of the proposed method\u2019s efficacy, why not select a single fixed LLM, such as Llama3-7b-Instruct? By doing so, it might be easier to assess the generalizability of the method. (Please correct me if there is an issue with my understanding.)\n- The implementation of the baselines is weak, with only one effective but not particularly practical baseline (best-of-k and random) in each scenario. Between the proposed method and these baselines, there are likely other reasonable approaches that could better demonstrate the effectiveness of the proposed framework.\n- The related work section is too concise and lacks comprehensiveness, especially in the discussion of relevant adaptive computing research. Only one recently published paper is mentioned, which undermines the paper's completeness and contextual grounding."
+            },
+            "questions": {
+                "value": "- Typos:\n    - Line 352: \"which in an\" should be \"which is an\".\n    - \"LoRa\" should be changed to \"LoRA\".\n    - In Figure 1, \"Large LM\" should be changed to \"large LM\" for consistency.\n- What's the definition of \"N\" in equation (10)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Presents an input-adaptive method for test-time compute-allocation. Decoding methods apply either sequential (eg weak vs strong model) or parallel compute (eg more samples in best-of-n). For a given method, this paper proposes to predict the marginal utility of every unit of computation, then use these predictions to optimize compute allocation. The paper proposes to predict these utilities given only the input.\n\nThe resource allocation problem can be solved in an offline manner given a fully observed dataset, referred to as online allocation in the paper, or solved via online access to only a partially observed dataset, referred to as offline allocation in the paper.\n\nExperimental results across coding, math, and chat indicate that utility prediction is difficult at the extremes, and allocation decisions are sensitive to utility errors. Overall, adaptive allocation outperforms uniform or random allocations. The partially-observed strategy empirically often does better than the fully-observed case, possibly due to coarsening effects that hide errors in utility prediction."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper tackles a novel and timely problem, and offers a reasonable approach. The paper is clearly written."
+            },
+            "weaknesses": {
+                "value": "A small criticism is the naming convention of online versus offline. Online optimization refers to \"optimization problems having no or incomplete knowledge of the future (online),\" which is not how online is used in this paper.\n\nOther than that, this paper is a good step in improving adaptive test-time compute, identifying the importance of accurate utility estimation in problems with very low success rates."
+            },
+            "questions": {
+                "value": "Drawing inspiration from the online secretary problem, it would be interesting to see how online estimation of pass rates for coding can aid utility estimation. For example, one could increase the total computation budget and, for each problem, reserving some of that budget to utility estimation. This would alleviate some of the burden from the prediction model."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes an input-adaptive computation allocation mechanism for improving the efficiency of test-time computation. The core idea is to train a model that predicts the distribution of rewards given a query and a budget. It incorporates training an MLP LM head and LoRA as the reward predictor that estimates the difficulty of a batch of queries. The proposed adaptive best-of-k outperforms the efficiency of standard best-of-k baselines in math, code, and chat domains. In addition, the author demonstrates the improvement in routing in terms of different model sizes and decoding schemes. The additional case study in inspecting the allocation of computation at different budgets is intriguing."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Scaling the test-time compute is effective but costly, this work contributes to a timely direction with a smart input-adaptive allocation scheme improving test-time efficiency.\n\n2. The empirical improvement in efficiency is noticeable, and this work has covered adaptive allocation in representative popular subdomains: sampling, model size, and decoding method.\n\n3. The presented analysis in Figure 6 is intuitive."
+            },
+            "weaknesses": {
+                "value": "1. The selection of datasets and backbone language models may be questionable. I suspect this method should be ideally generalizable across tasks, however, only a single data in each domain is selected. I expect to see more tasks like HumanEval, MBPP for coding, Hendrycks MATH, and GSM for math. Meanwhile, for each domain, the author selects a specific backbone LM rather than the same choice across all tasks. This may raise concerns about the generalization of the proposed method.\n\n2. The underlying difficulty of this method is to actually train a very good difficulty estimator. However, the training difficulty, and the heavy training data resource requirement for learning a good reward predictor have not been explicitly discussed in the context. Moreover, it is highly dependent on the task, and I suspect the difficulty of some tasks will not be easy to predict. \n\n3. The proposed method only considers the query for training the reward predictor. However, though there is a latency for querying the model, I suspect introducing $y$ will be more informative to reflect the difficulty of a task. \n\n4. In Figure 3 (middle), besides the left bottom and right top clusters, the rest correlation appears to be relatively poor. Therefore, I suspect the efficiency gain could be mostly coming from predicting \u201cunanswerable\u201d for the queries in the left bottom regions and putting 0 costs there, also assigning a minimum budget to always correct questions. However, the middle region is actually the region that should benefit from a smart computation allocation scheme, and the correlation is not convincing here."
+            },
+            "questions": {
+                "value": "1. Though I understand using a query only to predict the reward should incur less latency, will $y$ be more informative and easier to train the predictor?\n\n2. Could you please report the Spearman Correlation in Figure 3 (b, middle column)?  \n\n3. Could you provide more clarification on the computing budget? Is it based on the inference calls?\n\nI will be happy to raise my score if the author could address the aforementioned limitations and concerns."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a method for the adaptive allocation of decoding computation. By employing an LLM-based probe to predict the difficulty of a given query, the approach dynamically adjusts the allocation of decoding resources. The authors validate the method\u2019s effectiveness across coding, math, and chat tasks. Results demonstrate that, under computational constraints, this approach outperforms the baseline BoK method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper achieves efficient decoding from a different perspective, showing clear improvements over the original BoK method.\n2. The authors apply their method across three distinct domains\u2014code, math, and chat\u2014demonstrating generalizability of their method."
+            },
+            "weaknesses": {
+                "value": "1. In the experiments for code and math, the authors employ less-used benchmarks rather than widely adopted ones like HumanEval and MATH, raising concerns about the method\u2019s applicability to broader tasks.\n\n2. The paper's baseline comparison is limited to the BoK method, lacking comparative experiments with other stronger efficient decoding methods, such as Speculative Decoding."
+            },
+            "questions": {
+                "value": "1. Please explain the choice of benchmarks and how they compare to HumanEval and MATH in terms of difficulty distribution. Or please add more benchmarks like HumanEval and MATH. \n\n2. If a more complex decoding method, such as MCTS, is employed, would it necessitate retraining the probe? This could suggest a mismatch between the model's capabilities when using more advanced decoding methods and the probe's predictions. Additionally, it raises the question of whether the probe's prediction accuracy may be affected by factors such as varying prompts or decoding methods, and whether the probe demonstrates robustness under these conditions. Please explain the discuss the generalizability of the probe."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

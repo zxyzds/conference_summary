@@ -1,0 +1,208 @@
+{
+    "id": "QxbJYBZVbE",
+    "title": "CursorCore: Assist Programming through Aligning Anything",
+    "abstract": "Large language models have been successfully applied to programming assistance tasks, such as code completion, code insertion, and instructional code editing. However, these applications remain insufficiently automated and struggle to effectively integrate various types of information during the programming process, including coding history, current code, and user instructions. In this work, we propose a new conversational framework that comprehensively integrates these information sources, collect data to train our models and evaluate their performance. Firstly, to thoroughly evaluate how well models align with different types of information and the quality of their outputs, we introduce a new benchmark, APEval (Assist Programming Eval), to comprehensively assess the performance of models in programming assistance tasks. Then, for data collection, we develop a data generation pipeline, Programming-Instruct, which synthesizes training data from diverse sources, such as GitHub and online judge platforms. This pipeline can automatically generate various types of messages throughout the programming process. Finally, using this pipeline, we generate 219K samples, fine-tune multiple models, and develop the CursorCore series. We show that CursorCore outperforms other models of comparable size. This framework unifies applications such as inline chat and automated editing, contributes to the advancement of coding assistants.",
+    "keywords": [
+        "AI-Assisted Programming",
+        "Large Language Models for Code",
+        "Code Benchmarks"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=QxbJYBZVbE",
+    "pdf_link": "https://openreview.net/pdf?id=QxbJYBZVbE",
+    "comments": [
+        {
+            "comment": {
+                "value": "Thanks for clarification.\n\n- Indeed I misunderstood the construction of APEval, I thought it was a subset of collected data, but it turned out to be human annotated data on top of existing benchmarks.\n\n- Yes I understand it is not always feasible for run all ablation. I was just a little bit let down that these three sources do not blend as good as my impression from reading the intro (based on Figure 9) and there is not much insights about how these datasets help with each other in practical tasks. But at least they improve the overall performance when they are all blended together. \n\nThanks for the response, I'll update my score to reflect the discussion."
+            }
+        },
+        {
+            "comment": {
+                "value": "> The paper tries to pack too much information in the limited space\n\nThanks for this suggestion. We will add some transitional sections to further explain the relationship between each module and its real-world applications, as well as the design motivations behind the Assistant-Conversation Framework, to help readers better understand the overall structure. Details are as follows:\n\n- Provide a detailed explanation of two examples in the caption of Figure 2, each using different types of information.\n- Provides additional information on the statistics of H, C, and U in Table 1.\n- In the caption of Figure 7-8, add analysis of the differences in distribution of different data sources.\n- Add discussion of other work that utilizes historical information to the related work section.\n- Add an explanation on how the benchmark data was collected for the targeted evaluation.\n- Add figures of benchmark examples\n- Further elaborate on the connection between real-world applications and the motivation behind the design of the Assistant-Conversation Framework in the transition between the Introduction and section 2.\n\n> Is there any check in place to ensure that this step does not throws away some important segments? How do you decide if something is aligned with user's purpose when you may not even have the user query (U)?\n\nWe make judgments using the LLM-as-a-judge method and employ a principle-guided approach to assess whether something aligns with the user's intent. Specific prompts for this can be found in Table 12. While using an LLM to synthesize data cannot guarantee 100% accuracy, it is sufficiently fast and, compared to human annotation, is much more cost-effective. As a result, similar approach has seen some applications in the LLM field, such as RLAIF [1] mentioned in the paper, which uses AI to label human preference data.\n\n[1] Constitutional ai: Harmlessness from ai feedback\n\n> Line 340-343 mention \"randomly utilize two powerful open-source LLMs\" -- utilize for what?\n\nUtilize for the data collection of training (the data synthesis pipeline outlined in section 4).\n\n> Line 295-296 mention things that are mentioned only there in the main part of the paper. What are the learnings from that part of the paper?\n\nOur motivation is to align the model using all available information during the programming process. The main information sources we leverage include historical edits, current code, and user instructions. Additionally, other information, such as cursor position and selected areas, are also relevant and can be utilized during programming, which is why we mention them in the main body. However, compared to other types of information, they are not the primary focus, and due to space constraints, we moved the detailed discussion of them to the appendix.\n\nWe appreciate your review and look forward to your response!"
+            }
+        },
+        {
+            "comment": {
+                "value": "Thanks for your review. Please see our detailed response below:\n\n> This point about history (H) not being incorporated in prediction has been made previously in many papers in software engineering conferences\n\nOur work focuses on proposing a framework that can integrate various types of information, rather than being limited to historical edit records alone. The software engineering community has made significant contributions to utilizing historical edit records, but most of these approaches either rely on prompt engineering techniques or involve modifications to encoder-based or encoder-decoder architectures such as CodeBert or CodeT5, which are not easily applicable to the current LLM training that primarily uses decoder-based architectures. We will update the related work section to reflect these points.\n\n> but there is no mention of releasing the benchmark set in the paper\n\nWe release all data collection pipelines, models, and benchmarks. Due to the anonymous review policy, we cannot disclose public code link. We will include the corresponding links in the abstract of the final published version.\n\n> inclusion of H almost always leads to worse performance\n\nThis is a normal result because the evaluation samples for different data types are distinct. During the benchmark creation process, in order to better assess the model's ability to utilize historical edits and integrate them with user instructions, we specifically collected data that requires relevant information for inferring user intent. For example, in the case of the H+C and H+C+U categories, these samples were designed to require related information to answer the user query. If a sample only includes data from a single category (such as only C or only U), it might be insufficient to answer the query due to a lack of information. The difficulty of utilizing historical edit information is even greater. Although it can be automatically captured without requiring user input, it reflects user intent in a more ambiguous way, or it may contain irrelevant or noisy records. Therefore, it is harder for the model to make use of this information, which is why the setting with H performs worse than without H.\n\n> The code (C) and user interaction (U) part is already part of most LLM-based programming assistants.\n\nIn the current implementation, the components C and U are mixed together in both the model's input and output. Many existing tools handle them through prompt engineering and post-processing techniques to achieve features like instructional editing. However, models like ChatGPT produce outputs in a free-form conversational style. While this format is user-friendly and easy to read, it may hinder automated parsing of the output. For example, to quickly highlight edited sections, LLMs might omit unchanged parts or split the content into multiple snippets, which can pose challenges for applications. To address this, we separate the C and U components in our framework design, making it easier to process the input and output of C.\n\n> I did not find any conversational interactions here / What is the conversational bit in the Assistant-Conversation framework?\n\nWe refer to the 'conversation interaction' here just as the interaction between human programmers and AI programming assistants (models). Our Assistant-Conversation framework is proposed as an extension of frameworks similar to ChatGPT's chatbot model. Unlike traditional chatbots, which typically involve only user instructions and model responses, our framework incorporates edit history, current content and user instructions."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thanks for your review. Please see our detailed response below:\n\n> As a benchmark paper, this paper doesn't provide a very convincing evaluation dataset\n\nThe reviewer seems to have misunderstood our experimental setup. Our paper is not a benchmark paper, the proposed new benchmark is only part of the work; it encompasses a framework, data collection, training, and benchmarking, among other components. The training dataset we collected and the benchmark used for evaluation are entirely different. The training data was synthesized using LLMs, and during this process, techniques similar to AI Judge were employed to filter the data. The benchmark used for evaluation was manually annotated by human programmers. This benchmark naturally reflects real-world editing needs and is tested using execution-based metrics to ensure precise evaluation of functional correctness. These details are discussed in section 3 and 4 of our paper. The separation between training data construction and benchmark creation is a common practice in the alignment of LLMs.\n\n> The paper doesn't make clear comparison with dataset curated from github/coding submits and synthetic data\n\nWe present concrete examples in Figure 2 and provide statistical information from different data sources for further analysis in Figures 5 through 8. During the training of code LLMs, it is not feasible to perform cross-validation on the training data. Currently, evaluation of code models primarily relies on execution-based metrics such as Pass@k to ensure correctness, which requires the sample to be executable and accompanied by accurate test cases. However, the training data does not include corresponding test cases, and some code snippets have highly complex dependencies, making execution nearly impossible. Therefore, for training code LLMs, the approach typically involves training with different data combinations through ablation studies, and comparing results on benchmarks, which is the method used in our paper. And Due to the high cost of training large models, many current works omit comprehensive ablation experiments on the training data in order to accelerate the experimental process. [1] [2] \n\n[1] OctoPack: Instruction Tuning Code Large Language Models, ICLR 2024\n\n[2] Magicoder: Empowering Code Generation with OSS-Instruct, ICML 2024\n\nWe appreciate your review and look forward to your response!"
+            }
+        },
+        {
+            "comment": {
+                "value": "> How do you determine the appropriate timing for recording code changes?\n\nThe appropriate timing for recording code changes is crucial. In the specific system implementation, we treat it as a problem of segmenting edits at different granularities. Code edits can occur at different levels of granularity. For instance, a coarse-grained approach records only large changes, while a fine-grained approach tracks even the modification of a single character. Our design for it is that the model should be capable of handling code changes at any level of granularity, this is why it is not mentioned in the main body. In our data synthesis process, we do not impose any restrictions on the granularity of edits. Instead, we generate modifications at various levels of granularity to support this flexibility.\n\nIn deploying the model for practical applications, we use simple functions to automatically capture the edit history. How this history is captured can be determined by either the editor or the user. For example, we have two simple implementations as follows:\n\n```python\ndef if_continuous_modify(code1, code2, code3):\n    dist1 = Levenshtein.distance(code1, code2)\n    dist2 = Levenshtein.distance(code2, code3)\n    dist3 = Levenshtein.distance(code1, code3)\n\n    if dist3 == dist1 + dist2:\n        return True\n    else:\n        return False\n\ndef blockwise_if_continuous_modify(code1, code2, code3):\n    dist1 = Levenshtein.distance(code1, code2)\n    dist2 = Levenshtein.distance(code2, code3)\n    dist3 = Levenshtein.distance(code1, code3)\n\n    past_diff_blocks = generate_diff_blocks(code1, code2)\n    new_diff_blocks = generate_diff_blocks(code1, code3)\n\n    if dist3 == dist1 + dist2 and len(past_diff_blocks) == len(new_diff_blocks):\n        return True\n    else:\n        return False\n```\n\nThey use different granularities and methods to determine the boundaries between different historical records. The first approach uses Levenshtein edit distance to determine the boundary, where a discontinuity in the edit distance marks the start of a new historical edit record. The second approach considers both the Levenshtein edit distance and the number of diff blocks. Editors or users can decide how to capture historical edits based on practical usage.\n\n> How does the framework address the issue of long inputs?\n\nWe mentioned this in Section 2.3 and discussed it further in Appendix F. Similar to many conversation retrieval techniques used for chatbots in the past, we can compress/retrieve historical edits to address this issue. In this work, we explore a simple approach, the sliding window. When the number of historical edit records exceeds a predefined threshold, the model automatically discards the oldest entries. It is straightforward but yields great results.\n\n> How is the code change history constructed for APEval during manual annotation?\n\nWe inform the annotators about the function's entry point and its purpose, and allow them to send instructions to the AI programming assistant at appropriate moments. We then use screen recording tools to capture the annotators' process of wrtining this function. Afterward, we manually analyze the recordings to construct our benchmark.\n\nWe will provide a more detailed explanation of the relevant content in the benchmark section of the paper, along with specific examples, to help readers better understand. Details are as follows:\n\n- Add an explanation on how the benchmark data was collected for the targeted evaluation.\n- Add figures of benchmark examples\n\nWe appreciate your review and look forward to your response!"
+            }
+        },
+        {
+            "comment": {
+                "value": "Thanks for your review. Please see our detailed response below:\n\n> Questions about our benchmark\n\nWe do not rely solely on code generation tasks; instead, we cover various code editing scenarios. We only use the testcases and function names from the HumanEval (+) benchmark, without utilizing any other content. The historical information, current code, and user instructions are provided by annotators based on the specified function functionality. For instance, our benchmark accommodates scenarios that require edits and historical context. We illustrate this with two simple examples to facilitate quick understanding.\n\nExample 1:\n\n```python\n# Current\ndef has_close_elements(n, t):\n    for i in range(len(n - 1)):\n        for j in range(i + 1, len(n)):\n            if n[i] - n[j] < t or n[j] - n[i] < t:\n```\n\nThis code check if in given list of numbers, are any two numbers closer to each other than given threshold. The current conditional logic in this code has an issue. We should check whether the absolute difference between the two values is less than `t`. Therefore, the model needs to recognize this and, in addition to generating the remaining code, also edit the erroneous code accordingly.\n\nExample 2:\n\n```python\n# History 1\ndef incr_list(l: list):\n    return [x++ for x in l]\n\n# Current\ndef incr_list(l: list):\n```\n\nThis example corresponds to a situation where a programmer writes an incorrect piece of code and then deletes it to add the correct version. However, if we only retain the current code, the model cannot infer the specific purpose of this function. For instance, when passing the current code to ChatGPT, it would only respond with something like this:\n\n```python\ndef incr_list(l: list):\n    # ... existing code ...\n    {{ edit_1 }}\n    # ... existing code ...\n```\n\nWhile by incorporating historical editing information, the model can infer the user's intent and make accurate code edits. In our benchmark, there are more complex scenarios where the model needs to combine various information to align with the programmer's intent.\n\nDuring the process of creating the benchmark, in order to better evaluate the model's ability to utilize historical edits and integrate this information with user instructions, we collected samples for the H+C and H+C+U types that required the use of relevant historical information to accurately infer user intent. If a sample contained only a single category of data (such as only C or only U), it might be impossible to provide an adequate answer due to a lack of sufficient information. Leveraging historical edit information is particularly challenging, as it can be automatically captured without user input, but often reflects user intent in a more ambiguous manner or includes irrelevant or distracting records. Consequently, models find it more difficult to utilize this information effectively, and settings that include H perform worse than those without H.\n\n> The experimental results analysis is insufficient.\n\nThe reviewer may have misunderstood our experimental setup, and we would like to clarify. Our training is based on base models because fine-tuning LLMs is generally more effective when done on base models rather than on instruction models. The case mentioned by the reviewer pertains to specific categories in our 6B+ model comparison, where our model was compared against the official instruction-tuned versions, not with the base models. Our model significantly outperforms the base models across all categories (average 22.6%) and shows notable improvements in overall performance compared to the corresponding instruction models (average 9.7%), even though our training data is much smaller than the official instruction versions. Additionally, prior models required long prompts to handle this task, whereas CursorCore does not, which is highly beneficial for practical applications."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thanks for your review. Please see our detailed response below:\n\n> The improvements with using CursorCore is not clear\n\nCursorCore demonstrates significantly improved performance compared to the base model (average 22.6%). It delivers the best results while requiring far less training data than official instruction-tuned versions (average 9.7%), as shown in Table 4. Additionally, previous models needed lengthy prompts to handle this task, whereas CursorCore does not\u2014an important advantage in practical applications.\n\n> The conversational framework needs be motivated better as its hard to understand why this system was chosen\n\nThanks for the reviewer\u2019s suggestions. The Introduction section has explained the challenges of the current model in practical applications and the necessary directions for improvement. We will further elaborate on the connection between these issues and real-world applications, as well as the motivation behind the design of the Assistant-Conversation Framework, in the transition between the Introduction and section 2. This will help readers gain a clearer understanding.\n\n> Formatting & Writing\n\nWe will update the relevant captions and the related work section to improve the overall presentation of the paper. We will make the following changes:\n\n- Provide a detailed explanation of two examples in the caption of Figure 2, each using different types of information.\n- Provides additional information on the statistics of H, C, and U in Table 1.\n- In the caption of Figure 7-8, add analysis of the differences in distribution of different data sources.\n- Add discussion of other work that utilizes historical information to the related work section.\n\nWe appreciate your review and look forward to your response!"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes:\n(1) the Assistant-Conversation Framework. This combines multiple components like System (priming to the tasks), History (past edits and changes made in code), Current (The current code being processed), User (instructions for the task) and Assistant (the responses from the model).\n(2) APEval: A benchmark for holistic programming assistant evaluation.\n(3) CursorCore: A model for assisted programming tasks."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- Current agents lack history information and are very specific to the current context which is the key challenge this paper tries to solve.\n- Real user scenarios are a more complex framework of interactions similar to the one proposed.\n- The benchmark created evaluates information use from different context sources."
+            },
+            "weaknesses": {
+                "value": "- The improvements with using CursorCode is not clear from the performance differential.\n- The conversational framework needs to be motivated better as its hard to understand why this system was chosen. Also, the paper tries to cover a lot of things which makes it hard to focus on the core problem."
+            },
+            "questions": {
+                "value": "Formatting:\n- Caption for figure 2 can be improved.\n- Table 1 caption should explain the data.\n- Figure 7 and 8 are hard to parse.\n\nWriting:\nRelated works should talk about other tasks in AI for code that look at the history of changes like OverWatch."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents CursorCore, an AI-powered programming assistant that improves programming support by utilizing multiple sources of information, including code change history, current code and user intention, throughout the coding process. CursorCore introduces a new framework, Assistant-Conversation, and establishes a benchmark, APEval, to assess its effectiveness. The work also develops the Programming-Instruct pipeline for training data synthesis. Evaluation results in HumanEval benchmark shows the effectiveness of CursorCore."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper addresses a critical limitation of current code benchmarks by focusing on continuous code editing, aligning its benchmarks more closely with real-world development scenarios.\n- The paper introduces Programming-Instruct, a data synthesis pipeline that generates a substantial dataset of 219K samples from sources like GitHub. Experimental results demonstrate that this dataset effectively supports supervised fine-tuning, making it a valuable resource for training code assistance models.\n- The description of the Assistant-Conversation framework is clear and comprehensive."
+            },
+            "weaknesses": {
+                "value": "- The paper divides the HumanEval benchmark into four settings, each with 41 examples, which limits direct comparison across these settings. This approach uses different data for each setting, making it difficult to assess their relative effectiveness. For instance, settings with code history (H) might not be particularly relevant for a task like HumanEval\u2019s code generation, raising questions about its utility in this context.\n- The evaluation relies heavily on code generation tasks, which may not fully capture the utility of incorporating code change history information (H) as input. In Table 4, the setting with H seems perform worse than without H. Expanding to additional tasks beyond code generation could better assess the contribution of code history information and more accurately reflect the value of the proposed framework across a broader range of code assistant applications.\n- The experimental results analysis is insufficient. In Table 4\u2019s 6B+ model comparison, CursorCore underperforms relative to its base models in specific settings, such as DS-Coder\u2019s C+U, Yi-Coder\u2019s C, and Qwen-Coder\u2019s H+C and C+U settings. This raises questions about the factors driving these inconsistencies, suggesting that the paper\u2019s analysis of model performance across settings could be more thorough to address the causes of these variances."
+            },
+            "questions": {
+                "value": "- How do you determine the appropriate timing for recording code changes? In real-world scenarios, code changes are often continuous; for example, a modification to a single code block may consist of multiple edits across different lines, and each line may undergo multiple token-level edits. How are boundaries between different history records (H1, H2, etc.) defined?\n- How does the framework address the issue of long inputs? With a large number of code changes, the input text can become very lengthy. What strategies are used to manage or reduce input length while preserving relevant information?\n- How is the code change history constructed for APEval during manual annotation? Given that HumanEval\u2019s inputs are only function declarations, how do annotators simulate the evolution of a function declaration through code changes to build realistic histories?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a dataset synthesis pipeline to generate mixed style programming data to support in-context code generation task. The paper considers a mixture of history steps, current context, user instruction for generation code completion together with rationale as the task. To collect training and evaluation dataset, the authors consider (1) use LLM to generate intermediate steps from an initial program, (2) collect from github commits, and (3) collect coding platform submits. A random mixture approach is taken to generate tasks, with LLM as a judge to compare consistency. \n\nThe authors present three models trained on this dataset (with mixture from all sources), and CursorCore models show impressive improvement over baseline models of similar size."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This paper's main contribution is the dataset synthesis approach, that leverages AIprogrammer to generate code edit histories from seed code snippets. Then, together with the mixture strategy, APEval includes a diverse set of insertion, editing, generation tasks. Given that fine-grained coding history data can be difficult to obtain, this synthetic approach is great for this task.\n\nThe dataset selection process also highlights the benefit of mixing datasets with both chat data and synthetic data. It seems like the gain from github and online coding platform is minimal, which potentially requires additional analysis."
+            },
+            "weaknesses": {
+                "value": "There are two weakness of the paper:\n\n1. As a benchmark paper, this paper doesn't provide a very convincing evaluation dataset. The authors should provide analysis of the evaluation dataset, justifying (1) why the evaluation set reflects practical editing needs (since AIprogrammer generated data may not completely align with typical programming styles), (2) how does the evaluation set ensures high accuracy, especially with respect to the contextual information (as the authors filtered with the AI judge).\n\n2. The paper doesn't make clear comparison with dataset curated from github/coding submits and synthetic data, despite dataset selection section clearly show that git-commit and online submit made minimal contribution on top of AIProgrammer + Evol-instruct. I suggest the authors provide some insights about their difference qualitatively (e.g., how does the editing styles different among them). If possible, maybe perform cross-evaluation between models trained on these subsets (e.g., train on AIProgrammer, but eval on git data / then train on git data and eval on AIProgrammer data). This might highlight and justify how these datasets should be mixed together."
+            },
+            "questions": {
+                "value": "As mentioned above, the authors should:\n(1) elaborate why eval dataset is convincing, and should be used by future model developers for the general coding assistant benchmark.\n(2) compare in detail about data from three sources."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents (1) a new conversational framework called Assistant-Conversation aimed at simplifying the programming process.  The paper also presents (2) a benchmark set for assisted programming, namely APEval, which has 164 benchmarks that are hand-curated starting with HumanEval and adding some or all of the \"history\", \"code\", and \"user\" components.  Since generating APEval like benchmarks is time consuming manual process, the paper also presents (3) a method, Programming-Instruct, to automate data collection.  Finally, the dataset is used (4) to fine-tune LLMs and get CursorCore models.\n\nAssistant-Conversation framework: The framework consists of the elements system (S), history (H), current snapshot of code (C), user query (U) and assistant response (A).  The paper observes that current models have limitations in dealing with these 5 pieces.  This point about history (H) not being incorporated in prediction has been made previously in many papers in software engineering conferences; see, for example, see the FSE 2023 paper titled \"Grace: Language models meet code edits.\"\n\nAPEval: APEval is an extension of HumanEval generated by asking programmers with varying levels of experience to annotate HumanEval by interacting with an LLM. The paper identifies four categories of benchmarks, where we either have H,C,U or just H,C, or just C, U or just C. Benchmarks for each category are generated by humans starting from HumanEval benchmarks.  There are a total of 164 benchmarks in APEval, 41 of each category, where history (H) ranges from 21-139 lines, code (C) ranges from 8-31 lines, and user query (U) ranges from 3-19 lines (Table 1).  The benchmark set could be useful contribution, but there is no mention of releasing the benchmark set in the paper.\n\nProgramming-Instruct: The idea here is to get a history of code snapshots generated in the process of solving a programming task. This history could come from an LLM, or Git commits, or online submissions of (partial or incorrect) solutions of programming tasks. The data is processed and categorized into HCU, HC, CU or C buckets. The user query U is LLM generated.\n\nCursor-Core: The data generated in (3) above is used to fine-tune Deepseek-Coder, Yi-Coder AI and Qwen2.5-Coder of different sizes. The benchmarks in (2) are used to evaluate.\n\nThe evaluation results show that the fine-tuned model perform better than the base models, and other models in that (size) category. The fine-tuned CursorCore models all perform worse than GPT-4o."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "+ The paper describes a fairly extensive effort that includes benchmark generation using human annotations,\nautomated data generation, and fine tuning. \n\n+ Evaluation across several models, including several open-source models, across sizes"
+            },
+            "weaknesses": {
+                "value": "- While the effort is impressive, the take-home message remains unclear. The paper starts by emphasizing the need for history (H) -- but inclusion of H almost always leads to worse performance (going from C to HC or going from CU to HCU) -- in fact, that is also true for GPT-4o, which is evidence contrary to the thesis of the paper. The code (C) and user interaction (U) part is already part of most LLM-based programming assistants. \n\n- The abstract also emphasizes conversational framework, but I did not find any conversational interactions here, just the history of the code.\n\n- The presentation is poor because the paper tries to pack too much information in the limited space."
+            },
+            "questions": {
+                "value": "1. what is the conversational bit in the Assistant-Conversation framework?\n\n2. Lines 288-293 discuss the process of discarding some segments that are not aligned with \"user's purpose\" -- is there any check in place to ensure that this step does not throws away some important segments? How do you decide if something is aligned with user's purpose when you may not even have the user query (U)?\n\n3. Line 340-343 mention \"randomly utilize two powerful open-source LLMs\" -- utilize for what?\n\n4. Line 295-296 mention things that are mentioned only there in the main part of the paper. What are the learnings from that part of the paper? Is there a conclusion to be drawn, and if so, then it should be in the main paper, and if not, then adding 2 sentences with a pointer to the Appendix is not very helpful."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

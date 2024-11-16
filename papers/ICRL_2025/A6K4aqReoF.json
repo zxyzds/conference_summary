@@ -1,0 +1,168 @@
+{
+    "id": "A6K4aqReoF",
+    "title": "Stateful Dynamics for Training of Binary Activation Recurrent Networks",
+    "abstract": "In recent years, there has been an increased interest in heavily quantized neural networks, which utilize a mixture of numerical precision for various layers in the network. Training such networks requires modifications or alternatives to standard backpropagation, typically in the form of surrogate gradient descent. While multiple methods exist, they have primarily been utilized in feedforward networks, neglecting application to domains which require recurrent layers. Here, we show that surrogate gradient methods are unstable when applied to standard binary activation layers, and fail to converge when applied to temporal datasets.We then incorporate the pre-activation integrative state from spiking neural network approaches into these training methods and show that the incorporation of this state can enable binary activation networks to reach similar performance as floating-point networks. We show that other aspects of spiking networks, namely explicit reset mechanisms and leakage terms, do not contribute additional performance. These results show how incorporating local dynamic states can allow training of recurrent binary networks to maintain low-resolution communication.",
+    "keywords": [
+        "recurrent network",
+        "quantization",
+        "spiking neural network",
+        "dynamical systems"
+    ],
+    "primary_area": "learning on time series and dynamical systems",
+    "TLDR": "Local state allows binary activation functions in recurrent neural networks",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=A6K4aqReoF",
+    "pdf_link": "https://openreview.net/pdf?id=A6K4aqReoF",
+    "comments": [
+        {
+            "summary": {
+                "value": "This manuscript discusses experiments with various quantization strategies to binarize activations of neural models, particularly recurrent. The authors have included in the list of strategies SNN training by seeing the LIF neuron model as yet another binary yet stateful activation function, and conclude that it is a very effective approach for quantization of recurrent networks but they assess that decay, and reset/refractoriness do not really play any influential role."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "I could not identify any, i am sorry."
+            },
+            "weaknesses": {
+                "value": "I find that this manuscript lacks basic understanding of SNNs, does not have a clear scope, and the experimentation lacks depth and structure. Instead, in many parts the authors just re-discover basic concepts or properties about SNNs and recurrent networks.\n\nFirst and foremost the authors claim that \"Binary activation NNs have only been reported for feedforward topologies\" (!), when practically every SNN network is a binary activation recurrent network.\n\nThe authors also claim as a contribution that state allows to train binary activation recurrent networks, but well isn't that obvious, the state is responsible for the recurrent behavior to begin with ?\n\nWhat the authors claim to be temporal instability treatise for recurrent layers (in section 4.1), is really just a discussion about the smoothness of the gradient, or am i missing something?\n\nWhat the authors call different training methods are really one method, only THE backprop (BP) method, and instead they look at different strategies for quantizing (binarizing) activations using BP in-training. In these strategies they test various combinations of statefulness/statelessness, approximations of firing functions (heavyside, noisy heavyside, and hard sigmoid converted to heavyside progressively), and surrogates of the gradients of the binary firing function (actually just one the STE with different gains). However, the combinations are not exhaustively examined but rather haphazardly chosen.\n\nAlthough the authors claim contributions relevant to recurrent networks, the experiments carried out are not with temporal tasks but rather all spatial. They are also executed in a way (the inputs are not provided sequentially but in a single timestep) that the authors only observe the step response of the models (as dynamical systems) and not the temporal integration of the data dynamics, which makes no sense to me.\n\nMoreover the results they present in two tables hardly support their claimed contributions, in different datasets different strategies give the best results, and it is by no means decisive that statefulness attains the best result (but then again also the tests are not temporal either).\n\nFinally, exactly because the choice and design of experiments (with non temporally integrated stimulus) I would not expect to see any effect from decay or refractoriness, so I wonder what makes the authors conclude that these play not role whatsoever in general ?\n\nAdditionally\n\nIn l-099 the authors try to justify they choice for centering the activation functions, without explaining why is that relevant.\n\nIn l-100 the authors talk about literature standards without explaining what standards they refer to.\n\nIn Table 2 the difference between CNN-RNN and CRNN has not been explained\n\nThe SOT benchmark is not explained clearly"
+            },
+            "questions": {
+                "value": "See the Weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper investigates the impact of recurrence as an inductive bias in binarized neural networks, revealing that recurrence leads to temporal instability when using modern surrogate gradient methods, in contrast to spiking neural networks. Furthermore, it demonstrates that integrating local dynamic states, similar to those in spiking neural networks, enhances temporal stability in recurrent binarized neural networks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. **Innovative Application of Spiking Neural Network (SNN) Concepts**\n   - Introducing elements from SNNs, like pre-activation state, leakage, and reset mechanisms, is an innovative approach to handling binary activations in RNNs. \n\n2. **Exploration of Multiple Training Methods**\n   - The paper systematically compares several training strategies (surrogate gradient descent, probabilistic surrogates, and progressive sharpening), showing a thoughtful approach to exploring solutions for BARNNs.\n\n3. **Comprehensive Experimental Setup**\n   - The use of three distinct tasks\u2014image classification, keyword spotting, and small object tracking\u2014demonstrates the versatility of the proposed methods across different types of temporal and spatial data. \n\n4. **Potential for Hardware Implementations**\n   -  This is valuable in the context of real-world deployment, where binary networks and reduced precision can offer efficiency gains, particularly for embedded or neuromorphic systems.\n\n\nWith these strengths, the paper lays a foundation for further exploration and potential practical applications in energy-efficient temporal modeling."
+            },
+            "weaknesses": {
+                "value": "- **Equation Nomenclature and Legibility**: \n   - Equations in the paper are difficult to follow due to inconsistent or unclear notation. Key variables are not defined consistently, and some choices create ambiguity. For instance, in Equation 8, it\u2019s unclear if the layer is intended to be interpreted as a stacked ConvRNN. Additionally, the same variable, \u2018y\u2019, is used across both the spiking neural network (SNN) and binarized ConvRNN contexts, which conflates distinct mechanisms and makes tracking the model dynamics challenging.\n\n- **Unprincipled Approach in Section 4.1**:\n   - The demonstration of binarized recurrent network instability in Section 4.1 lacks theoretical grounding. Beyond the empirical results, the chosen edge case of a constant input does not convincingly justify the instability of these networks. Additionally, Figure 4.1 requires more explanation: it seems to show that the binary activation seems to reconstruct the input, unlike the SNN, could you provide further clarity on this. I am willing to adjust my score if further clarity on this figure is provided.\n\n- **Lack of Focus**:\n   - The contributions are listed but lack clarity, and the paper attempts to address multiple aspects of binary recurrent network training without a clear focus. For example, the incorporation of pre-activation states, leak, and reset mechanisms are all discussed but without a strong, unified narrative explaining why each is necessary. This could be solved by strengthen the message and the structure of the paper. The paper could greatly benefit from clarity.\n\nIn summary, while the paper addresses a relevant problem, its clarity, and structure could be significantly improved. Addressing these weaknesses would enhance the impact and accessibility of the work."
+            },
+            "questions": {
+                "value": "See weaknesses which highlight some key questions. In particular, I'd like clarity on Figure 4.1, and Equation 8 in the manuscript."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Efficient recurrent processing is increasingly important for energy or memory-sensitive spatiotemporal processing tasks. RNNs with binarized activations (BARNNs) would provide increased efficiency. However, training binary recurrent RNNs is generally regarded as difficult in the existing literature.\n\nThe authors illustrate on a keyword spotting task that conventional BARNNs have non-smooth temporal gradients, while a floating point RNN and recurrent LIF spiking neural network (SNN) have smoother temporal gradients. The authors hypothesize that these smoother gradients are beneficial to learning.\n\nThe authors reproduce the difficulty of training BARNNs. They apply three existing methods: (1) surrogate gradients (STE), (2) probabilistic activations, and (3) sharpening activations over training. Importantly, the authors show that on a static-input task, CIFAR, BARNNs train comparably well compared to a floating-point baseline. In contrast, for spatiotemporal tasks SC and SOT, BARNNs do not train well compared to a floating-point baseline. Interestingly, however, in contrast to the 3 conventional BARNN methods listed above, the authors train a LIF SNN and achieve competitive task accuracy on all three tasks compared to a floating-point baseline. The authors identify the stateful accumulation, leaky, and reset mechanisms as potential explanators for the SNN\u2019s advantage over the conventional BARNN methods.\n\nThe authors hypothesize that the stateful accumulation is responsible for the SNN advantage, so they add stateful accumulation to the pre-activations of the 3 conventional BARNN methods and recover competitive task accuracy with the LIF SNN and floating point baseline for SC and SOT tasks, for all but the sharpening method. This evidence supports the hypothesis regarding the critical role of stateful accumulation.\n\nThe authors also investigate how the leak and reset features of LIF SNNs affect SSNs trained using surrogate gradients. The authors train networks using surrogate gradients or probabilistic activations with stateful accumulation (integration), leak, and/or reset. The authors find that generally competitive task performance is maintained in all cases, and they conclude that the key ingredient for well-performing BARNNs is stateful accumulation (integration). Furthermore, the authors find that the distributions of trained parameters varies among the different configurations."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Significance.\nThis work makes a valuable connection between conventional binarized networks and spiking neural networks (SNNs). The connection is particularly valuable because it carefully uncovers \u201call you need\u201d to get the benefit from SNNs in more conventional binarization approaches for recurrent networks \u2013 namely, stateful accumulation in preactivations (integration).\n\nOriginality. \nThis work is the first I have seen that systematically compares conventional BARNN training methods for RNNs to SNNs on relevant spatiotemporal tasks.\n\nQuality.\nThe author\u2019s approach is generally clear, and their line of reasoning generally lucid.\n\nClarity.\nThe state goal and subsequent structure of the paper creates a clear narrative illustrating how the author\u2019s reached their findings."
+            },
+            "weaknesses": {
+                "value": "I noted the following weaknesses:\n\nNotably, the SNN Eq (7) has an infinite-extent surrogate derivative, while Eqs (2) (3) and (4) for BARNNs have finite-extent surrogate derivatives. One confounding reason for why the SNN performs better on spatiotemporal tasks, in addition to the integrative state, is the infinite-extent surrogate derivative. Could this also be the reason why SNNs learn better than the conventional BARNN approaches? Or stated another why \u2013 why did the authors choose finite-extent surrogate derivatives for BARNNs and infinite-extent for SNN? Stated yet another way \u2013 is there a reason why this finite-vs-infinite extent distinction is irrelevant?\n\nIn section 4.1, the authors state that BARNNs are unstable through time. In what sense are they unstable - are the authors using \u2018stability\u2019 in some a technical sense? E.g., one could argue that the dynamics are in fact stable \u2013 they do not go to infinity nor negative infinity.  \n\nI have trouble following the logic from line 313 to 341. For instance, why would activities propagate poorly in BPTT in the oscillatory example Eq 10?  The surrogate derivates are not zero, so as far as I can tell, gradients would propagate without issue. In line 325, why would taking the surrogate gradient of this patter with respect to the recurrent weights provide minimal information other than the relative value of the recurrent weights to the feedforward activity? In line 327, what\u2019s a \u201creal valued\u201d BARNN? My understanding was that BARNNs had binary activations by definition. In line 338, \u201cresulting in dense discontinuities in the input\u201d \u2013 to what input do the authors refer? More generally regarding the choice of a single-neuron BARNN illustrative example \u2013 are there no averaging effects when many neurons are considered that could help smooth out binary activation oscillations?"
+            },
+            "questions": {
+                "value": "I asked the most salient questions above in the \u201cWeaknesses\u201d section. The questions that follow are more minor.\n\n1.\tTo be clear, are all weights and integrative states floating point in this work? (Only activations are binary.)\n\n2.\tWhy are the dense layers for SC and SOT not recurrent? \n\n3.\tIs there anything that can be said about the hyperparameter selection process used in this work, to help justify that the conclusions drawn in this work are not an artifact of certain hyperparameter choices? (E.g., perhaps the reasoning sharpening did not work as well as other BARNN methods is because it requires different hyperparameter settings to perform well.)\n\n4.\tWhat is an autapse?\n\n5.\tRegarding line 402, the authors state distributions of leaks is beneficial. Did the authors use a distribution of leaks in this work? Were leaks trainable parameters?\n\nThank you for this fascinating work."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper deals with artificial neural networks with binary activations (BANNs). Spiking neural networks (SNNs) are a subset of BANNs. The authors investigate whether methods to train feedforward BANNs (e.g., surrogate gradient)  also work in a particular kind of recurrent BANNs: SNN with recurrent connectivity, with and without (leaky) integration. It turns out that these methods fail without (leaky) integration."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "These results are new."
+            },
+            "weaknesses": {
+                "value": "The scope of the paper is very narrow. Essentially, the authors take the sort of architectures that is typically used by the SNN community and show that the usual training methods (e.g., surrogate gradient) fail when removing the (leaky) integration (this is somewhat useful to\u00a0know for the SNN community,\u00a0but the vast\u00a0majority of papers use integration anyway because it is useful to learn temporal dependencies). However, recurrent BANNs are a much broader class. For example, binarized GRU has been proposed (see SpikGRU\u00a0by Dampfhoffer et al), as well as binarized LSTM (https://ieeexplore.ieee.org/abstract/document/7743581). So much more work would be needed to support their general claim that integration is necessary and sufficient to train recurrent BANNs.\n\nMinor points:\n\n* The SNN community always uses {0,1} activations, but the BANN community use {-1,1} most of the time. This should be discussed. In the experiments, the author restricts themselves to {0,1} activations. This again restricts\u00a0the scope.\n\n* The accuracy they reach is well below the SOTA (e.g., around 80% for GSC vs 95% here https://openreview.net/forum?id=4r2ybzJnmN)\n\n* \"g_L is a term which regulates the speed with which x_L decays to zero in the absence of inputs\"\ntau_x already does that. One constant is enough.\n\n* Eq 9: I think it should be dx_L / dt\n\n* You may want to say that Eq 12 corresponds to the (non-leaky) Integrate and Fire (IF) neuron.\n\u00a0\n* Eq 13 bottom: I think it should be dx_L, not dx_L / dt"
+            },
+            "questions": {
+                "value": ">For networks with temporal dynamics, the entire image was presented for 16 timesteps and the network output was taken as activity on the final step.\n\nIt's more common to take the mean or max activity across timesteps. Have you tried?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

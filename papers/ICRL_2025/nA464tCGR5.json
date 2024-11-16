@@ -1,0 +1,169 @@
+{
+    "id": "nA464tCGR5",
+    "title": "Balanced Neural ODEs: nonlinear model order reduction and Koopman operator approximations",
+    "abstract": "Variational Autoencoders (VAEs) are a powerful framework for learning compact latent representations, while NeuralODEs excel in learning transient system dynamics. This work combines the strengths of both to create fast surrogate models with adjustable complexity. By leveraging the VAE\u2019s dimensionality reduction using a non-hierarchical prior, our method adaptively assigns stochastic noise, naturally complementing known NeuralODE training enhancements and enabling probabilistic time series modeling. We show that standard Latent ODEs struggle with dimensionality reduction in systems with time-varying inputs. Our approach mitigates this by continuously propagating variational parameters through time, establishing fixed information channels in latent space. This results in a flexible and robust method that can learn different system complexities, e.g. deep neural networks or linear matrices. Hereby, it enables efficient approximation of the Koopman operator without the need for predefining its dimensionality. As our method balances dimensionality reduction and reconstruction accuracy, we call it Balanced Neural ODE (B-NODE). We demonstrate the effectiveness of this method on academic test cases and apply it to a real-world example of a thermal power plant.",
+    "keywords": [
+        "dynamical variational autoencoders",
+        "state space models",
+        "Neural ODEs",
+        "Koopman theory",
+        "surrogate models"
+    ],
+    "primary_area": "learning on time series and dynamical systems",
+    "TLDR": "We present Balance Neural ODEs, that learn dynamics with continous latent representations of adjustable complexity.",
+    "creation_date": "2024-09-23",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=nA464tCGR5",
+    "pdf_link": "https://openreview.net/pdf?id=nA464tCGR5",
+    "comments": [
+        {
+            "summary": {
+                "value": "A method for model order reduction using $\\beta$-VAEs and state space NeuralODEs called **balanced neural ODE** is described and tested on a few examples. The hyperparameter $\\beta$ controls the number of active latent space dimensions, i.e. the reduced dimension of balanced neural ODE. Two main methods of evolution are proposed for the latent VAE parameters: constant-variance and dynamic-variance. Koopman operator approximation is shown to be a special case of balanced neural ODE."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Method is fully described, intuitive to understand, many derivations are fully given\n2. Balanced neural ODE outperforms latent neural ODE and is able to learn latent dynamics.\n2. Numerical experiments demonstrate the breadth/diversity of application of the method."
+            },
+            "weaknesses": {
+                "value": "1. Method combines two existing approaches (however, the combination is novel)\n2. Presentation feels brisk at times (might be alleviated with an extra page)\n3. The model involves many components with architecture choices, and there is not enough ablation on"
+            },
+            "questions": {
+                "value": "1. Are there other related works that combine model order reduction and latent space evolution, other than latent ODE?\n2. How does the balanced neuralODE compare to Dynamic Mode Decomposition method (for linear operator learning)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel method, called B-NODE, for time-series modeling of dynamical systems (e.g. power plants). B-NODE is claimed to be fast (in terms of runtime) and accurate (in terms of reconstruction error on the original data). The main idea behind B-NODE is a combination of $\\beta$-VAE (for dimensionality reduction) with a Neural ODE (for dynamical systems' modeling). \n\nThe faster runtime of B-NODE results from dimensionality reduction via the VAE. Previous approaches (like standard latent ODEs) fail to provide such dimensionality reduction. B-NODE also claims to offer the user with a knob to balance the trade-off between dimensionality reduction and reconstruction accuracy.\n\nAs for the paper structure, section 3 describes the methodology. Sections 4 and 5 demonstrate the advantages of B-NODE on certain synthetic and real-world tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper shows promising results with using B-NODE on certain tasks.\n- The paper provides certain handy illustrations and detailed figures explaining their approach."
+            },
+            "weaknesses": {
+                "value": "**Technical Weaknesses**:\n1. *Limited evaluation.* Since this is a paper that proposes a novel method to solve a problem, the authors should aim to provide a comprehensive suite of experiments showing the advantages of the proposed methodology over existing baselines. The only real-world use case is presented in Section 4.2, which is just one single task. In Figure 5 (in the same section), B-NODE is compared against only one baseline, which is NODE. As a reference, two closely related papers in this field are [1] and [2]. Both provide much more detailed evaluation (Table 3 in [1] and Tables 2,3 in [2]).\n\n**Presentation Weaknesses**: \n\n1. *Unclear on the main advantage of B-NODE.* Is your main contribution speed of the proposed methodology, or accuracy, or both? It would be good to explicitly state it. The paper abstract mentions the word \"fast\", but the only runtime comparison I could find was Figure 6(b), which is only discussed briefly in the text in lines 388-392. In contrast, Figures 4,5,7,8 all seem to focus on accuracy via the RMSE.\n\n2. *Vague exposition.* Below I list certain examples where the exposition is vague.\n\nExample 1: The \"B\" in B-NODE stands for \"Balanced\", but what exactly is the knob that lets one choose the balance of the trade-off between reconstruction accuracy and latent dimension size?\n\nExample 2: In lines 150-155, how is the $D_{KL}$ measured per channel? The overall $D_{KL}[q(z|x^\\mathcal{D})||p(z)]$ is well-defined, but to measure for certain channel $i$, do you measure $D_{KL}[q(z_i|x^\\mathcal{D})||p(z_i)]$? Are the marginals on a \"channel\" $i$ well-defined? It would have been nice to see this in proper notation. \n\nExample 3: It is unclear what the following statement means: \"The VAEs sampling-based robustness complements stability enhancements for Neural ODEs\". This statement is mentioned twice, in line 180 (Methodology section) and line 476 (Conclusion section).\n\nExample 4: Line 280 says \"state $x_i^z$ is inactive\", but no notion of active/inactive-ness is defined? Likely by inactive, the authors mean that the $D_{KL}$ of the $i^{th}$ channel is below the threshold, but this is sloppy exposition.\n\nExample 5: Line 60 (and a few other places) mention that B-NODE *requires* a non-hierarchical prior, but the paper does not explain why this is the case.\n\nOverall, I found the paper difficult to understand. Sentences that follow one another do not necessarily build the same idea in a linear/sequential fashion. This makes it hard to extract what the authors are trying to convey.\n\n\n```\n[1] Naiman, I., Erichson, N. B., Ren, P., Mahoney, M. W., & Azencot, O. (2023). Generative modeling of regular and irregular time series data via koopman VAEs. arXiv preprint arXiv:2310.02619.\n[2] Wi, H., Shin, Y., & Park, N. (2024, March). Continuous-time Autoencoders for Regular and Irregular Time Series Imputation. In Proceedings of the 17th ACM International Conference on Web Search and Data Mining (pp. 826-835).\n```"
+            },
+            "questions": {
+                "value": "**Technical questions**:\n1. How exactly does B-NODE \"balance\" between dimensionality reduction and reconstruction accuracy? Is it simply just varying the $\\beta$ in $\\beta$-VAE? If yes, it would be nice to explicitly mention this. \n2. In equation 4, why is it $q(u_{0:T}^z|u_{0:T})$ instead of $q(u_{0:T}^z|u_{0:T}, p^z, p)$? Since the latter is what one would get from the definition of $x^\\mathcal{D}$ and $z$ in line 188. Is it because the external input $u$ is independent of the time-invariant parameters $p$? Is this a standard assumption?\n\n**Suggestions for presentation**:\n1. In the first paragraph explaining motivation, it would be nice to present more examples so that the reader can conceptualize the problem. Currently, only the words \"yearly energy system simulations\" are mentioned as examples.\n2. In Figure 4(a), the reader needs to zoom in a lot to read the values of $\\beta$ around the markers on the plot. Please make the plots easier to read."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work presents a novel approach combining Variational Autoencoders (VAEs) and Neural ODEs to address model order reduction (MOR) for dynamic systems. The proposed model, named Balanced Neural ODE (B-NODE), utilizes VAEs for latent dimensionality reduction and Neural ODEs for capturing transient dynamics, resulting in a compact, efficient surrogate model that can dynamically adapt to the complexity of input data."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper effectively combines Variational Autoencoders (VAEs) and Neural ODEs, leveraging their complementary strengths for dimensionality reduction and transient dynamics modeling. This approach could significantly impact surrogate modeling in dynamic systems."
+            },
+            "weaknesses": {
+                "value": "Although the paper acknowledges areas for future work, a more detailed discussion on scenarios where B-NODE might underperform would be helpful. Specifically, it would be beneficial to outline any cases where the model might struggle with particular types of inputs or dynamic systems."
+            },
+            "questions": {
+                "value": "- Please provide more comprehansive understanding of \u03b2-value?  A discussion of the theoretical implications of different \u03b2 values\n- It seems that \u03b2-value is small does it mean that information bottleneck become negligible?\n- if you set \u03b2=0 what will happen? please discuss the theoretical implications of setting \u03b2=0\n\nIf the authors can clarify my concern, I could change my opinion."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel method called\u00a0Balanced Neural ODE (B-NODE), which combines\u00a0Variational Autoencoders (VAEs)\u00a0with\u00a0Neural ODEs\u00a0to reduce the complexity of dynamical systems while maintaining accuracy. This approach extends\u00a0Latent ODEs\u00a0to handle\u00a0time-varying inputs\u00a0by continuously propagating latent variables. It also aims to approximate\u00a0Koopman operators\u00a0by leveraging the weight factor of KL divergence during VAE training. The proposed method is evaluated on both academic and real-world scenarios."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The problem addressed is both interesting and crucial for applying Neural ODEs to dynamical systems with time-varying inputs. The combination of VAE and Neural ODEs to achieve dimensionality reduction alongside dynamic modeling provides an approach for managing complex systems. \n\n- The inclusion of real-world test cases adds practical value to the study and demonstrates its potential applicability."
+            },
+            "weaknesses": {
+                "value": "## Presentation \n- The layout of this paper is somewhat disorganized, which makes it very hard to follow. The presentation is unclear without a main thread, with complex concepts that are not explained adequately and unnecessary.\n- The concepts and some formulations appear to be justified solely by the authors themselves, lacking sufficient external validation or references to prior work (see points in Questions).\n- Please ensure there is proper spacing between different paragraphs and sections. \n\n## Experiments \n- There are no baseline comparisons with Koopman-based models, Neural ODEs, or VAE-based forecasting approaches (which are highly relevant to this work), which limits the ability to assess how much improvement the proposed model actually provides.\n\n## Minor issues \nsome examples:\n- Lines 100 the integral should be $\\int_{t_0}^{t}f_{\\phi NODE}(\\mathbf{x}(\\tau))d\\tau$\n- Line 225, is -> are\n- Line 312, Observed -> observe \n\nI'd encourage authors redo proofreading."
+            },
+            "questions": {
+                "value": "- In line 159, the statement \"Combining VAEs with State Space Models leverages VAEs' ability to generalize through an information bottleneck with a numerically pre-determined latent space that promotes data locality and latent orthogonality\" is unclear. Specifically, what is meant by \"data locality\" and \"latent orthogonality\"? Could the authors provide further explanation, relevant citations, or supportive numerical results to clarify these concepts?\n\n- Could author further explain how they arrive equation (4ba)? You assume that the $x_0^z$ only related to initial state $x_0$?\n\n-  Lines 297-299: Could the authors further justify why they do not need to pre-determine the dimensionality of the latent space? The weighting factor might contribute to sparsity in certain contexts, but it is unclear how it directly adapts the dimensionality. Additional explanation on this point would be helpful."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

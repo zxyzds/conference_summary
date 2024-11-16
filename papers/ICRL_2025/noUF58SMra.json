@@ -1,0 +1,203 @@
+{
+    "id": "noUF58SMra",
+    "title": "MeToken: Uniform Micro-environment Token Boosts Post-Translational Modification Prediction",
+    "abstract": "Post-translational modifications (PTMs) profoundly expand the complexity and functionality of the proteome, regulating protein attributes and interactions that are crucial for biological processes. Accurately predicting PTM sites and their specific types is therefore essential for elucidating protein function and understanding disease mechanisms. Existing computational approaches predominantly focus on protein sequences to predict PTM sites, driven by the recognition of sequence-dependent motifs. However, these approaches often overlook protein structural contexts. In this work, we first compile a large-scale sequence-structure PTM dataset, which serves as the foundation for fair comparison. We introduce the MeToken model, which tokenizes the micro-environment of each amino acid, integrating both sequence and structural information into unified discrete tokens. This model not only captures the typical sequence motifs associated with PTMs but also leverages the spatial arrangements dictated by protein tertiary structures, thus providing a holistic view of the factors influencing PTM sites. Designed to address the long-tail distribution of PTM types, MeToken employs uniform sub-codebooks that ensure even the rarest PTMs are adequately represented and distinguished. We validate the effectiveness and generalizability of MeToken across multiple datasets, demonstrating its superior performance in accurately identifying PTM types. The results underscore the importance of incorporating structural data and highlight MeToken's potential in facilitating accurate and comprehensive PTM predictions, which could significantly impact proteomics research.",
+    "keywords": [
+        "Biomolecular learning",
+        "Protein sequence"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=noUF58SMra",
+    "pdf_link": "https://openreview.net/pdf?id=noUF58SMra",
+    "comments": [
+        {
+            "summary": {
+                "value": "The work aims at creating a structure and sequence-based representation of microenvironment  of the  residues and use this for post-translational modification (PTM) classification. They compile a large-scale sequence-structure PTM dataset featuring over 1.2 million residue-level annotated sites across multiple PTM types. The method MeToken tries to capture the context of the site using the sequential and structural neighbourhood of the modified residue. The paper learns a codebook that represents the high-dimensional data into simpler, representative tokens. The work is interesting contribution to the field."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- The authors use valid strategies for experimental evaluation. For example, they take into account sequence similarity to prevent leakage in the evaluation. Uses appropriately macro-avearged evaluation metrics. Many decisions are based on valid reasons or experimentation (using ESM-2 vs ESM3) and (PDB vs AlphaFold+PDB vs AlphadFold) \n- Results on two external datasets are provided. \n- The work is interesting in the sense that it uses the structural features of the modified site together with the sequence\n- Authors compare against existing PTM models and wider protein language models. They have modified some of the specialized models such as DeepPhos to evaluate for the general PTM classification task.\n- Authors provide an ablation study to understand the contribution of the different parts of the method"
+            },
+            "weaknesses": {
+                "value": "Weakness:\n\nA simple baseline of one-hot encoded amino acid sequence representations would be useful to see if certain classes can easily be predicted based on their modification site.\n\nThe authors could compare their work to other structure-aware representations. For example, SAProt using the Foldseek structural tokens learns a sturture aware embedding.\n\nThe authors demonstrate one of the codebooks as an example but a more extensive analysis on this would be interesting. For example a very basic question would be : \"Are the amino acid preferences (K for Sumoylation, S/T/Y for Phosphorylation, etc )correctly captured by the codebooks?\"\n\nInformation on the hyperparameters used to train MeToken and the baseline models are needed for reproducibility of the results.\n\nA hyperparameter sensitivity analysis would be useful. For example the codebook size, the number of neighbors in the k-nn graph etc. \n\nDistinguishing some PTMs from others are easier because of the distinct amino acid preferences in their modification sites. Hard evaluation sets up could have been designed to understand the weakness and the strength of the methodology. For example, does the model correctly differentiate a Lysine residue  being ubiquninated or sumoylated?\n\nThe authors do not provide results on performance across different PTM classes. Are certain PTMs are much easier because of the available training data?"
+            },
+            "questions": {
+                "value": "Questions \nHow are the no-modification sites determined? Are these all sites in protein sequences where no modifications are reported or are they subsets based on amino acid types?\n\nIs the quantization technique and the codebook strategy different than the cited work FoldToken? The differences and similarities should be included in the relevant literature part as it is very closely related to the work introduced here.\nOf the many structures available for a protein in the PDB, which one is selected ? What criteria are applied on this selection?\nAuthors suggest that they introduce a sub-codebook strategy to handle the long-tail distribution but at the end of the day, all the rare classes are grouped as a single class. How does that help?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposed a pipeline to predict PTMs (mostly in residue level as opposed to other global level) by addressing the issue of lacking structural information in the modeling. Additionally they curated a new dataset for such task as added contribution. Through comparison with baselines and some ablation studies, they show the better performance of the method"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The raised challenges in the current landscape of PTMs prediction are legit. These issues make both modeling and evaluation in the domain difficult, thus the claim for such challenge is of high relevance.\n\nThe introduction of MeToken Model, that tokenizes amino acids\u2019 micro-environments by integrating both sequence and structural information into discrete tokens, is relevant (although it seems like most of the boost is from this innovation so it begs the questions why the latter two, see below Weakness comments)\n\nTo handle the long-tail distribution of PTM types, MeToken introduces a sub-codebook strategy which arguably serves as a regularizer for the model to learn canonical representations"
+            },
+            "weaknesses": {
+                "value": "The hypothesis that incorporating structural data into PTM prediction can improve accuracy is well-supported by prior research indicating that sequence-only approaches may overlook important spatial context. But from table 4 it seems like this has enough boost compared to other baselines. It's beneficial to investigate deeper (and perhaps more ablation studies on only this arm of contribution) to stress the importance of added benefit of structural information.\n\nAdditionally, ESM-2 baseline seems to be very close the proposed method and beats all other baselines so there's still arguably a lot of sequence information that's useful already, so how to showcase their method is not overfitting to structural features might help reviewers to understand the validity of their method.\n\nAgain, the latter contributions, uniform sub-codebook strategy and temperature-scaled vector quantization, seems to offer marginal benefit which IMO dilutes the core contribution brought by the Micro-env arm of contribution. In addition, the temperature adjusted approach might necessitate a huge effort for hyperparameter tunning to make it work. But the authors didn't discuss any ramification of it. Further, the uniform sub-codebook strategy might risk embedding redundancy for common PTM types, and this was not discussed either."
+            },
+            "questions": {
+                "value": "They highlighted the long tail nature of the current datasets in the domain but it lacks some deeper analysis for the distribution e.g. rarity analysis, frequency statistics. It's unclear the extent to which the long tail nature is currently at play for the modeling difficulty in the domain, as what they claimed as a challenge. Additionally, reducing the class imbalance by consolidating PTM types with fewer than 100 samples into a single \u201crare sites\u201d category might be exacerbate the imbalance issue? The rare classes are not modeled/studied individually then\n\nAlso, UMAP is often better at preserving global structure in the final projection. This means that the inter-cluster relations are potentially more meaningful than in t-SNE. So might want to suggest the authors to compare that visualization (see appendix c: https://arxiv.org/pdf/1802.03426)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "MeToken introduces a novel approach to PTM prediction by integrating sequence and structural data through micro-environment tokenization and a uniform codebook, enhancing model performance across diverse PTM types. The model shows good results but relies on AlphaFold data and lacks evaluation on biological interactions, suggesting areas for future refinement."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Proposes MeToken that effectively integrates sequence and structural data in PTM prediction. This foresighted approach to using micro-environment tokenization and uniform sub-codebook construction demonstrates promising results in addressing the long-tail distribution of PTM types.\n2. Extensive experiments across datasets validate the model's performance, showing significant improvements in metrics such as F1-score and AUPRC over competitive baselines. The experiments reveal that MeToken captures complex biochemical contexts well, potentially setting a new benchmark for PTM prediction."
+            },
+            "weaknesses": {
+                "value": "1. The reliance on AlphaFold-generated data may limit its generalizability in real-world applications where experimental structures are less available or differ significantly.\n2. Although the authors address the dimensionality reduction challenge, computational complexity remains an issue, especially given the additional steps in codebook learning and temperature-scaled quantization. Further exploration of optimization methods would enhance applicability for high-throughput or large-scale data analysis.\n3. The study focuses primarily on PTM types without including interactions with enzymes or other proteins, which are crucial for PTM formation and regulation in vivo. Extending the approach to consider these interactions could improve the model\u2019s utility in biological applications."
+            },
+            "questions": {
+                "value": "MeToken's design, with its uniform sub-codebooks and temperature-scaled quantization, may introduce significant computational demands, especially in high-dimensional cases. Have you explored options like pruning or adaptive quantization to mitigate these costs? This could clarify MeToken\u2019s efficiency for large-scale deployment. Another question is that as protein-protein interactions, particularly with enzymes often influence PTM sites, could you consider ways to include these relationships in MeToken\u2019s predictions? Addressing this would potentially expand the model\u2019s real-world applicability and accuracy in cellular contexts."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper compiles a large-scale sequence-structure PTM dataset and also propose METoken which uses sub-codebooks for each of the subtypes and temperature scaled vector quantization. On top of the the codebooks and learned tokens for micro-environment of the protein positions it then predicts PTM and its type."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The ablation and comparisons are done and results are reported on various useful metrics like F1, MCC and others."
+            },
+            "weaknesses": {
+                "value": "It is not clear how the sequence similarity or redundancy was mitigated in the train-test-validation sets. Please report how minimal redundancy was ensured among test-train and validation sets.\n\nIn the rare modification class, how good is the predictor to discriminate the classes is not made clear. In this case authors may consider to report the different metrics for the PTM classes merged.\n\nThere are datasets and methods which are specifically learned for particular type of PTM and that has been a trend in the literature. Please report how does those methods perform comapred to METoken."
+            },
+            "questions": {
+                "value": "How is the imbalance in the samples for no modification class affects the classification? Particularly the merged small PTMs and no modifications."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "PTM prediction is a very important topic in bioinformatics. This study introduces the MeToken model to consider the micro-environment of amino acids for PTM prediction. The proposed method has shown promising results in performance evaluation tests."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors incorporated the protein structural data to enhance the prediction, which is good as structural information could be better presented the functional-related information."
+            },
+            "weaknesses": {
+                "value": "Some descriptions are not very accurate, and the progress of some existing studies is ignored."
+            },
+            "questions": {
+                "value": "1. PTMs can be summarised into four types according to the modification types: chemical groups (e.g. Phosphorylation, Acetylation), proteins/peptides (e.g. Ubiquitylation, Sumoylation), complex molecules (e.g. glycosylation), and cleavage (proteolysis). These four types could have different structural preferences. How can the proposed model capture the differences between them? Which types work well using the proposed method?\n2. The description \"Existing computational approaches predominantly focus on protein sequences to predict PTM sites\" in the Abstract is not accurate. There are many graphs and structural-aware methods that have been developed and published.\n3. The authors are suggested to provide some biological case studies to interpret the micro-environment tokenization related to the characteristics of PTMs in the biological context.\n4. The source codes and datasets should be publicly available upon acceptance."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

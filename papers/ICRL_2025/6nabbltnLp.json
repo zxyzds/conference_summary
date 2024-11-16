@@ -1,0 +1,133 @@
+{
+    "id": "6nabbltnLp",
+    "title": "Joint or Disjoint: Mixing Training Regimes for Early-Exit Models",
+    "abstract": "Early exits are an important efficiency mechanism integrated into deep neural networks that allows for the termination of the network's forward pass before processing through all its layers. \nEarly exit methods add trainable internal classifiers which leads to different training dynamics. However, there is no consistent verification of the approaches of training of early exit methods and little understanding how training regimes optimize the architecture.  Most early exit methods employ a training strategy that either simultaneously trains the backbone network and the exit heads or trains the exit heads separately. \nWe propose a training approach where the backbone is initially trained on its own, followed by a phase where both the backbone and the exit heads are trained together. Thus, we categorize early-exit training strategies into three distinct categories, and then validate them for their performance and efficiency. \nIn this benchmark, we perform\nboth theoretical and empirical analysis of early-exit training regimes. We study the methods in terms of information flow, loss landscape and numerical rank of activations and gauge the suitability of regimes for various architectures and datasets.",
+    "keywords": [
+        "early-exit",
+        "efficient AI",
+        "conditional computation"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "",
+    "creation_date": "2024-09-21",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=6nabbltnLp",
+    "pdf_link": "https://openreview.net/pdf?id=6nabbltnLp",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents a new method to improve model efficiency by early exits. Previous methods in this line usually train the backbone and head classifiers at the same time (joint scheme), or separately (disjoint scheme). This work argues that they will impair the performance, so they propose to train the backbone first and then both the backbone and head exit networks together, sort of a method in between of the previous two paths. Experiments across various architectures and datasets show the effectiveness of the method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The early exits methods for model efficiency is practical and interesting. And their method has been motivated by grounded observations.\n2. The method is associated with a theoretical analysis from the lens of mode connectivity. Although I think the \"theoretical\" part can be more grounded and rigorous, the intent and attempt are valuable.\n\n3. Empirical results suggest the method is effective against other counterparts."
+            },
+            "weaknesses": {
+                "value": "1. One problem with the experiments is that the paper does not include evaluations on relatively large-scale datasets like ImageNet-1K. Many papers have noticed that the conclusions on CIFAR is hard to generalize to ImageNet-1K, so the results on ImageNet-1K are encouraged.\n\n2. Methodologically, the paper method looks too simple technically and too intuitive. One sign that the paper lacks *real* technical contribution is that it has zero equations - only one, if any, is in page 4 without indexing. The paper claims to \"conduct theoretical analysis\". Sorry to say it is hard to see where the \"theory\" is rigorously defined or introduced. With this missing, the paper has 9 pages, 1 page shy of the max 10 pages, which is of course okay, but somehow tells us that the paper appears to be rushed out.\n\n3. In most results, the performance advantage over mixed training is quite marginal. Ie, the results are not strong.\n\n4. Some of the results look strange. Why in Fig 7(a) does the disjoint scheme perform unusually better than the others at large FLOPs?\n\nMinior writing or presentation issues:\n- \u201djoint\u201d regime -> \u201cjoint\u201d\uff0c \u201ddisjoint\u201d regime ->\u201cdisjoint\u201d  -- many of the quotes are in wrong format."
+            },
+            "questions": {
+                "value": "NA"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies different learning regimes (joint, disjoint) that could be followed when training the base model (backbone) and the additional internal classifiers. In this regard, the paper proposes a \u201cmixed\u201d regime, which follows a warming-up type of approach, where the backbone is first trained, and then, the internal classifiers are added and trained together with the backbone.\n\nOn the more theoretical side, the paper analyses the learning dynamics behind these regimes. On the empirical side, experiments on image and text classification problems based on several backbones show the capabilities of the proposed method at different computational budgets."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- A a high-level, the paper is very clear. There are no \u00a0barriers getting on the way towards understanding the problem addressed by the paper and its proposed solution.\n    \n- The empirical validation of the proposed method covers different data modalities, i.e. images and text. As a beneficial consequence, different datasets (CIFAR\u201910/100, ILSVRC12, Newsgroups and ) and models/architectures. This helps the reader get a good overview of the capabilities of the proposed method.\n    \n- Results seem to be reported over different runs, i.e. 4 according to Sec. 4 (l.323)\n    \n- The empirical evaluation is complemented with a more theoretical analysis of the effect of the considered training regimes."
+            },
+            "weaknesses": {
+                "value": "- W1: weak positioning; Good part of the related work (l.430-441) is centered on discussing Early Exiting Networks without focusing on the training regime aspect, the core of the contribution put forward by the paper.\n    \n- W2: While the proposed mixed regime seems to outperform the classical joint approach under some circumstances, the technical novelty seems to be relatively reduced and some what comparable to existing techniques used to train multi-component networks. A comparison wrt. to these could help position the proposed method and stress further its novel aspects.\n    \n- W3: From the reported results, the proposed method seems to be less suitable for the setting of interest, i.e. the one with reduced computational budget. Moreover, the improvement of the proposed mixed regime over the classical joint strategy following other exit strategies, e.g. the entropy exit criterion (Sec. 4.2, Fig, 10) does not seem be that clear anymore.\n    \n- W4: Some observations made by the paper seem rather anecdotal. For instance, in Sec. 3.1 (l.130-146) some observations are made regarding the relative locations between loss values from models \u00a0trained following the considered regimes. Similarly, in several places (l.125, l.267-269, etc.) there are some statements regarding performance of input samples with different level of difficulty (e.g. easier vs. difficult to classify). It is unclear however, how prevalent/frequent these observations hold in the different problems/models/datasets that are considered. A supporting quantification of this aspect would be a proper companion to these statements.\n    \n- W5: The proposed method seems to be currently tested only in classification problems. Experiments on regression problems would provide further evidence on the applicability of the proposed method.\n    \n- W6: The content of the paper is too verbal at times, a more formal presentation of the considered training regimes would make more clear what are the different factors that are behind and influence one or the other. This would also help throw further light into how training would be affected by the selection of one or the other regime.\n    \n- W7: In its current form, the paper provides almost no details on the classification problems (and related datasets) that were considered on the empirical evaluation. This would not only be desirable for unfamiliar readers, but it would also serve as a point to verify whether the paper follows the standard or its own protocols, and ensure reproducibility of the reported results.\n    \n- W8: There are some inconsistencies in how models/datasets are used in some of the reported experiments. For instance, in some cases only specific model/dataset combinations are considered (Sec. 4.1 Fig.6 & 7). In other cases, \u00a0a given model. e.g. ViT is only trained on CIFAR-10 (Fig. 8) and in other cases on CIFAR-100 (Fig. 9). Results from Sec. 4.3 Fig.11 are limited only to the ViT model and CIFAR-10 dataset. A similar focus occurs on (Sec. 4.4, Table 1). Given this, it is hard to assess to what level the difference in performance are generalizable accross other settings that the specific combinations reported in the paper."
+            },
+            "questions": {
+                "value": "[Suggestion] Regarding W1 and W2, a positioning wrt. to the iterative approaches like those used in GANs (Goodfellow, 2014) , R-CNN based detectors (Ren, 2017), and other multi-component models (Haidar, 2023) would be beneficial in this context?\n\n[Suggestion] Regarding W4, quantifying how prevalent the stated observations are present in the conducted experiments could provide better grounds to support such statements. In a similar manner, I would suggest defining the difficulty of the samples of the considered datasets, quantify where these sample groups exit in the models and find the relationship of this wrt. the considered regimes.\n\n[Suggestion] Regarding W8, I would suggest conducting experiments on all the possible combinations of the considered datasets/models. Certainly the page limitations will not allow adding all of them in the body of the paper, but the additional/supporting results could be part of the supplementary material.\n\nReferences\n\n- Goodfellow et al., \"Generative Adversarial Nets\", \u00a0NeurIPS 2016\n    \n- Ren et al., \"Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks\", Transactions of Pattern Recognition and Machine Intelligence (T-PAMI) 2017\n    \n- Haidar et al., \"Training Methods of Multi-label Prediction Classifiers for Hyperspectral Remote Sensing Images\", Remote Sensing 2023."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N.A."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper analysis the"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Early exiting is a very important research topic to achieve efficiency. Focusing this topic is valuable.\n\n2. This paper provide a understanding of the early-exit neural networks, which may be useful for other researchers.\n\n3. The author do both image and language experiment."
+            },
+            "weaknesses": {
+                "value": "1. The novelty is limited. The proposed joint / disjoint / mixed training sound naive. Although the authors provide some analysis for early-exit networks, the proposed methods and experiments looks have few relation with these these analysis.\n\n2. Inproper baseline network and evaluation choice. And I think it is the biggest problem. I am curious why the author mainly follow the practice in SDN [11], rather than follow the practice of MSDNet [9]. It is apparent that MSDNet have a more clean and reasonable architecture for early-exit, a very clean training setting, and a more systematic evaluation method for early-exiting. \n\n    2.1)  The disadvantages of directly add early exits in resnet (as the practice in SDN) have been very througthly discussed in MSDNet paper. And MSDNet have a much stronger performance than SDN in a very clean training setting. I think the authors should do their experiments in more SoTA architectures.\n\n    2.2) The line of MSDNet works [9, 7, 19, 32] provide a more reasonable evaluation method for early-exiting networks. They evaluation the networks in Budgeted Training and Dynamic Inference schemes. In the Budgeted Training scheme, they will calculate the threshold for each exits in the training set, and they use these thresholds to do evaluate in eval/test sets. However, the way SDN evaluate their model looks much naive. Furthermore, this submission \"set 100 evenly spaced early-exit confidence thresholds\" (as mentioned in line 319), is not very reasonable   compared with MSDNet.\n\n3. The training setting is not clear and maybe infair. When the authors compare disjoint / joint / mixed training, it seems they have not keep the total training epoch (or some other method to evaluate training cost) the same. As a result, I am doubtful for their results.\n\n4. The training hyper-parameter is also confuing. For example, in sec. D.3, the author claim they train 1500 epoches for efficientnet in line 791, while in line 791 they say they train efficientent for 200 epochs.\n\n5. Lack of experiments.\n\n    5.1) For image experiment, I think the results in imagenet-1k is very important. While the authors sometimes do experiments in CIFAR10, and sometimes in CIFAR100, limited ImageNet-1k results is provided. \n\n    5.2) I also does not understand the way they choose CIFAR 10 or 100 in some small ablations.\n\n    5.3) The authors do not compare they method with related works.\n\n\nMinors:\n\n1) Line 379: Imagenette --> ImageNet\n\n2) Line 773: Imagenette --> ImageNet"
+            },
+            "questions": {
+                "value": "1. How the author claim \" Disjoint and mixed regimes produce similar models, while the model trained in joint regime lies in a different basin\" in Fig. 2? What is the x axis and y axis means in Fig. 2? If the distance in Fig. 2 mean something, it looks like the distance between the three points is similar. If you think a very high loss \"mountain\" separate  joint and the other two points, I think the loss \"mountain\" may means nothing in this space.\n\n2. How the MODE CONNECTIVITY findings motivate the authors to design these methods?\n\n3. How the numerical rank is computed in each layer? Why the rank will have a ~3000 rank? What network this experiment use?\n\n4.  How the NUMERICAL RANK findings motivate the authors to design these methods?\n\nI would raise my rating if the author give a reasonable explanation and necessary additional experiments for my comments and questions in the weakness section and questions section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,170 @@
+{
+    "id": "m7lBCyROPP",
+    "title": "Goal-conditioned Reinforcement Learning with Subgoals Generated from Relabeling",
+    "abstract": "In goal-conditioned reinforcement learning (RL), the primary objective is to develop a goal-conditioned policy capable of reaching diverse desired goals, a process often hindered by sparse reward signals. To address the challenges associated with sparse rewards, existing approaches frequently employ hindsight relabeling, substituting original goals with achieved goals. However, these methods exhibit a tendency to prioritize the optimization of closer achieved goals during training, leading to the loss of potentially valuable information from the trajectory and low sample efficiency. Our key insight is that these achieved goals, generated from the same hindsight relabeling, can serve as effective subgoals to facilitate the learning of policies that reach possible long-horizon desired goals within the same trajectory. Leveraging this perspective, we propose a novel framework called Goal-Conditioned reinforcement learning with Q-BC (i.e, behavior cloning (BC)-regularized Q) and Subgoals (GCQS) for goal-conditioned RL. GCQS is a innovative goal-conditioned actor-critic framework that systematically exploits more trajectory information to improve policy learning and sample efficiency. Specifically, GCQS initially optimizes a Q-BC objective to facilitate learning policies that reach achieved goals effectively. Subsequently, these achieved goals are redefined as subgoals, which serve to enhance the goal-conditioned policies, thereby predicting better actions to reach the desired goals. Experimental results in simulated robotics environments demonstrate that GCQS significantly enhances sample efficiency and overall performance compared to existing goal-conditioned methods.",
+    "keywords": [
+        "Goal-Conditioned Reinforcement Learning",
+        "Hindsight Experience Replay",
+        "Subgoal-based Approach"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "This paper introduces a novel subgoal-based framework for goal-conditioned reinforcement learning, where subgoals are generated through relabeling.",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=m7lBCyROPP",
+    "pdf_link": "https://openreview.net/pdf?id=m7lBCyROPP",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper studies hindsight relabeling in goal-conditioned reinforcement learning (GCRL). The key finding is that previous GCRL methods have a bias towards closer achieved goals during training, which results in the learned policy being less aligned to reach long-term goals. To address this issue, this paper proposes a novel GCRL method, GCQS, which first learns a goal-reaching policy and then uses the KL-divergence between the learned policy to final goals and goal-reaching policy to subgoals along the trajectories to guide policy optimization for reaching the long-term goals. This method enjoys a performance guarantee and demonstrates better performance than state-of-the-art GCRL baselines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The proposed method shows strong empirical results.\n2. The method is well-motivated."
+            },
+            "weaknesses": {
+                "value": "Major questions:\n\n1. If prioritizing the closer achieved goals is the main issue of previous GCRL methods, can we simply use data augmentation to rebalance the relabeling trajectory dataset and improve the performance? I think this would be an interesting result to see and could make the paper more solid.\n2. The connection between GCQS and GCWSL: while the authors do not classify GCQS as one GCWSL method, I think there are some similarities to discuss between the two methods. Actually, in offline settings, both Equation 12 and Equation 15 should have a closed-form solution, which is an exponentially weighted form of $\\pi_{relabel}$ and $\\pi^{prior}$, as discussed in [1]. This makes me wonder if GCQS is still a GCWSL method (like exponential advantage weight mentioned in WGCSL [2]) and if the closed-form solution could further improve the method.\n3. Several baselines in the experiments are offline methods, so I am wondering how authors compare them with other online baselines and GCQS to make sure the comparison is fair.\n\nMinor points:\n\n1. The cumulative function should be defined in Theorem 4.1, as it is slightly different from the commonly used probability cumulative function.\n2. I believe Section 6.1 has a typo: 16 CPUs -> 16 GPUs.\n\nDespite the questions mentioned above, I am recommending weak acceptance due to the motivation and strong performance of the paper at this stage, however I hope the authors can address my concerns.\n\n[1] Nair, Ashvin, et al. \"Awac: Accelerating online reinforcement learning with offline datasets.\" *arXiv preprint arXiv:2006.09359* (2020).\n\n[2] Yang, Rui, et al. \"Rethinking goal-conditioned supervised learning and its connection to offline rl.\" *arXiv preprint arXiv:2202.04478* (2022)."
+            },
+            "questions": {
+                "value": "There are some questions and concerns, which I have outlined in the previous section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents GCQS, which utilizes achieved goals as subgoals and iteratively updates by considering behavior cloning schemes for prior policy and KL-constraint for policy."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper is generally well-written, easy to follow, and provides promising results on some benchmark problems.\nThe paper also highlights neglected aspects, such as the issue of short trajectory usage in subgoal generation, and presents theoretical support for the proposed objective."
+            },
+            "weaknesses": {
+                "value": "The lack of comparison with other benchmark problems, such as complex AntMaze tasks presented in [1, 2], where the original HER showed significantly degraded performance compared to similar methods such as PIG, raises questions about whether omitting high-level planning for subgoal generation is valid for other complex and long-horizon GCRL tasks.\n\nSee questions for others.\n\n[1] Kim, Junsu, et al. \"Imitating graph-based planning with goal-conditioned policies.\" arXiv preprint arXiv:2303.11166 (2023).\n\n[2] Kim, Junsu, Younggyo Seo, and Jinwoo Shin. \"Landmark-guided subgoal generation in hierarchical reinforcement learning.\" Advances in neural information processing systems 34 (2021): 28336-28349."
+            },
+            "questions": {
+                "value": "(1) This is the question for clarification. What is the key difference between the proposed methods compared to existing methods [1,2] which update subgoals throughout training? Specifically, how does relabelling achieved goals as subgoals differ from landmark or subgoal updates in PIG and HIGL? \n\n(2) This method discards the necessity of high-level planning for subgoal generation but I'm curious whether GCQS works well in long-horizon tasks such as AntMaze [1,2,3] compared to methods utilizing high-level planning, such as HIGL and PIG.\n\n(3) It is unclear how GCQS addresses the issue of short trajectory updates since HER already conducts a similar relabeling scheme. Which component of GCQS handles this? \n\n(4) How important is the SAC component in Eq.12 for GCQS? This omitted ablation leaves the question of the importance of the BC term.\n\n(5) Presenting more details on the derivation of Eq. 25 from Eq. 24 would be helpful for readers.\n\n[1] Kim, Junsu, et al. \"Imitating graph-based planning with goal-conditioned policies.\" arXiv preprint arXiv:2303.11166 (2023).\n\n[2] Kim, Junsu, Younggyo Seo, and Jinwoo Shin. \"Landmark-guided subgoal generation in hierarchical reinforcement learning.\" Advances in neural information processing systems 34 (2021): 28336-28349.\n\n[3] Lee, Seungjae, et al. \"Cqm: Curriculum reinforcement learning with a quantized world model.\" Advances in Neural Information Processing Systems 36 (2023): 78824-78845."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper works on goal-conditioned reinforcement learning tasks and introduces the idea of leveraging subgoals in hindsight relabeling to improve learning efficiency. The proposed method is mainly heuristic, and it is justified with theory on the performance. Empirical results are provided to support the method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors appropriately used illustrative figures to explain some concepts in their paper. Motivating examples are provided to demonstrate the problem of previous approaches. The experiments are conducted on multiple tasks and results are compared with multiple baselines."
+            },
+            "weaknesses": {
+                "value": "There are several main weaknesses in the current paper:\n\n1. on the high level, the necessity of the proposed method is not clear. I understand the key insight the authors aimed to convey using Figure 2. However, from my perspective, isn't this a *property* rather than a *problem* of hindsight relabeling? e.g. when the number of steps required to achieve different goals is uniformly sampled from 1-50, then during the learning process, hindsight relabeling using trajectories having a length of 50 will generate a uniformly distributed length from 1-50, and as the learning proceeds, the policy will learn to achieve closer goals, and averaged trajectory length will be smaller than 50 --- this will lead to a compounding effect in increasingly having more shorter paths. \n\n\n2. to solve the above challenge, why is the proposed method \"necessary\"? For instance, why can not one just to re-sample or down-sample on some of the state-goals? In the current write-up, it is not very clear why the multiple designing factors introduced are well-motivated or necessary. \n\n\n3. according to the theory, using a smaller $\\eta$ will lead to a tighter bound, does this mean that we need the $\\eta$ to be as close to 0 as possible?\n\n4. In Figure 5, the averaging/smoothing method for different figures seems different, and some results lack error bars. The FetchSlide performance is noticeably lower than what has been achieved in the literature.\nFrom my perspective, it is not necessary to demonstrate a method is always better than baselines in all experimental cases. What is more important is to clearly show what are the realistic motivations for introducing the techniques/designing components of the paper, and then use experiments to highlight --- the settings where those challenges exist, the method shines and on the other hand, when those challenges (controllably) alleviated, the performances of different methods would converge. \n\n\nMinor:\n\n5. On presentation. In Figure 1, it would be great if the authors could give some concrete examples and make sure the notations are self-consistent. I acknowledge the authors' effort in explaining their method using Figure 1 and it could be a great idea if the clarity can be further enhanced. For instance, what is \"QBC\" objective in this figure, what does it mean by \"subgoals come from achieved goals\", and why the policy can take either s and g or s and s_g as its inputs?"
+            },
+            "questions": {
+                "value": "please refer to weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies a tendency in existing GCRL methods with goal relabelling that prioritises optimisation toward closer achieved goals. To mitigate this bias, the authors propose an actor-critic objective without goal relabelling, incorporating a KL-divergence constraint towards a novel prior policy. This prior policy ensures that the learned policy behaves consistently towards both the final desired goal and intermediate subgoals. In the experiments, the authors demonstrate that the proposed method achieves strong performance with fewer environment interactions, although the experimental design remains contentious."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The motivation behind the proposed method is insightful and articulated clearly, providing a strong rationale for the approach.\n2. The method developed from this motivation is based on a promising and well-supported assumption."
+            },
+            "weaknesses": {
+                "value": "The main concern with this paper lies in the experimental design:\n1. Section 6.1: It lacks comparison with suitable baselines (see Question 5).\n2. Section 6.2: This section appears redundant, as GCQS's advantage in sample efficiency is already demonstrated in Figure 5 and Section 6.1.\n\nSome minor issues are noted in the questions section."
+            },
+            "questions": {
+                "value": "1. The definition of Q-BC should be clarified upon its first appearance (line 80).\n2. There is a typo in line 312-313 - 'policy objective that reaching achieved goals'.\n2. Section 2 discusses GCWSL methods like GoFar (Ma et al., 2022) and WGCSL (Yang et al., 2022) without mentioning their offline nature. Yang et al. prove the theoretical guarantees in the offline goal-conditioned setting\u2014do these guarantees still hold in the online setting?\n3. In Section 5.2, the relabelled (achieved) goal $g'$ is redefined as subgoals $s_g$, but both $g'$ and $s_g$ are used in the text, which causes some confusion. Would it be clearer to consistently use the notation $g'$ throughout the paper?\n5. The comparison in Section 6.1 appears unfair, as some baselines, like Actionable Models, WGCSL, and GoFar, are designed for offline goal-conditioned RL and may not perform as well in the online setting.\n\n**References**\n\nMa, J. Y., Yan, J., Jayaraman, D., \\& Bastani, O. (2022). Offline Goal-Conditioned Reinforcement Learning via f-Advantage Regression. NeurIPS.\n\nYang, R., Lu, Y., Li, W., Sun, H., Fang, M., Du, Y., \u2026 Zhang, C. (2022). Rethinking Goal-conditioned Supervised Learning and Its Connection to Offline RL. ICLR."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

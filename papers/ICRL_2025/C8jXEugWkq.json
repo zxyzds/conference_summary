@@ -1,0 +1,167 @@
+{
+    "id": "C8jXEugWkq",
+    "title": "EqNIO: Subequivariant Neural Inertial Odometry",
+    "abstract": "Neural network-based odometry using accelerometer and gyroscope readings from a single IMU can achieve robust, and low-drift localization capabilities, through the use of _neural displacement priors_. These priors learn to produce denoised displacement measurements but need to ignore data variations due to specific IMU mount orientation and motion directions, hindering generalization.\nThis work introduces EqNIO, which addresses this challenge with _canonical displacement priors_. We train an off-the-shelf architecture with IMU measurements that are mapped into a canonical gravity-aligned frame with learnable yaw. The outputs (displacement and covariance) are mapped back to the original frame. To maximize generalization, we find that these learnable yaw frames must transform equivariantly with global trajectory rotations and reflections across the gravity direction, _i.e._ action by the roto-reflection group $O_g(3)$ which preserves gravity (a subgroup of $O(3)$). This renders the displacement prior $O(3)$ _subequivariant_.\nWe tailor specific linear, convolutional and non-linear layers that commute with the actions of the group. \nMoreover, we introduce a bijective decomposition of angular rates into vectors that transform similarly to accelerations, allowing us to leverage both measurements types. Natively, angular rates would need to be inverted upon reflection, unlike acceleration, which hinders their joint processing.\nWe highlight EqNIO's flexibility and generalization capabilities by applying it to both filter-based (TLIO), and end-to-end (RONIN) architectures, and outperforming existing methods that use _soft_ equivariance from auxiliary losses or data augmentation on the TLIO, Aria, RONIN, RIDI and OxIOD datasets. We believe this work paves the way to low-drift, and generalizable neural inertial odometry on edge-devices.",
+    "keywords": [
+        "equivariance",
+        "inertial odometry",
+        "subequivariance"
+    ],
+    "primary_area": "applications to robotics, autonomy, planning",
+    "TLDR": "Our framework robustly regresses an equivariant frame which  improves the state-of-the-art in neural IO, when coupled with off-the-shelf filter-based or end-to-end models.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=C8jXEugWkq",
+    "pdf_link": "https://openreview.net/pdf?id=C8jXEugWkq",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors propose a method to adapt existing inertial odometry (IO) architectures to be invariant to the IMU orientation. This is done by making use of an $O_g(3)$/$SO_g(3)$ equivariant network that transforms the gravity-aligned IMU measurements to a canonical frame as a pre-processing step for non-equivariant IO. The predicted displacement and covariance from IO for these canonicalized measurements are then transformed back to the source frame using the inverse canonical frame. The proposed method leads to improved accuracy while maintaining comparable runtime and can in principle be applied to any IO method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This is an interesting and novel application of equivariant networks to an under-explored but useful problem. The canonicalization approach is a good choice for this problem as it adapts existing sota IO architectures and keeps the pipeline interpretable.\n- The symmetry of the problem in terms of $O_g(3)$ equivariance (which is $O(3)$ subequivariant) is well presented. Care has been taken to consistently process the IMU measurements and specialized $O(2)$/$SO(2)$ architectures based on vector neurons have been developed, while more architectures are possible.\n- The approach was tested on two IO architectures which showed accuracy improvements on many datasets, with comprehensive ablation studies, while keeping the inference times comparable."
+            },
+            "weaknesses": {
+                "value": "- The general canonicalization scheme has been proposed before by Kaba, S\u00e9kou-Oumar, et al. \"Equivariance with learned canonicalization functions.\" ICML 2023, and cannot not be presented as a contribution. The original work must be cited.\n- While there is a reduction in drift compared to the baselines, the remaining drift is still significant (>2m) which suggests that the main problem in IO is not in exact equivariance but elsewhere (most likely sensor noise)."
+            },
+            "questions": {
+                "value": "- Why is this canonical. equiv. scheme chosen over other equiv. choices? e.g. frame averaging (Puny et al. ICLR '22) also allows adapting existing non-equiv. architectures.\n- I'm confused about the choice of metrics, especially for the TLIO experiments. From the definitions in A.5 (I believe squared norm is missing), it seems that MSE is just sqrt(ATE)? But the numbers don't reflect this. And I also think ATE, RTE, AYE would be sufficient. Do you do SE3 alignment with the GT trajectories?\n\nMinor non-critical comments:\n- Could you elaborate on the yaw augmentation procedure used for TLIO / RoNIN?\n- It is surprising to me that despite requiring 10x more FLOPs than the non-equiv. architectures, there is barely any increase in runtime (<1 ms). Since there is no code release, can you comment more on the reasons for this efficiency?\n- Writing: In Fig. 3b it is not clear what 'rot. sense' means; explain how the frame is constructed from the network outputs with gs-orth. for sake of clarity; Typo in conclusion: \"respects eliminates\"; Would be helpful to indicate that * means no-EKF in the table 2,3 captions or simply remove the * since it is not applicable to RoNIN."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work introduces EqNIO, a neural network-based odometry system that enhances localization accuracy using accelerometer and gyroscope data from a single IMU. Traditional neural odometry methods face challenges with generalization, as variations in IMU orientation and motion direction can disrupt displacement predictions. EqNIO overcomes this by training a model with canonical displacement priors, aligning IMU data to a gravity-aligned frame with learnable yaw. This approach ensures that the system\u2019s outputs are invariant to rotations and reflections in the gravity direction, supporting robust generalization. Through carefully designed layers and an innovative angular rate decomposition, EqNIO can effectively integrate both acceleration and angular data. Tested on TLIO, Aria, RONIN, RIDI, and OxIOD datasets, EqNIO demonstrates superior performance and adaptability over existing methods, marking a step forward in low-drift neural inertial odometry suitable for edge devices."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "I think the method itself looks novel and interesting.  It introduces a canonicalization scheme that leverages gravity and an estimated sub-equivariant frame to map IMU measurements into a canonical orientation. This procedure can be flexibly applied to arbitrary off-the-shelf network architectures by mapping the inputs into the canonical space and mapping the outputs back into the original space."
+            },
+            "weaknesses": {
+                "value": "The primary weakness of this paper is the clarity of its writing. I\u2019m unable to fully understand the major differences between this work and RIO: Rotation-equivariance Supervised Learning of Robust Inertial Odometry.\n\nWhile the key idea of this paper is clear, it\u2019s difficult to discern how it specifically diverges from the previous work. I strongly recommend that the authors begin by clearly outlining the main concepts, followed by a detailed description of the methodology. This structure would greatly help readers in understanding the unique contributions of this work."
+            },
+            "questions": {
+                "value": "What is the roto-reflection group, and why is it important? A more detailed explanation of this concept and its relevance would be helpful.\n\nWhat is the PCA(handcrafted equivariant frame)? A more detailed explanation of this concept and its relevance would be helpful.\n\nClarity in distinguishing from RIO: It appears that the figure is intended to convey the core idea of this work. However, the differences between this approach and RIO are unclear\u2014elaborating on this distinction would strengthen the presentation.\n\nData specification in figure captions: It would be beneficial if each figure caption specified which data is seen and which is unseen to enhance the reader's understanding. Note, the performance of different method highly depends on how much data is seen or trained. \n\nSupplementary material vs. main paper clarity: The supplementary material provides much better clarity than the main paper. Including some of this contextual information directly in the main paper would make it easier for reviewers to follow your method."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a new method for inertial odometry, which predicts the poses given IMU measurements. The method is called EqNIO, which brings the idea of the so-called canonical displacement priors. How it works, is (1) that IMU measurements are mapped into a gravity aligned, canonical frame with neural networks, and (2) mapping the outputs back to the original frame. Several contributions are presented. A canonicalization scheme is presented, that maps IMU measurements into a canonical orientation. A processing step is devised, which map both accelerometer and gyro readings into a space where gravity direction is preserved. Finally, a neural network designed is presented to perform regression tasks. Several experiments are presented, demonstrating advancements to the state of the art and ablation studies that motivate the overall approach."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Pros:\n\n-\tThe paper is written well with clear figures, and many intuitive explanations of complex concepts.\n\n-\tThe paper presents several technical contributions, which overall leads to more generalizable framework for inertial odometry. Mixing the physical properties with learning based regression module makes sense, which can boost generalization performance.\n\n-\tExperimental results are presented to a large extent, demonstrating advancements to the state of the art. Ablation studies presented are useful to better comprehend the research done."
+            },
+            "weaknesses": {
+                "value": "Cons:\n\n-\tIt is not clear if ICLR is the best venue for such research, since learning components here is rather limited to a regression module. \n\n-\tUncertainty modelling assumes diagonal covariance. Validity of these assumptions are tested by looking at the final performance that it helps. Perhaps an in-depth analysis on this step could help, despite not the core focus of the paper. For example, there has been many evaluation tools from uncertainty quantification literature, and can be presented here."
+            },
+            "questions": {
+                "value": "I wonder for sensor fusion in the form of visual-inertial odometry, it could be helpful to have a good uncertainty estimates from the inertial odometry module. Uncertainty estimates could consider the modelling errors of neural networks, and propagated to the final module. Here, priors can also be defined using physical properties of the system. Would it be a consideration to use Bayesian modelling tools?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper  presents a method to enhance inertial odometry by applying group equivariance to canonicalize IMU data and targeting yaw ambiguity in gravity-aligned frames through a subequivariant framework. \n\nThe authors design a neural network architecture that maintains equivariance under roto-reflections around the gravity axis, allowing integration with existing systems like RONIN and TLIO. By predicting canonical yaw frames and equivariant covariance matrices, EqNIO improves generalization across diverse motion patterns and reduces drift caused by sensor noise and biases. Experiments on publicly available datasets demonstrate that this method achieves reductions in Mean Squared Error and Absolute Translation Error compared to baseline models, while also exhibiting faster convergence and maintaining computational efficiency suitable for deployment on edge devices."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper introduces an approach by applying strict subequivariance in neural inertial odometry, addressing yaw ambiguity and gravity alignment limitations directly within the network architecture, an aspect that prior methods often handled indirectly. Its originality lies in developing a canonicalization scheme using the roto-reflection group to simplify IMU data processing. The authors integrate and extend existing methods by adapting the framework to both end-to-end and filter-based neural inertial odometry systems, which demonstrates its flexibility and scalability. \n\nIn terms of quality, the paper provides detailed, reproducible implementation notes and thorough ablation studies in the appendix that clarify design decisions and evaluate parameterization choices. It emphasizes empirical rigor by testing the model across multiple datasets with varied sensor placements and motion patterns, supporting claims of robustness and broad applicability. Clarity is maintained through structured explanations of complex mathematical formulations, specifically around group theory and its relevance to sensor data processing, while the significant computational efficiency results underscore the practical utility for edge-device applications. The combination of technical insights and comprehensive empirical validation underlines the paper's contribution to advancing neural inertial odometry, particularly in settings with challenging orientations and device constraints."
+            },
+            "weaknesses": {
+                "value": "The abstract describes EqNIO as leveraging \"canonical displacement priors\" to generalize across arbitrary IMU orientations, but it lacks a clear technical explanation of how these priors work in practice. Generalization is claimed to stem from \"canonical gravity-aligned frames\" and \"equivariant yaw frames,\" but the abstract could benefit from a more precise explanation of these transformations and their operationalization in the model.\n\nThe learnable yaw orientation in canonical frames is a promising feature but lacks clarity on how it resolves yaw drift or improves orientation estimation, given that yaw is typically the most challenging to estimate accurately in inertial odometry due to the absence of an absolute reference.\n\nThe introduction highlights EqNIO\u2019s generalization and robustness but does not discuss potential limitations or scenarios where the approach may struggle (e.g., handling different sampling rates, extreme motions where IMU biases may not be fully mitigated, or contexts with poor gravity alignment).\n\nWhile EqNIO is compared to existing neural odometry methods like TLIO and RONIN, the introduction does not delve into specific weaknesses in these prior approaches and how EqNIO addresses these limitations.\n\nThe paper covers a broad range of related works but may omit some recent or seminal papers in the domain of learning-based inertial odometry and equivariant neural networks. Ensure a comprehensive literature review by including all relevant and recent works that contribute to the field. This includes verifying that seminal papers and the latest advancements are adequately cited to position EqNIO within the current research landscape. Due to the inherent relationship between odometry and inertial attitude estimation, as well as the similar methods applied to both, I highly encourage you to explore these areas further, including learning-based approaches to inertial attitude estimation.\n\nThe descriptions of related methods (e.g., TLIO, RONIN) are somewhat high-level and lack technical depth.  Providing only superficial descriptions may not adequately highlight the nuances that differentiate EqNIO from these methods."
+            },
+            "questions": {
+                "value": "Could you provide a technical explanation of how the canonical displacement priors are implemented in practice?\nHow exactly do the gravity-aligned frames and equivariant yaw frames work in your model architecture?\nWhat specific mechanisms in your learnable yaw orientation approach help address the yaw drift problem?\nCould you provide experimental evidence demonstrating how your method improves yaw estimation compared to existing approaches?\nHow does your model perform under varying IMU sampling rates?\nWhat are the performance characteristics under extreme motion scenarios where IMU biases may be significant?\nHow does the system behave in situations with poor gravity alignment?\nHow does your work relate to recent developments in learning-based inertial attitude estimation?\nCould you elaborate on the connections between EqNIO and current research in equivariant neural networks specifically applied to inertial navigation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

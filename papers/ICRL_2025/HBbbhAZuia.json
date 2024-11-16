@@ -1,0 +1,167 @@
+{
+    "id": "HBbbhAZuia",
+    "title": "DockedAC: Empowering Deep Learning Models With 3D Protein-ligand Data For Activity Cliff Analysis",
+    "abstract": "Artificial intelligence has become a crucial tool in drug discovery, excelling in tasks such as molecular property prediction. An activity cliff, which refers to a minor structural modification to a molecule resulting in a large change in its biological activity, poses a challenge in predictive modeling. The activity cliff depends on the interaction between the target and the ligand, which is however largely overlooked by previous ligand-centric studies. In this paper, we introduce DockedAC, a new dataset incorporating the protein target and target-ligand 3D complex structure information for studying the problem of activity cliffs. By matching protein binding information and ligand bioactivity, we employ molecular docking to generate the complex structure for each activity value. The DockedAC dataset contains 82,836 activity data on 52 protein targets with activity cliff annotations, which serves as the first step towards activity cliff research with large-scale 3D complex structures. We benchmark the dataset with traditional machine learning and deep learning approaches.",
+    "keywords": [
+        "Activity cliff prediction",
+        "Molecular property prediction",
+        "AI-aided drug discovery"
+    ],
+    "primary_area": "datasets and benchmarks",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=HBbbhAZuia",
+    "pdf_link": "https://openreview.net/pdf?id=HBbbhAZuia",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces dockedAC, a dataset that leverages molecular docking to generate complex structures associated with each activity value. The dataset incorporates 3D complex structure information, facilitating in-depth study of activity cliffs."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is well-written and easy to understand.\nThe 3D structural information of molecular complexes is crucial for addressing cliff tasks, as varying interaction patterns can significantly impact affinity values. Previous methods for modeling activity cliffs typically focus on feature extraction from the ligand molecule alone, neglecting the surrounding protein environment. \nThe ablation study of the paper is extensive to reflect the differences between RSME and RMSE_cliff"
+            },
+            "weaknesses": {
+                "value": "For ECFP, what proportion of samples have an ECFP similarity > 0.9, given that similarities > 0.5 are already quite rare?\nIn pairs of activity cliffs with docking conformations, what noticeable differences exist in their 3D structures? It has not been verified whether docking conformations can accurately capture the true differences in interaction patterns.\nCan generated 3D docking conformations, which may differ from the crystal structures, reliably reflect the actual interaction differences between activity cliffs?\nIn Section 4.3, would training on bioactivity values (pKi/pEC50/pIC50 in log units) together pose any issues?\nIn Figure 4, although the 3D approach shows a higher RMSE difference and RMSE correlation, the performance gains from the additional 3D complex information are not very significant.\nIn Table 2, traditional methods (KNN, RF, SVM, etc.), even when only modeling the ligand, still achieve better results, indicating no clear advantage of using 3D complex data.\nOverall, I believe that 3D complex structures are valuable for addressing activity cliffs. However, the current 3D complex methods evaluated in this paper, when compared to ligand-only approaches (such as ECFP and 2D graphs), have not shown significant improvement and still fall short of traditional ECFP-based methods. The reasons for this lack of improvement are not quantitatively analyzed, and there is also no evaluation of the quality of docking data to ensure it captures the critical information within activity cliffs."
+            },
+            "questions": {
+                "value": "See weakness"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "**Summary:** The authors present DockedAC for comprehensive machine learning of molecular activity cliffs.\n\n**Recommendation:** I am currently recommending a weak (yet optimistic) reject.\n\n**Rationale behind Recommendation:** If the authors can clarify their dataset splitting approach and potentially benchmark one or two more recent 3D GNN/transformer architectures, I will consider raising my score."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- The authors' experiments and conclusions are thorough and informative. I appreciate the correlation studies for the insights they provide into the potential of 3D GNNs in this problem domain.\n- The authors' benchmark is well-constructed overall.\n- The authors' data and benchmarking code is thoroughly documented."
+            },
+            "weaknesses": {
+                "value": "- The authors need to clarify the splitting of their dataset to ensure proper benchmarking (see \"Questions\" below).\n- The authors' chosen 3D GNNs (or 3D/equivariant transformers, which in my view may be most interesting to explore for this problem) are not up-to-date. For example, new models such as the Equiformer v2 architecture [1] could be included as well.\n- The authors should consider performing flexible docking with conventional docking algorithms rather than \"fixed-protein\" docking, since the amino acid side chain rotamer states in a crystal protein structure may be conducive to only the ligand against which the protein was originally bound [2]. I understand this may be computationally expensive, but perhaps the authors can perform small-scale experiments at some point to see if this makes a difference in the final benchmarking results.\n\n**References:**\n\n[1] Liao, Yi-Lun, et al. \"EquiformerV2: Improved Equivariant Transformer for Scaling to Higher-Degree Representations.\" The Twelfth International Conference on Learning Representations.\n\n[2] Wankowicz, Stephanie A., et al. \"Ligand binding remodels protein side-chain conformational heterogeneity.\" Elife 11 (2022): e74114."
+            },
+            "questions": {
+                "value": "- On line 198, how is a canonical SMILES string determined for each pair of ligands?\n- On line 213, when are two binding sites considered the same? Do you use a distance-based metric here? Please explain in more detail.\n- On line 227, what does \"docking results are reviewed\" mean? Do you simply mean that you reject ligands that achieved a docking score greater than or equal to zero? Or did you manually apply some other heuristic to reject ligands at this stage?\n- Regarding line 234, could the authors provide more detail about why they split the dataset this way? I ask because it's not clear to me how this splitting strategy would prevent models from overfitting to popular protein targets such as GPCRs if they are widely represented in the dataset. Perhaps I'm misunderstanding how the authors trained their baseline methods on this dataset (e.g., maybe they only trained on one protein at a time, an approach which seems difficult to scale), but it's important for the authors to more clearly explain their design and rationale for this proposed dataset splitting strategy (since their results suggest 3D GNNs perform well in certain contexts, where they might be overfitting to the crystal protein structures in the dataset).\n- More of a suggestion: Drawing a downward arrow next to 5.4 nM in Figure 1 could inform readers unfamiliar with bioactivity measurements that a lower quantity is better in this context."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work introduces the new benchmark dataset including Activity Cliffs (AC), which holds significant importance in quantitative structure-activity relationship (QSAR) analysis.\nAuthors collect the bioactivity data from ChEMBL, refine the collected molecules, find the AC relationships in the dataset, and construct 3D conformer dataset using docking.\nFinally, authors investigate the regression performance of various ML and DL methods and demonstrate that the 3D spatial information helps to distinguish ACs."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Authors include various ML, DL methods for benchmarking.\n2. The curation process is clear and well-organized to understand.\n3. Unlike previous datasets, DockedAC includes 3D conformers which play crucial roles in protein-ligand interaction.\n4. They perform an ablation study to investigate the 3D conformational information. (Appendix B)"
+            },
+            "weaknesses": {
+                "value": "**Issue 1.**\nI believe that a benchmark set like DockedAC, which focuses on metrics relevant to the application domain, its value is evaluated by how effectively it can assess the performance of different methodologies used in the field (e.g., PoseCheck [1], DUD-E [2]).\nIn this light, I think this AC-focused benchmark can be used as a rigorous and meaningful test set for various 3D protein-ligand interaction prediction model, which have been in development for a long time.\n\nTherefore, I wonder why authors do not include evaluations for popular 3D binding affinity prediction models (e.g., PIGNet [3], RTMScore [4], TANKBind [5], DSMBind [6], KarmaDock [7]).\nSimilar to how DUD-E serves as a virtual screening benchmark, the authors could evaluate these models by using the entire collected dataset as a test set.\nAlthough the authors included IGN and SS-GNN, which are 3D binding affinity prediction models, they trained these neural networks on their own training set.\nI suggest evaluating the activity cliff prediction performance of some of state-of-the-art models [3-7] trained on general binding affinity dataset (e.g., PDBbind) using the DockedAC benchmark set.\n\n**Issue 2.**\nThe 3D conformer sets are generated through a single GPU-accelerated docking using AutoDock Vina scoring. Since the binding conformations are crucial for identifying protein-ligand interactions, and I concerned that the performance of the 3D DL model may be constrained by the quality of the conformers. It would be beneficial to include the diverse conformers computed by various docking tools employing different scoring functions, such as conventional docking (Smina, AutoDock Vina, Quick Vina, GLIDE) or deep learning-based docking (KarmaDock, DiffDock).\n\n---\n**Reference**\n\n1. Harris, Charles, et al. \"Posecheck: Generative models for 3d structure-based drug design produce unrealistic poses.\" NeurIPS 2023 Generative AI and Biology (GenBio) Workshop. 2023.\n2. Mysinger, Michael M., et al. \"Directory of useful decoys, enhanced (DUD-E): better ligands and decoys for better benchmarking.\" Journal of medicinal chemistry 55.14 (2012): 6582-6594.\n3. Moon, Seokhyun, et al. \"PIGNet: a physics-informed deep learning model toward generalized drug\u2013target interaction predictions.\" Chemical Science 13.13 (2022): 3661-3673.\n4. Shen, Chao, et al. \"Boosting protein\u2013ligand binding pose prediction and virtual screening based on residue\u2013atom distance likelihood potential and graph transformer.\" Journal of Medicinal Chemistry 65.15 (2022): 10691-10706.\n5. Lu, Wei, et al. \"Tankbind: Trigonometry-aware neural networks for drug-protein binding structure prediction.\" Advances in neural information processing systems 35 (2022): 7236-7249.\n6. Jin, Wengong, Caroline Uhler, and Nir Hacohen. \"SE (3) denoising score matching for unsupervised binding energy prediction and nanobody design.\" NeurIPS 2023 Generative AI and Biology (GenBio) Workshop.\n7. Zhang, Xujun, et al. \"Efficient and accurate large library ligand docking with KarmaDock.\" Nature Computational Science 3.9 (2023): 789-804."
+            },
+            "questions": {
+                "value": "1. Could you please clarify whether the 3D DL methods are trained on the entire training set using a single model that is generalized to pockets (target-conditioned) or are they trained for each target pocket (target-specific)? Additionally, what are the target DL methods of this benchmark? Neural network architecture (e.g., EGNN or MPNN) or trained 3D DL models which is generalized to different proteins? (e.g., PIGNet, KarmaDock.)\n3. I wonder why empirical scoring function of AutoDock Vina is not included as the baseline.\n4. As I understand it, the ligands are docked to the single rigid protein binding site structure. To reflect the protein\u2019s flexibility, it would be helpful to consider multiple protein structures, i.e., run docking with multiple protein structures for each ligand."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "An activity cliff (AC) refers to cases where structurally similar ligands exhibit significantly different activity values due to interactions between protein targets and ligands. Benchmark datasets for ACs have been limited. While existing large datasets consist only of 2D information, they fail to consider 3D interactions. In this context, this work creates a new dataset that adds 3D information which previous AC data could not cover. The purpose and methodology are sound, but there\u2019s a lack of analysis on whether the data classified as activity cliffs genuinely represent real AC relationships. Additionally, there\u2019s no mention of the diversity of conformations generated by docking, and some analyses are not straightforward."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**S1**: The authors collected significantly more AC data than previously available high-quality AC datasets[1,2,3] through binding affinity data curation for various protein targets and species.\n\n**S2**: Based on the importance of considering 3D information in target-specific AC prediction, the authors generated pseudo-binding structures using molecular docking, overcoming limitations of 2D-only AC data.\n\n**S3**: The authors benchmarked their dataset using various models, providing many baselines.\n\n## References\n[1] Wang, Lingle, et al. \"Accurate and reliable prediction of relative ligand binding potency in prospective drug discovery by way of a modern free-energy calculation protocol and force field.\" Journal of the American Chemical Society 137.7 (2015): 2695-2703.\n\n[2] Schindler, Christina EM, et al. \"Large-scale assessment of binding free energy calculations in active drug discovery projects.\" Journal of Chemical Information and Modeling 60.11 (2020): 5457-5474.\n\n[3] Pecina, A., Fanfrl\u00edk, J., Lep\u0161\u00edk, M. et al. SQM2.20: Semiempirical quantum-mechanical scoring function yields DFT-quality protein\u2013ligand binding affinity predictions in minutes. Nat Commun 15, 1127 (2024)."
+            },
+            "weaknesses": {
+                "value": "**W1**: It appears that the authors directly followed the definition from existing work. In the definition of activity cliff in Section 3.2, all criteria seem to *implicitly* consider the structural similarity of molecules. Is there any reason not to consider explicit structures such as Maximum Common Substructure (MCS)? If computational complexity is a concern, it would be more impactful to check the distributions of number of shared and different atoms between newly created AC data pairs with MCS.\n\n**W2**: Since the structures are generated through docking, it\u2019s challenging to obtain the correct global minimum structures (as mentioned in the limitations). Providing multiple local minimum structures might be beneficial, but those information are not exist in the current manuscript.\n\n**W3**: Some analyses about dataset is not straightforward. (see Q2-5)\n\n**W4**: Several recent models[1,2,3] aiming versatile predictions for protein-ligand interaction (doing both virtual screening and scoring on acitivity-cliff data) also used well-curated activity cliff data[3,4]. The authors might include these works in related works or further do benchmarks on these models to enlarge the impact of this work.\n\n## References\n[1] Moon, Seokhyun, et al. \"PIGNet2: a versatile deep learning-based protein\u2013ligand interaction prediction model for binding affinity scoring and virtual screening.\" Digital Discovery 3.2 (2024): 287-299.\n\n[2] Shen, Chao, et al. \"A generalized protein\u2013ligand scoring framework with balanced scoring, docking, ranking and screening powers.\" Chemical Science 14.30 (2023): 8129-8146.\n\n[3] Cao, Duanhua, et al. \"Generic protein\u2013ligand interaction scoring by integrating physical prior knowledge and data augmentation modelling.\" Nature Machine Intelligence (2024): 1-13.\n\n[4] Pecina, A., Fanfrl\u00edk, J., Lep\u0161\u00edk, M. et al. SQM2.20: Semiempirical quantum-mechanical scoring function yields DFT-quality protein\u2013ligand binding affinity predictions in minutes. Nat Commun 15, 1127 (2024).\n\n[5] Schindler, Christina EM, et al. \"Large-scale assessment of binding free energy calculations in active drug discovery projects.\" Journal of Chemical Information and Modeling 60.11 (2020): 5457-5474."
+            },
+            "questions": {
+                "value": "**Q1**: Sections 3.2 and 3.5 seem identical to previous work[1]. Shouldn\u2019t this be acknowledged or cited appropriately?\n\n**Q2**: In Section 5.1, when correlating RMSE with RMSE-cliff, is there a potential for bias introduced by comparing AC data with the entire dataset (which includes both AC and non-AC data)?\n\n**Q3**: Conceptually, using 3D information should improve AC prediction. However, deriving this conclusion in section 5.1 from the results comparing IGN[2] and other 2D models seems to lack depth in interpretation. It would be better to compare IGN with a 2D version of IGN to minimize bias.\n\n**Q4**: In Section 5.3, is the sample size too small for calculating the p-value? Additionally, in Table 3, the percentage of AC is at most 0.6%. Why did the authors choose to show the correlation with a maximum AC data percentage of only 0.6%?\n\n**Q5**: In Section 5.4, ECFP shows the best performance. Could this be because ECFP was used in the criteria when dividing the data? Is there a potential ECFP bias? How do the results look if the authors use the other fingerprints for dividing data instead of ECFP?\n\n## References\n[1] Van Tilborg, Derek, Alisa Alenicheva, and Francesca Grisoni. \"Exposing the limitations of molecular machine learning with activity cliffs.\" Journal of chemical information and modeling 62.23 (2022): 5938-5951.\n\n[2] Jiang, Dejun, et al. \"Interactiongraphnet: A novel and efficient deep graph representation learning framework for accurate protein\u2013ligand interaction predictions.\" Journal of medicinal chemistry 64.24 (2021): 18209-18232."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

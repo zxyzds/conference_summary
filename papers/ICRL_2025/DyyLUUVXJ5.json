@@ -1,0 +1,167 @@
+{
+    "id": "DyyLUUVXJ5",
+    "title": "Adaptive Caching for Faster Video Generation with Diffusion Transformers",
+    "abstract": "Generating temporally-consistent high-fidelity videos can be computationally expensive, especially over longer temporal spans. More-recent Diffusion Transformers (DiTs)--- despite making significant headway in this context--- have only heightened such challenges as they rely on larger models and heavier attention mechanisms, resulting in slower inference speeds. In this paper, we introduce a $\\textit{training-free}$ method to accelerate video DiTs, termed Adaptive Caching ($\\textit{AdaCache}$), which is motivated by the fact that $\\textit{``not all videos are created equal''}$: meaning, some videos require fewer denoising steps to attain a reasonable quality than others. Building on this, we not only cache computations through the diffusion process, but also devise a caching schedule tailored to each video generation, maximizing the quality-latency trade-off. We further introduce a Motion Regularization ($\\textit{MoReg}$) scheme to utilize video information within AdaCache, essentially controlling the compute allocation based on motion content. Altogether, our plug-and-play contributions grant significant inference speedups (e.g. up to 4.7x on Open-Sora 720p - 2s video generation) without sacrificing the generation quality, across multiple video DiT baselines. Our code will be made publicly-available.",
+    "keywords": [
+        "Diffusion Transformers",
+        "Caching",
+        "Content-adaptive Generation"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We accelerate Video DiTs w/o any re-training, by introducing a caching schedule that adaptively-allocates computations dependent on each video generation, and a motion-regularization that controls it based on motion content.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=DyyLUUVXJ5",
+    "pdf_link": "https://openreview.net/pdf?id=DyyLUUVXJ5",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes training-free Diffusion Transformer (DiT) acceleration named AdaCache. The method is motivated by the fact that different videos require different amounts of computation. AdaCache decides whether to skip or recompute the cache during the cache step defined by the schedule, using an introduced rate-of-change metric $c_t$, which is basically L1 distance between residual block features in current and previous cache schedule timesteps.  Authors further augment rate-of-change metric c_t with a Motion Regularization (MoReg) metric to add information about the motion content of the generated video.\n\nOverall, the AdaCache idea has good potential. However, the current version of the manuscript needs significant revision to be accepted for this conference. Please refer to the Weaknesses and Questions sections for more details."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Novelty: The idea of adaptive caching seems novel in the field of diffusion model caching.\n2. Motivation: The paper provides a clear motivation for AdaCache method.\n3. Clearness: The method is simple and easy to understand."
+            },
+            "weaknesses": {
+                "value": "1. Method section requires clarifications: \n\na. The paper lacks information about the selection of rate-of-change schedule hyperparameters.\n\nb. Lines 286-287 stat that authors observe that unique caching schedules for each layer will make the generations unstable. This important observation requires further explanation and clarification.\n\n2. Experiment results require better presentation:\n\na. There are concerns regarding the reported speedup and latency. Given that AdaCache is not a deterministic method and inference time for different videos varies, it is incorrect to report just the mean inference time and speedup for all videos. Standard deviation (std) values should be included.\n\nb. Ablation studies are performed on only 32 videos. Considering that AdaCache is not deterministic, the results may have low statistical significance.\u00a0 \n\nc. AdaCache without MoReg is a general method that could apply to image diffusion transformers. A comparison with prior works on DiT architectures for image generation, such as PIXART-\u03b1 for T2I generation and DiT-XL for class-conditional image generation on ImageNet, is suggested.\n\nd. The paper missed a comparison with another DiT caching method like FORA [1].\n\n3. The paper lacks Limitation section. It would be interesting to see if there are videos on which AdaCache performs worse than its deterministic competitors."
+            },
+            "questions": {
+                "value": "1. My main concerns regarding this paper are related to experiments results presentation and clarification of method hyperparameters:\n\na. Since method is not deterministic, the results should include std values for inference time and speedup (See Weakness 2a). Moreover, apart of adding std values, I recommend to conduct ablation studies on more than 32 videos (See Weakness 2b).\n\nb. AdaCache without MoReg is not tied to video generation, I recommend to include image generation DiTs caching (See Weakness 2c).\n\nc. I suggest authors to provide information about rate-of-change schedule hyperparameters selection, as it is crucial pert of the proposed method (See Weakness 1a).\n\n2. Additional group of questions is not as important as the main one, but can also help to improve the quality of the manuscript:\n\na. Statement regarding unique caching schedules for each layer needs clarification (See Weakness 1a). \n\nb. The paper would greatly benefit from method\u2019s limitations analysis (See Weakness 2).\n\nc. The authors may include FORA [1] in comparisons.\n\nd. It interesting to see how AdaCache performs on MMDiT models such as CogVideoX [2] and SD-3 [3].\n\ne. In line 196, it would be beneficial to explain which features were used for visualization.\n\n\n[1] Selvaraju, P., Ding, T., Chen, T., Zharkov, I., & Liang, L. (2024). Fora: Fast-forward caching in diffusion transformer acceleration.\u00a0arXiv preprint arXiv:2407.01425.\n\n[2] Yang, Z., Teng, J., Zheng, W., Ding, M., Huang, S., Xu, J., ... & Tang, J. (2024). Cogvideox: Text-to-video diffusion models with an expert transformer.\u00a0arXiv preprint arXiv:2408.06072.\n\n[3] Esser, P., Kulal, S., Blattmann, A., Entezari, R., M\u00fcller, J., Saini, H., ... & Rombach, R. (2024, March). Scaling rectified flow transformers for high-resolution image synthesis. In\u00a0Forty-first International Conference on Machine Learning."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a training-free method called Adaptive Caching (AdaCache) to accelerate video Diffusion Transformers (DiTs). AdaCache is based on the idea that \"not all videos are created equal,\" meaning some videos require fewer denoising steps to achieve reasonable quality. It caches computations through the diffusion process and devises a caching schedule tailored to each video generation to maximize the quality-latency trade-off. Additionally, the paper introduces a Motion Regularization (MoReg) scheme to utilize video information within AdaCache, essentially controlling compute allocation based on motion content. These plug-and-play contributions significantly speed up inference (e.g., up to 4.7\u00d7 faster on Open-Sora 720p - 2s video generation) without compromising generation quality across multiple video DiT baselines. The code for this method will be made publicly available."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Adaptive Caching achieve very good performance even compared with recent PAB paper. I very appreciate it.\n\n2. This approach requires no training and can seamlessly be integrated into a baseline video DiT at inference, as a plug-and-play component.\n\n3. Motion Regularization (MoReg) to allocate computations based on the motion content in the video being generated seems to be very reasonable."
+            },
+            "weaknesses": {
+                "value": "1. Regarding the choice of metric, why was the Mean Squared Error (MSE) selected directly? Can the MSE metric truly reflect the actual reduction in features between adjacent steps? Are there alternative metrics that might be more suitable, or can you provide comparisons with other metrics such as the cosine similarity metric or others?\n\n2. Secondly, I'm interested in knowing if the proposed method is compatible with large Text-to-Image (T2I) base models, like FLUX. If it is, what would be the expected impact on the performance metrics?\n\n3. Although above questions exists, I think this is a really valuable paper"
+            },
+            "questions": {
+                "value": "On the whole, I consider this paper to be well-executed. However, I'm intrigued by the possibility of identifying a metric that could more accurately assess the redundancy in the system. Furthermore, I'm curious about the potential of integrating layer-wise broadcasting dynamically with distillation techniques to enhance real-time video generation capabilities."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces Adaptive Caching (AdaCache), a plug-and-play, training-free method to accelerate video generation using diffusion transformers.  The authors note that \"not all videos are created equal\", meaning some videos don\u2019t need as many processing steps to reach high quality. Based on this, they propose an adaptive caching strategy that reduces the computation of denoising steps based on the rate-of-change. The authors also introduce a Motion Regularization (MoReg) scheme to adjust the caching schedule, which can allocate computation based on video motion content for improving the quality-latency trade-off. Experimental results demonstrate that AdaCache significantly speeds up existing video diffusion models."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "a. The approach presented is straightforward, and the method section is generally clear and easy to follow.\nb. The motivation for the work is reasonable and interesting, i.e., \"not all videos are created equal\".\nc. AdaCache provides a training-free acceleration method that can be applied to existing video diffusion models, achieving significant speedups without additional model training."
+            },
+            "weaknesses": {
+                "value": "1. Lines 285-287 mention that using unique caching schedules for each layer makes the generations unstable, but it\u2019s unclear why this is the case. It would help if the authors provided an explanation.\n2. Equation 5 introduces a codebook for the caching rate, but it\u2019s not clear what this codebook is or how it\u2019s created. The authors should add more details to clarify this part of the method.\n3. While Table 1 shows AdaCache outperforming PAB, the qualitative comparison in Fig. 7 shows a different result. AdaCache seems to lose more visual detail, especially in the details. This raises concerns about its practical quality compared to PAB.\n4. In Table 1, AdaCache achieves better VBench results than the baseline. The authors should explain why the accelerated video have better results, especially since the visual quality in Fig. 7 is noticeably worse than the baseline. \n5.  In Table 1, the SSIM of AdaCache-slow on Line 346 appears unusually high."
+            },
+            "questions": {
+                "value": "1. The primary concern with this paper is the practical effectiveness of AdaCache. More qualitative comparisons are needed to robustly demonstrate AdaCache\u2019s effectiveness in preserving visual quality, especially for the detail generations.\n2. The authors need to provide more detailed methodological details, such as the construction and role of the codebook in caching rates."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents AdaCache which accelerates video generation by caching residual computations and devising adaptive caching schedule without requiring re-training. It also introduces MoReg to optimize computation based on motion. This paper demonstrates the effectiveness of AdaCache across various open-source models."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.A novel adaptive algorithm is designed to control the number of steps for reusing cached features."
+            },
+            "weaknesses": {
+                "value": "1. typo need to be corrected:\n    1. Line346: SSIM of AdaCache-slow should be 0.7910?\n2. The methodology section lacks clarity in certain areas. For example, in Line 276, a pre-defined codebook is mentioned, and the reviewer wants to know how this codebook was pre-defined. Was it manually set? If so, what criteria or method were used to set it? Is there any further detailed explanation regarding it?\n3. The qualitative comparison provided by the authors is insufficient and does not adequately demonstrate the superiority of AdaCache. Although AdaCache achieves a higher acceleration speedup, as shown in Figure 7, its results on Open-Sora-Plan (e.g., Rows 1, 2, 6, 7) and Latte (e.g., Rows 2, 4, 6, 7) are significantly worse than those of PAB and the Baseline. Based on the visual quality presented in Figure 7, the reviewer expresses concerns about the stability of AdaCache in terms of visual quality."
+            },
+            "questions": {
+                "value": "1. The caching rate for the steps following step t is determined based on the rate of feature change between steps t and t+k. The reviewer wonders whether this metric is reasonable. For instance, as shown in Fig. 2, during the early and late stages of sampling, the L1 curve exhibits rapid changes, characterized by a large derivative. Would relying on the differences at earlier time steps to determine the subsequent caching rate introduce errors?\n2. Could the authors provide more visual quality comparison results? For example, visualizations of the sampling process under different configurations (fast, slow) and how different video content leads to varying caching schedules, to more intuitively demonstrate the mechanism and effectiveness of the designed caching schedule.\n3. PAB demonstrates impressive results in multi-GPU parallel processing. Can the authors' method leverage similar techniques (e.g., DSP) to scale to multi-GPU parallel inference? What would the efficiency be like?\n4. The reviewer wants to know the source of the Delta-DIT performance in Table 1 and why there is almost no acceleration."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

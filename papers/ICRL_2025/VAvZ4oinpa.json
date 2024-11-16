@@ -1,0 +1,169 @@
+{
+    "id": "VAvZ4oinpa",
+    "title": "Video Generation with Learned Action Prior",
+    "abstract": "Long-term stochastic video generation remains challenging, especially with moving cameras. This scenario introduces complex interactions between camera movement and observed pixels, resulting in intricate spatio-temporal dynamics and partial observability issues. Current approaches often focus on pixel-level image reconstruction, neglecting explicit modeling of camera motion dynamics. Our proposed solution incorporates camera motion or action as an extended part of the observed image state, employing a multi-modal learning framework to simultaneously model both image and action. We introduce three models: (i) Video Generation with Learning Action Prior (VG-LeAP) that treats the image-action pair as an augmented state generated from a single latent stochastic process and uses variational inference to learn the image-action latent prior; (ii) Causal-LeAP, which establishes a causal relationship between action and the observed image frame, and learns a seperate action prior, conditioned on the observed image states along with the image prior; and (iii) RAFI, which integrates the augmented image-action state concept with a conditional flow matching framework, demonstrating that this action-conditioned image generation concept can be extended to other transformer-based architectures. Through comprehensive empirical studies on robotic video dataset, RoAM, we highlight the importance of multi-modal training in addressing partially observable video generation problems.",
+    "keywords": [
+        "Stochastic Video Generation",
+        "Variational Inference"
+    ],
+    "primary_area": "probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",
+    "TLDR": "We propose variational models for learning action priors for video generation tasks in situations where the camera is also moving like in autonomous cars or robots.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=VAvZ4oinpa",
+    "pdf_link": "https://openreview.net/pdf?id=VAvZ4oinpa",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors tackle the problem of partial observability video prediction, which deals with video prediction problems in which the camera is also moving, in which case the video is influenced by both the scene dynamics and the camera's motion -- common in autonomous vehicles and robot manipulators. \n\nThis work explicitly models camera motion dynamics by extending the observed image state (existing settings) by introducing three models build upon prior works. Two models are based upon SVG-lp that learn image-action priors (LeAP) -- \n- (i) vg-leap (imagen-action pairs generated using a single stochastic process), and \n- (ii) causal-leap (causal relationship between image and action), and \n- (iii) RAFI -- that augments the image-action state pair of an existing flow-matching model RIVER. \n\nFor learning the latent action prior, two variational approaches are presented -- (i) combined image-action prior derived from both the observed image and action, with the assumption that image and action states are conditionally independent, and (ii) two separate posterior priors learnt for the image and action latent variables assuming causal interlinking. \n\nThe experimental evaluations are performed on the RoAM dataset which consists of synchronized image-action pairs recorded with a Turtlebot robot using a stereo camera setup. The dataset has 45 training videos and 5 testing sequences (300k videos sequences of 25 frames each used for training). The models are evaluated on the task of video generation for generating 10 frames conditioned of randomly sampled 5 previous consecutive frames. Perceptual and semantic quantitative metrics are used for evaluation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The problem of partially observable video prediction is quite interesting and has applications in autonomous vehicles that have an onboard camera (such as autonomous cars/taxis), drones (with an onboard camera), and robot manipulators (that have wrist-mounted cameras). \n\nTackling video prediction under partially observable settings (where the acting agent is not visible on the camera) can be benefit robot applications (for instance pedestrian intent detection and prediction could influence autonomous driver decisions, video prediction networks as world models for robot manipulators etc.)\n\nThis work tackles the interesting idea of incorporating (robot) actions (as a learned latent) into the video prediction/generation task that have been traditionally conditioned on just image frames. \n\nThe problem statement is interesting the authors motivate it well. The paper is also well-presented and articulated except for a few spelling errors (for instance lossses pg 6, divergance pg 6)."
+            },
+            "weaknesses": {
+                "value": "Although sound, I find the contributions (incorporating actions) to be minimal additions to the existing frameworks. For instance, in VG-leap, the extended image-action state pair is used to condition the SVG-lp model instead of just the images, and the latent posterior approximated with recurrent modules. \nSimilarly, in Causal-leap, two stochastic posteriors are learned -- one each for image and action, learnt using recurrent modules. \nFor RAFI, the image latent is concatenated with the action state along the image latent's channel dimension of an existing RIVER model. Given the extensive literature on latent conditioning methods, I would have liked to see comparisons/discussions with different latent conditioning methods for incorporating actions. \n\nI find the experimental evaluations quite weak. The experiments are performed just on the RoAM dataset which has just 45 video sequences for training and 5 for testing/inference I would have liked to see comprehensive comparisons -- for instance on the robot manipulation settings in which case the camera is mounted on the robot's wrist. The Causal-leap model should be evaluated on such a setting -- which has a larger action space (7dof instead of the 2-dimensional in RoAM) that was used to motivate the problem. A similar comparison could have been done on drones for instance. \n\nEvaluations on short sequences. Predicting just 10 frames or evaluating on 25 frame length long video sequences does not quantify as long-term video prediction (which was used to motivate the manuscript). In such short horizon prediction problems, it is harder to quantify the effect of the moving camera. I would have liked to see examples of video predictions that are influenced by external factors (for instance the car turning right due to an obstacle on the left -- collision avoidance being one of the motivations). The quantitative metrics used in the paper evaluate semantic/perceptual quality of the generated videos -- fvd, lpips, vgg-16 etc., and don't necessarily motivate incorporating actions into the video prediction problem. TLDR; how obstacles or other hinderances influence video predictions is quite unclear as the metrics primarily evaluate video quality and not decisions. This would also strengthen the applications of such systems."
+            },
+            "questions": {
+                "value": "- How does the model perform on long-horizon video prediction problems. \n- How is the performance in different robot settings? (for instance, robot manipulators, drones, etc.)\n- Were any other latent conditioning methods evaluated?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes three action-conditioned video prediction training frameworks and shows empirical results of their efficacy on a robot video dataset."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The paper adapts action-free VAE and flow-based formulation from video prediction literature to action-conditioned learning. \n* Empirical results show benefit of incorporating action information in training in terms of video prediction accuracy."
+            },
+            "weaknesses": {
+                "value": "* Missing related works. The paper revisits the literature on VAE-based and flow-matching-based video prediction models, without discussing the latter in the section of prior works. \n* The method restricts cameras to be static (line 148). This assumption does not hold in general for casual videos outside of the training data being used and limits the applicability of the method. \n* The assumption of causality between actions $a_t$ and observed framer $x_t$ is again specific to robot manipulation tasks with fixed cameras as in the RoAM dataset used in this paper. This assumption does not hold in generic videos. \n* The paper lacks a discussion of the potential benefit of incorporating actions into video modeling frameworks in general. Action-free video prediction training does not require action annotations and is much more scalable. If the downstream task is robot manipulation, an alternative approach is to train action-free video prediction models and extract robot actions via inverse dynamics [1]. More discussions would help strengthen the paper. If the goal is accurate video prediction itself, then how does the method compare to state-of-the-art video prediction architectures? \n* What's the relation of the proposed 3 distinct models? A much more extensive discussion on this would help clarify the motivation of developing three separate frameworks in the paper.  \n* The paper claims results on incorporating camera motion (line 014) but empirically only evaluate on datasets with fixed cameras. \n\n[1] Learning Universal Policies via Text-Guided Video Generation."
+            },
+            "questions": {
+                "value": "* How are discussions on diffusion-based video prediction (line 131 - 135) related to camera controls (line 103)? \n* What's the action space in RoAM? Is it continuous or discrete? Does the method scale to high-dimensional action space?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper extended the stochastic video generation method with explicit encoding of camera motion dynamics, and then proposes three models , 1) SVG-LP extended with image-action joint states, 2) SVG-LP with disentangled image and action states (with a predefined causal dependency), and 3) RIVER jointly conditioned by the image-action states. This paper compares the proposed models in a action-labeled robotic video dataset named RoAM, and shows certain improvements than existing approaches that do not include camera motion dynamics."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- It shows that combining the camera motion dynamics with visual dynamics will help the video prediction as well as the action prediction. This idea is straightforward but is useful in many cases, such as the design of the world models in embodied agents.\n- The paper is easy to follow, and the supplementary materials seem comprehensive."
+            },
+            "weaknesses": {
+                "value": "Novelty\n- The main weakness of this paper is lack of novelty. Indeed, applying camera motion dynamics to condition video generation is not a new story. Recent studies have even tried to customize video generation with user-directed camera movement (Direct-a-video, siggraph'24), or abstract textual motion descriptions (LEGO, eccv'24). In this case, multimodal training of actions and images to the basemodel such as SVG-LP may not meet the expectations of the audience in recent research communities. However, the modification of RIVER is quite trivial and the gain is quite marginal. It was expected that a good action interaction scheme with visual space would lead to a powerful world model that can predict faithful future actions along with physically reliable future frames. The proposed method did not show such kind of potential, according to its results.\n\nDataset Limitations \n- Limited diversity: The RoAM dataset is just about several indoor scenes with a specific robot and features mainly corridors, lobby space, staircases with human movements like walking and sitting. This limited setting may not fully represent the wide variety of real-world scenarios with moving cameras. It would be beneficial to test on a more diverse set of datasets that include a broader range of environments and camera movements. \n- Data size and complexity: While the dataset contains a significant number of video sequences (more than 300k), each sequence has only 25 frames of image size 64 \u00d7 64 \u00d7 4 (again, the diversity of scenarios is limited). This relatively small frame size and limited sequence length (just 1 second may not capture large motions) may not capture all the complex spatio-temporal dynamics that occur in real videos. Larger frame sizes and longer sequences could provide more detailed information for the models to learn from, potentially leading to better performance and more accurate video generation.\n\nComparison with State-of-the-Art\n- Poor visual quality and overfitting issues. The reported qualitative results are of poor visual quality, making it hard to convince that the proposed action prior indeed works. Moreover, the action prediction errors are surprisingly small. Are the GT action values small, or the overfitting issue just happened? \n- Incomplete benchmarking: The paper compares the proposed models with a few existing methods such as SVG-lp, RIVER, and ACPNet (cannot find its reference though). However, there are many other recent and relevant state-of-the-art video generation models that are not included in the comparison. For example, some of the latest diffusion-based models or other advanced variational frameworks may have different approaches to handling camera motion and image-action dynamics. \n- Lack of ablation studies on key components: While an ablation study is conducted to compare the performance of Causal-LEAP, VG-LeAP, and SVG, more ablation studies on other key components of the models could be useful. For example, analyzing the impact of different encoding and decoding strategies, the role of the latent variables in capturing image-action dynamics, or the effect of the conditional flow matching in RAFI on the overall performance would provide a deeper understanding of the models and help in identifying areas for improvement.\n\nMinor Issue\n- The citation in the paper may use the wrong latex command, using \\citep{} instead of \\cite{}.\n- The font sizes in the plots are too small, especially Fig. 4 and 5, 7."
+            },
+            "questions": {
+                "value": "Please check the questions in the section of the weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper tackles the partially observable video prediction problem, where the camera is in motion, by incorporating both camera movement and action. The authors propose three models: (1) VG-LeAP, which treats the image-action pair as a state from a single latent stochastic process; (2) Causal-LeAP, which learns a separate action prior conditioned on the observed images and action history; and (3) RAFI, which integrates the augmented image-action state with a conditional flow matching framework. Empirical results on the RoAM dataset demonstrate the effectiveness of these models in addressing partially observable video generation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper addresses an important and interesting problem in video generation\u2014partially observable video prediction.\n2. The paper introduces three models based on variational frameworks and conditional flow matching."
+            },
+            "weaknesses": {
+                "value": "1. The paper lacks a comparison with prior works that model camera motion in video generation. Several existing studies incorporate camera motion information [1-6]. The authors should discuss how their methods differ from these works and clarify the advantages of their approach.\n2. Experiments are limited to the RoAM dataset, which includes camera action annotations. Testing the models on additional datasets and demonstrating generalization to video data without explicit camera action annotations (like A2D2 [7]) would strengthen the effectiveness of proposed models.\n3. The rationale for proposing three distinct models is unclear. The authors should explain the specific advantages, disadvantages and computational complexities of each model and provide guidance on when to use each one.\n4. The frames shown in Figures 6 and 8 are too blurry, hindering a proper assessment of video prediction quality. Providing zoomed-in key areas or video samples would improve evaluation clarity.\n\n[1] Guo, Yuwei, et al. \"AnimateDiff: Animate Your Personalized Text-to-Image Diffusion Models without Specific Tuning.\" The Twelfth International Conference on Learning Representations.\n\n[2] Wang, Xiang, et al. \"Videocomposer: Compositional video synthesis with motion controllability.\" Advances in Neural Information Processing Systems 36 (2024).\n\n[3] Wang, Zhouxia, et al. \"Motionctrl: A unified and flexible motion controller for video generation.\" ACM SIGGRAPH 2024 Conference Papers. 2024.\n\n[4] He, Hao, et al. \"Cameractrl: Enabling camera control for text-to-video generation.\" arXiv preprint arXiv:2404.02101 (2024).\n\n[5] Yang, Shiyuan, et al. \"Direct-a-video: Customized video generation with user-directed camera movement and object motion.\" ACM SIGGRAPH 2024 Conference Papers. 2024.\n\n[6] Xu, Dejia, et al. \"CamCo: Camera-Controllable 3D-Consistent Image-to-Video Generation.\" arXiv preprint arXiv:2406.02509 (2024).\n\n[7] Geyer, Jakob, et al. \"A2d2: Audi autonomous driving dataset.\" arXiv preprint arXiv:2004.06320 (2020)."
+            },
+            "questions": {
+                "value": "1. What are the differences between the proposed methods and prior works listed in Weakness? What are the advantages of the proposed method?\n2. What are the connections between the three proposed models? What is the purpose of proposing three models? What are the advantages and disadvantages of each model?\n3. Can the proposed method generalize to video data without explicit camera action annotations?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

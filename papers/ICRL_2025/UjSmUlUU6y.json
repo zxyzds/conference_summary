@@ -1,0 +1,167 @@
+{
+    "id": "UjSmUlUU6y",
+    "title": "SimLayerKV: A Simple Framework for Layer-Level KV Cache Reduction",
+    "abstract": "Recent advancements in large language models (LLMs) have extended their capabilities to handle long contexts. However, increasing the number of model layers and the length of input sequences significantly escalates the memory required to store key-value (KV) cache, posing challenges for efficient inference. To mitigate this issue, we present SimLayerKV, a simple yet effective method that reduces inter-layer KV cache redundancies by selectively dropping cache in identified lazy layers. Our approach is based on the observation that certain layers in long-context LLMs exhibit \"lazy\" behavior, contributing less to modeling long-range dependencies compared to non-lazy layers. By analyzing attention weight patterns, we find that the behavior of these lazy layers is consistent across tokens for a given input. This insight motivates our SimLayerKV, which identifies lazy layers and reduces their KV cache accordingly. SimLayerKV is training-free, generalizable, and can be implemented with only seven lines of code. We conduct extensive experiments on three representative LLMs, e.g., LLaMA2-7B, LLaMA3-8B, and Mistral-7B across 16 tasks from the LongBench benchmark. The results demonstrate that SimLayerKV achieves a KV cache compression ratio of 5$\\\\times$ with only a 1.2\\% performance drop when combined with 4-bit quantization.",
+    "keywords": [
+        "Large Language Models",
+        "Long-Context",
+        "KV Cache"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "A simple training-free method that reduces inter-layer KV cache redundancies in LLMs by dynamically identifying and trimming lazy layers.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=UjSmUlUU6y",
+    "pdf_link": "https://openreview.net/pdf?id=UjSmUlUU6y",
+    "comments": [
+        {
+            "summary": {
+                "value": "With the recent increase in context lengths of large language models (LLMs), the memory required to store key-value (KV) cache has grown significantly. This paper aims to reduce inter-layer KV cache redundancies by selectively dropping caches in identified \"lazy\" layers. The paper first observes that certain layers in long-context LLMs are \"lazy,\" primarily focusing on semantically unimportant tokens (the initial few tokens and the most recent few tokens) when performing attention. Furthermore, lazy layers are less important than non-lazy layers in long-context generation. The paper also finds that the laziness behavior is consistent across tokens for a given input and is easily identifiable. Based on these observations, the paper proposes SimLayerKV, a simple strategy that identifies lazy layers at either the prefill or decode stage and trims the lazy layers to reduce inter-layer KV cache redundancy. To demonstrate SimLayerKV's effectiveness, the paper evaluates it on popular benchmarks like LongBench and Ruler, showing a maximum compression ratio of 5x with only a 1.2% drop in performance. Unlike existing works, this paper is distinct in leveraging inter-layer KV cache redundancies and requires no additional training."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is novel in its exploration of better inter-layer KV cache trimming without additional training.\n- The paper is well written"
+            },
+            "weaknesses": {
+                "value": "- It is not clear why SimLayerKV is orthogonal to existing KV cache trimming or compressing methods\n- The compression ratio of 1.6x on average without 4 bit Quantization is not significant\n- There is performance degradation on more complex tasks\n- The proposed way of identifying lazy layers is not flexible enough"
+            },
+            "questions": {
+                "value": "- In Figure 2, the paper demonstrates the attention patterns during long-context generation in layers 0, 10, 20, and 30, thereby categorizing layers into two types: lazy and non-lazy. How do the insights gained regarding attention patterns in this paper compare to prior work, such as MInference1.0, which identifies three sparse patterns (A-shape, Vertical-Slash, and Block-Sparse)? Do these findings align?\n\n- Could you clarify the lazy layer identification algorithm further? The paper suggests two methods for identifying lazy layers\u2014during the prefill stage and the decode stage. Specifically, when is this identification executed during online inference? How frequently is it updated during benchmarking, and how often would it be updated in an online inference scenario? For multi-round conversations, where inputs from a single user may vary significantly between rounds, how does SimLayerKV address this in its design?\n\n- In Section 2 on related work, the paper references prior research on KV cache trimming, compression, and selection. It includes comparisons with MiniCache, StreamingLLM, and SnapKV as baselines. Why does the paper not include comparisons with more intra-layer trimming methods? Can you provide examples illustrating why inter-layer methods are orthogonal to intra-layer methods? Additionally, have you conducted experiments to demonstrate that integrating these two approaches does not significantly degrade performance?\n\n- In Table 1, the paper compares the performance of SimLayerKV and baseline methods. On the LongBench benchmarks, why does SimLayerKV+Q outperform SimLayerKV in many cases, especially in nearly half of the tests for the Mistral-7B-Instruct model?\n\n- What configuration is used for the StreamingLLM baseline? In Table 6, StreamingLLM achieves a 6-8x higher compression ratio than SimLayerKV; could you provide additional comparison results where both methods achieve similar compression ratios?\n\n- In Section 6.3 on Ruler experiments, SimLayerKV shows a performance drop (8.2% on average) on Multiple Queries NIAH and significant degradation in Common Words Extraction (from 75.1% to 48.6% for a 32k context length). The paper attributes this to the data-dependent nature of lazy layer identification, specifically a fixed selection of lazy layers across the entire benchmark task. Have you conducted experiments to verify this hypothesis? Additionally, have you considered dynamically updating the selected lazy layers during runtime? What are possible solutions to fix this issue?\n\n- What is the overhead introduced by lazy layer identification in terms of latency, and how does it affect the system\u2019s overall throughput? Have you conducted end-to-end serving experiments to demonstrate SimLayerKV's deployment potential?\n\n- How might performance and compression ratios change if individual heads within a layer are considered? Have additional experiments been conducted on this aspect? Would controlling for smaller granularities potentially improve performance, or could it lead to worse outcomes?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper aims to optimize the efficiency of the LLM inference by reducing the KV embeddings that are needed to be cached in the memory. Based on the observations of the attention weights of different layers, the authors propose an algorithm to identify the \u201clazy\u201d layers, whose attentions weights of the initial tokens and recent tokens are predominately larger than those of other tokens, and then trim the KV cache of these lazy layers so as to reduce the memory cost. Some experiments on LLaMA2-7B, LLaMA-3-8B, and Mistral-7B show the effectiveness of the proposed method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The research question is interesting and promising for the highly-efficient inference of LLM. Since the KV cache grows linearly with the number of layers, it\u2019s natural to optimize this problem from the layer\u2019s perspective. Recently, increasingly more studies are focused on this topic.\n2. From what I understand, the proposed method might be able to save the memory cost not only for decoding, but also prefilling, which is useful for those case where the prompt is way longer than the generated response.\n3. The paper has reasonable design of experiments."
+            },
+            "weaknesses": {
+                "value": "1. The way to identify the lazy layers involves quite a few hyper-parameters, such as the length of $X_{last}$, $X_{initial}$, $X_{recent}$, and $\\delta$. There is no systematic way to tune those hyper-parameters, which makes it too empirical.\n2. Since there are two ways to identify the lazy layers, does it mean the lazy layers in prefilling and decoding are different? \n3. Can we identify the lazy layer on-the-fly during the inference? because in practice we usually do not have a small subset of data to identify the lazy layers first, then conduct the real inference.\n4. A big missing part of this paper is the result of efficiency, like token throughput, latency or memory cost of the proposed method, since the goal of the algorithm is to optimize the efficiency. \n5. There are quite a few related works trying to identify the optimal KV cache strategies for different layers [1][2][3], it\u2019s unclear what are the cons and pros of those methods compared with the proposed one.\n\n[1] https://arxiv.org/pdf/2410.10819\n\n[2] https://arxiv.org/pdf/2404.04793\n\n[3] https://arxiv.org/pdf/2310.01801"
+            },
+            "questions": {
+                "value": "please refer to the Weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a simple and effective method, SimLayerKV, which reduces inter-layer KV cache redundancy by selectively discarding the cache of \u201clazy\u201d layers. The authors found that, in long-context LLMs, certain layers contribute minimally to modeling long-distance dependencies, displaying \u201clazy\u201d behavior. By analyzing attention weight patterns, they observed that these lazy layers consistently exhibit this behavior throughout the generation process for a given input. SimLayerKV identifies these lazy layers and reduces their KV cache accordingly without altering the cache of non-lazy layers or merging caches across layers. Extensive experiments on three representative LLMs demonstrate that SimLayerKV, combined with 4-bit quantization, achieves a 5x KV cache compression rate with only a 1.2% performance drop."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper addresses a good research topic: efficient LLM inference.\n    \n2. The paper is well-organized.\n    \n3. The proposed method is clearly presented."
+            },
+            "weaknesses": {
+                "value": "1. The designed identification algorithm does not meets the observation. It will also treat the layer that attend all of the tokens, including the intial, the recent tokens, and other tokens in the sequence as the lazy layer.\n    \n2. Why only use the only one token rather than few tokens, as in prefilling stage, in decoding to detect the lazy layers?\n    \n3. It seems that there are a lot of parameters need to be manually set in this algorithm, including the X_intial, X_recent, and W_last, making the designed algorithm less practical. Moreover, these parameters are also not covered in the ablation study and the authors did not explain how they configure them in the experiments."
+            },
+            "questions": {
+                "value": "See above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces SimLayerKV, a method aimed at addressing the increased memory requirements for storing key-value (KV) caches in large language models (LLMs) that handle long contexts. It identifies \"non-lazy\" layers in these LLMs that contribute significantly to modeling long-range dependencies. By implementing a novel KV cache eviction strategy that selectively drops caches in less critical layers based on attention weight patterns, SimLayerKV effectively reduces memory usage related to inter-layer KV cache redundancies."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The study identifies non-lazy layers within large language models and introduces an innovative KV cache eviction method that significantly reduces the memory usage of KV caches.\n- The proposed approach is training-free, generalizable, and can be implemented in just seven lines of code, demonstrating its ease of application.\n- Experiments conducted on three representative LLMs across 16 tasks from the LongBench benchmark illustrate that SimLayerKV, when combined with 4-bit quantization, achieves high KV cache compression ratios with only a minimal drop in performance."
+            },
+            "weaknesses": {
+                "value": "- The paper notes that KV caches in non-lazy layers must be fully retained, which does not fundamentally solve the substantial overhead caused by KV caches. This could still result in high memory usage. Methods like H2O are able to drastically reduce the memory footprint of KV caches.\n- There is a lack of comparison with existing advanced KV cache eviction methods, such as H2O, SnapKV, and PyramidKV.\n- The method proposed by the paper appears trivial, and it is unclear whether non-lazy layers will still be present in larger models or how this phenomenon may relate to different datasets."
+            },
+            "questions": {
+                "value": "- What is the underlying cause of non-lazy layers?\n- Many papers have analyzed the relationships between cross-attention layers. How does this relate to the non-lazy layers identified in this paper?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

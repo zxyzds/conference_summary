@@ -1,0 +1,169 @@
+{
+    "id": "WwpYSOkkCt",
+    "title": "Relaxed Recursive Transformers: Effective Parameter Sharing with Layer-wise LoRA",
+    "abstract": "Large language models (LLMs) are expensive to deploy. Parameter sharing offers a possible path towards reducing their size and cost, but its effectiveness in modern LLMs remains fairly limited. In this work, we revisit \"layer tying\" as form of parameter sharing in Transformers, and introduce novel methods for converting existing LLMs into smaller \"Recursive Transformers\" that share parameters across layers, with minimal loss of performance. Here, our Recursive Transformers are efficiently initialized from standard pretrained Transformers, but only use a single block of unique layers that is then repeated multiple times in a loop. We further improve  performance by introducing Relaxed Recursive Transformers that add flexibility to the layer tying constraint via depth-wise low-rank adaptation (LoRA) modules, yet still preserve the compactness of the overall model. We show that our recursive models (e.g., recursive Gemma 1B) outperform both similar-sized vanilla pretrained models (such as TinyLlama 1.1B and Pythia 1B) and knowledge distillation baselines---and can even recover most of the performance of the original \"full-size\" model (e.g., Gemma 2B with no shared parameters). Finally, we propose Continuous Depth-wise Batching, a promising new inference paradigm enabled by the Recursive Transformer when paired with early exiting, which we show to theoretically lead to significant (2-3$\\times$) throughput gains.",
+    "keywords": [
+        "Efficient LLM",
+        "Parameter Sharing",
+        "Relaxed Recursive Transformer",
+        "Continuous Depth-wise Batching",
+        "Early-Exiting"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=WwpYSOkkCt",
+    "pdf_link": "https://openreview.net/pdf?id=WwpYSOkkCt",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces a new approach to reducing the deployment costs of large language models by implementing recursive parameter sharing. The proposed Recursive Transformer model reuses a single block of unique layers across multiple iterations, effectively minimizing model size while maintaining strong performance. To enhance flexibility, Relaxed Recursive Transformers incorporate low-rank adaptation (LoRA) modules at each layer, allowing for slight layer-specific modifications that improve performance with minimal overhead. Additionally, the authors propose a Continuous Depth-wise Batching technique, which leverages the recursive architecture to increase inference throughput by enabling multiple depths to be processed simultaneously, achieving up to a 2-3\u00d7 improvement in efficiency over traditional models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Propose a novel model structure that can effectively compress pre-trained large language models for deployment.\n2. LoRA adaptation makes the model structure more flexible to adapt to different depths.\n3. Depth-wise Batching translates the advantages of the proposed recursive transformer block to real deployment acceleration."
+            },
+            "weaknesses": {
+                "value": "1. Experiment design is not so convincing, which can be further improved.\n2. Authors do not push the recursive computation block\u2019s advantage to the limit, which can be interesting to explore\n3. Some highly-related papers are missing in the reference"
+            },
+            "questions": {
+                "value": "1. In experiment design (Line 268), authors mention \u201cAs a result, we set the target performance for Gemma and Pythia models as the performance achieved by uptraining a full-size pretrained model with an equivalent number of tokens.\u201d. This design is unreasonable, especially since your training (SlimPajama) and testing datasets (llm harness evaluation) are different. You need to provide the original LLM\u2019s performance to help readers understand the real performance of the proposed recursive transformer instead of fine-tuning a worse model to mislead readers.\n2. To test the effectiveness of your model compression method, it is highly recommended to achieve a larger compression ratio. E.g. compressing 7B model to 1B. Current experiments only compress 2B models to 1B, which lacks practical meaning as they are all models with similar sizes.\nReusing the transformer computation block has been explored before [1] without properly cited within this paper.\n\n[1] Liu, Zechun, Changsheng Zhao, Forrest Iandola, Chen Lai, Yuandong Tian, Igor Fedorov, Yunyang Xiong et al. \"Mobilellm: Optimizing sub-billion parameter language models for on-device use cases.\" arXiv preprint arXiv:2402.14905 (2024)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents an innovative approach to parameter efficiency in Large Language Models through Recursive Transformers, by iteratively reusing a single block. The concept is extended to Relaxed Recursive Transformers by incorporating layer-specific LoRA modules, introducing flexibility to the parameter-sharing scheme. The authors demonstrate the conversion of pre-trained LLMs into more compact recursive versions while maintaining performance and achieving improved throughput through depth-wise batching."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- The core concept of recursive layer sharing combined with LoRA-based relaxation is straightforward yet powerful.\n- The paper provides extensive empirical validation across multiple model architectures, recursive layer initialization strategies, LoRA initialization strategies, and evaluation metrics, including thorough ablation studies and practical deployment.\n- The authors not only show the benchmarking results of Relaxed Recursive Transformers but also explore hypothetical training speedup with continuous depth-wise batching strategy and early-exiting."
+            },
+            "weaknesses": {
+                "value": "**Major**\n- It compares to different-sized dense baselines. However, the evaluation lacks comparison with sparse designs, particularly layer-skipping mechanisms, and layerwise parameter-sharing approaches [1-2].\n- The paper does not fully investigate how recursive architectures affect model training dynamics and optimization landscapes. The relationship between shared parameters and gradient flow during the uptraining phase. Also, whether shared parameter amounts affect model learning capacity could be explored.\n- The study would benefit from experiments on optimal recursion depths across varying model scales and task domains.\n\n**Minor**\n- The experiments are primarily conducted on relatively small models with 1-2B parameters. The effectiveness and scalability of the approach on larger models remain unproven. This raises questions about whether the benefits would hold at scales where current LLMs demonstrate more sophisticated capabilities.\n- Typos: \"achieved a 10%p performance\" on page6.\n\n[1] Mixture-of-Depths: Dynamically allocating compute in transformer-based language models\n\n[2] Zamba: A Compact 7B SSM Hybrid Model"
+            },
+            "questions": {
+                "value": "- The choice of LoRA for relaxing parameter sharing appears somewhat arbitrary. And prefix-tuning results show limiting performance gain. Could you elaborate more on the relaxation technique selections and other alternatives (*e.g.* Adapter, IA3)?\n- For Section 3.8, how would the throughput gains hold up when using practical confidence-based early-exiting rather than the idealized oracle approach that assumes perfect prediction matching?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel framework for parameter sharing in LLMs, namely relaxed recursive transformers. The method revist the way of layer tying and further convert LLMs into recursive transformers by sharing parameters across layers. Moreover, the performance is further improved by relaxing the layer tying constraint. The method is demonstrated to be well performed on various LLMs, it also get significant throughput gains by paring with early exiting, namely continuous depth-wise batching."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is well motivated on a hot topic in the field of LLMs.\n2. The paper is well organized and the insight of the method is clearly stated.\n3. The experimental results are convincing. I appreciate the way the authors present the takeaways for relaxed recursive transformers."
+            },
+            "weaknesses": {
+                "value": "1, It lacks evaluation on larger scales, which makes the scalability of the method remain questionalbe. For instance, I expect results on LLMs with 7B, 70B or larger scales."
+            },
+            "questions": {
+                "value": "1. I wonder the performance of relaxed recursive transformers on larger scales.\n2. How does the authors compare the proposed parameter sharing methods with other model deployment optimization methods, such as quantization, sparcification\uff0cpruning or distillation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper revisits the concept of \"layer tying\" as a form of parameter sharing in Transformers for developing smaller models. These models utilize a single block of unique layers repeated in a loop derived from pre-trained models to reduce model size while maintaining high performance. The paper presents Relaxed Recursive Transformers incorporating depth-wise LoRA modules to enhance these recursive models. These modules add flexibility to the layer-tying process but maintain the model's compactness. Furthermore, the paper proposes a new inference technique, Continuous Depth-wise Batching, which leverages the recursive nature of these models combined with early exiting strategies to increase throughput by 2-3 times."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The introduction of Recursive Transformers with a single repeated layer block offers a novel approach to reducing model size and complexity without substantial loss in performance.\n\n2. The incorporation of Relaxed Recursive Transformers with LoRA modules successfully improves flexibility and performance.\n\n3. The proposed Continuous Depth-wise Batching method, which takes advantage of the recursive model structure and early exiting, increases inference throughput."
+            },
+            "weaknesses": {
+                "value": "1. The approach of uptraining a full-size pre-trained model is questionable, especially given that the goal is to achieve comparable performance to the original model. In practical applications, deployment considerations often prioritize model size rather than training data size or consumption. Using a smaller, lower-quality dataset for these experiments may unfairly favor smaller (1B) models, potentially skewing the results and making the claimed improvements less persuasive. \n\n2. Furthermore, this uptraining step could be prohibitive for settings where on-device retraining is required. The reliance on extensive uptraining, which consumes 60 billion tokens, presents challenges for practical deployment, particularly when computational resources are constrained.\n\n3. The current methodology appears to train reduced models from scratch, using the same number of tokens, while recursive transformers are initialized with pre-trained layers. This discrepancy in training procedures introduces a potential bias in favor of the recursive transformers.\n\n4. The paper lacks a clear rationale for determining the number of initial layers to be recursively repeated and the frequency of such recursions. Furthermore, an automated approach for selecting the optimal recursion size would greatly increase the novelty and technical contribution of the proposed method.\n\n5. All experiments are conducted with models around the 1B parameter mark, yet hardware advancements make models larger than 1B feasible for many applications. Testing the proposed approach on larger models is essential to validate its scalability and effectiveness beyond the 1B parameter range, ensuring the method\u2019s relevance for state-of-the-art large models. \n\n6. The selection of layers for initializing looped layers, as indicated in Figure 5, appears to depend heavily on the specific model used. A clear explanation of how to automate this layer selection process would substantially improve usability and consistency across different models. Without this, the method\u2019s applicability may be limited by model-specific manual tuning. \n\n7. The impact of using different base models (other than a 2B model) for recursive transformer initialization has not been evaluated. Testing a range of base model sizes would provide insight into how the choice of initial model affects recursive initialization outcomes, offering a more thorough assessment of the method\u2019s robustness.\n\n8. The experiments focus exclusively on few-shot tasks, but in real-world applications, 1B models are often fine-tuned for specific tasks. Testing the proposed method on downstream QA or classification tasks with full training on task-specific data would provide a more realistic evaluation of its performance and applicability across different use cases."
+            },
+            "questions": {
+                "value": "Please refer to the weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

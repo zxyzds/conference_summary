@@ -1,0 +1,189 @@
+{
+    "id": "KVLnLKjymq",
+    "title": "Star Attention: Efficient LLM Inference over Long Sequences",
+    "abstract": "Transformer-based Large Language Models (LLMs) with extended context capabilities are becoming increasingly prevalent, with recent models supporting contexts of up to 2 million tokens. However, inference on such long sequences poses significant challenges due to the quadratic complexity of global self-attention. In this paper, we introduce Star Attention, a novel two-phase inference approach designed to handle long sequences more efficiently. In the first phase, the context is encoded using local attention by distributing the self-attention and feedforward computations across multiple devices in blockwise fashion, where each block is prefixed with an \"anchor\" block. In the second phase, global attention is applied to process the query and for auto-regressive output token generation, with all tokens attending to the key-value cache generated during Phase 1. Star Attention can be integrated with most Transformer-based LLMs that utilize global attention, leading to substantial reductions in computational and memory requirements for long-sequence inference. Experiments on Llama-based models show that Star Attention reduces inference time by up to 11x, while maintaining 95-100\\% of the accuracy achieved by full attention.",
+    "keywords": [
+        "Large Language Model",
+        "Transformers",
+        "Long Context",
+        "Efficient Inference",
+        "Local and Global Attention"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "Inference technique combining local and global attention giving upto 11x speedup while retaining 95-100% accuracy.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-15",
+    "forum_link": "https://openreview.net/forum?id=KVLnLKjymq",
+    "pdf_link": "https://openreview.net/pdf?id=KVLnLKjymq",
+    "comments": [
+        {
+            "comment": {
+                "value": "We thank reviewer dPwG for their thoughtful comments.\n\n* Thank you for pointing it out. Star Attention is complementary and orthogonal to most of parallel global context computation or attention approximation methods and we have emphasized it in the updated version of the paper. \n  * Taking Flash Attention as an example, in Star Attention, each host processes it assigned context block using Flash Attention.\n  * Star Attention is a inference-only method that does not require any additional training/finetuning. Whereas the methods like Sliding Window Attention etc. require the model to be specifically trained. This is why we don't consider these as a baseline.\n  * As for some of the other sparse attention methods that do not require training, star Attention is orthogonal to all those methods. We can further optimize Star Attention by incorporating these methods in all the hosts. This is why we consider only Ring Attention as the baseline.\n\n* For Star Attention, we show in the paper that as long as the block size is 1/4th of the sequence length, star attention is closely able to match the accuracy of global attention while giving significant speedup. But if reduce the block size to be 1/8, 1/16, etc. of sequence length, the speedup would be even more significant at the cost of even more accuracy degradation.\n  * It was our mistake that we combined both these things in a single table leading to confusion among the readers. We have updated the paper by splitting the table 2 into two parts where in the first part we keep block size ~ 1/4 of seq length. This is our main table.\n  * Then in the second part, we show the impact on accuracy and speedup if we freeze the block size and keep on increasing the seq length.\n  * We also convert the original table 1 to a plot to clearly demonstrate star attention is not applicable to only one benchmark or model but can be used on other models as well.\n\n\nWe also wanted to let you know that based on the feedback from other reviewers, we have made some updates to the paper:\n* We updated the Table 1, Table 2 and Figure 3 in Section 3 to now contain the full RULER benchmark. This includes 13 tasks spanning domains such as Retrieval, Multi-Hop Tracing, Aggregation, and Question Answering. Despite including much more complex and diverse tasks, our overall conclusion remains the same.\n* We also added a new subsection (3.4) discussing the particular domain of tasks where Star Attention shows significant advantages over global attention and also the most challenging domains for such two-phase inference approach.\n* In the appendix, we have also listed all the RULER scores for each individual task and each model.\n* We rewrote the text in section 3.3 to make the tradeoff section more clear.\n* We also updated the introduction section slightly to make it clear that that star attention is orthogonal to other training-free sparse attention methods and can be combined with them.\n\nOther changes:\n* We also made the text in Section 2 (that describes Star Attention) much more clearer and we explain it using an example and with simplified equations.\n* We added the star attention pseudo-code and the accuracy on each ruler task in the appendix."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank reviewer JR9S for their thoughtful comments.\n\n* **Why Ring Attention for Baseline:** In the paper, we show that for these long context inference scenarios, the model does not need to attend to all the previous tokens. This is why the baseline for star attention is full global attention.\n  * But using standard global attention implementation gives OOM for very long sequence lengths. We use ring attention just as a way to implement exact attention in order to be able to run inference on such long sequences with exact attention.\n\n* **Comparison with other techniques:** Star Attention is a inference-only method that does not require any additional training/finetuning. Whereas the methods like StreamingLLM, Longformer etc. require the model to be specifically trained. This is why we don't consider these as a baseline.\n  * As for some of the other sparse attention methods that do not require training, Star Attention is complementary and orthogonal to all those methods. We can further optimize Star Attention by incorporating these methods in all the hosts. This is why we consider only Ring Attention as the baseline.\n  * In the introduction section we already referenced a quite a few of the works and it was a significant overlap to the related work section. Thus we decided to merge those two into the introduction instead.\n\n\n* **Other Benchmarks:** Apart from RULER, we also show the scores on the BABILong benchmark. The babilong benchmark contain several supporting facts throughout the context and the model is required to follow through all the facts in order to be able to answer the question.\n  * We have updated the experiements section in the paper to have the full RULER scores instead of just the NIAH tasks. The full RULER benchmark has 13 tasks spanning domains such as Retrieval, Multi-Hop Tracing, Aggregation, and Question Answering. The Question Answering domain contains two QA tasks that come by combining paragraphs from non-synthetic datasets such as SQuAD and hotpotqa.\n\n* For Star Attention, we show in the paper that as long as the block size is 1/4th of the sequence length, star attention is closely able to match the accuracy of global attention while giving significant speedup. But if reduce the block size to be 1/8, 1/16, etc. of sequence length, the speedup would be even more significant at the cost of even more accuracy degradation.\n  * It was our mistake that we combined both these things in a single table leading to confusion among the readers. We have updated the paper by splitting the table 2 into two parts where in the first part we keep block size ~ 1/4 of seq length. This is our main table.\n  * Then in the second part, we show the impact on accuracy and speedup if we freeze the block size and keep on increasing the seq length.\n  * We also convert the original table 1 to a plot to clearly demonstrate star attention is not applicable to only one benchmark or model but can be used on other models as well.\n  * The delta show in paper is the relative delta i.e. delta = (acc_star - acc_global) / acc_global. Thanks for pointing it out, we have added this clarification in the captions.\n\n* Yes, this is the assumption behind star attention that the length of the context is much greater than the length of the query and output. This conforms to the most common long context inference scenarios where the input context is very long and the model takes a lot of time just to process that long context. Star Attention aims to optimize this context encoding process without degrading the accuracy.\n\n\nWe also wanted to let you know that based on the feedback from other reviewers, we have made some updates to the paper:\n* We updated the Table 1, Table 2 and Figure 3 in Section 3 to now contain the full RULER benchmark. Despite including much more complex and diverse tasks, our overall conclusion remains the same.\n* We also added a new subsection (3.4) discussing the particular domain of tasks where Star Attention shows significant advantages over global attention and also the most challenging domains for such two-phase inference approach.\n* In the appendix, we have also listed all the RULER scores for each individual task and each model.\n* We rewrote the text in section 3.3 to make the tradeoff section more clear.\n* We also updated the introduction section slightly to make it clear that that star attention is orthogonal to other training-free sparse attention methods and can be combined with them.\n\nOther changes:\n* We also made the text in Section 2 (that describes Star Attention) much more clearer and we explain it using an example and with simplified equations.\n* We added the star attention pseudo-code and the accuracy on each ruler task in the appendix."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank reviewer LaPe for their thoughtful comments on our submission.\n\n* Star Attention is orthogonal to all these sparse attention methods. We can further optimize Star Attention by incorporating these KV cache compression methods in all the hosts.\n* In the paper, we show that for these long context inference scenarios, the model does not need to attend to all the previous tokens. This is why the baseline for star attention is full global attention.\n  * But using standard global attention implementation gives OOM for very long sequence lengths. We use ring attention just as a way to implement exact attention in order to be able to run inference on such long sequences with exact attention.\n* Similarly, we can also implement exact attention with DistFlashAttention and then implement star attention using it so that the relative speedup is comparable.\n\nWe also wanted to let you know that based on the feedback from other reviewers, we have made some updates to the paper:\n* We updated the Table 1, Table 2 and Figure 3 in Section 3 to now contain the full RULER benchmark. This includes 13 tasks spanning domains such as Retrieval, Multi-Hop Tracing, Aggregation, and Question Answering. Despite including much more complex and diverse tasks, our overall conclusion remains the same.\n* We also added a new subsection (3.4) discussing the particular domain of tasks where Star Attention shows significant advantages over global attention and also the most challenging domains for such two-phase inference approach.\n* In the appendix, we have also listed all the RULER scores for each individual task and each model.\n* We rewrote the text in section 3.3 to make the tradeoff section more clear.\n* We also updated the introduction section slightly to make it clear that that star attention is orthogonal to other training-free sparse attention methods and can be combined with them.\n\nOther changes:\n* We also made the text in Section 2 (that describes Star Attention) much more clearer and we explain it using an example and with simplified equations.\n* We added the star attention pseudo-code and the accuracy on each ruler task in the appendix."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank reviewer iuNN for their thoughtful comments and we also thank you for pointing out the issues with the figures, we have fixed it.\n\n* For Star Attention, we show in the paper that as long as the block size is 1/4th of the sequence length, star attention is closely able to match the accuracy of global attention while giving significant speedup. But if reduce the block size to be 1/8, 1/16, etc. of sequence length, the speedup would be even more significant at the cost of even more accuracy degradation.\n  * It was our mistake that we combined both these things in a single table leading to confusion among the readers. We have updated the paper by splitting the table 2 into two parts where in the first part we keep block size ~ 1/4 of seq length. This is our main table.\n  * Then in the second part, we show the impact on accuracy and speedup if we freeze the block size and keep on increasing the seq length.\n  * We also convert the original table 1 to a plot to clearly demonstrate star attention is not applicable to only one benchmark or model but can be used on other models as well.\n\n* **BABILong Discrepancy**: In Table 1, we see accuracy on RULER and BABILong follow the same trends for the instruct models and this discrepancy only happens with the base model where BABILong improves while the RULER scores drop. As mentioned in the second paragraph of Section 3.2, this fluctuation is because BABILong requires the model to generate answers in a specific format, which is challenging for base model because they are not trained for instruction following. Thus making the scores of the base model on this benchmark unreliable.\n\n* **Llama-8B scoring higher than Llama-70B**: Our results have the same trend as reported in the original RULER benchmark leaderboard: https://github.com/NVIDIA/RULER\n  * On sequences upto 64K, 70B has higher score as compared to 8B. But on 128K, the 8B scores higher (77 for 8B vs 66 for 70B).\n  * Even for the gradient-AI 8B model, its score on 128K sequence length is higher (69.5 for 8B vs 66 for 70B).\n\n* **Inference Time**: When measuring this for a given sequence length, the model is evaluated on a NIAH task from RULER on 500 samples. We start counting the time after the model and the data is loaded and stop when inference is finished. The total inference time in then divided by 500 to get time per sample.\n\n\nWe also wanted to let you know that based on the feedback from other reviewers, we have made some updates to the paper:\n* We updated the tables and figures in Section 3 to now contain the full RULER benchmark. This includes 13 tasks spanning domains such as Retrieval, Multi-Hop Tracing, Aggregation, and Question Answering. Despite including much more complex and diverse tasks, our overall conclusion remains the same.\n* We also added a new subsection (3.4) discussing the particular domain of tasks where Star Attention shows significant advantages over global attention and also the most challenging domains for such two-phase inference approach.\n* In the appendix, we have also listed all the RULER scores for each individual task and each model.\n* We rewrote the text in section 3.3 to make the tradeoff section more clear.\n* We also updated the introduction section slightly to make it clear that that star attention is orthogonal to other training-free sparse attention methods and can be combined with them.\n\nOther changes:\n* We also made the text in Section 2 (that describes Star Attention) much more clearer and we explain it using an example and with simplified equations.\n* We added the star attention pseudo-code and the accuracy on each ruler task in the appendix."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces star attention, a two-phase inference techniques to handle long sequences efficiently.\n\nThe author find that pure blockwise context encoding can bring attention spike in the attention scores , and propose \"anchor blocks\" to address this issue in stage 1, by attach the first block (the \"anchor block\") to the begining of each sub-block and conduct the encoding, which shift the attention spike to the \"anchor block\", and only use the encoded sub-block part for inference. In stage 2, the author combine the online softmax technique to make full use of query and previous encoded sequence for token generation.\n\nThe author conduct experiment on long-context benchmarks like RULER-NIAH using Llama family models, and do the abliation study on anchor blocks, learn effect of its position, content and size."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper propose a interesting solution \"anchor block\" for breaking the dependencey of long-sequence to enable process in parallel.\n- The ablation study is sufficient and present details effect of \"anchor block\" from different dimision."
+            },
+            "weaknesses": {
+                "value": "- Given the technical depth of the proposed method, the experiment result is not strong enough. In Table 1,  the improvement that the star attention can bring is marginal. While In Table 2, the propsoed method is hard able to achieve significant speed up without sacrifiing a huge amount of performance, especially on super long sequence.\n- The experimental result may not solid. Combine Table1 and Table2, I notice that Llama-3.1-70B shows clear poor performence comparing to Llama-3.1-8B on both base and instruct version. This observation makes me questionable on the experiment set up and impelmentation.\n- There presentation is not complete. For example, Figure 3 left is missing the data point on 32K lenght block, which make it inconsistent to the Figure 3 right. This may due to the seq-lenght limitation of 64K, the author should switch the setting from 64K to 256K to make the figure full-fill. also,Figure 3 type error \"instruct global att\"."
+            },
+            "questions": {
+                "value": "Follwing the discussion of the weakness part, I have following questions:\n1. Why llama3-8B perform much better than llama3-70B on RULER-NIAH in both base and instruct version?\n2. How to measure the \"speed up\"? it is unclear about the which time is used for comparsion, the time to generate the first token or the time to finish the response.\n3. Why the star attention clearly outperform the global one in BABLONG and clearly underperform in RULER-NIAH at the same time?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents Star Attention, a two stage approach to reduce the inference time of long context Transformers. It achieves 11x speed up with 95%-100% the performance."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper method is simple and clear.\n2. The experiments are well motivated and provide decent ablations."
+            },
+            "weaknesses": {
+                "value": "The main experiment is conducted mainly to RingAttention, an exact attention mechanism. In the reviewer opinion, the  experiments should also cover the following dimensions:\n\n(1) Other sparse attention methods, e.g. H2o.\n(2) exact attention system: there are other systems than RingAttention that is faster, e.g. DistFlashAttn."
+            },
+            "questions": {
+                "value": "Please address the weakness section. Thanks!"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes star attention, which is based on an assumption \"global attention is not necessary during context processing\". It breaks the long context into multiple segments, prepend the first block with all other blocks, doing local attention. Then it replicates the queries and compute attention between query and each block. Finally, it sums up all block-wise attention to generate outputs. The method is evaluated with one synthetic benchmark and compare with only one baseline Ring Attention."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed method is easy to understand.\n\n2. The long-text LLM is an important research problem nowadays."
+            },
+            "weaknesses": {
+                "value": "1. Lack of baselines and related work. Transformer for long context is an active area. But this paper does not have a related work section to discuss many related work in this area. Can authors justify why the baseline only includes Ring Attention, any many other related methods (e.g., StreamingLLM, Longformer, Reformer, Unlimiformer, are not included in the baselines or discussed in the paper? The papers i list here might already be out-dated, but there definitely are a lot more papers in the last two years. \n\n2. Only one synthetic benchmark is used in the experiment. I think Ruler is a good benchmark, but it is fully synthetic. The proposed method is based on that \"global attention is not necessary in context processing\", so I think it is important to evaluate the proposed method on real-world data (e.g., InfiniteBench and Bamboo).\n\n3. The accuracy reported in Table 1 and Table 2 seem to be contradictory. In Table 1, the conclusion is the proposed method can maintain 95-100% accuracy. However in Table 2, the delta could be more than 10%. What is the delta in Table 2? If delta is the relative error, then ithe accuracy of Table 2 seems to be a lot worse than the accuracy in Table 1. (e.g., 95 * 90% =85.5).\n\n4. The proposed method cannot be applied to cases where the LLM needs to generate a lot of  tokens (e.g., writing a paper). Though it is not a serious issue, it limits the application and contribution of the proposed method."
+            },
+            "questions": {
+                "value": "See weakness above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces Star Attention, an approach designed to enhance the efficiency of large language models (LLMs) in processing extremely long input sequences. This method mitigates the high computational costs associated with traditional global self-attention by optimizing the prefill stage of inference: it employs a local attention mechanism with \"anchor\" blocks to capture core context across segmented portions of the input. Experimental results show that Star Attention improves inference efficiency while maintaining accuracy levels similar to those of full attention. Further, the paper conducts comprehensive evaluations to validate the rationale and underlying principles of the proposed method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. This paper provides an in-depth analysis of the \"attention sink\", presenting a new perspective on it and exploring the underlying causes of this effect.\n2. This paper presents a concise and effective approach to accelerate long-sequence processing in LLMs, improving operational efficiency with limited accuracy degradation.\n3. This paper provides ablation studies to validate the rationale and potential principles underlying the proposed method.\n4. This paper is well-written and well-organized."
+            },
+            "weaknesses": {
+                "value": "1.  The evaluation section of this paper includes only a few baseline methods. Aside from the global attention used in Ring Attention, no comparisons on accuracy and efficiency were made with other relevant parallel global context computation or attention approximation methods, such as Flash Attention, sliding window attention, or sparse attention.\n2.  In Table 2, for the Gradient-AI Llama3-8B-Instruct-1024K at sequence lengths of 512K and 1024K, and the Meta Llama-3.1-70B-Instruct at a sequence length of 128K, an accuracy drop of over 10% can be observed. The paper lacks a more detailed experimental analysis of these scenarios."
+            },
+            "questions": {
+                "value": "1. I suggest the authors considered compare Star Attention's accuracy and efficiency with other related works. Such comparisons could provide a more comprehensive understanding of Star Attention\u2019s performance relative to existing methods.\n2. In cases with longer sequences or larger models, accuracy degradation becomes more pronounced. Have you tried any approaches to mitigate this issue, such as increasing the block size directly? Or is it acceptable?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

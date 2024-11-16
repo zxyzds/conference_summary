@@ -1,0 +1,172 @@
+{
+    "id": "EjJGND0m1x",
+    "title": "MIND over Body: Adaptive Thinking using Dynamic Computation",
+    "abstract": "While the human brain efficiently handles various computations with a limited number of neurons, traditional deep learning networks require a significant increase in parameters to improve performance.\n  Yet, these parameters are used inefficiently as the networks employ the same amount of computation for inputs of the same size, regardless of the input's complexity.\n  We address this inefficiency by introducing self-introspection capabilities to the network, enabling it to adjust the number of used parameters based on the internal representation of the task and adapt the computation time based on the task complexity.This enables the network to adaptively reuse parameters across tasks, dynamically adjusting the computational effort in convergent loops to match the complexity of the input.  We demonstrate the effectiveness of this method on language modeling and computer vision tasks.\n  Notably, our model surpasses much larger ResNet-50 and EfficientNet with a three-layer network on ImageNet, achieving 96.62\\% accuracy, and scores a 95.8\\% F1 on the SQuAD dataset.\n  These results showcase the potential for dynamic and ``self-aware'' computation, contributing to the creation of intelligent systems that efficiently manage resources based on input data complexity.",
+    "keywords": [
+        "Interpretability",
+        "Fixed points",
+        "Dynamic routing",
+        "Dynamic input processing",
+        "Deep Learning Framework"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "We introduce MIND model that dynamically adjusts computation based on input complexity using an Introspection Network. It outperforms traditional architectures emulating the brain\u2019s resource allocation for improved efficiency and performance.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=EjJGND0m1x",
+    "pdf_link": "https://openreview.net/pdf?id=EjJGND0m1x",
+    "comments": [
+        {
+            "summary": {
+                "value": "1) This paper introduces a new method to dynamically allocate network compute based on the difficulty of the inputs allowing early exits at inference time. The proposed method comprises of 2 networks - a) prediction network that outputs activations at each layer for a given input b) an introspection network that taken in the activations and decide which layers to pick for more intensive computation (using fixed point iterations) and which layers to leave as is.\n\n2) Authors also describe a training procedure to jointly optimize the introspection and prediction networks. \n\n3) Experiments show that a much smaller model (in terms of param count) achieves better performance than considered baselines on language modeling and vision tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "The proposed method is generic and has been applied across modalities with sufficient ablations to prove that the proposed method work."
+            },
+            "weaknesses": {
+                "value": "1) The paper doesn't contrast and compare to more recent early exit methods proposed  for language modeling tasks : \na) Confident Adaptive Language Modeling (https://arxiv.org/abs/2207.07061) \nb) LayerSkip: Enabling Early Exit Inference and Self-Speculative Decoding (https://arxiv.org/abs/2404.16710)"
+            },
+            "questions": {
+                "value": "1) Can you provide experiments comparing the proposed method to more recent early exit methods like CALM and LayerSkip ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a Model INtrospection for a Dynamically adaptive model (MIND) which dynamically adjusts computation depending on the complexity of the input. It consists of two networks: the introspection network and the prediction network. The introspection network takes as input the activations from the different layers of the prediction network, and outputs a binary mask over the layers, determining the layers which require more computation through fixed point iterations. The authors demonstrate the effectiveness of the MIND model for vision tasks using a three layer CNN as the prediction network, outperforming much larger models like ResNet-50, and EfficientNet B7 on ImageNet and CIFAR-100 datasets. The authors also propose MIND-Transformer, with fixed point iterations in self attention and feedforward networks, demonstrating its superior performance on language modeling tasks, despite using fewer parameters than RoBERTa-base. The authors further demonstrate that MIND\u2019s dynamic allocation of computational depth depending on the input complexity is more effective, both in terms of accuracy and efficiency (fewer parameters and FLOPs) over static compression techniques like pruning and quantization."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The authors propose a model, MIND which dynamically adjusts computation via fixed point iterations in its prediction network using an introspection network depending on the input complexity.\n2. MIND model with a three layer CNN as the prediction network, outperforms much larger models like ResNet-50, and EfficientNet B7 on ImageNet and CIFAR-100 classification datasets.\n3. The authors also demonstrate that MIND using LSTMs and Transformers in the prediction network achieves superior performance on language modelling tasks using fewer parameters. \n4. MIND\u2019s dynamic allocation of computational depth results in higher accuracy using fewer parameters and FLOPs over static compression techniques like pruning and quantization."
+            },
+            "weaknesses": {
+                "value": "1. It is not clear how the input complexity metric is incorporated into the introspection network's mechanism, and how this can be more generally quantifiable\n\n2. The MIND model when used with prediction networks with many layers (as in the case of LLMs) will significantly increase the inference time as more layers with fixed point iterations are used."
+            },
+            "questions": {
+                "value": "1. What is m\u2019 in line 147?\n2. What is the rationale behind Equation 5 for MIND-Transformer?\n3. How is $w_l$ in Equation 7 computed? Also, what is the need for a separate $m_{i,l}$ term in Eq 7?\n\n4. Just to clarify in the toy random dot motion task the model needs to classify in one of the four possible directions and the direction of the shifted image denotes the ground truth?\n\n5. Which dataset are the results for in Table 5?\n\n6. What are the parameters of the introspection network, like how many layers are there in the MLP and what are the sizes of the hidden dimensions? \n\n7. From $p_{i,l}$ in Equation 8, how are the binary layer selection variables $m_{i,l}$ obtained?\n\n8. Can the authors share more details about the different MIND variants, like how are fewer FPI layers decided, what is a simpler inspection network and how are the decisions of the introspection network fixed after training?\n\nMinor - Line 127 typo, should be \u201cprediction\u201d"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces an approach targetted at computational efficiency in deep learning by adapting amount of computation to complexity of each input. Inspired by how human brain is considered to allocate resources dynamically. Two core components, (i) introspection network and (ii) prediction network.  Introspection network analyses intermediate activations from prediction network & figures out which layers require additional compute via fixed-point iterations )FPI) as well as what can proceed with standard forward pass.  Prediction net performs FPI until convergence or threshold of iterations reached. Leverages phantom gradients method for backprop through FPI; gradients approximated without unrolling / jabobian calc to limit compute-memory needs during training.\n\nThe paper is well written and easy to read + get the core idea across."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "Computational efficiency; optimal use of resources allocating more for compelx inputs. Clever use of intermediate activations to assess input complexity. Should be able to work with existing architectures making engineering it for downstream real-world use cases simpler. Backprop with phantom gradients done in an interesting way. Mixed with use of statistical methods ~ should allow for generalisation. Considered overfitting issues within architectural design."
+            },
+            "weaknesses": {
+                "value": "The idea is subtle and complex + introspection network needs more compute cost. Approach may not capture actual gradient landscape given the number of adjustments made & have to be considered. Strategy for arrving at thresholds / stopping criteria around convergence is not clear as such. Gradient flow calc is non-trivial given the overall architecture."
+            },
+            "questions": {
+                "value": "Given the size of the appendix can you put in a full section to indicate the weaknesses (vs hinting at them in the future works/conclusion section)?\nIs the trade-off in terms of gain for the complexity worth while?; how can this be known earlier before selecting this approach?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a framework for designing architectures that are able to adaptively control the number of computations they perform in order to produce an output given an input. Their proposal has two main components. First, separate the model into two parts: a prediction network and a control network. At each step, the latter decides which layers to use to refine it\u2019s estimate of the output. To make computations even more granular, they use a Deep Equilibrium networks to implement each layer as a fixed-point iteration computation. Thus the control network can no only decide which layers to apply, but for how long. The authors proceed to show the effectiveness of their approach on several qualitatively different datasets."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The approach is well motivated and the problem of adapting the computations used by a model is an interesting one.\n2. The authors lay out the approach in good detail, explaining how it diverges and improves from previous work.\n3. They conduct extensive experiments to support their goal of improving upon previous approaches."
+            },
+            "weaknesses": {
+                "value": "1. Some details on model architecture and metrics are missing.\n2. Parts of the language used to describe the model are misleading and fall into unnecessary anthropomorphising."
+            },
+            "questions": {
+                "value": "1. It is not clear from Figure 1 or maybe not detailed enough in the text how the controller network determines the computation time of each layer. In other words, how are the parameters determined? Or are they always fixed and it is just a choice between 1 pass or multiple (until covergence)?\n2. The complexity metric is described as \u201cthorough\u201d but it is not clear what makes it such. Or even what complexity means in this case.\n3. CompCost is said to depend on the number of layers and iterations, but is this a sum or some other function? Not clear from the text.\n4. I have an issue with the anthropomorphising the authors lean into.\n    1.  There is no mention about any \u201cbody\u201d in the text so the title is misleading. \n    2. The model doesn\u2019t think, it processes. There is no \u201cself-awareness\u201d, at most it self-regulates. \n    3. And why call it \u201cMIND\u201d? It doesn\u2019t even match the first letter of the name they themselves assign.\n    4. The title could be \u201cAdaptive Processing through Dynamic Computation Control\u201d or something, which conveys a better feel about what the authors are doing."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

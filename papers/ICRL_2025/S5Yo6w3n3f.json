@@ -1,0 +1,168 @@
+{
+    "id": "S5Yo6w3n3f",
+    "title": "ODE-based Smoothing Neural Network for Reinforcement Learning Tasks",
+    "abstract": "The smoothness of control actions is a significant challenge faced by deep reinforcement learning (RL) techniques in solving optimal control problems. Existing RL-trained policies tend to produce non-smooth actions due to high-frequency input noise and unconstrained Lipschitz constants in neural networks. This article presents a Smooth ODE (SmODE) network capable of simultaneously addressing both causes of unsmooth control actions, thereby enhancing policy performance and robustness under noise condition. We first design a smooth ODE neuron with first-order low-pass filtering expression, which can dynamically filter out high frequency noises of hidden state by a learnable state-based system time constant. Additionally, we construct a state-based mapping function, $g$, and theoretically demonstrate its capacity to control the ODE neuron's Lipschitz constant. Then, based on the above neuronal structure design, we further advanced the SmODE network serving as RL policy approximators. This network is compatible with most existing RL algorithms, offering improved adaptability compared to prior approaches. Various experiments show that our SmODE network demonstrates superior anti-interference capabilities and smoother action outputs than the multi-layer perception and smooth network architectures like LipsNet.",
+    "keywords": [
+        "Reinforcement Learning",
+        "Smooth Control",
+        "Low-pass Filter",
+        "Neural ODE"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "This paper proposes a neural unit structure with smooth properties, and based on it, proposes a smoothing policy neural network. This work is the first time that Neural ODE method is used for action smoothing in deep reinforcement learning.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=S5Yo6w3n3f",
+    "pdf_link": "https://openreview.net/pdf?id=S5Yo6w3n3f",
+    "comments": [
+        {
+            "summary": {
+                "value": "To adress the issue of smoothness in a policy in RL the authors propose an ODE-based approach to perform a low-pass filtering of the methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper deals in an important area of research: finding stable control policies (where smoothness is one aspect) is a relevant area of research\n- the derivations are sound and the concepts are explained in a clear way\n- overall the paper is written quite well\n- the authors perform experiments on different domains\n- relevant work is mentioned as far as I can tell"
+            },
+            "weaknesses": {
+                "value": "- One key problem is that the authors motivate their method e.g. by: \" Filtering methods like Kalman and extended Kalman filtering Chen et al. (2023) effectively suppress noise and reduce output oscillation by estimating the current state from multi-step historical data. These methods work well with Gaussian noise but struggle with non-Gaussian noise.\" \n\nHowever, in the experiment the authors only test on settings with Gaussian noise:\n  - MuJoco:  Table 2,3 and 4 specify a Gaussian noise level\n  - vehicle trajectory tracking environment: it is unclear what the noise shape is here (perhaps its partial-observable and thus exhibits non-Gaussian noise). In that case the authors should perform an analysis of the shape of stochasticity in this benchmark. \n\nEither way: I would advise either testing again a Filtering method, such as an extended Kalman filter, re-designing the experiments under non-Gaussian settings and/or clearly present how the vehicle trajectory tracking is a RL problem with non-standard noise."
+            },
+            "questions": {
+                "value": "."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel neural ODE-based architecture designed for reinforcement learning tasks, specifically addressing the problem of action fluctuation. The authors use ODEs as low-pass filters on network hidden states, with provided theoretical justifications. Their method controls the network's Lipschitz constant in a state-dependent manner, allowing for large actions when needed and smooth actions otherwise. The work demonstrates improved performance over state-of-the-art methods through comprehensive experimentation and ablation studies."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. The novel approach of integrating smoothing into neural ODEs for resolving action fluctuation is an interesting idea.\n2. Having state-dependence is shown to be important for performance, which is important knowledge for the community.\n3. The comprehensive ablation studies show that the individual choices made are important for the performance of the method.\n4. Testing with multiple noise levels on mujoco tasks is a good way of benchmarking such methods, and the results show clear improvements over existing techniques.\n5. The authors provide proofs showing how their method can bound the Lipschitz constant.\n6. The authors describe how their ODE integration is performed carefully making choices so that the method is not too expensive for practical use."
+            },
+            "weaknesses": {
+                "value": "## Major issues\n\n1. Limitations discussion hidden in appendix instead of main paper under future work\n3. Neural ODE section explanation is unclear, particularly \n4. Notation used is often confusing or partially defined:\n    - Equation 12 has the variable j which is never quantified, I believe there is a missing summation\n    - some undefined terms such as g(.)^max, this is not clear what the max is over\n    - In equation 14 l is defined to take one parameter but then takes 2 in the equation\n5. \"Bionic modeling\" terminology is confusing and includes notions of membrane capacitance with arbitrary values (0.4-0.6) which lack justification, and it is unclear if the model aims for biological plausibility or mathematical abstraction\n6. The authors mention that the limitation of Kalman filters is that they only function well with Gaussian noise but their tests only include Gaussian noise.\n\n## Minor Issues\n1. Line 096: \"Multi-layer perception\" should be \"Multi-layer perceptron\"\n2. Line 332: \"Regular\" should be \"Regularization\"\n4. Line 376: DSAC is mentioned as state-of-the-art, but newer methods outperform DSAC, such as TQC and CrossQ, however this does not detract from the contribution of the paper\n3. Line 746: \"According to Eq. equation 17\" should be \"According to Eq. 17\"\n## Suggestions\n1. Move limitations section to main paper\n2. Add clarity to mathematical notations, such as defining what g(.)^max is\n3. Fix equation 12 as it's missing a summation\n4. Use h(t) instead of x(t) for hidden states as previous literature does would be clearer\n5. Use non-gaussian noise in some tests"
+            },
+            "questions": {
+                "value": "How does this work relate to ODE-based Recurrent Model-free RL for POMDPs (https://arxiv.org/abs/2309.14078)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a Smooth Ordinary Differential Equation-based Neural Network (SmODE) architecture, designed to address the issue of unsmooth control actions in deep reinforcement learning (RL). The SmODE network mitigates high-frequency input noise and restricts the neural network\u2019s inherent high Lipschitz constants by employing a dual mechanism that combines low-pass filtering with Lipschitz constant control. This approach enhances the smoothness and robustness of the policy."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. **Innovative Approach**\n    - **First Combination of Neural ODE to Address Dual Issues**:\n        - This work is the first to attempt using Neural Ordinary Differential Equations (Neural ODE) to simultaneously address high-frequency input noise and action unsmoothness caused by the network\u2019s Lipschitz constants. The SmODE network provides a comprehensive solution by integrating low-pass filtering with Lipschitz constant control, effectively improving policy smoothness and robustness rather than optimizing for a single issue alone. The design cleverly mimics the structure of a classical first-order low-pass filter but replaces the fixed time constant with a state-dependent learnable function. This not only retains the noise suppression capability of the low-pass filter but also enhances the model's adaptability and dynamic response through the learning mechanism. Additionally, it leverages the continuity properties of Neural ODEs.\n    - **Dual Smoothing Mechanism**:\n        - The SmODE network introduces learnable state-dependent time constants \\(\\tau(x)\\) and state mapping functions \\(g(x(t), I(t), t, \\theta)\\), controlling the rate of state change via the time constants and regulating the Lipschitz constants through the state mapping functions. This simultaneously suppresses high-frequency noise and controls the network\u2019s sensitivity, achieving smooth and robust action outputs.\n    - **Biologically-Inspired Neuron Design**:\n        - SmODE neurons emulate the characteristics of biological neurons by combining synaptic weights (\\(w_{ij}\\)), membrane capacitance (\\(C_{mi}\\)), and resting potential (\\(x_{leaki}\\)). Through low-pass filtering, they enable adaptive adjustment of state boundaries. This design not only enhances the biological plausibility of the model but also improves its performance and stability in practical control tasks.\n2. **Technical Depth**\n    - **Theoretical Foundation**:\n        - The paper provides formal theorems and proofs (Theorem 1 and Theorem 2), theoretically demonstrating the bounds on hidden states and the upper limits of derivatives, showcasing a deep understanding of Neural ODEs and control theory.\n    - **Extensive Experimental Tasks**:\n        - The authors conducted comprehensive experimental validations across various reinforcement learning tasks, including vehicle trajectory tracking, linear-quadratic regulation problems, and eight robot control tasks in Mujoco. The experimental results demonstrate that the SmODE network significantly outperforms traditional Multi-Layer Perceptrons (MLP) and methods like LipsNet in terms of action smoothness and noise robustness, showcasing superior control performance.\n    - **Validation of Key Component Contributions**:\n        - Ablation studies demonstrate the significant contributions of the time constant term and state boundary adjustment term in enhancing action smoothness. By individually removing these key components, the experimental results show a substantial degradation in the smoothness effect of SmODE, further validating the rationality and effectiveness of its design choices."
+            },
+            "weaknesses": {
+                "value": "1. **Insufficient Description of the Core Neuron Model (Equation 12)**:\n    - While similar works are referenced in the paper, the transition from the general smooth ODE neuron model (Equation 10) to the specific biological neuron model (Equation 12) deserves more detailed exposition, as it serves as the core design of the SmODE network. The roles, value ranges, and impacts on model performance of key parameters (\\(w_{ij}\\), \\(C_{mi}\\), \\(\\gamma_{ij}\\), \\(\\mu_{ij}\\)) are not thoroughly discussed. A more comprehensive explanation would enhance the paper's logical flow and motivation. Moreover, the introduction of multiple parameters in Equation 12 increases the model's complexity and raises concerns about the reliability of experimental results due to the extensive parameter tuning space. The introduction of multiple parameters in Equation 12 increases the model's complexity and the difficulty of parameter tuning. There is a lack of clear guidelines or empirical rules for selecting these parameters.\n2. **Incomplete Theoretical Assumptions and Proofs**:\n    - **Missing Boundedness Assumption for Function \\( g(\\cdot) \\)**:\n        - Theorem 1 asserts that the hidden state of the neuron is bounded by the maximum and minimum values of the function \\( g(x(t), I(t), t, \\theta) \\), but it does not sufficiently explain or prove whether \\( g(\\cdot) \\) itself is bounded. If \\( g(\\cdot) \\) is unbounded, the validity of the theorem is questionable.\n    - **Incompleteness and Rigorousness of Theorem Proofs**:\n        - **Theorem 1**: The proof lacks a detailed discussion on the boundedness of \\( g(\\cdot) \\) and does not adequately explain why \\( \\frac{dx_i}{dt} \\leq 0 \\) holds in all cases. The derivation steps for the lower bound \\( \\min(0, g(\\cdot)_{\\min_i}) \\leq x_i(t) \\) are not sufficiently clear.\n        - **Theorem 2**: The derivation process lacks detailed explanations regarding the boundary control of \\( f(x(t), I(t), t, \\theta) \\) and \\( g(x(t), I(t), t, \\theta) \\). The origin of the constant \\( C \\) and its relationship with \\( M(\\cdot)_i \\) are not clearly explained, resulting in the final inequality \\( \\left| \\frac{dx_i(t)}{dt} \\right| \\leq M(\\cdot)_i \\cdot C \\) lacking sufficient mathematical justification.\n3. **Insufficient Discussion on Computational Efficiency**:\n    - Although the paper mentions that the training time of SmODE increases due to the use of numerical ODE solvers, it lacks an in-depth discussion of this computational overhead and an analysis of its impact on scalability and real-time performance.\n4. **Lack of Direct Comparisons with Some Related Works**:\nRelated research focuses on addressing action smoothness in reinforcement learning, with methodologies highly relevant to SmODE. Without comparing SmODE to these methods, readers would find it difficult to understand SmODE's specific advantages.\n    - Related similar studies such as **\"Smooth Filtering Neural Network for Reinforcement Learning\"** are not included in the comparisons, potentially missing opportunities to demonstrate the relative advantages of SmODE against the latest methods.\n    - Recent relevant methods like **Neural CDEs (2020)** and **Stable Neural Flows (2021)** are not compared experimentally. These methods are relevant to handling continuous-time sequences and controlling stability, aligning closely with the goals of SmODE."
+            },
+            "questions": {
+                "value": "1. **Provide a Detailed Description of Equation 12**:\n    - Offer a comprehensive explanation of each parameter in Equation 12 (\\(w_{ij}\\), \\(C_{mi}\\), \\(\\gamma_{ij}\\), \\(\\mu_{ij}\\)), including their the influences of value ranges, and specific roles in controlling action smoothness. Provide additional theoretical support or empirical results to demonstrate how the introduction of these parameters influences the model's performance.\n2. **Discuss Computational Efficiency and Scalability**:\n    - Provide a more detailed analysis of the computational overhead, the training time and inference speed of the SmODE network. Explore the influences of the ODE solving process or the number of iterations, to improve the model\u2019s computational efficiency and real-time performance.\n3. **Expand Experimental Comparisons and Discussions**:\n    - [**Smooth Filtering Neural Network for Reinforcement Learning**](https://ieeexplore.ieee.org/abstract/document/10643291/): This work is highly relevant to the current paper and should be prominently compared to highlight the advantages and characteristics of the proposed method."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose an ODE that can serve as a neuron in a neural network. They then propose an actor-critic algorithm that incorporates the ODE neuron into the policy network, thereby allowing for smoother action outputs compared to existing methods. The authors present relevant theoretical results as well as extensive empirical validation that showcases the usefulness of their method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This paper provides a theoretically-sound method for smoothing the action output, which, based on the empirical results, leads to better performance overall. The authors provide useful and sound theoretical results, as well as convincing empirical evidence that shows how their method generally outperforms existing methods. The paper is polished, and presented in an easy-to-read manner. Overall, this paper provides a solid contribution."
+            },
+            "weaknesses": {
+                "value": "The authors heavily rely on the Action Fluctuation Ratio (AFR) as the key metric for their implementation and analysis. Given that the AFR was only proposed recently (in Song et al., 2023), the paper would benefit from a more thorough discussion on why this metric is an acceptable one to use. In fact, one could argue that if there is no universally-agreed upon metric, perhaps the authors should consider multiple candidates for metrics in their analysis and justify (in the paper) why AFR is the best one to use.\n\nSimilarly, aside from MPC, the other baselines used in the experiments are not well-motivated in the text. In particular, it should be made clearer why the baselines used are the correct ones to use, and why they constitute a reasonably complete set of relevant baselines to consider.\n\nFinally, in lines 231-232, \u201cWe also think that\u2026\u201d should be framed in a more scientific manner. Appendix C is not convincing either (while it shows an evidence)."
+            },
+            "questions": {
+                "value": "1.\tTheorem 2 is based on the specific setup in Eq (12) according to line 245 on p.5. But the proof does seem to rely on Eq (12). Can you discuss the generalizability of your main results. \n2.\tHow do the terms added to the loss in Equation 16 affect the performance? What are the guidelines on how to set the two weights (\\lambda_1 and \\lambda_2)?\n3.\tWhat is the computational burden due to the ODE solver?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

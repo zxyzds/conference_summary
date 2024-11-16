@@ -1,0 +1,210 @@
+{
+    "id": "Xr5iINA3zU",
+    "title": "Collapse or Thrive? Perils and Promises of Synthetic Data in a Self-Generating World",
+    "abstract": "The increasing prevalence of AI-generated content on the internet raises a critical and timely question: What happens when generative machine learning models are pretrained on web-scale datasets containing data created by earlier models? Previous work prophesied _model collapse_, a phenomenon whereby model-generated synthetic data degrades performance with each additional model-fitting and sampling iteration, with newer models becoming more and more useless. In this work, we clarify and unify the fractured literature on the perils and promises of synthetic data in model-data feedback loops to better forecast likely futures of large-scale deep generative models.\nFirst, previous work claimed that model collapse is caused by replacing all past data with fresh synthetic data at each model-fitting iteration and that collapse is avoided by instead accumulating data across model-fitting iterations; we test this claim on three prominent generative modeling settings, and find both claims hold in all three settings. Second, we study a middle-ground in which the available data pool contains increasing amounts of synthetic data, but each model is fit using a fixed compute budget; we demonstrate that model test loss on real data increases more quickly, but still plateaus unlike when data are replaced en masse. Third, we investigate whether the cardinality or proportion of real data matters more for avoiding model collapse. Surprisingly, we find a non-trivial interaction between real and synthetic data, where the value of synthetic data for reducing model test loss depends on the absolute quantity of real data. Our insights are particularly important when forecasting whether future deep generative models will collapse or thrive, and our results open avenues for empirically and mathematically studying the context-dependent value of synthetic data.",
+    "keywords": [
+        "model collapse",
+        "model-data feedback loops",
+        "synthetic data",
+        "sampling bias",
+        "deep generative models",
+        "model misbehavior"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We clarify and unify the fractured literature on the perils and promises of synthetic data in model-data feedback loops",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Xr5iINA3zU",
+    "pdf_link": "https://openreview.net/pdf?id=Xr5iINA3zU",
+    "comments": [
+        {
+            "title": {
+                "value": "Rebuttal to Reviewer 9sJL"
+            },
+            "comment": {
+                "value": "Thank you for reviewing our paper. We are grateful you found the problem of model collapse interesting, our theoretical and empirical results good and our guidance actionable. To highlight a key detail, ICLR 2025's scoring scale is different than other ML conferences: **8 is only an Accept**. Please take this into account when reviewing our paper. To address the concerns you raised:\n\n> Some of the theoretical proofs hinge on idealized assumptions (e.g., independence and Gaussian distribution in certain proofs). These may not fully apply in practical, real-world datasets.\n\nWe examine Gaussian models because these were a canonical example of how models collapse provided in Shumailov et. al, a Nature publication with ~250 citations.  Although the assumptions do not extend to training deep models, the patterns observed in multivariate Gaussian modeling were consistent across kernel density estimation, supervised finetuning of language models, linear regression and pretraining of language models.  Thus, Gaussian models and KDEs appear to qualitatively match generative models that are too difficult to study mathematically.\n\n>The \"accumulate-subsample\" paradigm offers a practical perspective on fixed compute budgets but is tested under simplified conditions. Additional real-world constraints (e.g., dynamic memory handling) are not considered in depth.\n\nWhile there are many settings we could study, we intentionally chose to study fixed compute budgets because this setting has significant real world implications. While accumulating data avoids model collapse, training on all accumulating data rapidly increases the cost of model training. Thus, it is highly unlikely that future large-scale deep generative models will be trained on 10 quadrillion or 100 quadrillion tokens; rather, it is far more likely that web-scale datasets will be collected and filtered to a smaller size. Section 3 and Figure 4 is a careful examination of 5 different generative modeling settings to study this crucial middle ground.\n\nIf you feel other settings have important real world ramifications, please let us know. We would very much appreciate good suggestions!\n\n> the size of the language model used in this study is quite small. While contemporary models like Llama range from 7B to 70B parameters, the paper\u2019s experiments are limited to Gemma2 with only 2B parameters.\n\nWhat experiment(s) would you most like to see? We are happy to run additional experiments, but our compute budget is finite and the review timeline is finite, so we want to make sure we prioritize the experiments you think would be most valuable. For instance, we can extend the SFT results (Figure 3) to include other language models, e.g., Gemma 2 9B and Gemma 2 27B. What would you advise?\n\n>This work primarily explores synthetic data quantity, but the quality of synthetic data is also a significant factor. Would lower-quality synthetic data exacerbate collapse, and could filtering or curating synthetic data mitigate this effect?\n\nWe agree that the quality of synthetic data is likely to play a significant role. We view our results as an (approximate) upper bound on the harm of synthetic data since we want to understand the effects of unfiltered data of arbitrary quality inundating future pretraining data. If data filtering is applied, we imagine that performance would only lead to better models."
+            }
+        },
+        {
+            "title": {
+                "value": "Rebuttal to Reviewer BKEn (part 2)"
+            },
+            "comment": {
+                "value": "> Have the authors explored ways to identify the breaking point between these two modes?\n\nThe second third of our paper (Accumulate-Subsample) is one way to explore the boundary between Replace and Accumulate, as is the final third of our paper (cardinality versus proportionality of synthetic data).  Theoretically, the Gaussian case and KDE settings suggest that as long as one does not increase the amount of synthetic data added at each iteration superlinearly, collapse does not occur.  We are happy to emphasize these points in the final version of the paper.\n\nIf there is a specific analysis that you think would be insightful, please let us know.\n\n> Another question is about the relative quality of the synthetic data. Presumably, there is a connection between how well the model learns the task and whether its generated data can effectively train a second iteration. Do the authors have comments on this?\n\nWe think this is a fascinating question that we intend to explore in a follow-up paper. To briefly sketch the methodology, we select model families with different scaling dimensions (parameters, data, compute), then sample and continue pretraining using a mixture of real and synthetic data. The central research question would be aimed at relating how well the first iteration model has learned the task to what effect the first model\u2019s synthetic data has on the second iteration model.\n\n> For these specific settings where the true distribution is known (I believe that it is the case?), it would be valuable to report the NLL value of the true distribution as a reference point.\n\nWe will add these figures to the appendix, along with other additional figures.\n\n> Have the authors considered extending the result from Theorem 1 to the accumulate-subsample setup? Or relating this result to their experimental results? This could strengthen the contribution of this work.\n\nThis would be a valuable extension but we were unable to derive a result. If you see a path to doing so, please let us know."
+            }
+        },
+        {
+            "title": {
+                "value": "Rebuttal to Reviewer BKEn (part 1)"
+            },
+            "comment": {
+                "value": "Thank you for reviewing our paper. We are grateful you found the motivation clear and relevant and the experiments thorough and insightful. To highlight a key detail, ICLR 2025's scoring scale is different than other ML conferences: **8 is only an Accept**. Please take this into account when reviewing our paper. To address the concerns you raised:\n\n> Some of the writing is needlessly sensationalized. For example, describing \"that model collapse is caused by deleting past data en masse and avoided by instead accumulating real and synthetic data\" as a \"provocative pair of claims\" feels excessive.\n\nWe concur. The final version will not have this sentence, and we have removed other sensationalist language. We will post a revised manuscript soon.\n\n> The use of tweets and LinkedIn posts as references gives the paper an unserious tone\n\nAgreed. Our goal was to communicate concerns with model collapse (or unfiltered synthetic data) from industry leaders steering billions of dollars who do not write academic papers, but the footnotes indeed felt unserious. We have replaced them with proper citations. Does this seem like an appropriate solution?\n\n> Contribution. The majority of the experimental section (4/9 pages) validates the findings of previous work (Gerstgrasser et al., 2024) [...] Although it is valuable to reproduce and verify previous findings, this should not constitute the main contribution of a novel work.\n\nHopefully we can clarify why we feel this manuscript contains multiple novel insights.\n\n1.  The first third of our manuscript tests whether the data paradigm claims of Gerstgrasser hold in the model settings of Shumailov. In our view, this is not a reproduction; rather, we are testing whether a prediction holds in new settings. Such work is a fundamental component of science and should not be dismissed as lacking novelty.\n2.  The experiments in the first third of our manuscript significantly extend beyond either paper. Gerstgrasser considers the settings of language model pretraining, linear regression, VAEs, and diffusion. In contrast, we consider Gaussian mean/covariance estimation, kernel density estimation, language model instruction finetuning.  Moreover, Gerstgrasser experiments on TinyStories only ran 5 model-fitting iterations, whereas we go to over 40 model-fitting iterations for Replace and to 10+ iterations for Accumulate.\n3.  The second third of our manuscript introduces a middle ground for how data are treated between Accumulate and Replace. This data paradigm might be conceptually simple, but it has significant real world implications and thus needs to be studied carefully. While accumulating data avoids model collapse, training on all accumulating data rapidly increases the cost of model training. Thus, it is highly unlikely that large-scale deep generative models will be trained on 10 quadrillion or 100 quadrillion tokens, and is instead far more likely that web-scale datasets will be collected and filtered to a smaller size. Section 3 and Figure 4 is a careful examination of 5 different generative modeling settings to study this crucial middle ground.\n4.  The final third of our manuscript moves far beyond prior work to tease apart the relative importance of proportionality versus cardinality of real and synthetic data on SFT performance, which previous papers on model collapse did not directly compare, but turns out to be crucial. We also provide insights into the value of synthetic data, discovering that when the number of real data is insufficient, a specific amount of synthetic data can improve model performance.\n\nWe will rewrite the manuscript to clarify these contributions.\n\n> A clearer discussion of related work to better position this paper's contributions is needed [...] A brief summary of these differences and a clearer statement of this work's position relative to others is required.\n\nThis is a good suggestion for improving the manuscript. We will add a Related Work section.\n\n> The presentation of figures could be improved (e.g., readability of axis labels, font size, relative scaling of the plots). Some figures use notation like 1.2\u00d710^0 instead of simply 1.2, and there is a lot of wasted empty space in the figures\n\nWe will update the figures with additional data and work to improve them.\n\n> Lastly, there are several errors in the references, as several published works are cited as arXiv references. This gives the impression of an unpolished work.\n\nThank you for your keen eye. Could you please tell us which papers caught your attention? We will update whichever papers we have outdated citations for."
+            }
+        },
+        {
+            "title": {
+                "value": "Rebuttal to Reviewer xzu3"
+            },
+            "comment": {
+                "value": "Thank you for reviewing our paper. We are excited that you also find this research topic and our findings very interesting, and that you appreciate the volume of experiments in the manuscript. To highlight a key detail, ICLR 2025's scoring scale is different than other ML conferences: **8 is only an Accept**. Please take this into account when reviewing our paper.\n\nTo address the concerns you raised:\n\n> the paper starts with MULTIVARIATE GAUSSIAN MODELING, can the findings still hold for other model, like VAE, diffusion model, or Transformer. Somehow, I feel the paper make too strong claim since there are many generative model.\n\n1.  We began with multivariate Gaussian modeling because it featured prominently in Shumailov, a Nature publication with ~250 citations. We felt studying such a prominent setting was an appropriate place to begin. Additionally, we wanted both theoretical and experimental results to complement one another, and multivariate Gaussian modeling is one setting where both are possible. To the best of our knowledge, VAEs, diffusion models and transformers are currently analytically intractable.\n2.  To emphasize, we don\u2019t study JUST multivariate Gaussians. We study many additional generative models, including instruction finetuning of transformer-based language models, kernel density estimation, linear regression and pretraining of transformer-based language models. This set of model settings includes both unsupervised and supervised learning, as well as both autoregressive and i.i.d. data.\n3.  If you feel like specific generative models are missing that would strengthen our paper\u2019s results, please let us know. We would be happy to run additional experiments (assuming such experiments are within our compute budget and can be run within the ICLR discussion period).\n\n> the reprodubility is unclear at this time..\n\nWe ran 5 sets of experiments, each with at least three seeds, and provided error bars for our results.  All of our results were consistent with our claims. We would be happy to provide you with an anonymized version of our code.\n\nCould you please elaborate on what you feel would strengthen the reproducibility of our paper? Assuming the changes are feasible and within reason, we will make such changes.\n\n> the math proof in Appendix is mainly for Guassina model, it is unclear how it can generalize to more generative models.\n\nOur appendix has two mathematical proofs, one for Gaussian modeling and another for Kernel Density Estimation. Given the difficulty the field has with analyzing even 3-layer networks, rigorous proofs for more complicated generative models (e.g., diffusion models) of model collapse are likely beyond the field\u2019s current mathematical toolkit. If you have suggestions for how to generalize the proofs, we would be very keen to hear your suggestions."
+            }
+        },
+        {
+            "title": {
+                "value": "Rebuttal to Reviewer MNCh"
+            },
+            "comment": {
+                "value": "Thank you for reviewing our paper. We are grateful you found our experiments thorough and our theoretical insights a positive contribution. To highlight a key detail, ICLR 2025's scoring scale is different than other ML conferences: **8 is only an Accept**. Please take this into account when reviewing our paper.\n\nTo address the concerns you raised:\n\n> Novelty.* The novelty of this work is fairly limited since it builds quite a bit on existing work. It starts by addressing some of the claims from Gertgrasser et al, and then uses the model/settings in Shumailov et al. The settings the authors tried out (not replacing data en-masse. etc) are important but do seem a bit incremental conceptually.\n\n\nHopefully we can clarify why we feel this manuscript contains multiple novel insights.\n\n1.  The first third of our manuscript does indeed test whether the data paradigm claims of Gerstgrasser hold in the model settings of Shumailov. However, we feel that a scientific contribution like this (i.e., testing whether a prediction holds) is the fundamental basis of science and should not be dismissed as lacking novelty. Predictions need to be tested!\n2.  The experiments in the first third of our manuscript significantly extend beyond either original paper. Gerstgrasser considers the settings of language model pretraining, linear regression, VAEs, and diffusion. In contrast, we consider Gaussian mean/covariance estimation, KDEs, and SFT of language models.  Moreover, Gerstgrasser experiments on TinyStories only ran 5 model-fitting iterations, whereas we go to over 40 model-fitting iterations for Replace and to 10+ iterations for Accumulate.\n3.  The second third of our manuscript introduces a middle ground for how data are treated between Accumulate and Replace. This data paradigm might be conceptually simple, but it has significant real world implications and thus needs to be studied carefully. While accumulating data avoids model collapse, training on all accumulating data rapidly increases the cost of model training. Thus, it is highly unlikely that future large-scale deep generative models will be trained on 10 quadrillion or 100 quadrillion tokens, and it is instead far more likely that web-scale datasets will be collected and filtered to a smaller size. Section 3 and Figure 4 provide a careful examination of 5 different generative modeling settings to study this crucial middle ground.\n4.  The final third of our manuscript moves far beyond prior work to tease apart the relative importance of proportionality versus cardinality of real and synthetic data on SFT performance, which previous papers on model collapse did not directly compare, but turns out to be crucial. We also provide insights into the value of synthetic data, discovering that when the number of real data is insufficient, a specific amount of synthetic data can improve model performance.\n\n\n> More Real-settings. The authors motivate their work a fair bit from the perspective of language models. I would like to have seen more experiments on this setting under a couple of different model strengths and synthetic data quality.\n\nWhat experiment(s) would you most like to see? We are happy to run additional experiments, but our compute budget is finite and the review timeline is short, so we want to make sure we prioritize the experiments you think would be most valuable. For instance, we can extend the SFT results (Figure 3) to include other language models, e.g., Gemma 2 9B and Gemma 2 27B."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies how training on synthetically generated data in the model-data feedback loop. In particular the authors claim to focus on a more nuanced setting than previous papers on the topic by considering settings where (i) parts of the real-data and synthetic data are used together (instead of discarding the real-data entirely in favor of synthetic), (ii) only a fixed budget is available for updating the model, and (iii) consider how important the proportion vs. cardinality is when updating the model. The authors demonstrate that keeping some of the real data can help prevent collapse, that the right amount of synthetic + real data can improve performance, and in some cases, no amount of synthetic data is outperform real data. The authors provide some proofs to demonstrate their claims too."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- *Important Problem Setting.* The problem of model collapse is a pressing problem and I found the authors investigation into the more nuanced issues of the model-data feedback loop compelling: that likely parts of synthetic and real data will be aggreagated, the budget assumptions etc. \n\n- *Thorough Experiments.* The authors conduct well-designed experiments on a variety of models and settings, including Gaussian models, kernel density estimators, linear regression and language models on a variety of datasets. While some of these models and datasets are fairly simple, they nonetheless help suport the author's claims. \n\n- *Theoretical Insights.*  In addition to the empirical insights, the authors are able to proud some theoretical guarantees. This helps complement the empirical results with simpler models."
+            },
+            "weaknesses": {
+                "value": "- * Novelty.* The novelty of this work is fairly limited since it builds quite a bit on existing work. It starts by addressing some of the claims from Gertgrasser et al, and then uses the model/settings in Shumailov et al. The settings the authors tried out (not replacing data en-masse. etc) are important but do seem a bit incremental conceptually.\n\n- *More Real-settings.* The authors motivate their work a fair bit from the perspective of language models. I would like to have seen more experiments on this setting under a couple of different model strengths and synthetic data quality."
+            },
+            "questions": {
+                "value": "- Can the authors please clarify their novelty a bit more?\n- Can the authors please discuss how they expect their results to hold when training significantly larger models, or changing the quality of the synthetic data?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "this work study the model collapse with the sythetic data."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The research topic is very interested. It tries to study the model collapse issue when the world have more and more sythetic data due to generative model.\n\n2. The paper contain a lot of experiemts to valdiate their claim.\n\n3. The finding in this work is interesting. they find a non-trivial interaction between real and synthetic data, where the value of synthetic\ndata for reducing model test loss depends on the absolute quantity of real data."
+            },
+            "weaknesses": {
+                "value": "1. the paper starts with MULTIVARIATE GAUSSIAN MODELING, can the findings still hold for other model, like VAE, diffusion model, or Transformer. Somehow,  I feel the paper make too strong claim since there are many generative model.\n\n2. the reprodubility is unclear at this time.\n\n3. the math proof in Appendix is mainly for Guassina model, it is unclear how it can generalize to more generative models."
+            },
+            "questions": {
+                "value": "1. the paper starts with MULTIVARIATE GAUSSIAN MODELING, can the findings still hold for other model, like VAE, diffusion model, or Transformer. Somehow,  I feel the paper make too strong claim since there are many generative model.\n\n2. the reprodubility is unclear at this time.\n\n3. the math proof in Appendix is mainly for Guassina model, it is unclear how it can generalize to more generative models."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper investigates the impact of iteratively training a generative model on a combination of real and synthetic data generated from a previously trained model. This is an important area of research to explore and understand, as exclusively training models on synthetic data will eventually fail, as highlighted by prior work. \nThe authors conduct experiments to validate previous findings, offering new evidence to clarify cases in which model collapse can be avoided. They also explore additional experimental settings in which they control for the ratio of synthetic/real data and the absolute quantity of real data to gain further insight into the limits of training with synthetic data."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Motivation. The research question is clearly defined and contextually relevant. Exploring the impact of training with synthetically generated data is important for advancing the field of machine learning.\n\n2. Experiment section. The experiments are thorough, relevant, and insightful. The authors verify that the hypotheses they are testing hold across a wide range of models and data generation processes. They present interesting experiments that control for different parameters, offering clear insights into the scope of the problem. The authors clearly list the questions they aim to answer and provide solid experiments to support their conclusions, along with clear and detailed explanations of their experimental setup.\n\n3. Writing and structure. The paper is well written and follows a logical and clear structure."
+            },
+            "weaknesses": {
+                "value": "1. Contribution. The majority of the experimental section (4/9 pages) validates the findings of previous work (Gerstgrasser et al., 2024). The experiments verify that retraining with a mix of synthetic and real data can avoid model collapse in three additional settings. Although it is valuable to reproduce and verify previous findings, this should not constitute the main contribution of a novel work. Emphasizing and clarifying the unique contributions and findings of this paper would strengthen its impact.\n\n2. Presentation. Overall, the presentation of the work could be improved in several ways. First, a clearer discussion of related work to better position this paper's contributions is needed. In the introduction, various papers on model collapse are listed with the comment that they have differing methodologies and conclusions. What are the differing methodologies and conclusions? A brief summary of these differences and a clearer statement of this work's position relative to others is required. This should be easy to achieve as the paper is one page short of the limit, so I am not sure what justifies the almost nonexistent discussion of the listed previous work. Second, the presentation of figures could be improved (e.g., readability of axis labels, font size, relative scaling of the plots). Some figures use notation like 1.2\u00d710^0 instead of simply 1.2, and there is a lot of wasted empty space in the figures. Lastly, there are several errors in the references, as several published works are cited as arXiv references. This gives the impression of an unpolished work.\n\nMinor\n\n1. Some of the writing is needlessly sensationalized. For example, describing \"that model collapse is caused by deleting past data en masse and avoided by instead accumulating real and synthetic data\" as a \"provocative pair of claims\" feels excessive. It\u2019s clear that using real data works and that purely generated data does not, so it is not surprising that a middle ground exists. Especially since this finding was already made by previous work. \n\n2. The use of tweets and LinkedIn posts as references gives the paper an unserious tone, though this may be a matter of personal preference."
+            },
+            "questions": {
+                "value": "1. This paper presents iterative settings in which performance either suffers from model collapse (replace) or avoids it (accumulate and accumulate+subsample). Have the authors explored ways to identify the breaking point between these two modes? For example, would the results hold if, instead of adding $n$ samples at each iteration, we add an increasing amount of synthetic data (say, $2n$ each time)?\n\n2. Another question is about the relative quality of the synthetic data. Presumably, there is a connection between how well the model learns the task and whether its generated data can effectively train a second iteration. Do the authors have comments on this?\n\n\n3. Regarding the observations in the blob experiment, the authors note a tendency: \"Interestingly, for specific pairs of datasets and numbers of samples per iteration, training on real data while accumulating synthetic data can yield lower loss on real test data than training on real data alone.\" For these specific settings where the true distribution is known (I believe that it is the case?), it would be valuable to report the NLL value of the true distribution as a reference point.\n\n4. Have the authors considered extending the result from Theorem 1 to the accumulate-subsample setup? Or relating this result to their experimental results? This could strengthen the contribution of this work."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the risks of training generative models on datasets increasingly dominated by AI-generated (synthetic) data, studying \"model collapse\"\u2014where model performance deteriorates as synthetic data accumulates. Through theoretical and empirical analyses, the authors explore when and how this collapse can be mitigated. They test three data-handling approaches (replace, accumulate, and accumulate-subsample) across various generative model settings. Findings suggest that model collapse is avoidable if synthetic data is accumulated alongside real data, and highlight how different ratios of real to synthetic data influence model performance."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The studied problem of model collapse under increasing AI-generatd data is prompt and interesting.\n\n2. The theories and empirical studies round up the good work.\n\n3. This paper offers actionable guidance on how to balance real and synthetic data in training."
+            },
+            "weaknesses": {
+                "value": "1. Some of the theoretical proofs hinge on idealized assumptions (e.g., independence and Gaussian distribution in certain proofs). These may not fully apply in practical, real-world datasets.\n\n2. The \"accumulate-subsample\" paradigm offers a practical perspective on fixed compute budgets but is tested under simplified conditions. Additional real-world constraints (e.g., dynamic memory handling) are not considered in depth.\n\n3. While language models are likely the most relevant generative model for readers, the theoretical analysis does not extend to this model type and is instead focused on Gaussian and kernel density estimation models. Additionally, the size of the language model used in this study is quite small. While contemporary models like Llama range from 7B to 70B parameters, the paper\u2019s experiments are limited to Gemma2 with only 2B parameters."
+            },
+            "questions": {
+                "value": "1. The study's empirical analysis is limited to a 2B parameter language model. Given the prevalence of larger models like Llama 3 and Mistral, do the authors plan to extend their experiments to these more widely used models to assess the generalizability of their findings?\n\n2. This work primarily explores synthetic data quantity, but the quality of synthetic data is also a significant factor. Would lower-quality synthetic data exacerbate collapse, and could filtering or curating synthetic data mitigate this effect?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

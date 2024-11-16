@@ -1,0 +1,131 @@
+{
+    "id": "mMmzHS28ht",
+    "title": "LLM Pruning and Distillation in Practice",
+    "abstract": "Structured pruning with knowledge distillation is a potent combination for obtaining small language models (SLMs) with significantly fewer training tokens and compute resources compared to training from scratch. In this work, we investigate how this strategy can be effectively applied in instances where access to the the original pretraining dataset is restricted. We introduce a new *teacher correction* phase before distillation which lets the teacher model adjust to our specific data distribution using a lightweight fine-tuning phase. We apply this strategy to compress the Mistral NeMo 12B and Llama 3.1 8B models to 8B and 4B parameters, respectively, using pruning and distillation. We explore two distinct pruning strategies: (1) depth pruning and (2) joint hidden/attention/MLP (width) pruning, and evaluate the results on common benchmarks from the LM Evaluation Harness. The models are then aligned with NeMo Aligner and further tested for instruction following, role-play, math, coding and function calling capabilities. This approach produces the state-of-the-art Mistral-NeMo-Compressed-8B (\\MNMinitron for brevity) model from Mistral NeMo 12B, and a compelling 4B model from Llama 3.1 8B.",
+    "keywords": [
+        "llm",
+        "compression",
+        "pruning",
+        "distillation"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "A simple and effective structured compression technique for LLMs that doesn't require access to the original training dataset.",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=mMmzHS28ht",
+    "pdf_link": "https://openreview.net/pdf?id=mMmzHS28ht",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper studies the combination of structural pruning and knowledge distillation to obtain compressed and performant language models with higher throughput. The paper proposes a \"teacher correction\" to allow for lightweight finetuning of the teacher model (a llama-3.1-8B or mistral nemo 12B). The step is proposed with the goal of adapting the distribution of the teacher to the domain of the finetuning data before the distillation step to a smaller model. Furthermore, the paper uses different saliency metrics to compute importance of depth and intermediate mlp/attention/width dimension and sort the teacher in order of importance, before applying pruning. In addition, the paper also explores different saliency metrics for improved depth pruning. The pruned models are evaluated on a wide variety of commonsense, math and instruction tuning tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Experiments\n- The paper evaluates the proposed teacher correction scheme on different models (llama-3.1-8B and mistral nemo 12B) for a more thorough study of effectiveness of distillation (pre-corrected or continuously corrected)\n- Detailed evaluation of gains from different components random student initialisation, importance sorting and knowledge distillation\n- Exhaustive evaluation on different tasks\n\nWriting\n- Paper is written in an easy to understand manner in most parts\n\nOriginality and significance \n- While most parts of the paper are similar to/derive from observations in [1], the empirical investigation into precise gains by each of the components is interesting and significant. \n\n[1] Muralidharan, S., Sreenivas, S.T., Joshi, R., Chochowski, M., Patwary, M., Shoeybi, M., Catanzaro, B., Kautz, J. and Molchanov, P., 2024. Compact language models via pruning and knowledge distillation. arXiv preprint arXiv:2407.14679."
+            },
+            "weaknesses": {
+                "value": "Originality and Significance\n- A lot of this work is similar to  [1], including importance sorting, architecture selection procedure, distillation loss\n- Domain adaptation of a teacher is also studied in [2] for BERT like models and I don't find the proposed teacher correction to be significantly different from the idea of adapting a teacher to a specific domain on interest\n- The idea of dropping last contiguous layers (except the last layer) have been studied in [3] and the scheme chosen here is similar to the scheme chosen in the paper. Is my understanding correct and could the authors present the key differences/observations here?\n\nExperiments\n- Check questions section, I think the paper would benefit a lot from adding comparisons to similar small sized models, trained from scratch. \n\nClarity\n- While the paper is written in an easy to understand manner in most parts, I am lacking a cohesive story of the overall approach of the paper. Could the authors provide an algorithm describing the final/best performing choices for pruning+distillation? \n- Could you elaborate on the following points which are ambiguous/unclear : 167-168, what are the architecture related learnings, how was the student designed?  Line 133-134, which calibration set is used, does the domain of the calibration set matter? \"continuously corrected teacher\", is not defined properly in the paper, is the teacher periodically updated? line 312-313, what is the general scheme used for pruning different teachers, which contiguous layer indices are to be dropped?\n\nScaling to larger models\n- As per my understanding the paper studies only full fine-tuning (FFT) of the teacher model, for teacher correction. However, this does not scale to larger models (eg: llama-3.1-70B) due to memory/compute constraints and hence cannot exploit larger/better teacher models.\n- While the authors do mention the possible use of Parameter-Efficient-Fine-Tuning (PEFT) schemes like LoRA[4] and Galore[5], I think given the focus of the paper on large language models, generalisability of the observations in the paper for PEFT schemes on even larger language models, should be studied in detail. \n\nCode and Reproducibility\n- The models are finetuned and distilled on a proprietary dataset, how do the observations translate to public datasets eg: openwebtext or finetuning datasets like alpaca, commonsense170k, math10k?\n- The paper does not release the code and experimental pipeline for their work and I encourage the authors to do this to increase the impact and adoptability of their work. \n\n[1] Muralidharan, S., Sreenivas, S.T., Joshi, R., Chochowski, M., Patwary, M., Shoeybi, M., Catanzaro, B., Kautz, J. and Molchanov, P., 2024. Compact language models via pruning and knowledge distillation. arXiv preprint arXiv:2407.14679.\n\n[2] Yao, Y., Huang, S., Wang, W., Dong, L. and Wei, F., 2021. Adapt-and-Distill: Developing Small, Fast and Effective Pretrained Language Models for Domains. Findings of the Association for Computational Linguistics: ACL-IJCNLP 2021.\n\n[3] Gromov, A., Tirumala, K., Shapourian, H., Glorioso, P. and Roberts, D.A., 2024. The unreasonable ineffectiveness of the deeper layers. arXiv preprint arXiv:2403.17887.\n\n[4] Hu, E.J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L. and Chen, W., 2021. Lora: Low-rank adaptation of large language models. arXiv preprint arXiv:2106.09685.\n\n[5] Zhao, J., Zhang, Z., Chen, B., Wang, Z., Anandkumar, A. and Tian, Y., 2024. Galore: Memory-efficient llm training by gradient low-rank projection. arXiv preprint arXiv:2403.03507."
+            },
+            "questions": {
+                "value": "- Given the newly released llama-3.2-1b and llama-3.2-3b and ministral-3b models, could the authors compare against these model families?\n- I currently lack a concrete answer to the question : Does a (student) model pruned and distilled from a larger model outperform a (student) model of similar size trained from scratch on a pretraining dataset? Could the authors elaborate on their observations here? \n- Have the authors tried to replace full-fine-tuning with PEFT techniques like LoRA[1] and Galore[2]? If yes do the observations about distillation and importance sorting hold there?\n- Could the authors provide on-device latency gains using the pruned models eg: on a A100/H100?\n\nI am willing to raise my score if the authors adequately respond to my questions and the weaknesses pointed out above.\n\n[1] Hu, E.J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L. and Chen, W., 2021. Lora: Low-rank adaptation of large language models. arXiv preprint arXiv:2106.09685.\n\n[2] Zhao, J., Zhang, Z., Chen, B., Wang, Z., Anandkumar, A. and Tian, Y., 2024. Galore: Memory-efficient llm training by gradient low-rank projection. arXiv preprint arXiv:2403.03507."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses an increasingly important challenge in the field of large language models (LLMs): how to effectively compress models when access to the original training data is restricted. The authors present a practical approach combining structured pruning and knowledge distillation, introducing several notable innovations in the process. The key contributions include a novel \"teacher correction\" phase for adapting the teacher model to target dataset distribution, an improved depth pruning saliency metric based on downstream task performance, and empirical validation through compression of Mistral NeMo 12B to 8B and Llama 3.1 8B to 4B parameters."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper introduces teacher correction as an innovative solution for compressing models without original training data access - a common industry challenge with proprietary models. The approach is elegantly simple yet effective, requiring only ~100B tokens for adaptation and integrating smoothly into existing distillation pipelines. This practical focus makes the method immediately valuable for real-world applications.\n- The results show impressive efficiency gains with the MN-COMPRESSED-8B achieving SOTA performance using 40\u00d7 fewer training tokens, and LLAMA 3.1-COMPRESSED-4B showing competitive results with 150\u00d7 fewer tokens. The method delivers significant speedups (2.7\u00d7 for depth pruning, 1.8\u00d7 for width pruning) while maintaining strong performance across diverse tasks including reasoning, coding, and instruction following."
+            },
+            "weaknesses": {
+                "value": "- The performance degradation observed in the compressed models is substantial, especially considering the modest compression ratios achieved. When compressing Llama 3.1 8B to 4B parameters (only a 2x reduction), the MMLU performance drops notably from 65.3% to 60.5% with width pruning, or even lower to 58.7% with depth pruning. This performance drop is particularly concerning when viewed against recent developments in the field - for instance, MobileLLM-350M demonstrates that it's possible to achieve comparable performance to LLaMA-v2 7B in specific tasks with a model that's 20 times smaller. The fact that this paper shows significant performance degradation with just 2x compression, while requiring additional fine-tuning, makes the proposed approach less compelling for practical applications. \n\n- The evaluation of the method's effectiveness is hampered by insufficient baseline comparisons. The authors should have compared their approach against a broader spectrum of existing compression techniques, including various pruning approaches, quantization methods. \n\n- The paper's experimental scope is also notably limited. While the authors validate their approach on two recent and popular models (Mistral NeMo 12B and Llama 3.1 8B), they don't explore more aggressive compression scenarios such as creating sub-1B parameter models, which would be particularly valuable for resource-constrained deployments.\n\n[MobileLLM] MobileLLM: Optimizing Sub-billion Parameter Language Models for On-Device Use Cases"
+            },
+            "questions": {
+                "value": "- Why Winogrande was chosen over other potential downstream tasks?\n- How sensitive is the method to the choice of downstream task for depth pruning?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper explores the practical application of structured pruning and knowledge distillation to compress large language models (LLMs) efficiently. The main goal is to create smaller models with fewer parameters while maintaining performance, even when the original pretraining dataset is unavailable. To achieve this, authors proposed\n\n**Teacher Correction**: A novel phase where the teacher model is fine-tuned with a small amount of new data to adapt to the specific distribution of the target dataset. This improves the distillation process when the original training data is inaccessible.\n\n**Pruning Strategies**: Authors explored two pruning strategies, including depth pruning and width pruning with their proposed importance measurement for each component."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The authors provide their base model on Hugging Face, and based on this, the results seem promising.\n\n2. Teacher correction can improve the effectiveness of distillation when the original data is unavailable, as demonstrated with Llama 3.1 8B and Mistral NeMo 12B.\n\n3. The authors propose a new method for measuring importance in pruning, but there seems to be a lack of comparison with other methods for evaluating LLM importance."
+            },
+            "weaknesses": {
+                "value": "1. This paper does not follow the ICLR 2025 style guidelines, which could be a serious reason for desk rejection.\n\n2. The overall writing is somewhat unclear. I believe the writing could be improved, and some details in the paper also need enhancement, including the proper use of \\citep and \\citet, as well as capitalization at the beginning of sentences.\n\n3. The reasoning behind the improvement from teacher correction is not very clear. Even though it is a crucial component of the work, it seems to only apply to a single case. I recommend that the authors provide more analysis or experiments demonstrating the effectiveness of teacher correction across different models or datasets. This would help establish whether the improvement is generalizable or limited to a specific case.\n\n4. Overall, the main components of the paper\u2014distillation and pruning\u2014appear to overlap significantly with previous works, particularly Sheared LLaMA, which first proposed efficient training using distillation and pruning. However, the paper does not cite this work."
+            },
+            "questions": {
+                "value": "1. There are several methods for measuring the importance of layers, including SLEB, Shortened LLaMA, and ShortGPT. For a stronger publication, I suggest that the authors include a comparative analysis section that directly compares their proposed importance measurement method with these existing methods on a common set of metrics or benchmarks.\n\n2. Is there any empirical validation for the authors' argument: \"We hypothesize this is due to the change in the distribution of sub-word tokens across the original dataset the teacher model was trained on versus the dataset being distilled on\"? I recommend that the authors provide quantitative evidence of the token distribution differences between datasets and demonstrate how these differences correlate with the effectiveness of teacher correction."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

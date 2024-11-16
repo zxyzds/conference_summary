@@ -1,0 +1,143 @@
+{
+    "id": "AEvu2ifH1r",
+    "title": "PTNQ: Post-Training Non-Linear Quantization",
+    "abstract": "Quantization is one of the leading techniques to reduce the memory usage of machine learning models.\nIt works by approximating the weights of a model by some function with a smaller domain (e.g., replace 32-bit floats with 8-bit integers that are coefficients in some function that maps back to 32-bit floats).\n\nAlthough most quantization methods approximate weights with a linear or affine function, the weights of current machine learning models often exhibit non-linear behavior at the extremities.\nMoreover, some studies suggest that the extremities are important for the end-to-end accuracy.\n\nIn this paper, we introduce PTNQ, a novel post-training quantization technique that approximates weights by searching through a pool of non-linear functions.\nWe show that PTNQ provides significant advantages over affine functions, achieving similar accuracy while requiring 2 to 4 fewer bits per coefficient.",
+    "keywords": [
+        "quantization"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "A novel post-training quantization technique that searches for the best function through a pool of methods",
+    "creation_date": "2024-09-16",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=AEvu2ifH1r",
+    "pdf_link": "https://openreview.net/pdf?id=AEvu2ifH1r",
+    "comments": [
+        {
+            "comment": {
+                "value": "Thank you for your feedback!\n\nBelow we answer your questions:\n1) Which kind of specific quantization method do you use? Like GTPQ, AWQ?\n\nWe used the more traditional quantization method of Q(w) = clip(round(w / s + z)), where w is the weight, s the scale and z the zero point. The rounding function, rounds to the nearest integer and the clip function, clips the results to the interval supported by the bit-width the model is being quantized to (i.e. for 8 bits, the interval is [-128, 127].\n\n2) What is the affine function, like f(x)=x? Can you give an example? As I understand, affine function is applied in uniform quantization and non-linear function is more suited in non-uniform quantization.\n\nThe affine function used is the usual Q(w) = w / s + z, where w is the weight, s the scale, z the zero point and the output being the quantized tensor\nThe goal of our work was to use relatively simple non-linear functions to quantize linear layers, non-uniformly, since most linear layers present distributions with outliers that require a careful representation not usually present in uniform quantization\nIn uniform quantization, all intervals have the same \u201cwidth\u201d and thus, the same importance to the quantization. This is the usual approach in other methods however, we aim to show that, through a small pipeline and the use of non-linear function we can achieve a better noise reduction\n\n3)  Which model specifically did you use in the experimental part? Like llama3-8b?\n\nThe models used in the experimental part as well as their number of parameters can be seen in Table 2. More specifically, the models were downloaded from HuggingFace:\n * Vit: https://huggingface.co/google/vit-large-patch16-224\n * Wav2Vec: https://huggingface.co/facebook/wav2vec2-large-960h-lv60-self\n * OPT: https://huggingface.co/facebook/opt-350m\n * TinyLlama: https://huggingface.co/TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T\n * Phi2: https://huggingface.co/microsoft/phi-2\n * Llama3: https://huggingface.co/meta-llama/Meta-Llama-3-8B\n\n----------------\nAdditionally we note the following:\ntorchao also does non-uniform quantization using several affine functions (128 functions for 4-bit quantization). This means the memory usage of torchao is higher than our technique that uses a single function per channel.\nThe memory and performance improvements are not fully realized in our prototype because we don't do sub-byte packing of data. While torchao packs 2x 4-bit values per byte, we pack just one. This would require a more production-ready implementation, which we believe to be beyond the scope of this paper. We wanted to determine whether the community should be looking into other functions besides affine and logarithms, and we believe we successfully showed that certain trigonometric functions show great potential.\n\nA final note is that while current hardware has acceleration for some trigonometric functions, CUDA kernels used by PyTorch are certainly not optimized to handle arcsinh and similar things, since they are not used by models currently. A production implementation would fix those issues with a moderate amount of engineering work, but beyond what a small academic group can achieve.\n\nThank you!"
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your feedback.\n\nWe would like to clarify one point: our technique is *not* related with quantization of non-linear layers such as embedding layers. The goal of our technique is to quantize linear layers through non-linear functions, such as trigonometric functions. As far as we are aware, this is the first systematic study on using a large pool of non-linear functions.\nBy using non-linear functions to quantize linear layers, it is possible to achieve a more compact representation of the weights while maintaining model accuracy.\nLinear layers often have weights that exhibit outliers, specifically at the extremities. Traditional linear quantization fails to capture these nuances, leading to either increased model size (when skipping quantization of that layer) or a loss in accuracy.\n\nWe emphasize that reducing memory bandwidth is the most important thing for the short and mid-term, at least. The gap between computation cost and bandwidth cost (in terms of energy and $) keeps widening, and thus requiring a few extra operations while halving the memory requirements is a good tradeoff.\n\nWe acknowledge some of the shortcomings in the paper writing, including that it led to the confusion of non-linear layers vs non-linear quantization functions. We will fix that."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank you for your accurate and helpful review.\n\nWe used different datasets depending on the domain of the model: for language models, we used WikiText, for vision models we used ImageNet, and for audio models we used LibriSpeech.\n\nAs for the number of tokens, specifically for language models, we performed 1,000 iterations with batch size of 8, each with 64 tokens, yielding a total of 512,000 training tokens per layer.\nWe randomized the inputs and used a fixed seed to make the results comparable among themselves.\n\nWe only compared with torchao since it works out of the box with all the models we tested and it is the official PyTorch package. Also, we were a bit constrained in terms of budget. Nevertheless, we are happy to compare against other tools if you suggest us some concrete tools & algorithms you want us to compare against.\n\nThank you!"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces Post-Training Non-Linear Quantization (PTNQ), that uses non linear functions to approximate the weights of a trained network. The technique has three components: \n1. Function selection - PTNQ evaluates a broad set of non linear functions (and their combinations up-to a user defined depth k) to find the function best suited to minimize loss. \n2. Quantization parameter initialization - The authors try three different initialization strategies for the parameters of the functions, namely, initializing all parameters to 1, sampling from a standard normal distribution with range [-1,1], and space search - a technique that starts by generating parameters from a large initial range and iteratively narrows the range. The parameter ranges are optionally refined using non-linear regression.\n3. Quantization parameter training - After initialization, the quantization parameters are further trained to minimize the mean square error between original weights and their quantized-dequantized counterparts. The technique leverages different learning rate schedulers to optimize performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is easy to follow and describes the various components of the proposed technique well.\n2. The motivation is clear, and this is a relevant problem.\n3. The technique does show compression advantage, however, comparison with other state of the art techniques from literature (some of which are mentioned in the related work section) is missing, making it hard to gauge the merits of the proposed non linear quantization."
+            },
+            "weaknesses": {
+                "value": "1. The approach increases quantization time and is slower at inference compared to linear methods. \n2. The technique has been only investigated on smaller models. On LLama3, the results are not much better than affine and torchao but the time and memory required for PTNQ are both higher. \n3. PTNQ requires further hardware optimizations to fully leverage its non-linear functions in production settings.\n4. Comparison with state of the art PTQ and QAT techniques from literature is missing in the tables."
+            },
+            "questions": {
+                "value": "Can you share the details of the data used for training, and how many tokens were needed to train the quantization parameters?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, authors propose the PTNQ algorithm. In PTNQ, users can pre-define a list of non-linear quantization function and PTNQ would provide the best non-linear quantization function, de-quantization function and best parameters. In their experiments, they claim that PTNQ provides significant advantages over affine functions, achieving similar accuracy while requiring 2 to 4 fewer bits per coefficient."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "Nonlinear quantization is a popular topic, especially when the data distribution in the tensor is not uniform. Nonlinear quantization often makes better use of resources and reduces the noise caused by quantization.\n\nThe authors provide a huge of experiments to estimate their methods."
+            },
+            "weaknesses": {
+                "value": "This paper faces many fatal problems:\n\n1.The motivation is not strong.\nAs mentioned in the article, the  significance of quantitation methods is to reduce both storage costs and computation time. The reduction in computation time depends on the increase in bandwidth benefits when data is loaded into different storage device after storage reduction. These are two goals to be achieved at the same time.  \n\nThe article unilaterally emphasizes the benefits of storage, which is untenable for nonlinear quantization raise the computation time dramatically. In practice, storage is a key point, but there are more effective solutions than quantitative methods to solve the problem of purity storage problem. For example, in the advertising recommendation business, the embedding layer often uses 7z compression method for storage, and uses GPU for decompression after loading into the GPU memory. Therefore, the motivation in the article is untenable \n\nThe experiments in this paper also show this point. In table 4, the inference time of PTNQ is much larger than traditional linear quantization, but compared with linear quantization, the model size is not small significantly. \n\n2.The method is trivial and writing is poor.\n\nThe methods in this article are very trivial. A simple yet effective method is important factor to accept this paper. However, when describing the simple method, emphasis should be placed on describing other properties of the method, such as how it is effective and how it is important in real business, rather than detailing how it is initialized. Therefore, sections 2.1.1-2.1.3 of this article should be rewritten to reduce unnecessary descriptions and further analyze the effectiveness and rationality of the method. Therefore, this article has significant shortcomings in  paper writing."
+            },
+            "questions": {
+                "value": "How to design nonlinear quantization methods that can simultaneously balance model size and computation time?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces PTNQ, a novel quantization technique designed to reduce memory usage in machine learning models by utilizing non-linear functions rather than traditional linear or affine methods. It highlights the trade-offs of using non-linear functions over standard affine functions, showing a reduction in bits required without significant accuracy loss. This approach enables memory-efficient model deployment without compromising accuracy, making it particularly relevant for resource-constrained environments"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. PTNQ innovates by leveraging a pool of non-linear functions, allowing for more accurate weight approximation in neural networks while using fewer bits per coefficient.\n2. PTNQ\u2019s two-phase approach first generates and evaluates various non-linear quantization functions, then selects the optimal one.\n3. PTNQ explores various initialization methods, learning rate schedulers, and function combinations, providing insights into the optimal settings for different models."
+            },
+            "weaknesses": {
+                "value": "1. I think it is unfair to compare PTNQ with affine and torchao, as both are uniform quantization methods. A fairer comparison would involve other non-uniform quantization techniques.\n2. In Table 4, the inference time for PTNQ increases significantly, while the memory savings and performance improvements appear minimal.\n3. This method relies on multiple steps and various heuristic combinations to determine the optimal solution, which may limit its practicality for real-world applications.\n4. In terms of academic writing, there is space for improvement in the paper\u2019s logical flow and structural clarity.\n5. The innovative aspects of this work seem somewhat limited and may not yet meet the competitive standards expected for ICLR."
+            },
+            "questions": {
+                "value": "1. Which kind of specific quantization method do you use? Like GTPQ, AWQ?\n2. What is the affine function, like f(x)=x? Can you give an example? As I understand, affine function is applied in uniform quantization and non-linear function is more suited in non-uniform quantization.\n3. Which model specifically did you use in the experimental part? Like llama3-8b?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

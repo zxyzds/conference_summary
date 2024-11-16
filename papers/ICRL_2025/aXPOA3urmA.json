@@ -1,0 +1,168 @@
+{
+    "id": "aXPOA3urmA",
+    "title": "Cross-Domain Reinforcement Learning via Preference Consistency",
+    "abstract": "Cross-domain reinforcement learning (CDRL) aims to utilize the knowledge acquired from a source domain to efficiently learn tasks in a target domain. Unsupervised CDRL assumes no access to any signal (e.g., rewards) from the target domain, and most methods utilize state-action correspondence or cycle consistency. In this work, we identify the critical correspondence identifiability issue (CII) that arises in existing unsupervised CDRL methods. To address this identifiability issue, we propose leveraging pairwise trajectory preferences in the target domain as weak supervision. Specifically, we introduce the principle of cross-domain preference consistency (CDPC)\u2013a policy is more transferable across the domains if the source and target domains have similar preferences over trajectories\u2013to provide additional guidance for establishing proper correspondence between the source and target domains. To substantiate the principle of CDPC, we present an algorithm that integrates a state decoder learned through preference consistency loss during training with a cross-domain MPC method for action selection during inference. Through extensive experiments in both MuJoCo and Robosuite, we demonstrate that CDPC enables effective and data-efficient knowledge transfer across domains, outperforming state-of-the-art CDRL benchmark methods.",
+    "keywords": [
+        "Reinforcement learning",
+        "Cross-domain transfer",
+        "Transfer learning",
+        "Preference-based RL"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "",
+    "creation_date": "2024-09-17",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=aXPOA3urmA",
+    "pdf_link": "https://openreview.net/pdf?id=aXPOA3urmA",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper describes a new method of cross domain reinforcement learning\nbased on the idea of receiving target domain preference labels rather than\ntarget domain reward labels.  It proposes training an encoder/decoder to\nmap between source and target states including previouly proposed\nconsistency and reconstruction losses and adding in a preference loss.  It\nalso adds MPC at inference time to improve the action selection.  It\ndemonstrates its results in simulation using some standard cross-domain\nexperiments and compares to several methods using cross-domain approaches\nand some that don't."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is well written and easy to understand and I believe it presents\na new idea."
+            },
+            "weaknesses": {
+                "value": "I have a few major concerns which are listed here:\n\n1. I did not find the problem setup very compelling.  Its hard to imagine\nrobotics applications where its easy to get preference data but the reward\nfunction is unknown.  This might well happen in language models or other\nsimilar applications.  But the empirical studies were done on robotics\nexamples where the reward functions are well known.  In order to be\nconvincing, I think the empirical studies should be done in applications\nwhere this problem setup really happens.\n\n2. Cross domain preference consistency seems to make sense in the\napplications that were shown -- basically you change the\nkinematics/dynamics of a robot that still has roughly the same task\ncapability and does the same task.  Maybe that really is your main use\ncase, but that again leads to point 1 above.  In robotics it would be nice\nto be to change the task for the same robot, but it seems unlikely that\nCDPC applies in that case.\n\n3. The effects of MPC are not well tested in the empirical study.  It seems\npossible that the main thing making the algorithm perform well is the MPC\nrather than the decoder learned via eq 5.  A useful comparison would be to\ntake the same target domain dynamics model to generate trajectories and\nevaluate those trajectories with the critic learned by SAC-Off-TR and by\nSAC-Off-RM.  You similarly could test CAT-TR plus MPC and DCC plus MPC to\nsee whether MPC is useful for resolving some of their limitations.\n\n\nHere are some additional minor notes:\n\n1. I did not find figure 1 helpful.  I agree some version of this figure\nwould be appropriate.  I found the decimal and binary distinction to be\nconfusing and maybe unnecessary.  While it was clear there were two\ndecoders, it was less clear how/why they both had zero cycle consistency\nloss.\n\n2. SAC-Off-TR is advertised as a \"topline that should be an upper bound\".\nI don't believe that statement is accurate since while it does have the\nbenefit of the true reward function, it does not have the benefit of the\nsource domain information.\n\n3. The empirical results figures are too small to read and on several I had\nto just go with the text and ignore the figure.  Figs 5, 6, and 11 could\nprobably be remedied by simply scaling up to use all the horizontal space\navailable.  The others need bigger reformatting.  This would take up more\nvertical space, but you could deduplicate and tighten up some of the text\nin the early sections to make room."
+            },
+            "questions": {
+                "value": "Please comment on the concerns listed above, focusing on the first three listed as \"major\" concerns."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "For cross-domain transfer in RL, the paper proposes a CDPC method using preference consistency between the target and source domains. The proposed approach learns a state decoder to connect target domain trajectories with source domain trajectories, and then use MPC to select actions for the target domain based on the corresponding source domain rewards. Experiments show data efficiency of the proposed CDPC method and improved final performance compared to some prior methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The ability to transfer knowledge across two RL domains is important for data efficiency but also challenging. This paper proposes a method based on the idea of preference consistency when we only have preferences over trajectories in the target domain. The idea is to find a mapping such that the preference ordering of trajectories in the source domain and the corresponding trajectories in target domain are consistent. Then based on this mapping, one can get the preference of any two target domain trajectories by mapping them back into the source domain and utilizing our source domain knowledge, which then allows one to apply MPC to select the best action. The idea is pretty novel and seems to be effective.\n\n-  Multiple experiments are conducted to evaluate different aspects of the proposed CDPC method. It is shown that CDPC performs better than prior methods in several domain transfer problems, and ablation studies show the importance of the proposed preference consistency loss in terms of preference accuracy and final performance."
+            },
+            "weaknesses": {
+                "value": "- In addition to the learned decoder, CDTO requires to learn a target-domain dynamics model, but little detail is provided for the target-domain dynamics model. Are the samples used in learning the target-domain dynamics taken into account in the sample efficiency calculation compared with other methods? Are there experiments showing the importance of the quality of this learned dynamics model?"
+            },
+            "questions": {
+                "value": "- For the preference accuracy in Figure 8, how is the preference accuracy evaluated? Are they evaluated on the same set of trajectories for all the methods?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel framework for cross-domain reinforcement learning that leverages pairwise trajectory preferences in the target domain as weak supervision. The proposed Cross-Domain Preference Consistency (CDPC) principle aims to address the correspondence identifiability issue (CII) in unsupervised CDRL by aligning trajectory preferences across source and target domains. Extensive experiments in MuJoCo and Robosuite demonstrating the effectiveness of CDPC in knowledge transfer across domains."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "-  The idea of cross-domain preference consistency is Interesting.\n- The experimental results are comprehensive."
+            },
+            "weaknesses": {
+                "value": "- In the standard unsupervised Cross-Domain Reinforcement Learning setting, the learner is typically provided with a set of target-domain trajectories that contain only state-action pairs, without any reward signal. The authors, however, introduce an additional preference signal, which the reviewer believes contravenes the foundational assumption of unsupervised learning. The introduction of a sufficient number of preference signals could potentially allow for the inference of the underlying reward function, thus undermining the unsupervised nature of the task. Furthermore, the reviewer notes a lack of specificity in the experimental section regarding the quantity of preference signals used. The manuscript does not clarify how many preference data points were utilized, what proportion of the dataset they represent, or how the performance of the model scales with the amount of preference data. It is crucial to understand the sensitivity of the model's performance to the quantity of preference data, as this could significantly impact the generalizability and robustness of the proposed method.\n\n- Regarding Figure 1, a lack of clarity on the implications of the correspondence identifiability issue. It appears that both $\\tau_\\alpha$ and $\\tau_\\beta$ are optimal trajectories, and the existence of multiple optimal trajectories within the same environment is a common occurrence. The reviewer questions whether the authors aim to identify a unique one-to-one mapping between the source and target domains. The necessity for uniqueness is not immediately apparent, and the manuscript would benefit from a more detailed explanation of why a unique mapping is required and how it affects the overall goal of the cross-domain transferability of policies.\n\n- Concerning Equation 3, the reviewer inquires about the origin of the transition kernel T of the source domain. It is unclear whether this is learned through training or directly accessible through an environmental model."
+            },
+            "questions": {
+                "value": "See Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel method, CDPC, to address the challenge of representation learning in cross-domain reinforcement learning. By leveraging trajectory preference signals from the target domain, the CDPC approach significantly enhances learning efficiency during knowledge transfer between the source and target domains."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Studies an important problem of cross-domain RL from offline data.\n\n2. Shows a counterexample of the exist unsupervised CDRL issue (figure 1) and prpose a principle of cross-domain preference consistency to address this issue.\n\n3. Clear writing in most places.\n\n4. The experimental results on MuJoCo and RoboSuite demonstrate that our approach outperforms existing Cross-Domain Reinforcement Learning (CDRL) methods."
+            },
+            "weaknesses": {
+                "value": "1. The reason for using MPC instead of other planning methods during the testing phase has not been clearly explained.\n\n2. Although the experiments demonstrate that the combination of PBRL and MPC is highly effective in the context of CDRL, the advantages and underlying mechanisms of this integration have not been thoroughly analyzed. The work lacks theoretical exploration and a detailed discussion of its contributions.\n\n3. The layout of the experimental results on page 10 requires revision.\n\n4. Equations (3) and (5) should indeed be written with \":=\" for consistency, just like Equations (2) and (4). Ensuring uniform formatting across all equations is important for clarity and professionalism in the presentation."
+            },
+            "questions": {
+                "value": "1. How is \"weak supervision\" defined in the paper? No specific information has been provided. Please clarify this in the introduction section.\n\n2. Are there any theoretical justification for the CDPC?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

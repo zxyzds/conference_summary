@@ -1,0 +1,182 @@
+{
+    "id": "RiS2cxpENN",
+    "title": "Diffusion Models as Cartoonists! The Curious Case of High Density Regions",
+    "abstract": "We investigate what kind of images lie in the high-density regions of diffusion models. We introduce a theoretical mode-tracking process capable of pinpointing the exact mode of the denoising distribution, and we propose a practical high-probability sampler that consistently generates images of higher likelihood than usual samplers. Our empirical findings reveal the existence of significantly higher likelihood samples that typical samplers do not produce, often manifesting as cartoon-like drawings or blurry images depending on the noise level. Curiously, these patterns emerge in datasets devoid of such examples. We also present a novel approach to track sample likelihoods in diffusion SDEs, which remarkably incurs no additional computational cost.",
+    "keywords": [
+        "diffusion models",
+        "likelihood estimation"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We develop novel methods for likelihood estimation for stochastic sampling in diffusion models. We use them to study high probability regions.",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=RiS2cxpENN",
+    "pdf_link": "https://openreview.net/pdf?id=RiS2cxpENN",
+    "comments": [
+        {
+            "title": {
+                "value": "Response - part 2"
+            },
+            "comment": {
+                "value": "1. *To use the assumption that the data is gaussian [...] results in incorrect results*\n\nWe would like to clarify further that we derive the mode-tracking ODE without assuming a Gaussian distribution (see Theorem 5). However, as discussed in lines 319-320, evaluating this ODE directly is computationally too costly in practice, so we opt to use an approximation. Specifically, while the simplified ODE (Equation 18) does not guarantee finding the mode, it allows us to evaluate the results empirically, as demonstrated in Section 4.3.\n\nThe purpose of Remark 1 is to illustrate that, under the assumption of a Gaussian data distribution, the simplified ODE (18) aligns with the optimal solution by naturally eliminating the troublesome higher-order terms. Although our data is not Gaussian, this simplification is appealing, so we apply the simplified ODE even in the non-Gaussian case to explore its empirical performance.\n\nWe believe that this reasoning is similar in spirit to the \"single-point\" distribution assumption (Appendix B.2 in [1]). In that work, the authors use the \"ideal derivative trick\" to derive parameters for the procedure under the assumption that the data distribution consists of a single point. They then empirically verify that this procedure performs well on real-world distributions, which consist of tens of thousands of points.\n\nSimilarly, we observe that when the data distribution is Gaussian, the troublesome higher-order terms vanish. Empirically, we find that even for non-Gaussian data, this approximation produces high-likelihood points, though not necessarily the exact modes, as would be guaranteed in the Gaussian case.\n\nWe would be happy to elaborate on this in the paper.\n\n5. *It is not true that diffusion models sample away from the high-likelihood regions.*\n\nWe take this opportunity to emphasize further that **in high dimensional distributions, samples are low-density by nature** and one always needs a special approach to obtain high-density points (which are not samples anymore). \nIn our paper, we demonstrate this in the context of diffusion, but the general phenomenon of \"typical\" samples not covering the highest likelihood regions is more widespread [2, 3].\n\n**The challenge was to design a procedure, which will find high likelihood samples and the qualitative analysis of these samples revealed surprising insights.**\nHowever, **the existence of samples with likelihoods higher than those of typical samples was to be expected and can be illustrated with an example below.**\n\nConsider the example of a Gaussian mixture.\nIt is informative because 1) it can approximate any distribution (given enough modes), and 2) we know exactly where the mode is (mean of the component with the highest weight).\nWe will consider a $D$-dimensional mixture with $K$ components of equal variance with the first component having the highest weight.\n\nConcretely: $p=\\sum_i^K w_i \\mathcal{N}(\\mu_i, I_D)$, where $w_1=\\frac{2}{K+1}$ and $w_i=\\frac{1}{K + 1}$ for $i\\geq 2$;\nand $\\mu_i$ the $i$-th row of $I_D$, i.e. the $j$-th element of $\\mu_i$ is $\\delta_i^j$.\n\nWe now sample $N=8192$ points from that mixture, evaluate their loglikelihoods, and compare them with the loglikelihood of the mode ($\\mu_1$).\nFor $D=50$ and $K=8$, we find that the \"typical\" values of loglikelihoods are in the range $[-96.03, -55.07]$, whereas the loglikelihood of the mode is $-45.25$, which is clearly larger than the largest \"typical\" value.\n\nThe discrepancy grows as we increase the dimension $D$.\nFor example for $D=3 * 32 * 32$ (dimensionality corresponding to CIFAR10 images) and for a larger number of components $K=512$, the typical range of loglikelihood is $[-4490.378, -4237.26]$ and the loglikelihood of the mode is $-2822.286$.\nIn this case the difference between the loglikelihood of the mode and the highest typical value is over $5$ times larger than the difference between the highest and lowest typical values.\n\nWe hope that this additional example showed that it is not uncommon in high dimensional distributions that there exist high-likelihood points that are never sampled.\n**This also shows that there are no contradictions in our findings.** The cartoon-like or blurry images do have high likelihoods, but they are not \"typical\" and therefore do not appear in regular sampling.\n\nThank you for your feedback that has helped us clarify these aspects.\n\n---\n\n[1] Dockhorn et al. \"GENIE: Higher-Order Denoising Diffusion Solvers\" (NeurIPS 2022)\n\n[2] Nalisnick et al. \"Do deep generative models know what they don\u2019t know?\" (ICLR 2019)\n\n[3] Nalisnick et al. \"Detecting out-of-distribution inputs to deep generative models using typicality\" (arXiv:1906.02994)"
+            }
+        },
+        {
+            "title": {
+                "value": "Response"
+            },
+            "comment": {
+                "value": "We thank the Reviewer for their scrutiny of our work. We address the raised concerns below.\n\n1. *To use the assumption that the data is gaussian in order to use remark 1 results in incorrect results.*\n\nIn Remark 1 we show that HP-ODE generates the mode in the case of Gaussian data. For non-gaussian data we are no longer guaranteed to find the mode using HP-ODE, but in section 4.3 we empirically show that it generates points with higher likelihoods than regular samples.\n\n**We do not use the Gaussian assumption for real-world data experiments and we explicitly emphasize it in lines 349-351: \"Even though equation (18) finds the mode of $p(x_0|x_t)$ only in the Gaussian case [...], we will empirically show that even for non-Gaussian data it finds points with much higher likelihoods than regular samples.\"**\n\n2. *Specifically this ODE doesn't sample from the correct target distribution, and therefore we observe those cartoon like images.*\n\nIndeed, HP-ODE does not generate samples from the target distribution, which is evident is Figures 7 and 9. This was precisely the point of \"High probability\" seeking ODE: To find samples with larger likelihoods than those of regular samples.\n\nThis was the question we were exploring (see e.g. lines 028 or 290-291): What happens if we explicitly bias the sampler towards higher likelihood regions? Deviation from the data distribution was expected.\n\n3. *Additionally when comparing the likelihood of images sampled normally or from the HP-ODE the likelihoods were measured using different methods. In section 4.3 it is explained how they compute the likelihood of. Empirically they show that it results in higher likelihood than , however since these likelihoods are being evaluated in different ways this comparison doesn't make sense.*\n\nIndeed, we explain in section 4.3 that $p(y_0|x_t)$ is evaluated differently from $p(x_0|x_t)$. The sole reason for this is computational. We mention this briefly in a footnote (line 377), but are happy to elaborate on it.\n\nThe goal is to generate many samples $x_0 \\sim p(x_0|x_t)$ and for each $x_0$ compare $\\log p(x_0|x_t)$ with $\\log p(y_0|x_t)$. To generate diverse samples $x_0$ conditioned on the same $x_t$, the sampling needs to be done stochastically (deterministic PF-ODE sampling would always generate the same sample). As we show in Equation (20), the main computational challenge is estimating  $\\log p_0(x_0) - \\log p_t(x_t)$. Since $\\log p_0(x_0) - \\log p_t(x_t)=-\\int_0^t d \\log p_s(x_s)$, we can estimate it \"for free\" using Theorem 1.\n \n4. *If done correctly the sample would be evaluated using the same way as, so we would evaluate the likelihood of the same distribution and results would not be as reported.*\n\nThat said, we can estimate both $\\log p(y_0|x_t)$ and $\\log p(x_0|x_t)$ using the augmented probability flow ODE as is standard practice (albeit more expensive than our proposed approach).\n\n**Motivated by your concerns we now repeated the experiment** in Section 4.3 (Figure 7), but estimated both $\\log p(x_0|x_t)$ and $\\log p(y_0|x_t)$ using the same standard method, i.e. PF-ODE (equation 3). Specifically, we use PF-ODE to esimate $\\log p_0(x_0)$, $\\log p_0(y_0)$ and $\\log p_t(x_t)$ and use equation (20) to estimate $\\log p(y_0|x_t)$ and $\\log p(x_0|x_t)$.\n\n**The results are almost identical to the ones that we reported in the paper. The correlation between two different methods of estimation is at 0.998.** We again find that for all samples $x_0 \\sim p(x_0|x_t)$ we have $\\log p(x_0|x_t) < \\log p(y_0|x_t)$. This is to be expected, because (as we have shown in section 3.2) the difference between $\\log p$ estimation using our novel method (Theorem 1) and the standard approach (Equation 3) is very small. However, we chose to use our novel method, because it does not incur any additional cost unlike the standard approach.\n\n5. *Unfortunately the final conclusion of the paper is just incorrect. It is not true that diffusion models sample away from the high likelihood regions.*\n\nWe hope that the above explanations convinced you that our analysis in the paper does in fact demonstrate that regular diffusion model samples have lower likelihoods than 1) samples generated by HP-ODE (Figures 7 and 9); and blurry images (Figure 10).\n\n---\n\nMany thanks for the opportunity to clarify some key aspects of HP-ODE. We hope we have resolved all your concerns and would be grateful if this could be reflected in an improved score. If you have any further questions or concerns or suggestions, we are more than happy to address them."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces new augmented SDE for likelihood estimation in SDE sampling of diffusion models. Moreover, a novel theoretical mode-tracking approach is proposed in order to locate the exact mode of the generative distribution and introduce a high-probability sampler capable of generating samples with higher likelihood than all the other samples, under theoretically proved guarantees. \nFinally, the main findings of the proposes analysis lies in the discovery of Cartoon-like images that lies in high-likelihood regions, even if the model has never been trained with images of the same style."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is well written and it develops new theoretical insights, especially the augmented SDE for tracking likelihood evolution are innovative and pratical since they don't introduce any additional computational cost.\n\n- The proposed high-probability sampler is a nice tool to generate high-likelihood samples that are not discoverable by traditional sampling techniques\n\n- The paper analize the diffusion probability landscape finding analyzing the different images in high-likelihood regions, experimentally demonstrating that the proposed theoretical tools can be used to perform analyisis of this landscape."
+            },
+            "weaknesses": {
+                "value": "- The proposed mode-tracking approach has a very high computational cost and this is not clearly discussed. The discussion on how this mode-tracking approach scale and its computational limitations should be discussed and quantified\n\n- The high-likelihood samples discovered by the proposed analysis does not seem to have a real practical advantage, being cartoon drawings or blurry images. It is not discussed how these insight can be leveraged to improve sample generation strategies or how these high-density samples can be practically useful.\n\n- The limitations of the work are not discussed at all, a limitations section covering all the main potential limitations should be added.\n\n- The work does not report any implementation details, code and implementation are not submitted in the supplementary materials. It would be important to openly release the contribution upon acceptance to ensure reproducibility and improve transparency.\n\n- The analysis of high-density regions is done on small and simple diffusion models trained on restricted datasets with limited variability. Moreover the selected models and study is done on uncoditional sampling without any guidance from text. In my opinion it would be valuable to explore real-world and more complex diffusion models (such as SD, Flux etc), especially focusing on the impact of text."
+            },
+            "questions": {
+                "value": "- The related work does not take into consideration a very relevant paper \"Null-text Guidance in Diffusion Models is\nSecretly a Cartoon-style Creator\", Zhao et al which is not discussed. In particular it would be relevant to highlight some connection and insights with this previous related work. \n\n- See weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigates the high-density regions of diffusion models, discovering that samples in these regions often appear as unrealistic cartoon-like or blurry images, despite the absence of such images in the training data. The authors propose a novel framework based on augmented stochastic differential equations (SDEs) to estimate the likelihoods of generated samples. This approach enables efficient, high-likelihood sampling without additional computational cost. The authors also introduce a high-probability sampling method that consistently yields higher-likelihood images than traditional sampling techniques, while their empirical analysis shows that images with less detail (e.g., blurred images) tend to achieve higher likelihood scores. The paper contributes to a better understanding of the diffusion model probability landscape and the relationship between likelihood and image quality."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper introduces a novel framework for estimating likelihoods within diffusion models using augmented stochastic differential equations (SDEs) and high-probability samplers. This is an important advancement because it allows the exploration of high-likelihood regions without increasing computational costs. By deriving density estimates through augmented SDEs, the authors provide a theoretically efficient approach to analyzing model outputs across noise levels, setting a foundation for future studies in likelihood-based generative modeling. The findings reveal that high-likelihood samples often resemble cartoonish or blurry images\u2014even though such images are not present in the training data."
+            },
+            "weaknesses": {
+                "value": "1. Although the paper sheds light on high-density regions and likelihood estimation, it lacks a clear discussion on how these findings could practically inform the design or improvement of diffusion models in applied settings. Without recommendations on balancing high-likelihood sampling with image quality, it\u2019s challenging to draw valuable insights from the findings, particularly for practitioners focused on real-world applications.\n\n2. The paper describes the emergence of cartoon-like images in high-likelihood samples but provides limited exploration into why or how this phenomenon occurs. \n\n3. The experiments are primarily conducted on well-known datasets like CIFAR-10 and FFHQ-256. Expanding the study to other types of diffusion models or additional data domains would strengthen the generalizability of the findings. Additionally, clarifying any specific architectural limitations of the proposed high-probability sampler could benefit those aiming to extend the approach.\n\n4. While the paper emphasizes the likelihood of generated samples, it does not address diversity within these high-likelihood outputs. The authors mention blurry and cartoon-like images, but they do not provide an assessment of diversity or how the high-likelihood sampling might affect the overall variance in generated outputs. It\u2019s unclear if the method leads to mode collapse or reduces the richness of the model\u2019s output space."
+            },
+            "questions": {
+                "value": "1. Does the high-likelihood sampling technique impact the diversity of generated samples, potentially leading to mode collapse or other reductions in output variability? \n\n2. For applications that prioritize both high likelihood and visual quality, what adjustments to the high-probability sampler could mitigate the production of low-quality images?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors offer a theoretical framework for estimating the log probability of samples that follow SDE in diffusion models. They develop novel forward and reverse augmented dynamics that estimates log probability not only for the case where $\\nabla \\log p_{t}(x)$ is known precisely but for the case where the score function is known. Then, the authors provide novel upper and lower bounds on the bias of the proposed estimator and analyze them on the experimental data. Lastly, the authors apply their proposed theory to analyze the diffusion probability landscape. They propose a simple yet effective way to generate samples with the highest log probability and show that such samples are unrealistic and blurry."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The authors develop a novel theory of augmented SDEs. They provided a clear and detailed derivation and coupled it with the bias estimation \n* Landscape analysis gives valuable insight into the structure of high-probability samples and provides a theoretical justification for the known fact that distorted images tend to have a higher likelihood \n* The paper is well-structured and easy to read"
+            },
+            "weaknesses": {
+                "value": "1. It isn't clear whether analysis from Section 5 can lead to the creation of better stochastic samplers or improve the quality of image generation. Overall practical implications of this work are quite poor\u00a0\n2. There is no intuition behind observations from Figure 4. More precisely, what does it mean that the model optimized for sample quality yields a smaller difference between $p_{0}^{ODE}$ and $p_{0}^{SDE}$?\n3. Experiments were conducted on rather small and outdated diffusion models. It would greatly improve the scope of the work if the experiments were performed on the frontier models"
+            },
+            "questions": {
+                "value": "1. Have the authors thought about how the proposed theory can be used to improve the quality of image generation?\n2. Can we use the proposed estimation for the log probability to evaluate model quality the same way as [1] (Table 2)? Will there be any difference between SDE and ODE estimation? Which one is better to compare different models?\n\n[1] Yang Song, Jascha Sohl-Dickstein, Diederik P Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole. Score-based generative modeling through stochastic differential equations. arXiv preprint arXiv:2011.13456, 2020c."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a perspective on studying likelihoods for diffusion models. They introduce a stochastic way to keep track of the likelihood. They introduce a likelihood maximizing ODE that maximizes the likelihood of a path for any given starting condition. They attempt to argue that they can use this ODE to demonstrate that the high likelihood region of diffusion models results in cartoon like images."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- The paper is well written and the use of good figures and colors in equations really helps the presentation\n- They present a stochastic way to keep track of the likelihood and a likelihood maximizing ODE"
+            },
+            "weaknesses": {
+                "value": "- Up to section 4.2 everything was very reasonable and nicely introduced, however the use of the ODE in remark 1 for sampling is a big mistake. Real world data is multimodal, for instance CIFAR 10 has at least 10 modes. To use the assumption that the data is gaussian in order to use remark 1 results in incorrect results. Specifically this ODE doesn't sample from the correct target distribution, and therefore we observe those cartoon like images. \n- Additionally when comparing the likelihood of images sampled normally or from the HP-ODE the likelihoods were measured using different methods. In section 4.3 it is explained how they compute the likelihood of $p(y_0|x_t)$. Empirically they show that it results in higher likelihood than $p(x_0 |x_t)$, however since these likelihoods are being evaluated in different ways this comparison doesn't make sense. If done correctly the sample $y_0$ would be evaluated using the same way as $x_0$, so we would evaluate the likelihood of the **same distribution** and results would not be as reported.\n- Unfortunately the final conclusion of the paper is just incorrect. It is not true that diffusion models sample away from the high likelihood regions."
+            },
+            "questions": {
+                "value": "Please see weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

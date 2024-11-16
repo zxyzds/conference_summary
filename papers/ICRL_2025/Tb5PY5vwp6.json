@@ -1,0 +1,209 @@
+{
+    "id": "Tb5PY5vwp6",
+    "title": "HShare: Fast LLM Decoding by Hierarchical Key-Value Sharing",
+    "abstract": "The frequent retrieval of Key-Value (KV) cache data has emerged as a significant factor contributing to the inefficiency of the inference process in large language models. Previous research has demonstrated that a small subset of critical KV cache tokens largely influences attention outcomes, leading to methods that either employ fixed sparsity patterns or dynamically select critical tokens based on the query. While dynamic sparse patterns have proven to be more effective, they introduce significant computational overhead, as critical tokens must be reselected for each self-attention computation. In this paper, we reveal substantial similarities in KV cache token criticality across neighboring queries, layers, and heads. Motivated by this insight, we propose HShare, a hierarchical KV sharing framework. HShare facilitates the sharing of critical KV cache token indices across layers, heads, and queries, which significantly reduces the computational overhead associated with query-aware dynamic token sparsity. In addition, we introduce a greedy algorithm that dynamically determines the optimal layer-level and head-level sharing configuration for the decoding phase. We evaluate the effectiveness and efficiency of HShare across various tasks using three models: LLaMA2-7b, LLaMA3-70b, and Mistral-7b. Experimental results demonstrate that HShare maintains accuracy with an additional sharing ratio of $1/8$, while delivering up to an $8.6\\times$ speedup in self-attention operations and a $2.7\\times$ improvement in end-to-end throughput. The source code will be made publicly available upon publication.",
+    "keywords": [
+        "Large Language Model",
+        "Decode",
+        "Key-Value Sharing",
+        "Critical Token",
+        "Hierarchical"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We propose a hierarchical critical KV cache indices sharing framework across layer, head, and query levels.",
+    "creation_date": "2024-09-21",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Tb5PY5vwp6",
+    "pdf_link": "https://openreview.net/pdf?id=Tb5PY5vwp6",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper explores the similarities in the KV cache tokens across neighboring queries, layers, and heads. Building on this finding, the paper introduces an advanced solution named HShare, which leverage a hierarchical framework for KV cache sharing. HShare enables the sharing of critical KV cache token indices across layers, heads, and queries, substantially reducing the computational load associated with query-aware dynamic token sparsity. Additionally, we propose a greedy algorithm that dynamically selects the optimal layer-level and head-level sharing configurations during the decoding phase. Emprical study was conducted to assess HShare's effectiveness and efficiency on various tasks using three models\u2014LLaMA2-7b, LLaMA3-70b, and Mistral-7b. Experimental results reveal that HShare preserves accuracy while enhancing system efficiency."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- S1. This paper addresses a crucial and cutting-edge problem in the field, tackling the computational challenges associated with managing KV cache in long-context LLMs. \n\n- S2.  The techique solution is well-desgined. By optimizing the reuse and sharing of critical KV cache token indices across queries, layers, and heads, the proposed solution significantly reduces computational overhead without compromising accuracy."
+            },
+            "weaknesses": {
+                "value": "- W1. The main concern I have is about the system-efficiency evaluation in Section 5.2. Concretely, I think the baseline is a little weak; we know FlashAttention could be the state-of-the-art implementation, but it is not equipped with advanced algorithm design for selective KV-cache usage. As motivated in the introduction, other methods also attempt to reduce the computation budget based on sparsity; I think the author should report the corresponding system efficiency with the same set of baselines in Section 5.1 to fully reveal the trade-offs introduced in Table 1. \n\n- W2. There are some trivial presentation issues. For example, on page 6, line 270, there is no space between \"across\" and \"layers\"."
+            },
+            "questions": {
+                "value": "Please address the corresponding problem listed in the Weaknesses Section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors conducted systematic experiments to analyze the similarity of KV cache selection among queries, heads, and layers. Capitalizing on these findings, they proposed a method that shares KV selection across the dimensions of query, head, and layer, thereby reducing the overhead of KV selection."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The sharing-based method proposed in this paper seems novel."
+            },
+            "weaknesses": {
+                "value": "1.\tThe experiments only selected 6 out of the 16 commonly used English datasets from Longbench for evaluation, which may not be sufficient to draw solid conclusions. For example, the performance of H2O and Quest on these 6 datasets in Table 3 appears similar, whereas in the Quest paper, H2O showed significantly lower accuracy. This discrepancy may suggest that specific methods perform better on these six datasets. To clarify, the authors are encouraged to provide results across all datasets.\n\n2.\tIn terms of speedup, the authors analyzed the theoretical complexity of KV cache selection in Table 2. However, this analysis alone is insufficient to demonstrate that the proposed method significantly reduces computational overhead, as the selection cost may only account for a small portion of the entired decoding process. To strengthen this claim, the authors could provide direct evidence of decoding speed in experiments. Additionally, an experimental study on the trade-off between accuracy and speed would be valuable.\n\n3.\tThe authors provided only a speed comparison with FlashAttention. To better demonstrate the effectiveness of their method, comparisons with other query-aware dynamic token sparsity methods are necessary. \n\n4.\tThe authors mention using an approximate computation approach from Double Sparse ('Following the approach in Yang et al. (2024)') to calculate approximate attention weights in their implementation. As a result, it is unclear how much of the observed speed gain is attributable to HShare specifically versus the query-aware dynamic token sparsity method itself."
+            },
+            "questions": {
+                "value": "Please refer to weakness points 1-4"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces HShare, a hierarchical key-value (KV) sharing framework to accelerate inference in large language models (LLMs). HShare exploits observed similarities in critical KV cache token usage across layers, heads, and adjacent queries to reduce the computational overhead of selecting query-specific tokens repeatedly. It introduces a method to share critical KV cache token indices within and across layers, heads, and queries and proposes a greedy algorithm to optimize layer- and head-level sharing configurations. Experiments demonstrate that HShare maintains accuracy while providing up to 8.6\u00d7 speedup in self-attention and a 2.7\u00d7 improvement in end-to-end throughput across various LLM architectures, including LLaMA and Mistral models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The hierarchical sharing of KV cache tokens across heads, layers, and queries is an innovative approach to reducing latency in self-attention. HShare's observation of token reuse across different levels of attention blocks offers a new angle to address computational efficiency in LLM decoding. HShare's ability to maintain high accuracy while delivering substantial improvements in self-attention latency and throughput makes it significant for practical deployment scenarios. The method's compatibility with several model types suggests its value for LLM inference optimization."
+            },
+            "weaknesses": {
+                "value": "While HShare achieves substantial speedup, the layer- and head-level sharing configurations are tested only on a few model architectures, leaving broader applicability unexplored. Additionally, its performance in tasks that demand highly dynamic attention, such as document summarization with varying context lengths, could be tested to reveal any potential trade-offs. Minor computational overhead remains from online calculation in the prefill phase, though this appears manageable."
+            },
+            "questions": {
+                "value": "Can HShare effectively support transformer variants such as convolutional or graph neural networks? A brief discussion on potential adaptations would help generalize its usability."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "HShare aims to reduce computation complexity of key value caches of transformer-based LLMs by sharing theses caches between attention heads within a layer, the layers themselves and queries within a batch. They identify critical tokens from three areas: initial/sink tokens, most recent window and significant tokens in the middle. For each of three dimensions (head, layer, query) they identify elements in these dimensions that are similar (based on a self-defined metric: overlap of cached key-value pairs) and only compute the respective key-value cache once, which is then shared between the respective elements. The resulting reduction in computation improves the latency and throughput for most configurations while maintaining the accuracy."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* A big strength is the evaluation. There is a wide variety of datasets used with a reasonable number of models, which show some variance in model size and architecture. Four additional framework are chosen to serve as baseline for comparison. The evaluation not only focuses on accuracy, but on compute performance (latency, throughput) as well. The provided ablation study is also fair.\n* The main idea is presented clearly for the most part and is reasonable motivated with examples/microbenchmarks.\n* The reduction in computation complexity with a subsequent performance improvement seems like a relevant contribution."
+            },
+            "weaknesses": {
+                "value": "* The language is a big issue. I had to read several sentences multiple times to make sense of them. So I suggest to improve the writing, so that language reads well.\n* The cache hierarchy is not discussed, i.e. the order in which the three dimensions are applied, which data they might share and so on. The individual levels are discussed in how they are constructed and their details, but not how they are applied together apart from that they are independent from each other (in their memory benefits), which contradicts the initial hierarchy claim.\n* some of the equations do not add much (eq. 4 and 5)\n* The performance of the original models without modification is kind of missing as a baseline for the evaluation.\n\nmore specific issues:\n* line 64: \"Although these two methods only load critical tokens, they retain all the KV cache\"\n  * That seems like a contradiction.\n* 2.1: recent efforts are from 2023 and 2024, but their downsides are discussed in a paper from 2022 - seems counterinituitive\n* line 248: \"Fig. 1(c) and Fig. 1(d)\" - I think these are not the correct subfigures: it should be 1e and 1f. I think \"Fig. 1(e) and Fig. 1(f)\" in line 250 is similarly wrong.\n* line 404: first time that the full name \"DoubleSparse (DS)\" was introduced; all previous mentions just refer to DS\n* table 3: I question the validity of computing an average from different types of scores (similarity, F1 and rouge).\n* I think the table and figure placement for the evaluation can be improved, i.e. moved closer to where they are discussed.\n\ndetailed/minor issues:\n* language:\n  * line 40/41: \"since the context length expands\" - probably better \"since as the context length expands\"\n  * line 43: \"to addressing this issue\" - I think it should either be \"to address this issue\" or \"for addressing this issue\".\n  * line 45: \"many works manage to only load these critical KV cache tokens\" - I think \"manage\" is the wrong word here, maybe better: \"many works choose to only load these critical tokens into the KV cache\"\n  * line 135: \"make efforts\" - should probably be past tense: \"made efforts\"\n  * line 136: \"Jiang et al. (2023b) trains\" - train (multiple authors as subject), or even better \"trained\"\n  * line 186: \"also the same operation for value matrix and form a new value\" - missing verb and general improvement: \"also apply the same operation to the value matrix to form a new value matrix ...\"\n  * line 265: \"layers of attention blocks\" - I think it should be \"layers of the attention blocks\"\n* typos:\n  * line 46: \"tokens(also\" - missing whitespace\n  * line 85: \"GSM8K Cobbe et al. (2021)\" - missing brackets around the reference, probably the wrong cite command is used\n  * line 120: \"scenarios.Decoder-only\" - missing whitespace\n  * line 143: \"MInference(Jiang et al., 2024)\" - missing whitespace\n  * line 182: \"i-th head(layer) and the j-th head(layer)\" - missing whitespace between \"head(layer)\", two times; alternatively you could also use \"head/layer\" or \"head|layer\" (also applies to other occurences of the same phrase)\n  * line 186: \"S}corresponding\" - missing whitespace\n  * line 210: \"HSahre\" -> \"HShare\"\n  * line 363: \"Sec.4.1\" - missing whitespace\n  * line 408: \"We use LM-Eval framework\" - missing \"the\" before \"LM-Eval\"\n  * Figure 6: x-axis label for TrivialQA is \"Sparsity Level\", when \"Sharing ratio\" is used for all other subfigures\n* references:\n  * \"Anze Xie Ying Sheng Lianmin Zheng Joseph E. Gonzalez Ion Stoica Xuezhe Ma Dacheng Li*, Rulin Shao* and Hao Zhang\" - author list is broken: wrong order, missing commas between the authors and please also remove the asterisks\n  * consider using title case for the titles"
+            },
+            "questions": {
+                "value": "* line 49: What are \"heavy tokens\"?\n* line 137: \"However, such a compression strategy ... and also increases the overhead during inference.\" - In what regard? Wasn't the \n compression of prompts applied to reduce certain types of overheads, for example memory complexity?\n* Figure 2: On what query sequence is the figure based?\n* 5.2.2 Where does the query data come from?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper discusses HShare, a hierarchical framework that facilitates the sharing of critical KV cache token indices across layers, heads, and queries. From observed similarities in KV token criticality across different levels, HShare enables a more efficient sharing strategy. The paper also introduces a greedy algorithm to dynamically determine the optimal sharing configuration for the decoding phase. The experimental results demonstrate that HShare can maintain similar accuracy and improve the end-to-end throughput."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. The problem is very practical and of high interest to the community, especially with limited computation resources\n2. A very comprehensive set of experiments to showcase the performance (latency and accuracy) on different datasets.\n3. Well-organized paper with adequate discussions on other existing methods."
+            },
+            "weaknesses": {
+                "value": "1. The paper should have some figures that discuss the tradeoff between accuracy and efficiency"
+            },
+            "questions": {
+                "value": "1. What would be your suspected reason for the performance gain by enabling KV sharing in Figure 6?\n2. The sharing ratio can be more finely tuned. Do you think the sharing ratios would be dependent on the dataset and the task?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

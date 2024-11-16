@@ -1,0 +1,178 @@
+{
+    "id": "I4e82CIDxv",
+    "title": "Sparse Feature Circuits: Discovering and Editing Interpretable Causal Graphs in Language Models",
+    "abstract": "We introduce methods for discovering and applying **sparse feature circuits**. These are causally implicated subnetworks of human-interpretable features for explaining language model behaviors. Circuits identified in prior work consist of polysemantic and difficult-to-interpret units like attention heads or neurons, rendering them unsuitable for many downstream applications. In contrast, sparse feature circuits enable detailed understanding of unanticipated mechanisms in neural networks. Because they are based on fine-grained units, sparse feature circuits are useful for downstream tasks: We introduce SHIFT, where we improve the generalization of a classifier by ablating features that a human judges to be task-irrelevant. Finally, we demonstrate an entirely unsupervised and scalable interpretability pipeline by discovering thousands of sparse feature circuits for automatically discovered model behaviors.",
+    "keywords": [
+        "Interpretability",
+        "mechanistic interpretability",
+        "circuits",
+        "spurious correlations",
+        "generalization",
+        "dictionary learning"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "We automatically discover circuits of interpretable components and apply them to remove sensitivity to spurious correlates",
+    "creation_date": "2024-09-23",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=I4e82CIDxv",
+    "pdf_link": "https://openreview.net/pdf?id=I4e82CIDxv",
+    "comments": [
+        {
+            "title": {
+                "value": "Paper endorsement"
+            },
+            "comment": {
+                "value": "Speaking as an unrelated mechanistic interpretability researcher, I think this is **one of the most important mechanistic interpretability papers of the past year, and worth being highlighted at the conference**. I think this paper had two key contributions:\n\nDemonstrating that sparse autoencoders were useful on the downstream task of SHIFT. Much mechanistic interpretability work purely focuses on showing that it produces understanding, and trying to directly argue that this understanding is true, by eg ablating model components predicted to be important, or finding patterns in where a neuron activates. But if we have achieved true understanding, it should enable greater control, and allow us to do things to models that we couldn't easily do before - and if we can't, perhaps our understanding is illusory. Through demonstrating that SAEs could enable useful disentanglement of two concepts on SHIFT, this work provided a new kind of evidence that SAEs were giving some form of real understanding.\n\nOn a more zoomed-out level, I think that looking more into applying mech interp to downstream tasks is a healthy direction for keeping the field grounded, and I've been focusing on this in my own research. This paper provided some useful inspiration for me to make that shift.\n\nThe second contribution was being the first serious attempt at circuit finding with SAEs. The goal in circuit finding is finding a sparse set of model components that matter for some task, and a key problem in prior work is that often the key \"component\" is distributed across many heads or neurons. The promise of SAEs was to find the \"right\" set of monosemantic components to analyse, but no one had properly tested whether it made circuit analysis substantially easier! I don't consider this paper to have conclusively answered that question, but it provided a lot of useful data, and laid useful conceptual and methodological groundwork, like thinking about error nodes and whether to include/exclude them, whether to use integrated gradients over activation patching (and providing a principled translation of integrated gradients into this context), etc. I also consider it impressive that they do circuit finding for Gemma 2 2B, involving dealing with about 6B parameters of SAE weights, which is a fair bit more technically involved than Pythia-70M. This provides valuable data that the method is scalable, though I do expect more efficient approximations to be required to scale it to frontier models. \n\nAs empirical evidence of the impact, two of my current ongoing papers are building on this paper, and I often point people to the paper as a guide for the right methods to use when working with SAE circuit finding.\n\n(Disclosure: I was not at all involved in this paper, but I do know the authors and likely have some positive bias due to that. No one asked me to write this)"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces sparse feature circuits as a causal network built from human-interpretable features, rather than neurons. The author discuss how to quantify the Indirect Effects (IE) of steering or patching individual neurons on model behaviors and propose approximations to extend this approach to models with many components. \n\nThrough experiments on the Gemme2-2B and Pythia-128M models, they demonstrate that a relatively low number of sparse features, compared to neurons, can interpret model behaviors with high fidelity. Building on these findings, the authors present the SHIFT framework, which enables the surgical removal of unintended features to prevent them from affecting model classification performance. While the framework involves some human judgment, it highlights that these Sparse Auto-Encoder (SAE) features are effective representations of concepts that can be manipulated to control model behaviors. Finally, the authors propose an unsupervised circuit discovery pipeline, moving from next-token clustering to zero-ablating features, to identify the most important feature circuits."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* This paper is well-motivated and articulated;\n* The studied subject is of good importance to the NN interpretability domain;\n* The experiment setup is clear and the results are promising;\n* The idea has sound novelty."
+            },
+            "weaknesses": {
+                "value": "* SAE features are vast, and identifying specific circuits among those formulated by these features can be challenging.\n* SAE errors cannot be fully interpreted, while they play an important role in making sparse feature circuits. This is ongoing work to train more proficient SAEs, but it should be discussed more in the paper regarding how to perform surgical edits on such errors.\n* I suspect that the circuits may only correlate with certain features. Simply removing gender-related features and observing a drop in classification performance is not universally convincing as a causal intervention approach; additional experiments on other features are needed to support this claim;\n* Trivial concerns: 1) several typos: 283: fair; 201: produce; 492: succession; 2) citation formatting errorsat line 95-96; 3) line 454-457 needs more clarity."
+            },
+            "questions": {
+                "value": "* Can you add explanations regarding the efficiency of the sparse feature circuit finding with the vast amount of possible feature circuits with respect to neurons'?\n* Can you help better understand how to interpret SAE errors at part of the sparse feature circuits?\n* Can you share your thoughts on extended experiments on more feature ablating studies and how would the results be?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents Sparse Feature Circuits, a method to discover interpretable causal graphs within language models (LMs) based on sparse, human-interpretable features. Leveraging sparse autoencoders (SAEs), the authors identify feature circuits that reveal causally implicated components in model behaviors, contrasting with prior work focused on more complex components like attention heads and neurons. The technique allows for targeted interventions to refine model predictions by eliminating task-irrelevant features, as demonstrated in a new method called SHIFT. SHIFT enables selective feature removal, improving classifier generalization without requiring disambiguating labels. The paper\u2019s contributions include a scalable pipeline for automatic discovery of interpretable circuits, and applications in improving model behavior by editing these circuits."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- By focusing on sparse feature circuits instead of larger, polysemantic components, this approach introduces a new level of granularity in LM interpretability. The use of SAEs is particularly innovative, as it allows for fine-grained, interpretable features that are scalable and can be applied across thousands of discovered behaviors, improving previous interpretability efforts that were limited by reliance on human-defined hypotheses. \n\n- The SHIFT technique, designed to improve model generalization by removing unintended signals, offers a practical, actionable method for handling spurious features. The fact that SHIFT can operate without disambiguating labels and apply human judgment to identify spurious features highlights its practical utility for real-world model refinement, especially in settings where unintended biases are a concern. \n\n- The unsupervised interpretability pipeline for discovering feature circuits across various model behaviors (including grammatical tasks like subject-verb agreement) is impressive. It enables scalable, automatic generation of feature circuits, addressing the labor-intensive nature of previous interpretability work. This unsupervised aspect expands the approach\u2019s applicability across domains and data types, making it a versatile contribution. \n\n- The paper presents quantitative evaluations on interpretability metrics such as faithfulness and completeness for both feature and neuron circuits, providing objective assessments of the interpretability advantage of sparse features."
+            },
+            "weaknesses": {
+                "value": "- The method relies on human judgment to determine which features are spurious, which may lead to inconsistencies across applications or datasets. The framework lacks a clear evaluation on the repeatability and consistency of human-selected spurious features in SHIFT, especially when applied by different users or in different contexts. Including a quantitative study or qualitative analysis on the consistency of feature selection across different users or scenarios would strengthen the reliability of SHIFT\u2019s results and enhance confidence in its practical application. For instance, assessing inter-annotator agreement or providing a standardized checklist could help mitigate inconsistencies. \n\n- Although SHIFT leverages human judgment for feature interpretation, this reliance could hinder scalability in complex or high-dimensional models, as manual inspection becomes increasingly challenging. The paper does not provide clear guidelines on how to efficiently scale this process for larger models or more diverse tasks. \n\n- The method\u2019s success is heavily tied to the availability and quality of sparse autoencoders (SAEs). If the SAEs are suboptimal, the interpretability and causal circuit discovery might suffer, particularly if they fail to capture meaningful latent structures. This dependency on pretrained SAE quality raises questions about the method\u2019s consistency and applicability across different model architectures or under domain shifts. \n\n- The faithfulness and completeness metrics for feature circuits are assessed primarily on grammatical tasks like subject-verb agreement, which may not generalize to more complex language tasks that involve nuanced semantic understanding or context-sensitive behaviors. This limited evaluation could affect confidence in the generalizability of the results. Expanding evaluations to include complex, semantically challenging tasks (e.g., multi-turn dialogue or reasoning tasks) would provide stronger evidence of the method\u2019s robustness."
+            },
+            "questions": {
+                "value": "1. How do the authors ensure consistency in identifying spurious features across different annotators or applications? Are there any plans to standardize the interpretation criteria?\n\n2. Could the authors clarify how the performance of SAEs affects the interpretability and effectiveness of feature circuits? Have they tested their approach on varying SAE architectures to assess robustness? \n\n3. For large-scale models with complex circuits, what optimizations or techniques do the authors recommend to maintain interpretability while managing the increased number of features?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a method for discovering interpretable sparse feature circuits in LLMs using sparse autoencoders (SAEs). While previous mechanistic interpretability work focused on polysemantic neurons, MLP attention heads, this paper shows how to decompose model behaviors into monosemantic, human-interpretable features. The authors validate their approach through three key contributions: (1) a circuit discovery method combining SAEs with linear approximations of indirect effects, (2) a debiasing application called SHIFT that ablates task-irrelevant features, and (3) demonstration of scalable, automated circuit discovery for large sets of model behaviors."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "Strengths:\n\nSuccessfully addresses a core challenge in MI: finding and scaling interpretable units of analysis. \n\n\n- Empirical Results:\n\nComprehensive subject-verb agreement circuits reveal clear compositional structure (e.g., distinct pathways for handling relative clauses vs. prepositional phrases)\nHuman evaluation shows significantly better feature interpretability (81.5 for BiB circuit features vs 36.0 for neurons)\nSHIFT achieves 93.1% profession accuracy while reducing gender bias to near chance (52.0%)\n\n- Validation & Reproducibility:\n\nThorough ablation studies on all key parameters (SAE width, layer selection, manipulation coefficients). Clear comparison against neuron-based approaches showing consistent advantages."
+            },
+            "weaknesses": {
+                "value": "Weaknesses:\n\n- No code and data released yet. \n\n- Theoretical Analysis:\n\nIn terms of theoretical weaknesses, some formal characterization of when SAE features capture meaningful concepts vs memorized patterns would strength the paper. \n\n\nMost of these are noted in the paper but it's worth mentioning it here, SAE training requires significant compute (2 billion tokens) with potential instability (dead features). The current implementation limited to decoder-only models (Pythia-70M and Gemma-2-2B). \n\n- Evaluation Scope:\n\nSubject-verb agreement circuits focus on relatively simple grammatical phenomena and this might not be an issue with scale but no mention of anything more complex in the paper."
+            },
+            "questions": {
+                "value": "- The paper shows strong results with linear approximations of indirect effects. Have you checked when/why these approximations break down? This seems especially relevant for early layers where you note integrated gradients improves accuracy.\n\n- For the automated circuit discovery, how robust are the discovered clusters to different choices of projection dimension and clustering hyperparameters?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a method that automatically discovers \"sparse feature circuit\", defined as subgraphs of a large language model that satisfy two desiderata: (1) responsible for implementing a model behavior, and (2) human-interpretable. As a by-product, the authors propose SHIFT, a method that removes non-causal features (e.g. gender bias) from a classifier. Finally, the authors scale their method to thousands of automatically discovered behaviors from SAEs, hinting at the possibility of automated interpretability."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- This paper is very well written, and provides enough background on SAEs to motivate their approach. Each component of the method is also presented very clearly.\n- This contribution is very timely. Most prior works on mechanistic interpretability suffers from two pitfalls: (1) Inability to understand / interpret dense MLP layers [1], and (2) what's next after interpretability. This work provides satisfactory answers to both, by (1) using more recent approaches of SAEs to disentangle polysemanticity and (2) using interpretable features to debias a classifier / remove non-causal relationships from it.\n- Owning to the scalability of SAEs, this method can be scaled to automatically discover thousands of behaviors to billion scale parameters. The authors also supplement this ability with an interactive website, which offers many interesting insights and improves accessibility of this research.\n\n[1] How does GPT-2 compute greater-than?: Interpreting mathematical abilities in a pre-trained language model, https://arxiv.org/abs/2305.00586"
+            },
+            "weaknesses": {
+                "value": "- While this approach is scalable with respect to model size and a broad range of behaviors, using this approach would still require contrastive sample pairs that is hard to get and / or define for tasks such as long-form generation and algorithmic reasoning. Nevertheless, I believe this work represents a step in the right direction, but it'd be great for the authors to discuss this type of dataset limitations and future directions to automatically construct contrastive pairs for more challenging tasks.\n- As the authors have mentioned, most of these results are qualitative, and it would be great to establish a more quantitative benchmark to supplement the other interesting behaviors that the authors were able to mine from their unsupervised approach."
+            },
+            "questions": {
+                "value": "See weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

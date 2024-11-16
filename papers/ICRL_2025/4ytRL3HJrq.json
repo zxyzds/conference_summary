@@ -1,0 +1,205 @@
+{
+    "id": "4ytRL3HJrq",
+    "title": "Nova: Generative Language Models for Assembly Code with Hierarchical Attention and Contrastive Learning",
+    "abstract": "Binary code analysis is the foundation of crucial tasks in the security domain; thus building effective binary analysis techniques is more important than ever. Large language models (LLMs) although have brought impressive improvement to source code tasks, do not directly generalize to assembly code due to the unique challenges of assembly: (1) the low information density of assembly and (2) the diverse optimizations in assembly code. To overcome these challenges, this work proposes a hierarchical attention mechanism that builds attention summaries to capture the semantics more effectively and designs contrastive learning objectives to train LLMs to learn assembly optimization. Equipped with these techniques, this work develops Nova, a generative LLM for assembly code. Nova outperforms existing techniques on binary code decompilation by up to 14.84 -- 21.58% higher Pass@1 and Pass@10, and outperforms the latest binary code similarity detection techniques by up to 6.17% Recall@1, showing promising abilities on both assembly generation and understanding tasks.",
+    "keywords": [
+        "large language model",
+        "hierarchical attention",
+        "contrastive learning",
+        "assembly code"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=4ytRL3HJrq",
+    "pdf_link": "https://openreview.net/pdf?id=4ytRL3HJrq",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper presents a way of training an LLM to improve its performance on tasks that require understanding of assembly code, in particular code decompilation, and assembly code similarity detection.\n\nThis is achieved by several contributions:\n1. A multi-way, parallel corpus of programs written in C, as well as the corresponding assembly produced by `gcc` with different levels of optimization (0 to 3), used for further training of pre-trained LLMs.\n2. A hierarchical attention mechanism, structured to summarize the content of each instruction into the representation of a single token. This mechanism is compatible with existing models.\n3. Two auxiliary contrastive loss objectives: a \"functionality\" one that minimizes the distance between representations of the same original code, while maximizing the distance between representations of different code pieces, and an \"optimization\" one encoding the fact that further levels of optimization should increase the distance between program representations.\n\nTwo variants (with 1B and 6B parameters respectively) of a model trained with these changes, and further fine-tuned for the task of interest, show a large improvement over state-of-the-art."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Originality\n--------------\n1. While hierarchical attention mechanisms are not new, the design of this one is innovative in that: it takes into account the specific format and constraints of assembly instructions, and it accommodates for using regular tokens in the same sequence (e.g., natural text instructions).\n2. The contrastive objective losses, as well, encode a priori knowledge of the underlying data: compilation stages preserve semantics, and optimization stages are sequential.\n\nQuality\n----------\nThe different contributions are overall sensible, and contribute to the performance of the model. Experiments are adequately designed, and support the conclusions of the paper. The additional experiments help understand the role of the different contributions, in particular their effect on how embeddings get clustered and the effect it can have on the final model's performance.\n\nClarity\n---------\n1. The paper includes most of the relevant information, either in the main text or appendix. Relevant literature is mentioned and cited.\n2. Figures and examples make it much easier to understand the logic, especially Fig. 3.\n\nSignificance\n-----------------\n1. This work shows a significant improvement on benchmarks, sustained across model sizes, and adaptable to other models. This is an advancement on an important, developing field of machine learning applications.\n2. Given that these improvements do not require any in-depth change (e.g., to the vocabulary) and are compatible with already pre-trained model make it easier to experiment with in different settings."
+            },
+            "weaknesses": {
+                "value": "Quality\n----------\n1. One of the 3 motivating cases in the introduction, malware detection, is not evaluated or considered at all in the rest of the paper. I understand the scope of the paper needs to end somewhere, but it would have strengthened the paper to include experiments on such a dataset.\n2. Details are missing in how the authors are certain that test data sets (both for decompilation and for similarity detection) do not overlap with any of the training data, including the pre-training data of DeepSeek-Coder, even inadvertently.\n3. An additional ablation on $\\textrm{Nova}_{-CL}$ would have helped see if there are any non-linear interactions between HA and CL.\n\nClarity\n---------\nThe overall organization of the paper could be improved. Many times, a concept, method, or setting is used in context before being formally explained. For instance:\n1. If the \"Related Work\" section is positioned earlier, it would help introduce the baseline models (DeepSeekCoder, LLM4Decompile) that are used in the previous \"Results\" section, as well as attention mechanisms, including LongCoder's, also used earlier.\n2. When describing the new datasets, it should be clear much earlier that \"source code\" really means \"C code\" (in the caption of Table 1, for instance), \"assembly\" is X86 assembly (or maybe X86-64? that's not so clear), that only `gcc` is considered as a compiler, and whether each \"program\" actually means a full executable program, or if it includes functions as well.\n3. Similarly, the contrastive losses mention \"the embedding\" of a function, which is quite ambiguous in transformers, especially if the model family (encoder-decoder?) is not mentioned.\n4. There is also a lot of ambiguity in notation, or the semantics of different objects. For instance:\n    * Do Table 1, and Appendix A.2, refer to the original \"AnghaBench\" and \"The-Stack\" datasets, or the new datasets constructed by the authors in Section 2.1? Maybe it would be better to name the new ones.\n    * In Functionality CL, l. 208 says it \"optimizes Nova with the constraint\", but a constraint is not a loss or objective. l. 215, \"constraints can be trained\" do not really make sense. It's also not obvious how the loss defined at l. 220 actually implements (a relaxation of) these constraints. It's also not explained if the sum over $f_i \\in F$ is actually done over all the million embeddings in the corpus, or how it's implemented in practice.\n    * K is introduced in Section 2.5, and then in 3.3., but we don't know what kinds of values will be used in practice. Also, Table 2 uses \"Pass@K\", but that's not the same K.\n    * In captions of Fig. 4 (b) and (d), the tables are more \"designs\" than \"implementations\"\n    * In Fig. 4 (b), the 1-4 indices are unfortunate as, for instance, $O0_3$ reads a lot like `-oO3`\n    * The equations at l. 220 and l. 266 have a really similar form, but the use of indices $i$ and $j$ is swapped between the two, making it a bit harder\n\nSignificance\n-----------------\nThe results are somewhat limited by the use of a single assembly language, and a single compiler, but this is acknowledged and does not seem like a fundamental limitation.\n\nMinor points\n-----------------\nl. 461: \"cauclated\" -> \"calculated\"?\n\nIn the bibliography:\n- Vaswani et al. is actually from 2017, not 2023 (though the arXiv version has had an inconsequential update in 2023), and a venue should be indicated (I'd suggest NeurIPS rather than arXiv)\n- Other articles are missing a venue or source\n- Several articles have incorrect capitalization in the title due to the lack of curly braces, e.g., use `{CodeT5}` to avoid it being rendered as \"Codet5\"."
+            },
+            "questions": {
+                "value": "1. Why do the evaluation for code similarity detection use cosine similarity (l. 321) when the objective (l. 212) uses the l2 distance?\n2. What is the underlying metric for the Pass@k in the decompilation evaluation? Exact match, or some more lenient equivalent? It seems wrong to use exact match when, for instance, variable names would be arbitrary.\n3. In Table 4, the second row is exactly the \"Nova-1B\" row of Table 2, but I was under the impression that \"Nova-1B\" was more than just \"DeepSeekCoder + Nova's attention\", in particular the additional training data, and CL objective. Are the numbers off, or the caption, or did I miss something?\n4. When creating the assembly datasets (Appendix A.1), why go all the way to compiling executables, then using `objdump` for disassembling, with the associated possibilities of failure, rather than dump the assembly in the first place with `gcc -S`?\n5. Do you have preliminary results, citations, or intuition behind the \"normalizing\" step of the assembly language performed in Fig. 6, in particular the addition of spaces? Is that necessary?\n\nMinor points:\n1. In the numerator on l. 265, is $f_j^q$ supposed to be $f^q$? or $f_j^p$ for which the substitution wouldn't apply?\n2. l. 300, how many samples do the GPT models perform, then, to be able to compute the Pass@10 in Table 2?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents Nova, a generative language model specifically crafted for understanding and generating assembly code. Nova integrates hierarchical attention mechanisms with contrastive learning to effectively capture the semantics of code. The hierarchical attention mechanism focuses on intra-instruction, preceding-instruction, and inter-instruction relations, while contrastive learning ensures that functionally equivalent code, even with different optimizations, is similarly represented. The model is evaluated on two key tasks: decompilation (recovering high-level source code from assembly) and binary code similarity detection (BCSD) (measuring the similarity between binary code functions). Nova shows superior performance in both tasks, excelling in decompilation by accurately generating source code from optimized assembly, and achieving high recall in BCSD by effectively identifying similar code across different optimization levels."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper is well-structured and easy to follow. Concepts such as hierarchical attention and contrastive learning are clearly explained.\n2. The paper proposes a new method for encoding assembly code by using a Hierarchical Attention Mechanism to effectively capture the semantics of assembly instructions, while employing Contrastive Learning to ensure that functionally equivalent assembly code, even at different optimization levels, is represented similarly. This novel combination allows the model to robustly understand and learn from diverse assembly code structures.\n3. The paper conducts a broad range of experiments across multiple tasks and datasets, providing comprehensive evidence of the model\u2019s effectiveness.\n4. Despite its specialized focus on assembly code, Nova's hierarchical attention is compatible with standard self-attention mechanisms, allowing it to seamlessly integrate and benefit from advancements in base models and code generation models."
+            },
+            "weaknesses": {
+                "value": "1. Unclear motivation for introducing several inductive bias by Hierarchical Attention Mechanism. While the added attention mask inductive bias shows promising results in the BCD task, its impact in the BCSD task is minimal. This discrepancy raises questions about why the inductive bias performs well in one task but fails to offer significant improvements in the other.\n2. Lack of Design Discussion. The paper lacks sufficient discussion on key design components like Preceding-Instruction Attention and Optimization Contrastive Learning (CL). Without Preceding-Instruction Attention, the attention design is quite similar to CodeART, raising questions about the novelty and contribution of the approach."
+            },
+            "questions": {
+                "value": "1. The paper argues that preceding-instruction attention helps avoid reuse of the same register (e.g., \"eax\") immediately after it is used in the previous instruction. However, this motivation is questionable because it does not explain how further subsequent instructions are prevented from reusing the same register. A more straightforward solution could be achieved with inter-instruction attention, as it can attend to all previous instructions, which raises the concern of functional overlap between preceding-instruction attention and inter-instruction attention, thus potentially making the preceding-instruction attention redundant.\n2. While Nova-1B and Nova-6B are much larger than CodeART, their performance gains in BCSD are limited. For example, in the k=100 case, CodeART sees a 17% improvement over JTrans with attention regularization, but Nova's improvement is only marginal, from 0.76 to 0.78 (as shown in Table 12). This suggests that adding hierarchical attention and other inductive biases provides limited benefits when scaling the model, and Tables 11-14 show that removing hierarchical attention does not lead to significant performance drops, questioning its overall necessity. And also in Table 5, the improvement brought by contrastive learning is much higher than the Hierarchical Attention.\n3. In the paper's analysis of attention distribution (Figure 10), the standard attention frequently converges on the first token, a phenomenon known as attention sink [1]. This behavior is also evident in the analysis of hierarchical attention (Figure 10(c, d)), where each token strongly attends to the first token within its attention mask, specifically the [INST-(x-1)] token, which represents the summary of the previous instruction. But it is not common when human try to interpret the functionality of each individual instruction. Furthermore, the justification for the Hierarchical Attention Mechanism \u2014which selectively uses specific attention heads to represent the best attention maps\u2014is somewhat ad hoc and lacks a clearer rationale.    \n4. The Hierarchical Attention Mechanism introduced in this paper represents a strong inductive bias; however, the underlying insights behind this inductive bias are not clearly explained. Additionally, the mechanism bears a striking resemblance to the Attention Regularization used in CodeART, with the primary difference being the absence of Preceding-Instruction Attention in CodeART. The effectiveness of this additional attention component has also been called into question earlier in the reivew, casting some doubt on its true contribution to the overall performance.\n5. While the use of contrastive learning aligns well with the BCSD task\u2014improving performance by ensuring that functionally similar binaries, even across different optimizations, are represented similarly\u2014it's less clear how this objective enhances the model's ability in decompliation. The training goal focuses on increasing the similarity of tokens from the same function but compiled with different optimization settings. However, this doesn't seem directly aligned with the ultimate goal of recovering executable source code, which requires more precise structural and semantic understanding beyond just token similarity across optimization levels. It would be greatly appreciated if the authors could provide some intuition as to why this approach can lead to improvements in decompliation.\n6. The authors introduced a novel optimization contrastive learning approach for the BCSD task, which had not been previously applied in the previous works, which commonly use the InfoNCE loss (line 220) or the triplet loss. As it is not discussed with deeper detail in the paper, it raises the question of whether these gains are substantial enough to justify the added complexity and whether this approach could be effectively generalized to improve other models in BCSD tasks.\n\n[1]: Efficient Streaming Language Models with Attention Sinks"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents Nova, a generative language model specifically designed for assembly code, addressing unique challenges posed by the low information density and diversity in assembly syntax due to compiler optimizations. Nova introduces a hierarchical attention mechanism and employs contrastive learning to improve the model's understanding of assembly semantics across diverse optimization levels. Trained on a large assembly corpus, Nova outperforms existing techniques in tasks like binary code decompilation and binary code similarity detection, showing  improvements in Pass@1 and Recall@1 rates over state-of-the-art models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Clear Writing and Novel Application: The paper is well-written and easy to follow. The idea of applying hierarchical attention to assembly code is interesting and novel. While hierarchical attention is commonly used in NLP tasks, applying this mechanism to assembly code is, to the best of my knowledge, unprecedented.\n\n2. Promising Results: The evaluation results are promising. Nova demonstrates substantial improvements in both decompilation accuracy and similarity detection compared to existing models, validating its approach with strong experimental evidence."
+            },
+            "weaknesses": {
+                "value": "Generalizability: The model is trained exclusively on x86 assembly code, which may limit its generalizability to other assembly languages, such as ARM or MIPS.\n\nRealism of Evaluation Settings:\n\n(1) The decompilation prompt requires optimization level information, but it is unclear if this information is accessible in stripped binaries.\n\n(2) For baseline models like GPT, fine-tuning with additional data isn\u2019t necessary, raising questions about the fairness of the comparison. If GPT were given a few-shot learning setup or fine-tuned using OpenAI\u2019s API, could it still be outperformed by the proposed approach?\n\n\nRelated Work: The paper omits discussion of several relevant works, which could provide a broader context for its contributions.\n\n[1] Debin: Predicting Debug Information in Stripped Binaries. CCS 2018\n\n[2] {DIRE}: A Neural Approach to Decompiled Identifier Renaming. ASE 2019\n\n[3] Learning to Reverse DNNs from AI Programs Automatically. IJCAI 2022\n\n[4] Asm2Vec: Boosting Static Representation Robustness for Binary Clone Search against Code Obfuscation and Compiler Optimization. S&P 2019\n\n[5] Neural Network-based Graph Embedding for Cross-Platform Binary Code Similarity Detection. CCS 2017.\n\n[6] ecompiling x86 Deep Neural Network Executables. Security 2023."
+            },
+            "questions": {
+                "value": "For binary similarity detection, compilers may inline functions or eliminate them altogether. How does your approach handle such scenarios?\n\nIf additional information (e.g., execution traces) were provided to GPT, or if iterative interaction with GPT were allowed, could the proposed approach still outperform a GPT-based model?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a generative model, Nova, tailored for assembly code tasks. Nova employs a hierarchical attention mechanism and is trained using contrastive learning objectives. This paper evaluates its effectiveness on two assembly code tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Strengths:\n+ The topic is interesting and important, addressing large language model (LLM) comprehension of assembly code.\n+ The paper is well-structured and easy to follow."
+            },
+            "weaknesses": {
+                "value": "Weaknesses:\n- Comparison may be unfair due to different fine-tuning practices.\n- Evaluation of individual components is insufficient.\n- Generalization assessment is lacking.\n \n(1) Unfair Comparison: Nova is evaluated on two tasks, with fine-tuning applied specifically for each. However, the baseline models (such as Table 2) do not undergo the same fine-tuning for the tasks, leading to a potentially unfair comparison.\n \n(2) Component Evaluation: Nova\u2019s hierarchical self-attention mechanism consists of three components, yet the paper lacks detailed performance assessments for each part. Despite a reasonable design, their individual impact remains unexamined.\n \n(3) Contrastive Learning Objectives: The contrastive learning objectives contain two distinct components. Further evidence is necessary to substantiate the utility of each objective. Additionally, the contrastive learning approach depends on the available optimization levels. Handling unseen optimization levels at inference should be discussed.\n \n(4) Normalization Process: In the data collection section, a normalization step is applied, but its relevance or benefit to Nova\u2019s training is unclear.\n \n(5) Results across different optimization levels should be explored\u2014e.g., training on O0, O1, O2 and testing on O3.\n \n(6) Random Sampling in BCSD Task: The BCSD task employs random sampling, yet statistical results are missing. Reporting such results would reduce the impact of randomness on performance claims."
+            },
+            "questions": {
+                "value": "Please check my concerns in the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents Nova, a generative LLM for assembly code. To effectively learn from assembly with low information density, it uses a novel hierarchical attention mechanism which combines intra-instruction attention, preceding-instruction attention and inter-instruction attention. It further utilizes contrastive learning to better learn the semantics of assembly code from different optimization levels. The authors demonstrate the superiority of Nova over the baselines on binary code decompilation and code similarity detection tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. LLMs for binary code is an important topic to study\n2. This work proposes new methods to train Nova based on the properties of assembly code, which is clearly motivated.\n3. The proposed models show a clear improvement in binary code decompilation."
+            },
+            "weaknesses": {
+                "value": "1. The comparison on code similarity detection may not be fair. For example, CodeArt uses 12 transformer blocks with 768 hidden dimensions, whose size is smaller than Nova-1B. The authors should compare Nova with the baseline under a similar size with the same pre-training data to demonstrate the superiority of Nova on code similarity detection. For the current result, we can find that compared with CodeArt, Nova actually does not show a significant improvement (e.g. both are 0.64 for Nova-1B under K=500). So it is in question whether Nova is indeed better for code similarity detection.\n2. The experiments for Comparison with Techniques Handling Long Input are confusing. Specifically, it has the following problems:\n\na) What is \"Nova\u2019s Fine-Tuning\" in Table 3? It seems Nova does not have something special in terms of fine-tuning. Does it just mean fine-tuning with hierarchical attention or also with Nova's pretraining as suggested in Line 360? \n\nb) What is the average token length for downstream tasks before truncation? The authors want to claim Nova is better at solving long input challenges. But I see from the Appendix that Nova uses the input length as 1024 tokens during pre-training and 2048 for fine-tuning. It may be hard to claim this length to be \"long-context\". Considering that assembly code should be much longer than source code and Granite-3B-Code-128K can handle 128K input tokens at most, have you tested in the benchmarks where the input context is longer, e.g. 8k/32k/128k?\n\n3. The presentation of the paper can be improved. Specifically, a) Line 281 is unclear. The authors should clearly state that their pre-training contains two stages and the loss in Line 240 is used in the second stage. b) The ablation study should be separated into new subsections instead of mixing with Section 4.1 c) The equations are not numbered."
+            },
+            "questions": {
+                "value": "1. See weakness 1,2 \n2. Could you provide more details about how to construct $F$ in practice used in Functional CL?\n3. The authors state that hierarchical attention is only applied to half of the attention head. Since different attention heads can learn different features, I wonder if this setup is robust to the selection of the attention heads?\n4. Would the pre-trained models (Nova-1B, 6B) be public available?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

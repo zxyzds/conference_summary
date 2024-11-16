@@ -1,0 +1,168 @@
+{
+    "id": "B2N0nCVC91",
+    "title": "FLIP: Flow-Centric Generative Planning for General-Purpose Manipulation Tasks",
+    "abstract": "We aim to develop a model-based planning framework for world models that can be scaled with increasing model and data budgets for general-purpose manipulation tasks with only language and vision inputs. To this end, we present FLow-CentrIc generative Planning (FLIP), a model-based planning algorithm on visual space that features three key modules: 1) a multi-modal flow generation model as the general-purpose action proposal module; 2) a flow-conditioned video gen- eration model as the dynamics module; and 3) a vision-language representation learning model as the value module. Given an initial image and language instruction as the goal, FLIP can progressively search for long-horizon flow and video plans that maximize the discounted return to accomplish the task. FLIP is able to synthesize long-horizon plans across objects, robots, and tasks with image flows as the general action representation, and the dense flow information also provides rich guidance for long-horizon video generation. In addition, the synthesized flow and video plans can guide the training of low-level control policies for robot execution. Experiments on diverse benchmarks demonstrate that FLIP can improve both the success rates and quality of long-horizon video plan synthesis and has the interactive world model property, opening up wider applications for future works. Video demos are on our website: https://flow-planning.github.io/.",
+    "keywords": [
+        "World Model",
+        "Long-Horizon Planning",
+        "Robot Manipulation",
+        "Flow Generation"
+    ],
+    "primary_area": "applications to robotics, autonomy, planning",
+    "TLDR": "We train an interactive world-model that enables model-based planning on the image flow and video spaces for diverse manipualtion tasks with only language-annotated video datasets.",
+    "creation_date": "2024-09-21",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=B2N0nCVC91",
+    "pdf_link": "https://openreview.net/pdf?id=B2N0nCVC91",
+    "comments": [
+        {
+            "summary": {
+                "value": "In this work, the authors consider the task of high-dimensional generative planning for manipulation tasks. Specifically, they seek to design a prediction task which is relevant for manipulation planning and can also operate in a task-agnostic way on widely-available data. The model-based planning primitives are: an action generation module (generating 2D flow), a state transition model (generating next frame of video given flow + current observations), and a value function for determining how close a state is to the goal (based on language-conditioned visual encodings). This allows them to search for a flow-based plan, which at execution time can be executed by a learned plan-conditioned low-level policy. They evaluate the ability of their model to make coherent / correct plans on several benchmark tasks, and evaluate its utility for policy execution on the LIBERO-LONG task."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "# Originality\n\nThe high-level approach is a reasonable combination of ideas in planning, visual representations, and generative modeling. On the flow generation component, It\u2019s difficult to establish the level of novelty as there are a number of concurrent works proposing generative flow models for manipulation (e.g. GeneralFlow, Track2Act, etc.), but I think the combination of ideas here - for planning - is original/novel.\n\n# Quality\n\nThe quality of this paper is high. The experiments are thorough and comprehensive (with two caveats, discussed later).\n\nThe design of each component is sound, and there are lots of details / modifications that the authors conducted (and motivated!) which I found interesting and commendable. For instance, the ideas about video chunking (instead of per-frame) for value prediction, and the details about conditioning a model on flow, action space ablation, etc. are all solid contributions for other practitioners.\n\n# Clarity\n\nThe paper is quite clear - each step of the algorithm is well explained.\n\n# Significance\n\nThis paper is of moderate significance. I think the flow-based (particle-based) generative modeling approach as an action space has a lot of potential to be powerful, and clearly shows improvements for reconstruction / video generation."
+            },
+            "weaknesses": {
+                "value": "The primary weakness of this paper is that, while the representation + models they built are quite interesting and useful for modeling the actual video domain they are imitating, the actual downstream utility of their method is not sufficiently characterized. Specifically, the method simply does not substantially outperform ATM, which has no planning at all and uses a similar generative representation, on the actual downstream manipulation task. Moreover, the inclusion of flow only seems to hurt the downstream policy in comparison to video conditioning. I\u2019m not saying this method can\u2019t show meaningful improvements over other approaches, but either the LIBERO setting chosen, or the particular low-level policy chosen, yield results that do not support the claim that this generative flow modeling + planning method provides downstream utility. Especially given the overhead. Of particular concern is the Ours-FV results, which are not well-explained.\n\nAnother weakness is that the experiments seem to be restricted to single domains, even though the method seems to have been designed to be task-agnostic - I would have liked to see the authors leverage this property more, e.g. by training predictive models on the full LIBERO benchmark and then finetuning on a subset of tasks for policy learning, or similar (even internet-scale pretraining\u2026 although I realize this is out of scope for this contribution / infeasible if there are resource constraints).\n\nAnother existential issue is that this paper is framed as a \u201cflow generation for manipulation\u201d paper, but the bulk of the experimentation+analysis is geared towards video prediction which has little to do with manipulation. I don\u2019t think it stands on its own as simply a video prediction paper (at least on these tasks alone) - and I would have liked to see a larger emphasis on the actual analysis for manipulation tasks (e.g. geometric precision is a visual prediction problem, or feasibility, or other downstream metrics)."
+            },
+            "questions": {
+                "value": "Why doesn\u2019t this method offer significant downstream benefits compared to ATM, which has no planning, on the selected benchmark?\n\nHow much does the action space affect downstream performance? If you were to retrain ATM with this adjusted action space, would the ranking change significantly? Do the marginal benefits of your model come from this component (unrelated to the planning contribution)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new model-based planning framework called FLIP. It consists of 3 components: 1) a flow generation network that generates action flows given the current image observation and a language instruction 2) a video generation (dynamics model) that conditions on the flow and generate future video frames 3) a value function that evaluates the task progress (reward) given the image observation and language description. The key is the introduction of using flow as an action representation and condition the video generation model on the flow. The whole system can be used for model-based planning to generate video plans given a task, and the flow itself can also be used for guiding low-level policy execution. Various experiments are performed in both simulation environments and real-world videos."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This paper is overall clearly written.\n- The experiments cover a range of test settings, and the ablation studies help understand each component of the method.\n- Overall the experiment results are good, which demonstrates the effectiveness of the proposed method."
+            },
+            "weaknesses": {
+                "value": "- I feel the paper could have compared to some stronger baselines, for some of the experiments. E.g., for experiments in section 5.1 and section 5.2, a stronger baseline than UniPi could be UniSim [1]. The reviewer understands that the code may not be open-sourced, in this case, at least some discussion to the paper should be included. There is another very recent work DIAMOND [2] that can do very long-horizon and detailed video prediction into the future conditioned on actions. Both of these paper use just a diffusion model without the need to first extract action flows, which seems to contradict to the key proposal of this paper, which is to make the model flow-centric. Some discussion on this would be appreciated.\n- For the flow generation model -- why using a C-VAE instead of a diffusion model? Some discussion on this design choice would be appreciated. \n- For all experiments, please specify the quality of the video demonstrations, e.g., are they collected using a random policy, or are they expert videos? This would be important to understand, e.g., in section 5.1., if the system can learn from sub-optimal data for planning or does it need optimal demonstrations. \n\n[1]  LEARNING INTERACTIVE REAL-WORLD SIMULATORS, Yang et al, ICLR 2024\n[2] DIAMOND\ud83d\udc8eDiffusion for World Modeling: Visual Details Matter in Atari, Alonso et al, NeurIPS 2024"
+            },
+            "questions": {
+                "value": "Please see the weakness section"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes FLIP, a model-based planning algorithm on visual space.\nThe algorithm consists of three main modules 1) a flow generation model as an action proposal module, 2) a flow-conditioned video generation model as a dynamic module, and 3) a value module.\nThe flow generation model generates flows based on the observation and a language instruction.\nThe video generation model generates videos with a Diffusion Transformer based the predicted flows.\nThe value module, built on a vision-language representation model, is used to assign values for each frame in a video to enable model-based planning in the image space.\nModel-based planning algorithm leverages the three modules to search for a sequence of flow actions and video plans that maximizes the discounted return.\nExperiments were performed to evaluate the capability of the proposed method on generating video plans, generating long-horizon videos, and accomplishing manipulation tasks.\nThe proposed method outperforms comparing baseline methods and showcases interactive properties, zero-shot transfer capability, and scalability."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper is well-written and clear. \nLeveraging CVAE to address the multi-modality of flows is well-motivated.\nAdditionally, the paper proposes to use a mixed-conditioning mechanism for multi-modal conditional video generation.\nFor the value module, the paper modifies the original LIV method and uses video clips instead of video frames as a unit to account for the noisy value prediction.\nExperiments show that the proposed method surpasses comparing baseline methods in generating video plans, long-horizon videos, and performing manipulation tasks.\nThe paper also showcases interesting interactive properties, zero-shot transfer ability, and scalability of the proposed method."
+            },
+            "weaknesses": {
+                "value": "1. There are no real-robot experiments to validate the effectiveness of the proposed method in policy learning in the real world. Incorporating such experiments and comparing with recent policy learning methods (e.g. ATM, OpenVLA [1] or Octo [2]) would provide a more comprehensive understanding of FLIP's performance in real-world policy learning.\n\n2. The paper only evaluates the policy learning capability on a suite of LIBERO, i.e. LIBERO-Long. Conducting an evaluation to assess the generalization capability of the proposed method, e.g. on the LIBERO-Object suite, would be beneficial. Also, including a comparison with recent policy learning methods, like OpenVLA [1] or Octo [2], would further strengthen the paper.\n\n2. In Sec. 5.2, the paper compares with IRASim on a text-to-video task. However, IRASim generates video based on a trajectory instead of a text. For the text-to-video task, it would be better to compare with a text-to-video method (e.g. [3]).\n\n[1] Kim, Moo Jin, et al. \"OpenVLA: An Open-Source Vision-Language-Action Model.\" arXiv preprint arXiv:2406.09246 (2024).\n\n[2] Team, Octo Model, et al. \"Octo: An open-source generalist robot policy.\" arXiv preprint arXiv:2405.12213 (2024).\n\n[3] Ma, Xin, et al. \"Latte: Latent diffusion transformer for video generation.\" arXiv preprint arXiv:2401.03048 (2024)."
+            },
+            "questions": {
+                "value": "1. In Sec. 5.1, the paper compares with FLIP-NC, an ablation of the proposed method FLIP which has no value module as guidance. Is it possible to provide more details on how FLIP-NC performs beam search without a value guidance?\n\n2. Is it possible to provide a more detailed description on the typical failure modes of FLIP in policy learning (Sec. 5.3) ?\n\n3. In the Dynamics Module Experiments in Sec. 5.4, the paper compares with LVDM and IRASim on short-horizon video generation. The proposed method is provided with ground-truth flows to generate videos. What information is provided for the two comparing baseline methods?\n\n4. Are the flow generation model and the video generation model trained individually or jointly?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a model-based planning framework (FLIP) designed for general-purpose robotic manipulation tasks using language and vision inputs. The framework allows for the progressive synthesis of long-horizon action plans, starting from an initial image and language instruction. FLIP effectively uses image flows to represent complex movements, enhancing the planning process for manipulation tasks across various objects and robots. They propose a multi-modal flow generation model predicting actions by generating dynamic representations of movements, simulating future video sequences based on the proposed actions, and evaluate the generated videos to maximize the task's success probability."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is well-written and methodically presented. \n- FLIP introduces a novel approach to model-based planning by integrating multi-modal inputs, which enhances its versatility for various manipulation tasks\n- FLIP is designed to scale with increasing model and data budgets, making it suitable for a variety of applications and capable of leveraging more extensive datasets as they become available.\n- The generated plans can be used to inform and train low-level control policies which can support several hierarchical policies that require strategic decision-making and planning."
+            },
+            "weaknesses": {
+                "value": "- The framework may struggle with ambiguities in language instructions or unexpected changes in the environment. \n- Depending on the computational demands of the multi-modal modules, real-time performance in dynamic environments could be a concern. Evaluating the speed and efficiency of planning under real-time constraints would be crucial."
+            },
+            "questions": {
+                "value": "- How does FLIP compare to other state-of-the-art planning frameworks in terms of efficiency and effectiveness?\n- What are the limitations of using image flow as an action representation? In which scenarios/tasks, this would not be ideal? \n- How does FLIP handle ambiguities in language instructions?\n- Are there any results on the real robot that show the applicability on world models even for quasi-static tasks? \n- How will the model's performance be affected in the presence of noise or visual obstructions? \n- How does the performance of FLIP depend upon or scale with the size of the available data, numerical analysis for the same would be helpful to understand the efficiency of the proposed approach.\n\nPlease also address other comments in the weaknesses section above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

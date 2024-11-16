@@ -1,0 +1,202 @@
+{
+    "id": "Il5DjZmLzp",
+    "title": "Foundation Vision Models are Unsupervised Image Canonicalizers",
+    "abstract": "One of the most significant and longstanding problems in computer vision is invariance - the ability to robustly handle changes in real-world transformations such as rotation, viewpoint, and lighting. Unfortunately, popular foundation models remain brittle under such transformations. While existing solutions towards invariance have shown promise, they all fundamentally require some model training, limiting their ability to adapt broadly to new tasks, transformations, and datasets. Our key insight is that foundation model priors can be used to reason about transformations. We thus propose Foundation Model Canonicalization (FMC), an approach that can undo nuisance transformations in images without any model training. With a single core approach, FMC can make models like CLIP and SAM invariant to different transformations without any training or fine-tuning. Our approach FMC flexibly adapts to new foundation models and tasks, making it significantly easier for newer and larger models to achieve invariance.",
+    "keywords": [
+        "Invariance",
+        "Canonicalization",
+        "Foundation Models",
+        "CLIP",
+        "SD",
+        "Augmentation",
+        "Vision",
+        "Robustness"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "A training-free and dataset/model agnostic method that uses foundation models to undo transformations such as rotation, lighting, and viewpoint shifts -- thus achieving invariance.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Il5DjZmLzp",
+    "pdf_link": "https://openreview.net/pdf?id=Il5DjZmLzp",
+    "comments": [
+        {
+            "comment": {
+                "value": "**Hyperparameter tuning**: We argue that hyperparameter tuning is not comparable to training neural networks. (1) The hyperparameter tuning cost is comparatively negligible because hyperparameters can be tuned on just a few dozen images. There are also very few numbers that need to be selected. (2) Energy hyperparameters don\u2019t suffer the same limitations as trained neural nets since hyperparameters transfer well across different datasets and downstream networks. We will include hyperparameter transfer and sensitivity analyses in the appendix for the camera-ready draft.\n\n**Typical number of transformations required**: For C4 and C8 experiments, we chose 4 and 8 samples, respectively. For viewpoint, we use 60. For our most sample-intensive setting, i.e., color shift experiments with CIFAR100, an exhaustive search requires 21x21=441 samples. We use 10-30 samples in the Bayesian optimization (BO). Doubling (i.e., 20-60) increases the accuracy by **less than half a percent**. Similarly, halving (i.e., 5-15 samples) decreases the accuracy by **less than a percent**.\n\nSince our goal was not computational efficiency, we did not try to decrease the number of transforms in any of these settings. However, in our experience, Bayesian optimization is quite sample-efficient.\n\nAdditionally, state-of-the-art \u201cfew-shot\u201d Bayesian optimization methods can be even more sample-efficient by learning the statistics of the energy functions [7]. For example, Figure 2 of [7] shows their method achieving the same result in 4-5 samples as naive BO in 20-30 steps. Thus, there is excellent potential for speedups in future work. \n\nWe will also add a graph of samples vs accuracy for each of the three transformation settings.\n\n\n**Other Speedup methods**: \n\n**Two-stage pipeline**: We have preliminary results for an approach that may significantly reduce amortized computational complexity by skipping the canonicalization when unnecessary. \n\nFor 2D rotations, we can skip the canonicalization if the input image\u2019s energy is significantly lower than nearby poses (+90 and -90 degree rotations). This can detect upright vs. not upright with 95% accuracy. \n\nIn summary, with only 3 CLIP inferences, we can detect whether to do canonicalization with 95% accuracy. If the extreme rotations are rare (as in the real world), this can bring significant computational savings and, on average, be even cheaper than TTA.\n\nThis approach is similar to the \u201cmental rotation\u201d [8] phenomenon in humans, where we classify familiar poses quickly but go through a slow mental uprighting process to classify unfamiliar poses. \n\nWe did not include these results initially since our focus is not computational efficiency, but we hope this alleviates some concerns about the cost of this approach.\n\n**Fewer diffusion steps**: In practice, it is sufficient to use only 10 diffusion steps for evaluation (500th, 550th, 600th, ..., 950th). We use this in our experiments to keep inference costs down. This significantly reduces the overall cost of energy computation. It is also possible to use only one step (500), as shown in [9], but this decreases the accuracy too much. We can include a graph of accuracy vs steps as well.\n\n**Distilling FMC energy into a cheaper (or one-shot) model**: Another computational cost reduction might come from distilling the pose knowledge in these foundation models into a single-shot model, like how [8] distills depth knowledge from diffusion models.\n\nIn summary, we will add the following to the camera-ready draft: (1) TTA baseline for every experiment, (2) Downstream classifier energy baseline, (3) computational cost (in FLOPs) and runtime for each experiment (in seconds), (4) Hyperparameter transfer/sensitivity analysis, (5) samples vs. accuracy graphs for bayesian optimization and diffusion steps.\n\nTo our knowledge, FMC is the only way to get reliable invariance/equivariance that generalizes across a wide range of settings - outperforming TTA (as shown above). Thus, **we argue that this contribution is valuable even if it is slower than prior approaches since a slow solution is better than no solution**.\n\nPlease let us know if you have any questions or if there is something you would like to see to change your rating.\n\n[1] https://arxiv.org/pdf/2206.00051\n\n[2] https://arxiv.org/pdf/2010.11882\n\n[3] https://arxiv.org/pdf/2202.10638\n\n[4] https://arxiv.org/pdf/2309.16672\n\n[5] https://arxiv.org/pdf/2211.06489\n\n[6] https://arxiv.org/abs/2202.00665\n\n[7] https://proceedings.mlr.press/v151/tighineanu22a/tighineanu22a.pdf\n\n[8] https://psycnet.apa.org/record/1971-28060-001\n\n[9] https://arxiv.org/pdf/2303.16203"
+            }
+        },
+        {
+            "comment": {
+                "value": "Thanks for your review. We are glad you appreciate the simplicity and novelty of our approach. \n\nIn our opinion, this method can achieve guaranteed invariance/equivariance in much more general settings, allowing us to solve problems that previous approaches like equivariant nets could not. Rather than training new canonicalizers for every new setting, FMC simply extracts the information already encoded in foundation models.\n\n**Accuracy comparison to test-time-augmentation (TTA)**: We agree that comparisons against TTA are helpful. Here are the results for CLIP with C8 rotations. **We will also add TTA as a baseline for every experiment in the paper for the camera-ready draft**.\n\n|               | CIFAR10    | CIFAR100   | STL10     |\n|-----------------|--------------|--------------|-------------|\n| No uprighting | 65.4       | 50.6       | 93.4      |\n| Ours          | 93.7       | 76.2       | 97.5      |\n| TTA           | 82.8 (-10.9)| 61.7 (-14.5)| 96.6 (-0.9) |\n\n\nResult: We achieve significantly higher accuracy than TTA for the same evaluated points. Intuitively, this happens because we choose the best point rather than rely on group averages (which could be dragged down by bad samples). While TTA works well for commonly used small ranges (e.g., 10-degree rotations), it degrades when averaging over larger ranges (i.e., full 360-degree circle) necessary for full invariance. \n\n**Advantage against downstream model energy**: Using the energy function from the downstream model is a special case of FMC if the downstream model is a large model like CLIP. \n\nIf the downstream is a smaller model like ResNet50, then there are two main drawbacks: (1) R50\u2019s energy function may not work well outside its training setting (e.g., new datasets), (2) it may not be as accurate as FMC due to seeing less data during training.\n\nTo show the difference, we used PRLC\u2019s trained ResNet50 classifier and compared it against our approach. \n\n|               | ResNet50 (CIFAR100) |\n|---------------|---------------------|\n| No uprighting | 69.7                |\n| Ours          | 82.2                |\n| ResNet50 Energy | 77.6 (-4.6)       |\n\nResult: Even in the best-case scenario where the classifier is trained for the specific dataset, its energy function is worse. If the test dataset were different, the gap would likely be even larger (similar to PRLC canonicalizers failing on new datasets in Figure 7).\n\nThe lower accuracy combined with the fact that this approach might not work outside its training setting are significant challenges for this approach.\n\nFor improved experimental rigor, we will add another table to the appendix with comparisons between FMC and classifier energies.\n\n\n**Computational expense**:  Speed/cost is not our priority since we focused on solving a problem that previous approaches could not solve: a general and training-free method for invariance. With FMC, we propose a method that enables a single canonicalization system to generalize across tasks, models, and transformations. \n\nYou are correct that the main paper does not discuss the computational expense. We only briefly mention it in the limitations.\n\n**Our cost** is (# of transforms evaluated) X (Cost of transforming + Cost of evaluating [CLIP + SAM + Diffusion model] + Cost of inference)\n\n**Relative to TTA**, this cost is 1 + (Cost of evaluating [CLIP + SAM + Diffusion model])/(Cost of transforming + Cost of inference)\n\nIn practice, when using CLIP as the downstream model and 10 diffusion steps (see \u201cSpeedup methods\u201d for details), TTA is roughly an order of magnitude more expensive than simple inference, and our method can be roughly an order of magnitude more expensive than TTA. \n\nThis difference is much smaller in 3D settings because the generation cost (from Zero123) dominates energy function costs.\n\nWe will add a table detailing the computational cost (in FLOPs) and runtime for each experiment (in seconds) for the camera-ready appendix."
+            }
+        },
+        {
+            "comment": {
+                "value": "**\u201cWhich foundation models to use, and how to balance them\u201d**:\nThis is a good point, and we will fix it by adding a subsection discussing this to the camera-ready draft. There is a practical and a theoretical answer to your question:\n- In practice, the best combination of models can be determined by hyperparameter tuning using Bayesian optimization. Practical constraints on computation/memory can be encoded into the objective function to help choose models.\n- In theory, the probability distribution represented by the energy function must approximate the data distribution at least along the submanifold defined by the transformation. Thus, the requirements for the foundation models are:\n    - The foundation model must see enough natural data to be able to model the data distribution in a large number of settings.\n    - The input data distribution to the foundation model should not deviate significantly from the real data, so drastic augmentations (which change the input data statistics a lot) are not allowed.\n    - The model\u2019s training loss must be able to model the data distribution either explicitly (e.g., flow models, diffusion models) or implicitly (e.g., classifiers through JEM [4]). \n- One test for whether a model can be used in FMC is whether the model in question can be used for out-of-distribution detection for a wide range of settings.\n- It would be useful to have a more precise theoretical argument for which models/losses to use. For methods such as DINO/MoCo, we are limited by a lack of deep learning theory to describe their learned distributions. We hope to address this in future work once there is a better understanding of these models.\n\n**\u201cEnergy function ablations\u201d**:\nThank you for the suggestion. We will add the ablations in the appendix section in the camera-ready draft.\n\n**\u201cBesides, I am actually not sure whether this method can generalize to any vision foundation models.\u201d**:\nTo clarify, we don\u2019t claim this. While we generalize across downstream models and while our framework is flexible to incorporate new foundation models, we don\u2019t claim that any foundation model would work well. We will add the above clarifications to describe what foundation models should be used in FMC. Please let us know if we misinterpreted your point.\n\n**In summary**, we will add (1) a plot of samples vs accuracy, (2) a discussion about foundation model choice, and (3) ablations to the camera-ready draft.\n\nPlease let us know if you have any more questions. We would also appreciate knowing what you would like to see to change your rating.\n\n[1] https://arxiv.org/pdf/2311.16098\n\n[2] https://proceedings.mlr.press/v151/tighineanu22a/tighineanu22a.pdf\n\n[3] https://arxiv.org/pdf/2211.06489\n\n[4] https://arxiv.org/pdf/1912.03263"
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for the review. We answer your questions/concerns below:\n\n**\u201cThe method is dependent on human-designed transformations; may have limited potential to generalize real-world transformations.\u201d**:\n\n**This understanding is incorrect**: our method can be used with any parameterizable transformation, e.g., the latent space of a generative model. It does not have to be a human-designed transformation. We chose intuitive transformations as these are already popular and easy to understand/debug, but in principle, this could be data-driven. **Importantly, this generality is the key strength of our method** compared to classical methods like equivariant nets!\n\nOur viewpoint transformation example shows this comparative advantage. Equivariant nets cannot be used for viewpoint transformations on images. However, viewpoint transforms can be learned by a generative model (like Zero123). Our method can leverage this generative model to deliver equivariance/invariance. In future work, we will apply this technique to more complex and realistic transformations.\n\nWe also argue that even the transformations shown in this paper are helpful \u2013 e.g., viewpoint changes often appear in robotics settings. This drastically increases the number of demonstrations required to act as data augmentation in applications such as home robotics [1]. This is because there are currently no reliable methods for viewpoint invariance. Our work represents a useful step towards solving this long-standing problem.\n\nOverall, we agree that it is important to model complex transformations in the real world for real-world robustness. If that is the goal, **our method is more well-suited for complex transformations than classical invariance approaches** and is a useful step toward real-world robustness.\n\n**\u201cOptimization is slow and sample-inefficient.\u201d**:\n\n**Our goal is generality**: The main goal of our work was to show that our canonicalization method is a general and training-free method for invariance. This enables us to generalize to a wide range of transformations (as described above) much better than classical invariance methods. As a result, we focused on generality rather than speed in this work. To our knowledge, methods that use only 1 sample do not generalize across tasks, models, and transformations. \n\n**Multiple samples are necessary for generality**: Please also note that there are no other guaranteed invariance methods that are as general and still fast. It is currently unknown if that goal is even possible. \n\nTo our knowledge, existing single-sample solutions for invariance/equivariance require an equivariant/invariant network in the pipeline. This is a consequence of Equation 2 in [3]: Either the canonicalizer or the classifier has to be equivariant. This can be achieved either with an equivariant network (which enables you to sample 1 point but is limited to simple human-designed transforms) or by using multiple samples (which we do). If generality is required, then the only known method so far is optimization.\n\nPlease let us know if you disagree and have an example of a method that satisfies the three criteria of generality, invariance, and speed.\n\n**Sample Efficiency**: Even so, for settings requiring many samples (e.g., color shift), Bayesian optimization (BO) is incredibly sample-efficient. For example, in our color shift experiments, 10-30 samples with BO achieve similar accuracy as an exhaustive 21x21 grid (i.e., 441 samples on the grid). This is a nearly **20x speedup**.\n\nAdditionally, state-of-the-art \u201cfew-shot\u201d Bayesian optimization methods can be even more sample-efficient by learning the statistics of the energy functions [2]. For example, Figure 2 of [2] shows their method achieving the same result in 4-5 samples as naive BO in 20-30 steps. **Thus, there is great potential for speedups in future work.**\n\nFor clarity and experimental rigor, we will add a plot of samples vs accuracy for the camera-ready version."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thanks for the review! We are glad that you find our approach to be novel, well-motivated, and convincingly evaluated across different settings. We hope this approach is a useful step towards general canonicalization-based invariance.\n\nAs for your questions:\n\n**Fig 6 (a) and (c)**: In case you are referring to the roughness of those curves, that is an artifact of the random sampling used to compute the accuracy statistics. To fix this, we will add error bars and average over more samples for the camera-ready version. Please let us know if we misinterpreted your comment.\n\n**Zero123 + Objaverse**: You are correct in pointing out that Zero123 is trained on Objaverse. Since our main contribution is the energy function for canonicalization, Zero123 is just another augmenter from our perspective (like the 2D rotation or color transform functions). We used Zero123 here, but in principle, our FMC framework could use any 3D viewpoint generation method.\n\n**Better augmenters**: Replacing Zero123 with augmenters like One-2-3-45 would likely lead to much better results if the generation quality is improved. We simulated what the \u201cideal\u201d generator could achieve by using the ground-truth Objaverse renders. In this case, the improvement is significant as shown in the following figure (with updated data processing; see \u201cupdated 3D results\u201d below for details):\n\nhttps://imgur.com/a/AUDGaXl\n\n**CO3D**: Figure 6 (a-b) shows that our energy function can rank CO3D frames well. In practice, we found it difficult to generate high-quality CO3D 3D generations with Zero123. We were held back by practical issues like unreliable foreground-background separation, frames where the object is not fully in the frame, frames where multiple objects are in the scene, and aspect ratio. \n\nWe show an example below. The original image (top) does not contain the entire couch, and the background removed version (bottom) segmented the incorrect object. This limits our ability to use Zero123. \n\nhttps://imgur.com/a/sKkKjrz\n\nSolving these practical issues is possible but outside the scope of this paper. In future work, we plan to focus more on the 3D setting and try better generative models with real-world datasets, especially for robotics applications like home robotics [1].\n\n**Updated 3D Results**: We noticed that Objaverse had poor label quality. The LVIS labels that came with the Objaverse-LVIS subset have many similar labels which confused the models (e.g., orange vs. mandarin orange vs. tangerine, ring vs. wedding ring, etc.). This was impacting both the ground-truth baseline curve and our curve. By simply filtering the data, we achieved much better results. \n\nWe only kept objects with (1) more than 10% of renders classified correctly and (2) a clear winner class (i.e., the frequency of the most common class should be at least 33% more than 2nd most common class). This selects roughly 30% of the objects. Please note that these are preliminary results, and we will add error bars and more points in the plot for our camera-ready draft.\n\nSee below for the updated plot, with the new lines in solid and the previous lines in dashed lines:\n\nhttps://imgur.com/a/99SY0A8\n\nPlease let us know if there is anything else we can provide to help increase your rating/confidence.\n\n[1] https://arxiv.org/abs/2311.16098"
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for taking the time to review our paper. However, we see **critical factual misunderstandings** in your assessment. We point out the critical oversights below. We hope you reconsider your review with an open mind.\n\n**Experiments only on 2D rotation**: Your understanding is incorrect. Figures 5 and 6 show color shift and viewpoint results, respectively. The corresponding experiment settings are described in Section 5.3. Earlier figures/tables focus on 2D rotation because the main baseline (PRLC) evaluates on those, but we do consider viewpoint and lighting (illumination color specifically) as well. We can make these results more prominent in the camera-ready draft.\n\n**Evaluated only on small datasets like CIFAR10/STL**: This understanding is also incorrect. We also evaluate on COCO (Table 2), ImageNet (Takeaway #2 in Section 5.1; Table 3 in Appendix), and subsets of CO3D and Objaverse (Figure 6).\n\nPlease also note that popular papers in the invariance learning subfield, e.g.,  Augerino, Prior-Regularized Learned Canonicalization,  LILA [1, 2, 3] in similar conferences (NeurIPS, ICML) have used datasets like CIFAR10/STL rather than larger datasets such as ImageNet. *We still went beyond the standard practices of this subfield to show our claims more rigorously*. We hope you consider this factor in your rating.\n\nWe can also make these results more prominent in the camera-ready draft.\n\n**2D plane rotation is too simple**: While it is easy to train a 2D rotation estimator for specialized settings (like our baseline PRLC), our paper addresses a more general approach that works across many settings. One example of why this matters is mobile agents; to enable them to work in the real world, we need a system that can adapt to various transformations and settings.\n\nSpecialist approaches like PRLC (our baseline) are insufficient for a generally robust system. PRLC trains specialized networks to estimate rotations on a dataset and uses it to upright the image. However, we find that such approaches (1) fail to generalize to new datasets (Figure 7); (2) don\u2019t work for new transformations by design (e.g., viewpoint, lighting color); and (3) degrade on new downstream models (Figure 9). Put simply, such approaches do not work outside of their training setting.\n\nOur work aims to overcome these fundamental limitations. Notably, we beat these specialized models in all relevant settings *without any training*. This aspect is crucial because it allows us to create *one single approach* that works across many settings. Thus, our work is an important step towards a generally robust system.\n\nPlease let us know if we missed something. We would also appreciate knowing specifically what we can do to change your rating of the paper. Thank you for your questions."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper propose a training-free adaptation approach for vision foundation models, e.g. CLIP and SAM, to adapt on unseen 2D image rotation. They conduct experiments on small datasets e.g. CIFAR and STL10 with C4/C8 rotations. Results show some improvement vs baseline w/o such adaptation."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "Improvement for robustness of foundation models are useful.  Training free adaptation reduce the limitation of usage of those adaptation."
+            },
+            "weaknesses": {
+                "value": "In the abstract the author talk about rotation, viewpoint, and lighting. However, in the experiment, they only conduct on 2D image rotation.  The 2D in-plane rotation is far too simple, and easy to solve. One can easy train a additional small estimation via self-supervision (data augmentation in training). Or use some existing approach to detect the rotation first [1]. Unless the author can show some results also for other type of perturbation, otherwise, it is hard to convince me the effectiveness of the approach. Additionally, CIFAR10 and STL10 is consider too small and far from realworld usage, I would command the author to conduct more experiment on larger dataset.\n\n[1] Maji, S., & Bose, S. (2020). Deep image orientation angle detection. arXiv preprint arXiv:2007.06709"
+            },
+            "questions": {
+                "value": "See weakness"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper studies to what extent large pre-trained models can be used to canonicalize images with respect to transformations such as rotation and lighting. The proposed approach is to define an energy $E(I)$ for every image $I$ by combining pre-trained CLIP, stable diffusion and SAM and to use brute-force search or bayesian optimization to find the transformation $t$ that minimizes $E(t(I))$. The finding is that this works quite well, i.e. that the proposed energy can be used to canonize images to get improved downstream performance."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. The approach is simple and novel.\n2. The paper demonstrates that CLIP, Stable diffusion and SAM (at least when combined) have a strong knowledge of the distribution of internet images under common image transformations."
+            },
+            "weaknesses": {
+                "value": "1. The approach needs to apply three large pre-trained models (including 500 steps of stable diffusion) to many transformations of the input image. It must be quite computationally expensive, but this is not commented on.\n2. There is no comparison to test-time-augmentation, which would be the most common approach to get invariance/equivariance from a non-invariant/equivariant model. Since the proposed approach requires evaluating pre-trained models on several input transformations it seems not to have a computational advantage over test-time-augmentation, which previous work on canonicalization might have had.\n3. The approach is claimed to be training-free, but the energy hyperparameters need to be tuned using bayesian optimization (Appendix A.3)."
+            },
+            "questions": {
+                "value": "1. How large is the computational cost? In particular compared to using test-time-augmentation.\n2. Is the performance better than using test-time-augmentation?\n3. How computationally expensive is the tuning of the energy hyperparameters?\n4. What is the typical number of transformations used to find the canonical one? How much does the performance improve for, say, each doubling of the number of transformations?\n5. What is the advantage of the proposed approach over using the downstream model for the task at hand for canonicalization? For instance, in image classification, the classification model itself could be used to define an energy similar to the CLIP-energy. (This, again, would be a sort of test-time-augmentation.)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "FMC introduces a training-free approach to equip foundation models, like CLIP and SAM, with canonicalization-based invariance, enhancing their adaptability across various models and a wide range of downstream transformations."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. This energy function-based training-free method is technically sound and novel. \n2. The experiments are convincing and sufficient, validating the proposed methods across multiple dimensions, such as datasets (Sec. 5.1), models (Sec. 5.2), and transforms (Sec. 5.3).\n3. The paper is well-motivated (a training-free general-invariance method) and easy to understand."
+            },
+            "weaknesses": {
+                "value": "Please see the \"Questions\" section."
+            },
+            "questions": {
+                "value": "For Takeaway #9, \n\n1. The performance gains in Fig. 6 (a) and Fig. 6 (c) are not monotonous and I would like to see more analysis regarding it. \n\n2.  Zero123 is trained on Objaverse, how about the performance comparison on other datasets, such as OmniObject3D [1] and Co3D.\n\n3.  How about changing the Zero123 baseline to the advanced image-to-3D methods, like One-2-3-45 [2] and Unique3D [3].\n\n[1] OmniObject3D: Large-Vocabulary 3D Object Dataset for Realistic Perception, Reconstruction and Generation. CVPR 2023\n\n[2] One-2-3-45: Any Single Image to 3D Mesh in 45 Seconds without Per-Shape Optimization. NeurIPS 2024\n\n[3] Unique3D: High-Quality and Efficient 3D Mesh Generation from a Single Image. NeurIPS 2024"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a training-free method for image canonicalization based on pre-trained foundation models. The method is based on the hypothesis that the canonical image will have the minimal energy evaluated using the foundation models. The authors permute the possible augmentation and use the proposed method to evaluate their energy."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper proposes a training-free method for image canonicalization using pre-trained foundation model, which is interesting.\n- The paper is easy to follow and the idea is easy to understand."
+            },
+            "weaknesses": {
+                "value": "- This method formulates the image canonicalization problem as an optimization problem, which needs to permutes all possible augmentation/transformation, which is slow and is sample-inefficient.\n- Moreover, the method is dependent on human-designed transformations, e.g. color, viewpoint, rotation, etc. It may have limited potential to generalize real-world transformation that are actually very complex.\n- No reason or intuition on why picking the mentioned three vision foundation models. Why using them, not other foundation models?\n- No ablation on figuring out which foundation model is useful for recovering which transformation. And no ablation on whether it is necessary to use all three foundation models.\n- Besides, I am actually not sure whether this method can generalize to any vision foundation models. For example, DINO/DINOv2, which uses contrastive learning for representation learning might not suitable for this task, as they might not be sensitive to transformations/augmentations.\n- The authors should provide a deeper understanding on how to choose these foundation models and how to balance the energy they contribute to the final energy function."
+            },
+            "questions": {
+                "value": "Please see comments above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,132 @@
+{
+    "id": "EiYr9ArUFl",
+    "title": "Gathering and Exploiting Higher-Order Information when Training Large Structured Models",
+    "abstract": "When training large models, such as neural networks, \nthe full derivatives of order 2 and beyond are usually inaccessible,\ndue to their computational cost.\nThis is why, among the second-order optimization methods, it is very common\nto bypass the computation of the Hessian by using \nfirst-order information, such as the gradient of the parameters (e.g., quasi-Newton methods)\nor the activations (e.g., K-FAC).\n\t\nIn this paper, we focus on the exact and explicit computation\nof projections of the Hessian and higher-order derivatives on\nwell-chosen subspaces, which are relevant for optimization.\nNamely, for a given partition of the set of parameters, \nit is possible to compute tensors which can be seen as\n``higher-order derivatives according to the partition'',\nat a reasonable cost as long as the number of subsets of \nthe partition remains small.\n\t\nThen, we propose an optimization method leveraging\nthese tensors at order 2 and 3 with several interesting properties, including:\nit outputs one learning rate by subset of parameters, which can\nbe used for hyperparameter tuning;\nit takes into account long-range interactions\nbetween the layers of the trained neural network, \nwhich is usually not the case with similar methods;\nthe trajectory of optimization is invariant under \naffine layer-wise reparameterization.",
+    "keywords": [
+        "neural networks",
+        "Hessian",
+        "learning rate",
+        "projections",
+        "optimization"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "Cheap computation of tensors related to the higher-order derivatives of the loss, and application to second-order optimization of neural networks.",
+    "creation_date": "2024-09-23",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=EiYr9ArUFl",
+    "pdf_link": "https://openreview.net/pdf?id=EiYr9ArUFl",
+    "comments": [
+        {
+            "summary": {
+                "value": "This work considers building summaries of higher order loss derivatives, like the Hessian and the third-order Tensor, which bucket interactions at the level of layers or some arbitrary partitions, instead of each individual parameter. In particular, by considering a particular contraction (like with the all-ones vector or gradient direction), very compact higher-order summaries can be built (which scales polynomially in the number of layers, instead of parameters). As an application, they use it to derive a layerwise scaling of learning rates, which neatly interpolates between the two extremes of using Newton's method and Cauchy's steepest descent rule. The method is demonstrated on some very simple experimental setups."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is in general well motivated with the need to capture the interactions between parameters in different layers, which is often ignored by block-diagonal methods. This is operationalized in a natural way by studying the Hessian with suitable contractions. \n\n- The approach of getting layerwise learning rates through their layerwise grouping is neat. This offers a principled extension to the Cauchy's steepest descent rule. \n\n- The method could also find utility in studying the behaviour of feature learning across layers, and thus be used more than just in optimization."
+            },
+            "weaknesses": {
+                "value": "- The experimental section is quite weak. I understand that the authors themselves pitch it as a proof-of-concept, but I am not so sure about even if you can call it a proof of concept. The experiments are on small datasets like CIFAR, even over there none of the methods get the typical 90% and above accuracy, the test accuracy of their method is much worse than K-FAC. \n\n- More fundamentally, it is unclear to me where lies the bigger problem: correcting the curvature across layers, or that within the layers. It is well known that the Hessian tends to have a significant energy on its block diagonals, and thus maybe correcting across the layers, may not possess significantly more information. \n\n- Also, even for their method, I am curious what amount of the performance can be explained by simply estimating the scales of the Hessian on the diagonal blocks. In particular, if they instead use diag(\\bar{H}), and then use it to get layerwise learning rates, how does that perform? This would form a test bed to showcase how crucial is it to capture cross-layer information. \n\n- Besides, I think in the vision setting the Hessian tends to be more homogeneous across the networks as opposed to that in Transformers with language modelling [1]. Hence, I think their approach might be more suited to that setting, and would be interesting to see if it can outperform methods like Adam-Mini [2]. \n\n- There are very limited baselines considered by the authors. I would have liked to see the Cauchy step size, AdaHessian, and even a block-diagonal quasi Newton method. \n\n- The overall runtime cost can be quite large, as there are multiple Hessian vector products. Can the authors do a wall-clock comparison?\n\nReferences:\n\n[1] Ormaniec, et. al. (2024). What Does It Mean to Be a Transformer? Insights from a Theoretical Hessian Analysis. arXiv preprint arXiv:2410.10986.\n\n[2] Zhang, et. al. (2024). Adam-mini: Use fewer learning rates to gain more. arXiv preprint arXiv:2406.16793."
+            },
+            "questions": {
+                "value": "See above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes to make second-order optimization computationally tractable by taking a coarse view of high-dimensional parameter spaces. The authors break the Hessian of a deep learning model into blocks, with one block for every pair of layers, and compute one summary scalar per block. This allows for modeling inter-layer interactions, unlike many other approaches to approximate second-order optimization that neglect these terms. The authors propose a cubic-regularized version of their algorithm, and present experimental evidence that inter-layer interactions in deep learning models are non-trivial. Ultimately, the experimental results of the authors' proposed method are mixed."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors present a very interesting idea, and thoroughly motivate the idea. It really is a big short-coming that many related papers on this topic neglect inter-layer interactions when designing optimization algorithms. And finding computationally tractable ways to \"summarize\" the Hessian is a very strong idea.\n\nThe discussion of related work is quite comprehensive and clear.\n\nGenerally the work feels quite thoughtful: considering what are the issues with Newton's method, and how to try to overcome them."
+            },
+            "weaknesses": {
+                "value": "I think the method could potentially be introduced in a more straightforward way, and I want to suggest one way. I think the method could be viewed as a change of variables to a smaller set of local optimization variables. In particular, instead of viewing the loss as a function of general perturbations to all the weight tensors:\n\nloss( W_1 + \u2206W_1, W_2 + \u2206W_2, ..., W_S + \u2206W_S)\n\nwe can view the loss as as a function of scalar-parameterized perturbations to each layer:\n\nloss( W_1 - \u03b7_1 * G_1 , W_2 - \u03b7_2 * G_2, ..., W_S - \u03b7_S * G_S)\t\t\t(*)\n\nwhere \u03b7_1, \u03b7_2, ..., \u03b7_S are a collection of scalars and G_1, G_2, ..., G_S are the gradients of the loss with respect to each weight tensor, evaluated at the point W_1, W_2, ..., W_S. We can consider (*) to be a loss function with S variables \u03b7_1, \u03b7_2, ..., \u03b7_S. It's then clear that Hessian of this \"reduced-dimensionality\" loss is an S x S matrix. And we can throw any of a wide range of optimization methods toward solving this local S-dimensional optimization problem.\n\nI also think the title could possibly be improved. What about something like \"Multi-Tensor Optimization via Second-Order Scalar Summaries\"?\n\nAlgorithmically, there is a weakness in the method that it only searches in the gradient direction for each tensor. This means the method would miss Shampoo-style [1] changes to the gradient direction which have been found to speed up deep learning training empirically.\n\nThe experimental results are mixed and perhaps not terribly promising at the moment. But it's good that you are open and up front about this. I think it's unlikely the broader community would focus on the paper too closely without more thorough experimental results.\n\nSome light proof-reading of the writing would be helpful in places. For example line 90--91 \"This is typically what is done by Dangel (2023), despite it does not go beyond the second-order derivative.\"\n\n[1] https://arxiv.org/abs/1802.09568"
+            },
+            "questions": {
+                "value": "See weaknesses section. Do the authors agree with this perspective?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors suggest a layer-wise partitioning of order $d$ derivatives, that transforms the $R^{p^d}$ tensor to a $R^{S^d}$ tensor which is computationally tractable even in deep networks.  The authors then leverage this partitioning to first compute empirically the Hessian for some deep neural networks, and subsequently suggest a second order method based on partitioning for optimization."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper has several strengths:\n\n1) The interest in efficient computational schemes of higher order information for deep neural networks is significant, and improved methods of estimating the Hessian, as well as higher order terms could help improve interpretability and shed light on what neural networks learn during optimization.\n2) The partitioning scheme is the main contribution of this paper, and seems to be novel as far as I know, with possible applications to many interesting avenues."
+            },
+            "weaknesses": {
+                "value": "In spite of the strengths, the paper has some clear drawbacks in my opinion:\n\n1) The paper is not written well enough, with a substantial lack of a literature survey on properties of Hessians in deep networks, as well as works on second order methods from recent years. In terms of the writing itself, all of the equations on page 5 are unnumbered making them hard to refer to, and the chosen notation for tensor contraction $A[ u, u... u]$ is not standard and never explained. It must be understood from context in the main text or the appendices.\n2) The main contribution - the fast computation of lower complexity tensor containing similar information as the original tensor is not given in detail in the main text, and even in the appendix should be explained explicitly.\n3) In general, I believe the focus of the paper is completely misguided. It seems clear that the suggestion of the second order optimization method is not superior (at least in its current form) to other simple gradient based methods, and should then not be the focus of the paper. Instead, if the paper focused on the partitioning/computation methods and then applied this to real-world or even particular solvable examples, extending Sec. 5.1, the paper would be much stronger."
+            },
+            "questions": {
+                "value": "1) L43 - I'm not sure this is correct, assuming unlimited compute, and a perfectly known Hessian, even if the Hessian is singular you can still invert it on the nonsingular subspace, using SVD and find the pseudo-inverse.\n2) L71 - Why do the authors need to regularize instead of computing just the pseudo inverse? is it inefficient? this should be stated explicitly\n3) L76 - \"so its preserves \"\n4) L218-220 seems wrong, the d-derivative is a map from $\\mathbb{R}$ to $\\mathbb{R}^{p^d}$ and not the other way around, even if the intention was a map from weight space to the operator output it should be from $\\mathbb{R}^p$ to $\\mathbb{R}^{p^d}$, so this is unclear to me. Additionally, the second term is unclear, $u$ are not defined at this point and the brackets $[.]$ are undefined as well. In the appendix it seems clear that the intention is tensor contraction between the previous term and the brackets but this is not standard.\n5) L258 - \"Therefore, the tensors $D_\\theta^d(u)$ extract more information than the naive Taylor terms, while keeping a reasonable computational cost. \" why is this statement obvious \"therefore\"? is the statement that regular Taylor terms lose the layer-wise structure of the network? I understand that the equality between Taylor and this decomposition is only obtained after tracing out the $s_i$ indices, but what is the intuition? it would be useful to show explicitly for a low $d$ derivative with a fixed number of parameters to illustrate the difference.\n6) the authors don't comment on the compute time of their method compared to single gradient based method (Which seem to be better so far), it would seem like $t*p*S$ vs $t*p$, making it substantially slower for deep networks. \n7) While the method provided in this text is not shown to be superior to standard algorithms, it might be interesting to consider the computation method in the context of sharpness aware minimization."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

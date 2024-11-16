@@ -1,0 +1,243 @@
+{
+    "id": "GsR3zRCRX5",
+    "title": "Robust Simulation-Based Inference under Missing Data",
+    "abstract": "Simulation-based inference (SBI) methods typically require fully observed data to infer parameters of models with intractable likelihood functions. However, datasets often contain missing values due to incomplete observations, data corruptions (common in astrophysics), or instrument limitations (e.g., in high-energy physics applications). In such scenarios, missing data must be imputed before applying any SBI method. This work formalizes the problem of missing data in SBI and demonstrates that naive imputation methods can introduce bias into the SBI posterior. We introduce a novel method that addresses this issue by jointly learning the imputation model and the inference network within a neural posterior estimation (NPE) framework. Extensive empirical results on SBI benchmarks show that our approach provides robust inference outcomes compared to baselines, for varying levels of missing data, while being amortized.",
+    "keywords": [
+        "Simulation-based inference",
+        "likelihood-free inference",
+        "approximate Bayesian computation",
+        "neural posterior estimation",
+        "missing data"
+    ],
+    "primary_area": "probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",
+    "TLDR": "We tackle the problem of performing simulation-based inference under missing data scenarios by combining imputation and inference in neural posterior estimation framework",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=GsR3zRCRX5",
+    "pdf_link": "https://openreview.net/pdf?id=GsR3zRCRX5",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces a method for addressing the issue of missing data in the context of\nsimulation-based inference (SBI). The approach uses neural processes to learn an\nimputation model from simulated data and then combines the learned imputation model\nwith standard neural posterior estimation (NPE) to perform SBI. The authors first show\nhow previous approaches for addressing missing data with zero- or mean-value imputation\ncan lead to biased SBI posteriors. They then evaluate their approach on a set of\ntractable SBI benchmarking tasks and two intractable tasks. Additionally, they perform\nablation studies and show how their method can be extended to generalize over different\nlevels of missingness in the data."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper is well-written and clearly structured. The figures are visually appealing,\nand the results are reported over a reasonable number of repetitions and with error\nbars. The introduction and background section are concise and easy to follow, except\nmaybe for section 3.3, for which additional background is given in the appendix.\n\n### Originality\n\nThe paper addresses a known problem that has been tackled in the field of SBI before.\nHowever, it shows that previous approaches had limited success. It then proposes a new\nmethod that combines techniques from existing research on learning imputation. Thus,\noverall, using neural processes for learning imputation models for neural SBI is not a\nstrong technical contribution in itself, but can still be a valuable contribution to the\nfield of SBI. However, while most of the related work on missing data in SBI is cited\naccurately, it seems that the work by Gloeckler et al. is actually very similar to the\napproach proposed here. See below for details.\n\n### Quality\n\nThe derivations for combining imputation models with NPE appear technically sound. The\nexperimental results support the initial claims that the proposed method is more robust\nto missing data than the baselines. However, the choice of performance metrics and the\ncomparison to previous methods should be improved (see below).\n\n### Clarity\n\nAs mentioned above, I believe the paper is presented quite clearly. What I am missing is\na discussion of the potential limitations of the presented method, see below.\n\n### Significance\n\nThe paper addresses an important problem in the field of SBI, as actual SBI applications\nusually deal with real-world observations that often have missing data. This problem has\ngained only little attention in the literature so far. If the concerns on the evaluation\nlisted below are addressed and the method turns out to perform better than previous\napproaches, it will be a valuable addition to the field."
+            },
+            "weaknesses": {
+                "value": "### Missing discussion of previous work\n\n- There is one early SBI paper that addressed imputation in SBI that is missing and\n  should be discussed: Lueckmann et al. 2017 automatically learn imputation values for\n  NPE using an MDN embedding network, actually on the same Hodgkin-Huxley benchmark as\n  used here. A discussion of this paper and a comparison to their proposed method would be\n  appropriate. In particular, in section 3.3 and figure 4, they use an imputation model in the last layer of the MDN, to which you could \n  compare. A comparison to this approach could be straightforward as your NPE-NN baseline approach seems quite similar to their \n  approach. Ideally, you can show how your approach leads to more accurate imputation values on the benchmarking or the HH task, as \n  they actually observed that their learned imputation values tend to be close to the sample mean of the feature. \n\n- The discussion of the work by Gloeckler et al. is not accurate. The Simformer actually\n  learns the imputation of the missing data as well. In that sense, it is actually very\n  similar to the approach proposed here. Relating to the example given in the paper:\n\n  > However, this method estimates the partial posterior distribution p(\u03b8 | x1, x3)\n  > given x = [x1, x2, x3, x4, x5], where x1 & x3 are the only observed variables,\n  > without considering the mechanisms that lead to missing data.\n\n  This is not correct. The SIMFORMER can perform *arbitrary* conditioning and\n  evaluation. Thus, when given only x1 & x3, it can actually predict p(\u03b8, x2, x4, x5 |\n  x1, x3), which then serves as an imputation model for the missing data points (e.g.,\n  just sampling from p(\u03b8, x2, x4, x5 | x1, x3) and ignoring x2, x4, x5 would amount to\n  obtain an approximation to p(\u03b8 | x2, x4, x5, x1, x3)).  A more detailed and more\n  accurate discussion of this work would be essential here. The code for applying the\n  Simformer is available at https://github.com/mackelab/simformer and appears to be\n  well-documented. Ideally, it would possible to show on one of the benchmarking tasks how RISE leads to better imputation by being able to explicitly model different types of missingness, which seems to be the distinctive feature compared to the Simformer. \n\n### Choice of performance metrics\n\nThe choice of MMD and RMSE is not ideal. MMD can be misleading depending on the choice\nof kernel bandwidth (Lueckmann et al. 2021) and RMSE seems to measure accurate parameter\ndiscovery, although posteriors do not have to be centered on the true parameters at all.\nI suggest the following\n- In addition to MMD, calculate **C2ST** as well as it gives an absolut and interpretable and not just a relative comparison to reference posteriors. \n- instead of RMSE, calculate the the **nominal log posterior probability**, i.e., obtaining the NPE posterior for each x in the test set,\nand then averaging in the log probs of the corresponding thetas (as done in Papamakarios\net al. 2019, Greenberg et al. 2019, and discussed in detail in Lueckmann et al. 2021). The log nominal density, when averaged over many test data points, is a relative comparison metric of posterior accuracy. This would be more appropriate than using RMSE because it measures posterior accuracy and not just parameter discovery accuracy. \n\nAdditionally, it would be good to also evaluate the calibration properties of the\ninferred posteriors, e.g., by calculating the SBC or expected coverage, at least on the\nfour benchmarking tasks. This will show how well-calibrated the different methods are.\n\n### Discussion of data and computational requirements\n\nIt would be essential to give more details on how the training data set for RISE is\nconstructed. Given the large number of additional NN parameters required for training\nthe imputation model, I would expect that RISE needs more simulations for training\ncompared to naive imputation or NPE-NN. Concretely, how many simulations where used for training RISE, or more generally, what are the simulation budgets used for the different benchmark tasks and methods?\n\nSame for the computational resources. How much more effort in terms of data and\nresources does the user have to put in in order to use RISE? It would be good for the reader to see comparisons of training time and memory usage of the different methods."
+            },
+            "questions": {
+                "value": "What are the simulation budgets used for the different benchmarks and methods?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper emphasizes the problem of missing data in simulation-based inference (SBI) and proposes to learn a latent variable model of the predictive imputation distribution . This problem has a long-standing tradition in statistics and probabilistic modeling and extends way beyond SBI. However, it has received relatively little attention in the SBI literature, one reason being that simple data augmentation approaches are sufficient in most cases. The main value of the paper lies in the generality of the proposed method, which is clearly justified and well motivated."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is clearly written and easy to follow; it can be appreciated by both readers familiar with SBI and newcomers to the field. It addresses an important practical problem and is of interest to the community.\n\n- The joint training of a posterior surrogate and latent variable missing data model is original, quite general, and useful for SBI applications where the simulator is cheap to run.\n\n- The evaluation features a variety of different models (even though the selected four SBI benchmarks are rather uninteresting and not specifically designed to assess the impact of missingness)."
+            },
+            "weaknesses": {
+                "value": "*Major points*\n\n- The first contribution, namely, the \u201cformalization\u201d of the problem in SBI, is a bit of a stretch, as it is simply the standard missing data setting (i.e., equations 2\u20133 are not specific to approximate posteriors obtained via SBI). Propositions 1 and 2 are straightforward, and there is some notational confusion which may lead one to think that $x_{obs}$ is the real (non-simulated) data, while it is just a partition of the simulated data. Why not simply write the expectation as running over the augmented joint model $p(x_{miss}, x_{obs},\\theta)$ in Proposition 2?\n\n- The method is somewhat of an overkill for simple data, such as the 1D Ricker model used to pitch it, where the bias can easily be eliminated via data augmentation and a missingness mask provided as an additional input to the network. The demonstration in Figure 1 is simply bad practice and an example of model misspecification, as the networks have never seen imputed values during training. The work by Wang et al. (2024) is also somewhat misrepresented in the current paper, as they do not simply impute the data with constant values but use data augmentation and a mask indicator, which can be a much more efficient, albeit less sophisticated, approach for simpler cases (e.g., MCAR / MAR) [see also point on potential difficulties in learning the imputation model). \n\n- The paper lacks key ablation studies demonstrating the impact of a bad $p(x_{miss}\u2223x_{obs})$ model. I assume such a model will lead to unreasonable variance inflation of the posterior and hence miscalibration (see next point). The authors themselves acknowledge that \u201clearning the imputation model correctly is central to RISE\u2019s performance,\u201d so it seems paramount to quantify the impact of approximation error in $p(x_{miss}\u2223x_{obs})$.\n\n- It is important to add calibration error as an additional, practically relevant coverage metric to all experiments, besides simply looking at MMD and Bayes RMSE. I suspect\u2014and am open to being proven wrong\u2014that difficulties in learning $p(x_{miss}\u2223x_{obs})$ will result in rather poor calibration, which can easily go undetected by RMSE or MMD (values are heavily kernel-dependent).\n\n*Minor points*\n\n- The notation needs some polishing, e.g., bold font is used for data vectors, but parameter vectors are not bold. On a related note, I believe it would be informative to introduce precise notation for sequences of vectors vs. vectors and focus the discussion on sequences, since, e.g., missing points in set-based data can be trivially handled by summarizing the reduced set, whereas missing points in temporal or spatiotemporal data present a real challenge.\n\n- Some citations have inaccuracies, e.g., Gloeckler et al. is not an arxiv paper but an ICML paper, Radev et al. (2022) should be Radev et al. (2020), and so on.\n\n- It would be nice for **Algorithm 1** to illustrate that the method results in an ensemble of posteriors (i.e., one for each sample from the imputation model) and that this ensemble uncertainty is integrated out for inference.\n\n- I could not find any details on simulation budgets for the experiments. It would be nice to quantify performance as a function of simulation budget in at least one of the experiments."
+            },
+            "questions": {
+                "value": "- What are the benefits of learning a latent variable model for the predictive missing data distribution instead of directly parameterizing it using another flexible generative network (e.g., a diffusion model)?\n\n- What is M in equation 7?\n\n- What are the error bars computed over in Figures 3 and 5?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the problem of missing data in simulation-based inference (SBI). The authors formalize how missing data can introduce bias into SBI posterior estimates when naive imputation methods are used. They propose RISE (Robust Inference under imputed SimulatEd data) to tackle this issue. This novel method jointly learns an imputation model and an inference network within a neural posterior estimation (NPE) framework. The imputation model is based on neural processes, allowing RISE to handle different missingness mechanisms (MCAR, MAR, MNAR). The method is amortized and can be generalized across varying levels of missingness. Extensive experiments on SBI benchmarks demonstrate that RISE outperforms baseline methods in inference and imputation tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- **Contribution**: The paper tackles a significant and underexplored problem in SBI\u2014handling missing data\u2014and provides a novel solution by jointly learning imputation and inference models.\n\n- **Theoretical foundation**: The authors provide a formal analysis showing how naive imputation leads to biased posterior estimates, strengthening the motivation for their method. The cases for MNAR, MAR, and MCAR have been nicely formalized. The simplification of $\\mathcal{L}\\_{RISE}$ by $\\mathcal{L}\\_{NPE}$ in Proposition 2 is particularly convenient.\n\n- **Amortization**: The method can generalize across varying levels of missing data (RISE-Meta), making it practical for real-world applications."
+            },
+            "weaknesses": {
+                "value": "- **Clarity of presentation**: Some parts, particularly the mathematical formulations and explanations of the method, could be clearer. For instance, in Section 1 (Introduction), the authors refer to Figure 1, which has the axes $\\theta_{1}$ and $\\theta_{2}$ but only in Section 2 (Preliminaries) define what $\\theta$ is.\n\n- **Literature for handling missing values is limited**: While the literature review mentions prominent methods for handling missing values from the deep learning literature, such as GAIN [1], more traditional and frequently used techniques have been excluded. For example, the authors could have compared their methods or, at the very least, acknowledged imputation techniques such as expectation-maximization (EM) found even in the deep learning literature [2] and other traditional approaches such as MICE [3].\n\n- **Computational efficiency**: The paper does not provide a detailed analysis of the computational cost of RISE. This is especially true because the paper uses normalizing flows, which can be computationally expensive. Given the added complexity of jointly learning the imputation model and the inference network, it would be useful to understand the trade-offs.\n\n- **Some important limitations, such as the Gaussian assumption, have not been highlighted**: Even though the authors mention in line 255 that the Gaussian assumption does not limit the expressivity, this is still a limitation that has to be clearly highlighted. The argument for infinite mixtures may be valid theoretically but computationally infeasible. This is especially true as the authors mention in line 476 that the credibility of the posterior estimates needs to be further examined, which is directly impacted by the normality assumption.\n\n- **Source code for reproduction**: It would have been good to have the source code available for a more careful examination and reproduction of the results.\n\n### References:\n\n- [1] https://proceedings.mlr.press/v80/yoon18a\n- [2] https://proceedings.neurips.cc/paper/2018/hash/411ae1bf081d1674ca6091f8c59a266f-Abstract.html\n- [3] https://www.jstatsoft.org/article/view/v045i03"
+            },
+            "questions": {
+                "value": "- **Confusion in the contributions**: As mentioned above, in line 84, the most important contribution of the paper is that the proposed method is 'robust' to shift in the posterior distributions, but at the same time, the authors mention that the credibility of the posterior estimate after imputation remains an area for exploration. This seems contradictory. Can the authors clarify this point?\n\n- **Discussion of possible alternatives**: Why not use the EM algorithm?\n\n- **Extension to multiple observations**: I didn't quite understand if RISE can be extended to handle multiple observed data points per parameter setting. If so, what modifications would be necessary?\n\n- **Small remark on the structure of Section 5**: I initially missed the referred datasets. Is it because you once showed the SBI benchmarks and the other datasets (Adrenergic and Kinase)? Section 5 was structured confusingly; I recommend restructuring it or adding a small paragraph before *performance metrics*  to more clearly explain the section structure for the datasets.\n\n- **Sensitivity to neural process architecture**: How sensitive is the performance of RISE to the choice of neural process architecture and hyperparameters? Have the authors conducted ablation studies on this aspect?\n\n- **Computational efficiency**: Can the authors provide insights into the computational complexity of RISE compared to baseline methods? How does training time scale with data dimensionality and missingness levels?\n\n- **Handling model misspecification**: While the paper assumes a well-specified simulator, how would RISE perform under model misspecification? Can the method be adapted to account for this?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper explores the challenge of SBI under conditions of missing data and introduces a novel method named RISE. By integrating Neural Posterior Estimation (NPE) with neural processes, RISE effectively tackles the problem of missing data. Experimental results show that RISE offers a more robust posterior estimation than other imputation methods across varying levels of missingness."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This work presents the RISE method, which innovatively combines data imputation and neural posterior estimation to address the issue of missing data in SBI. This combination is novel within the SBI domain. The authors have validated the effectiveness of the method using multiple benchmark models and real-world datasets under various experimental settings. The paper is well-organized and the figures are easy for readers to understand."
+            },
+            "weaknesses": {
+                "value": "1. Reporting of Benchmark Metrics:\n\nThe authors report only MMD and RMSE as performance metrics. However, additional metrics commonly used in SBI literature or benchmarks [1] would provide a more comprehensive evaluation. For example, metrics like the negative log probability of true parameters (to assess the density of true parameters $\\theta$ within the approximate posterior), median distances (to evaluate the distance between samples generated from $\\theta$ under the approximate posterior and observations), and Classifier 2-Sample Tests (C2ST, to measure the closeness between approximate and true posteriors) are not included in this paper. C2ST is sensitive to subtle differences between distributions in high-dimensional spaces, potentially revealing nuances that MMD may miss due to kernel dependence [2]. \n\nTo enhance the robustness and comprehensiveness of the evaluation, I recommend the authors include C2ST as an additional metric.\n\n2. Comparisons to NPE-Zero and NPE-Mean:\n\nThe RISE method is compared with NPE-Zero and NPE-Mean methods, which fill missing inputs using zeros or sample means (Line 48, 323). These two imputation strategies are overly simplistic and introduce significant bias (as seen in Figure 1.(c)), resulting in biased posterior distributions. For a more rigorous comparison, it may be helpful to add a baseline such as Gloeckler et al. (2024) under the MCAR cases (Line 289).\n\n3. Choice of Conditional Density Estimator:\n\nFor the conditional density estimator, the authors do not use the Neural Spline Flows (NSFs) structure [3] employed in the SBI library. The NSFs is more performant and flexible than MAFs and has been widely used for SBI tasks in recent works [1, 4, 5, 6]. It would be helpful if the authors provided a rationale for selecting MAFs over NSFs or included an ablation study comparing RISE performance using MAFs and NSFs.\n\n---\n[1]. Lueckmann, et al. \"Benchmarking simulation-based inference.\" 2021.\n\n[2]. Bischoff, et al. \"A practical guide to statistical distances for evaluating generative models in science.\" 2024.\n\n[3]. Durkan, et al. \"Neural spline flows.\" 2019.\n\n[4]. Deistler, et al. \"Truncated proposals for scalable and hassle-free simulation-based inference.\" 2022.\n\n[5]. Kelly, et al. \"Misspecification-robust sequential neural likelihood.\" 2023.\n\n[6]. Ward, et al. \"Robust neural posterior estimation and statistical model criticism.\" 2022."
+            },
+            "questions": {
+                "value": "1. The RISE loss function (Eq. (5)) includes two parts: $\\hat{p_\\varphi} $ to generate $x_{mis}$ given $x_{obs}$, and $q_\\phi$ to generate $\\theta$ given $x_{obs}$ and $x_{mis}$. Can these two parts be trained separately? Alternatively, is it possible to train a flow directly from $x_{obs}$ or $(x_{obs}, c_{obs})$ to $\\theta$?\n\n2. (For Weaknesses 2): In Line 289, the authors mention that the method proposed by Gloeckler et al. (2024) is unequipped to handle MAR and MNAR cases. Why not compare this method with RISE under MCAR cases?\n\n3. (For Weaknesses 2): Could the authors include additional illustrations to show how the summary statistics produced by their data imputation method deviate from the true statistics, similar to what is shown in Figure 1.(c)? I believe this would help clarify why the RISE method reduces posterior bias."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes an approach to deal with missing data in the simulation-based inference (SBI) setting. In SBI, parameters are to be inferred for a model with an intractable likelihood function. The authors propose an imputation approach utilising latent neural processes, in which parameters of the neural process and the posterior estimator are jointly optimised. The resulting method (RISE) is compared against alternative approaches on a number of problems showing good performance in terms of MMD and RSME."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper addresses are timely, relevant topic.\n- Motivation and approach are clearly laid out.\n- The evaluation spans statistical problems and real world data sets.\n- RISE outperforms baselines on problems considered."
+            },
+            "weaknesses": {
+                "value": "- Some comparisons are missing, see questions for details.\n- HH example would benefit from quantitative evaluation.\n- Previous literature could be cited more accurately, some examples:\n  - L46: See also Lueckmann et al. (2017) where NN-based imputation for SBI was used.\n  - L50: Citing Radev et al. (2022) for NPE seems out of place, consider crediting NPE to Papamakarios and Murray (2016) and subsequent work based on it.\n  - L206: The VAE paper was published in 2013, not 2022."
+            },
+            "questions": {
+                "value": "- Have you considered running simulation-based calibration to check posteriors after imputation? This would allow going beyond the qualitative analysis on the HH example.\n- How does NPE-NN perform on the HH example?\n- What are meta-learning results for the remaining statistical problems (Ricker, OUP)?\n- How does RISE compare against the method by Gloeckner et al. for MCAR cases?\n- Are posterior distributions for all statistical examples unimodal?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors provide a method that aims to simultaneously learn an imputation model, alongside a posterior approximation, under an assumed missing data distribution. They fit both models by minimizing the forward KL divergence using samples generated from the assumed models joint distribution (including both missingness and the simulator component). A neural process model is used for imputation, and a masked autoregressive flow for the inference component."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper addresses handling missing data simulation-based inference , which is common problem in fields like astrophysics. The experiments include reasonable examples and the results seem to be good. The method is well motivated by including a probabilistic model over the missingness. Overall the paper is clear and well structured."
+            },
+            "weaknesses": {
+                "value": "There were a few substantial issues which I feel would need to be addressed. \n\n- From the onset, the paper should make it clear that we are interested in either the case where we have multiple observations, or expect multiple observations, so wish to maintain an amortized estimator. Otherwise, we can simply remove the missing indices from the simulated output, training the posterior estimate only on the observed sites. The examples unfortunately also focus on the single observation setting. \n\n- The review of previous work is not sufficiently thorough. For example, the authors state \"the latter problem of missing data in SBI has received little to no attention. The only exception is the work of Wang et al. (2024)\". A quick search pointed me some other examples https://arxiv.org/abs/2211.03747, https://iopscience.iop.org/article/10.3847/2041-8213/ace361/meta. The summary of Wang et al. (2024) is further very poor, and perhaps should at least mention the use of training the NPE model using augmented simulations with artificially missing values, alongside a missing indicator variable. It is not clearly justified why this approach is a bad idea, especially for flexible neural network conditioning models used in normalizing flows.\n\n- In my opinion, the notation with $x_{obs}$ is likely to confuse some readers, e.g. as it is used to refer to the subset of simulated data which is not missing in the observed data, not the observed data itself.\n\n- The title itself I would argue is too broad, closer to describing an area of research, rather than being informative to the presented method.\n\n- At least from the objective described in equation 5, I can see no reason to think joint training provides any benefits. The expectation is taken over a fixed distribution, and each model (inference/imputation model) has disjoint parameter sets. From my understanding you could separate the objective into two independent objectives, and expect very similar results, if not identical results, depending on the optimizer.\n\n- No code has been provided to the reviewers."
+            },
+            "questions": {
+                "value": "Does NPE-Mean and NPE-Zero refer to imputing only after training the NPE model? If so, I think it would be better to compare to methods  listed in Wang et al. (2024), which ensure the inference model learns to approximate the posterior using missing data during training. Otherwise, we are simply relying on neural networks to generalize to possibly out of distribution points, which is in my opinion not a fair comparison.\n\nWhy might the \"joint\" training procedure be useful? Have I missinterpreted the fact the objective could be partitioned into two independent objectives?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

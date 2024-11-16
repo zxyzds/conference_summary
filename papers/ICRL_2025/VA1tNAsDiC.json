@@ -1,0 +1,196 @@
+{
+    "id": "VA1tNAsDiC",
+    "title": "Best Possible Q-Learning",
+    "abstract": "Fully decentralized learning, where the global information, \\textit{i.e.}, the actions of other agents, is inaccessible, is a fundamental challenge in cooperative multi-agent reinforcement learning. However, the convergence and optimality of most decentralized algorithms are not theoretically guaranteed, since the transition probabilities are non-stationary as all agents are updating policies simultaneously. To tackle this challenge, we propose \\textit{best possible operator}, a novel decentralized operator, and prove that the policies of cooperative agents will converge to the optimal joint policy if each agent independently updates its individual state-action value by the operator when there is only one optimal joint policy. Further, to make the update more efficient and practical, we simplify the operator and prove that the convergence and optimality still hold with the simplified one. By instantiating the simplified operator, the derived fully decentralized algorithm, \\textit{best possible Q-learning} (BQL), does not suffer from non-stationarity. Empirically, we show that BQL achieves remarkable improvement over baselines in a variety of cooperative multi-agent tasks.",
+    "keywords": [
+        "reinforcement learning",
+        "multi-agent reinforcement learning"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "",
+    "creation_date": "2024-09-24",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=VA1tNAsDiC",
+    "pdf_link": "https://openreview.net/pdf?id=VA1tNAsDiC",
+    "comments": [
+        {
+            "comment": {
+                "value": "Thanks for pointing out this related work. We will add it into the revision. There are two significant difference between our work and the citation:\n\n1. We propose a novel algorithm BQL for the convergence and optimality in decentralized MARL, while the citation only provides the analysis of global optimality gap in IQL. \n\n2. The citation proves that IQL cannot guarantee the optimality, where the optimality gap is bounded by dependence level, which describes the influence between agents. It is straightforward to understand that the large dependence level  leads to large optimality gap. However, BQL can guarantee the optimality regardless of the dependence level."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for the detailed response. The missing citation is the following:\n\n[1] Jin, Ruiyang, et al. \"Approximate Global Convergence of Independent Learning in Multi-Agent Systems.\" arXiv preprint arXiv:2405.19811 (2024)."
+            }
+        },
+        {
+            "comment": {
+                "value": "> The observation of the global state can be a strong assumption.\n\nTo the best of our knowledge, BQL is the first method to guarantee the convergence and optimality on the global state in decentralized MARL, other baselines even cannot guarantee the optimality on the global state. \n\n> The uniqueness of the joint optimal policy can also be strong.\n\nWhether the optimality can be guaranteed with multiple optimal policies in decentralized MARL is still an open problem. To the best of our knowledge, no method can theoretically solve this problem in fully decentralized settings. In Appendix D, we have discussed how to deal with the case with multiple optimal policies.\n\n> How is eq (4) obtained?\n\nEq(3) does not require $a = \\pi^*(s)$, but describes the optimal value given any $a$. (4) is from taking $\\max_{a_{-i}}$ on both sides of (3) so it does not require $a_i = a_i^*$.\n\n> In the case of there exists only one optimal policy, why is it deterministic? \n\nPuterman's book says that there exists at least one deterministic optimal policy in an MDP, so if there exists only one optimal policy, this policy must be deterministic.\n\n> In the proof of Lemma 4, the convergence is based on the fact that the optimal kernel is chosen during updating. What if the kernel is never chosen?\n\nIn tabular cases, it is easy to sample all kernels. Any kernel can be chosen so the optimal kernel will be chosen.\n\n> When only deterministic policies are considered, the set of all possible kernels is finite, making Q3 a bit reasonable. But what if random policies are also considered?\n\nThere exists at least one deterministic optimal policy in an MDP, so we only need to consider the deterministic policies. Especially when there is only a unique optimal policy, stochastic policies must not be optimal."
+            }
+        },
+        {
+            "comment": {
+                "value": ">Scalability\n\nFirst, we have to argue that the complexity converging the optimum in fully decentralized MARL is high. The complexity exponentially grows as the number of agents increases, **so any algorithm for fully decentralized MARL must have exponential complexity**.  Second, in neural network implementation, we only maintain one replay buffer for each agent, without explicitly storing $P(\\cdot|s, a_i a_{-i})$ or searching over all possible $\\pi_{-i}$. So the sample collection of BQL is consistent with other baselines. Third, in Figure 3(d), BQL can achieve significant performance improvement when the agent number is large (17 agents), which shows the scalability of BQL is better than other baselines. Last, the aim of (7) is not to reduce the search time, but for the convenience of neural network implementation. The operator (6) has the same complexity as the simplified version (7,8), but the operator (6) cannot be written as a loss function for a neural network because each agent has to compute the expected values of all possible transition probabilities. \n\n> A closely related work [1] deals with theoretical convergence of independent Q-learning. Please provide comparison with the work in sense that how the setting is different, and pros and cons.\n\nSorry, but the citation [1] seems to be missed.\n\n> In Lemma 1, why do we need the condition of existence of only one optimal policy?\n\nWithout this condition, BQL can still converge to the optimal value but does not know how to select the optimal joint action. Look at the matrix game in Figure 11, there are two optimal policies (1,2) and (2,1). For each agent, actions 1 and 2 have the same highest optimal learned value. If each agent arbitrarily selects one of the optimal independent actions, the selected joint action might not be optimal (policy (1,1)). We have discussed the problem of multiple optimal policies in Appendix D.\n\n> In Section 2.4, $S^m_i$ has not been explained previously.\n\nWe have claimed that $S^m_i$ is a subset of states randomly selected by agent $i$ at the epoch $m$ at line 238."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for reviewing our paper. We will carefully address your questions.\n\n> It can be restrictive to assume there is only a unique optimal policy. How does the proposed algorithm perform when there are multiple optimal policies?\n\nIn Appendix D, we have discussed how to deal with the case with multiple optimal policies and provided a one-stage matrix game in Figure 11. BQL can select coordinated actions, though the value gap between the optimal policy and suboptimal policy is so small.\n\n> Can the authors provide explicit theorems and proofs for the convergence and optimality of BQL for both the tabular case and the neural network case?\n\nWe have proven the convergence and optimality of tabular case. The convergence of Q-learning cannot be guaranteed in function approximation methods, e.g., DQN with a neural network, as shown in (https://arxiv.org/pdf/1903.08894)."
+            }
+        },
+        {
+            "comment": {
+                "value": "> Surely the claim of global optimality in line 62 is restricted to tabular cases, right? Please clarify the setting in which this claim is valid.\n\nIn the Q-learning field, all discussions of convergence and optimality of are based on tabular cases since the convergence of Q-learning cannot be guaranteed in neural network approximation, as shown in (https://arxiv.org/pdf/1903.08894).\n\n> Why can\u2019t we treat all agents as one \u201csuper agent\u201d whose action space is the product space of the individual agents? At the very least, the authors should provide a reference for the statement of non-convergence on line 87\n\nIn fully decentralized  MARL, each agent does not know other agents' action space, so the action space cannot be the product space of the individual agents. The non-convergence of IQL (line 87) is common knowledge and is discussed in all related work listed.\n\n> I do not follow the step from line 142 to line 144. Is it generally true that max_x f(x) - max_x g(x) \\ge f(x\u2019) - g(x\u2019) for a generic x\u2019 (here, x\u2019 is analogous to a_i^{\u2018*})? I can certainly find counterexamples in general, so what is special about this case which admits this inequality? \n\n$\\max_x f(x) - \\max_x g(x) \\ge f(x\u2019) - g(x\u2019)$ where $g(x\u2019) = \\max_x g(x)$. Since $\\max_x f(x)$ is the max of $f(x)$, $\\max_x f(x) \\ge any f(x\u2019)$. How to build the counterexamples?\n\n> I am not clear on why we need to \u201cexplore\u201d all state/action pairs with a deterministic policy (looking at line 236). Can\u2019t we just enumerate them in a tabular problem? Please explain why the exploration is needed and enumeration does not suffice.\n\nOf course, we can enumerate them. Enumeration is a special case of exploration. Our algorithm shows how to explore them if enumeration is not allowed."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper considers decentralized training decentralized play for multi-agent reinforcement learning. A fully decentralized learning is proposed based on a best possible operator proposed in this paper. Though this operator is computationally expensive, it leads to convergence despite the nonstationarity caused by other players. A simplified operator is also proposed and the convergence and optimality based on this simplified operator is also provided. Simulation results demonstrate the performance of the proposed algorithm."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is quite novel and original since it proposed a novel operator to enable convergence despite the nonstationary environment caused by other players in a decentralized multi-agent and stochastic setting. \n2. The paper is very well written. The algorithm is explained clearly and the simulation results are easy to follow.\n3. The results are significant since it addressed a long lasting open question on MARL."
+            },
+            "weaknesses": {
+                "value": "1. It can be restrictive to assume there is only a unique optimal policy. How does the proposed algorithm perform when there are multiple optimal policies?\n\n2. Can the authors provide explicit theorems and proofs for the convergence and optimality of BQL  for both the tabular case and the neural network case?"
+            },
+            "questions": {
+                "value": "See above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies decentralized multi-agent Q-learning where every agents share the same state and observes only local action. Resolving non-stationary due to the joint-policy, it is difficult to establish convergence of to a joint optimal policy is an important problem in MARL. The authors propose a best-possible operator, which basically solves the joint opitmal Bellman equation for $i$-th agent:\n$$   Q^i(s,a_i)=\\max_{a_{-i}}\\mathbb{E}_{s^{\\prime}\\sim P(\\cdot\\mid s,a_i,a_{-i} )}[r+\\gamma Q^i(s,a_i)].$$\nThe authors solve the above equation in decentralized manner, and its extension to practical algorithm is studied."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The authors proposed a new decentralized algorithm that could give new insights into the community. Even though the proposed algorithm has limitations, finding a global joint optimal policy in a decentralized manner seems to be a contribution.\n\n2. The overall experimental result seems positive. It shows better or comparable results to existing ones including MA2QL, I2Q, H-IQL, IQL."
+            },
+            "weaknesses": {
+                "value": "1. The memory space to store $P(\\cdot\\mid s,a_i,a_{-i})$ requires at least $O(|\\mathcal{A}_{-i}|)$ space, which scales exponentially at the order of each action space. This makes the algorithm difficult to scale as number of agents increase. If we use function approximation, or somewhat similar methods to reduce this problem, will the arguments of this paper be still valid?\n\n2. The search over all possible $\\pi_{-i}(a_{-i},s)$ for evert state $s$ and $i$ seems to be quite a burden. It at least requires $N \\prod_i |\\mathcal{A}_i|$, which scale exponentially due to the joint action space. Even though the authors proposed a version in (7) to reduce the search time, I do not think this gives a meaningful cut in the search time in theoretical sense. Can the authors provide theoretical advantage in terms of search time for the proposed method?\n\n3. A closely related work [1] deals with theoretical convergence of independent Q-learning. Please provide comparison with the work in sense that how the setting is different, and pros and cons.\n\n\n4. The algorithm does not seem to be scalable."
+            },
+            "questions": {
+                "value": "1. In Lemma 1, why do we need the condition of existence of only one optimal policy?\n\n2. There is typo in the caption of Figure 3 : \"Mojoco\"->\"Mujoco\".\n\n3.  In Section 2.4, $S^m_i$ has not been explained previously."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a new take on decentralized Q-learning, in which each agent (independently) updates its value function by pretending that the other agents act optimally with respect to its current estimate of the value function. A simplification of this procedure is proposed which the authors show also leads to desirable convergence properties. Experiments contrast the proposed method with relevant baselines."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The main idea of having each agent \u201cimagine\u201d a best-case scenario of what the other agents do is a very clean way to synchronize the independent Q-learning approach which could otherwise fail to converge. \n* For the most part, the proofs are logical and easy to follow. (See question below.)"
+            },
+            "weaknesses": {
+                "value": "* Some syntax errors on line 70: no whitespace after \u201cMDP\u201d and also the <> symbols should probably be () for a tuple as is standard in the MDP literature.\n* Many instances of grammatical issues, e.g. missing \u201cthe\u201d in a sentence.\n* The simplified operator seems like it will be egregiously inefficient, particularly in larger state/action spaces. Isn\u2019t it effectively just random search?\n* The sentence \u201cbut the converged equilibrium may not be the optimal one when there are multiple Nash equilibria\u201d on line 322 only makes sense in (a) games where agents share a common objective \u2014 otherwise what is the measure of optimal \u2014 and (b) is not really a critique for non-convex games where methods would only at best be able to find local equilibria and there is no good way to find the \u201cbest\u201d such equilibrium. Similar comment for the statement about Hysteretic IQL on line 325. \n* \u201cslow learning rate to the value punishment\u201d on line 324 must be a typo of some kind\n* \u201cusing mean and standard\u201d on line 345 is a typo\n* \u201caction space of each agent is 4\u201d -> another typo on line 351\n* More details should be provided about the distribution from which transition kernels and reward functions are sampled (cf line 354). Depending on the variance of these distributions, using only 20 samples could easily give a very poor statistical estimate of performance. Since the standard deviations look fairly small (at least in Figure 1), I am guessing that these distributions are fairly well structured. It would be useful to understand that structure so as to better appreciate the testing scenario and results.\n* \u201cstd\u201d on line 356 should be spelled out\n* I do not follow all the issues that are being discussed in the paragraph ending on line 374. This discussion should be substantially rewritten for clarity.\n* \u201cwildly adopted\u201d -> typo on line 301. I presume it should be \u201cwidely\u201d but if that is the case, why is there only one reference here?\n* \u201cMPE\u201d is not defined anywhere as far as I can remember. Cf. line 341 and section 4.2. From the description in section 4.2, this is not actually a differential game since time is not a continuous variable. Cf. the standard texts by Rufus Isaacs and Tamer Basar & Geert Olsder. The proper term would be \u201cdynamic game,\u201d which includes discrete-time problems.\n* \u201cIn continuous environments, BQL and baselines are built on DDPG.\u201d (Line 428) -> this should be explained far more carefully so that readers can appreciate how this choice influences the results\n* In Figure 2, the results are not easily interpretable due to the color choices being so similar for the confidence intervals, and the intervals themselves being so wide for some methods. \n* All of the subfigure captions in Figures 3-5 are confusing. Without clear explanations of every single experiment, results are impossible to interpret and certainly cannot be trusted by a serious reader. \n    * Some of the descriptions of these subfigures in section 4.4 even make it sound like these are tasks where different agents have different objectives; clearly that does not conform to the present paper setting, so something is additionally confusing here."
+            },
+            "questions": {
+                "value": "* Surely the claim of global optimality in line 62 is restricted to tabular cases, right? Such broad claims should be avoided (unless somehow they are true) in order to ensure the work is not misunderstood by a casual reader. Please clarify the setting in which this claim is valid.\n* Why can\u2019t we treat all agents as one \u201csuper agent\u201d whose action space is the product space of the individual agents, and conclude that because (tabular) Q learning would converge for the \u201csuper agent,\u201d it will also for the individual Q learners? If we did value iteration instead of Q learning would it work? An explanation here would probably not depend upon (non)stationarity arguments, I think. At the very least, the authors should provide a reference for the statement of non-convergence on line 87.\n* I do not follow the step from line 142 to line 144. Is it generally true that max_x f(x) - max_x g(x) \\ge f(x\u2019) - g(x\u2019) for a generic x\u2019 (here, x\u2019 is analogous to a_i^{\u2018*})? I can certainly find counterexamples in general, so what is special about this case which admits this inequality? Please explain what is going on here more carefully.\n* I am not clear on why we need to \u201cexplore\u201d all state/action pairs with a deterministic policy (looking at line 236). Can\u2019t we just enumerate them in a tabular problem? Please explain why the exploration is needed and enumeration does not suffice.\n    * This relates to the italicized sentence at the end of section 2."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies multi agent RL. A best possible operator is proposed to learn the optimal joint Q function. To address the computational cost, a simplied randomized operator is proposed. Algorithm based on it is further designed and extensive experiments are developed."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The problem of MARL is definitely important. This work provide a theoretical study on it with convergence guarantees.\n2. I do appreciate the experiment part."
+            },
+            "weaknesses": {
+                "value": "1. The observation of the global state can be a strong assumption.\n2. The uniqueness of the joint optimal policy can also be strong. \n3. Since I am not familar with MARL, some statements/claims will benifit from more explanations. \n4. Some proofs are not convinced."
+            },
+            "questions": {
+                "value": "1. How is eq (4) obtained? Eq(3) holds when $a=(a_1^*,a_2^*,...,a^*_n)=\\pi^*(s)$. Now if taking the maximum of other actions, will it require to fix $a_i=a^*_i$?\n2. In the case of there exists onle one optimal policy, why is it deterministic? The Puterman's book is too large and more specific reference should be provided. It also seems to me that the Puterman's book is for single agent case mostly. \n3. In the proof of Lemma 4, the convergence is based on the fact that the optimal kernel is chosen during updating. What if the kernel is never choosen? \n4. When only deterministic policies are considered, the set of all possible kernels is finite, making Q3 a bit reasonable. But what if random policies are also considered?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

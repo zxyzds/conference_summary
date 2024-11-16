@@ -1,0 +1,167 @@
+{
+    "id": "5s1qpjrNvZ",
+    "title": "Guided Reinforcement Learning with Roll-Back",
+    "abstract": "Reinforcement learning-based solutions are increasingly being considered as strong alternatives to classical  system controllers, despite their significant sample inefficiency when learning controller tasks from scratch. Many methods that address this issue use prior task knowledge to guide the agent's learning, with several recent algorithms providing a guide policy that is sometimes chosen to execute actions instead of the learner policy. While this approach lends excellent flexibility as it allows the guide knowledge to be provided in any format, it can be challenging to decide when and for how long to use the guide agent. Current guide policy-based approaches typically choose a static guide sampling rate empirically, and do not vary it. Approaches that  transfer control use simple methods like linear decay, or require hyperparameter choices that strongly impact the performance. We show that under certain assumptions, the sampling rate of the guide policy can be calculated to guarantee that the mean return of the learning policy will surpass a user-defined performance degradation threshold. To the best of our knowledge, this is the first time a performance guarantee has been established for a\nguided RL method. We then implement a guided RL (GRL) algorithm that can make use of this sample rate, and additionally introduce a roll-back feature in guided RL with roll-back (GRL-RB) to adaptively balance the trade-off between performance degradation and rapid transfer of control to the learner. Our approach is simple to implement on top of existing algorithms, robust to hyperparameter choices, and effective in warm-starting online learning.",
+    "keywords": [
+        "reinforcement learning",
+        "guide policy",
+        "warm-start"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "Prevent performance degradation when using a guide policy to warm-start online reinforcement learning.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=5s1qpjrNvZ",
+    "pdf_link": "https://openreview.net/pdf?id=5s1qpjrNvZ",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents a guided reinforcement learning method, GRL-RB, which adaptively balances the use of the guided policy and RL agent, providing the first performance guarantee in guided RL."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. The main strength is that the paper provides a theoretical view on the selection rate of the expert policy in guided RL setup, which is important and novel."
+            },
+            "weaknesses": {
+                "value": "1. The major weakness is the lack of existing baselines for this problem. For example, [1, 2] both focus on adaptively learning when to query the experts. \n2. The presentation can be improved. \n   * Line 79, the space also relates to the time step T;\n   * Line 189, the definition of 'Combination Lock MDP' can be further explained with formulas;\n   * For Figure 1,2, the same legend should use the same colours. In Figure 3, there is no legend for the expert performance.\n   * The derivations on $\\alpha$ should be explained more, regarding where it comes from and what it means. \n3. The problem seems like an on-policy/off-policy problem, and it is not clear why an offline RL baseline is considered. \n\n[1] Biedenkapp, Andr\u00e9, et al. \"TempoRL: Learning when to act.\" *International Conference on Machine Learning*. PMLR, 2021.\n[2] Schulz, Felix, et al. \"Learning When to Trust the Expert for Guided Exploration in RL.\" *ICML 2024 Workshop: Foundations of Reinforcement Learning and Control--Connections and Perspectives*."
+            },
+            "questions": {
+                "value": "See weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a sampling method that alternates actions between a guide policy (which can originate from various sources, such as model-based or imitation learning methods) and an online learning policy. The main contribution appears to be a mechanism that balances data sampling between the guide and online learning policies by adjusting a user-defined sampling rate, denoted as $\\alpha$, which is based on policy performance."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The method effectively alternates actions from expert and learning policies, enabling the learning policy to leverage its own actions, a crucial factor for self-correcting estimations. Additionally, it is notable that GRB-RL appears resilient to distribution shift following pre-training, though more extensive testing is needed to confirm this observation."
+            },
+            "weaknesses": {
+                "value": "* *Lack of novelty*: The primary drawback is limited novelty, as similar approaches that interleave actions from expert and learning policies have been previously explored. The paper acknowledges this by referencing related works and including them as baseline comparisons (e.g., [1]).\n\n* *Limited testing and baseline comparisons*: The approach was evaluated only within variants of the AntMaze environment considering high-dimensional state space environments, which limits insights into its broader applicability. Testing in more diverse environments, such as those found in Gymnasium, like Atari games or other complex benchmarks, could reveal the method's adaptability to different reward structures and exploration needs. Additionally, while the paper reviews a broad range of related works, the baseline algorithms included tend to underperform compared to simpler approaches, such as linear decay (LD) sampling. Also, it would also be interesting to assess how GRL-RB performs with varying data budgets during pre-training.\n\n* *User-defined sampling rate*: The proposed method requires a user-defined sampling rate $\\alpha$, which determines the proportion of actions sourced from the expert or the learning policy. While this flexibility can accelerate learning, it places a significant burden on the user to fine-tune $\\alpha$, which may hinder practical applicability. Prior work, such as [2], explores this trade-off and provides insights into the optimal balance of data from both sources (expert and learner) to mitigate overestimation issues. Drawing from these insights might further constrain and optimize $\\alpha$'s range.\n\n**Overall Assessment**\n\nOverall, the paper lacks novelty, a thorough baseline comparison, and diverse environment testing. The structure is sometimes difficult to follow, and I often found it necessary to consult the Appendix to clarify the role of certain variables. For future improvements, I recommend decoupling the method from its reliance on specific test environments and applying it to more complex, generalizable tasks.\n\n**General remarks**\n\n-Section 2. \u201cGuide, Learning \u2026\u201d: Can be confusing how a policy $\\pi$ is derived from an offline and online policy, since either actions are sampled from one of the previous ones. I suggest considering only policies $g$ and $l$ in the notation.\n\n-Line 201 \u201cthe new guide sampling rate\u2026\u201d the authors should distinguish between the current $\\alpha$ and the initial one used to update the former.\n\n-The authors claim throughout the text that some features, such as the \u201croll back,\u201d can, for instance, \u201cspeed up the transfer learning\u201d before showing the results or evidence to support this (see section 4). Some (important) results are mentioned in the paper but are available in the Appendix.\n\n-I think the paper would benefit from having a dedicated section to describe the baselines IQL and JSLR, and eventually any other method that could be included for comparison.\n\n**References**\n\n[1] Ikechukwu Uchendu, Ted Xiao, Yao Lu, Banghua Zhu, Mengyuan Yan, Jos\u00e9phine Simon, Matthew Bennice, Chuyuan Fu, Cong Ma, Jiantao Jiao, Sergey Levine, and Karol Hausman. 2023. Jump-start reinforcement learning. In Proceedings of the 40th International Conference on Machine Learning (ICML'23), Vol. 202. JMLR.org, Article 1439, 34556\u201334583. \n\n[2] Ostrovski, Georg, Pablo Samuel Castro, and Will Dabney. \"The difficulty of passive learning in deep reinforcement learning.\" Advances in Neural Information Processing Systems 34 (2021): 23283-23295."
+            },
+            "questions": {
+                "value": "[Q1] The authors show in section 3.2.3 a distinction between negative and positive dense rewards. What about a reward normalization such as [-1, 1]?\n\n[Q2] I wonder if tested in more environments, eventually $\\alpha$ would get stuck and not converge towards 0, even employing the roll back mechanism. Would that possibly happen?\n\n[Q3] Have you tried to contact the authors of JSLR to obtain its implementation? It seems that their main result is a combination of IQL + JSLR. Is this the way it was tested in this work? \n\n[Q4] Why not consider different amounts of data during the pre-training phase?\n\n[Q5] In G.1.2, could you clarify why you haven't employed the same parameters of the offline agent?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors identify issues in prior works dealing with guided reinforcement learning and aim to address them by deriving an adaptive guide policy sampling rate, which should enable fast & stable transfer of the guide knowledge to the learner policy, while at the same time maintaining performance above a defined maximum tolerable degradation threshold. The method is implemented on top of the commonly known IQL algorithm."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "I like the general idea of the paper & the derivation of guarantees under some (strong) assumptions are interesting on their own. To the best of my knowledge those are novel & could be helpful in some (limited) scenarios."
+            },
+            "weaknesses": {
+                "value": "Main weaknesses from my point of view:\n\n1) The empirical evaluation is not very comprehensive:\nThere are 2 experiments in the CombinationLock environment, which are nice to get an intuitive understanding of the method, however are not very realistic RL tasks. Then there are 3 experiments on Antmaze, in which the LD baseline performs similarly well as the new algorithm. As the authors motivate the method from a quite applied perspective, I am wondering whether that means that there is not much expected gain from the method in practical scenarios. Also, I believe the positive dense reward setting is derived, but not experimented with.\n\n2) The assumptions leading to the derived sampling rates appear to be violated:\nThe authors realise that in practice the assumptions they make for the derivations are violated & thus add the Roll-Back method in order to improve performance. While the derived results are of course interesting on their own, one has to ask from a practical standpoint whether deriving & using something based on wrong assumptions makes a lot of sense - especially when taking into account the not so convincing empirical evaluation.\n\n3) Slightly overstated claims:\nE.g. in lines 67-69, you talk about \"a guided RL approach, [...] with a guaranteed online performance above a user-defined threshold\". This sounds like a broad claim which I think needs to be qualified further (only mean performance is above threshold, individual episodes can be below; limited to certain reward scenarios, i.e. not for general MDP / RL; only under questionable assumptions, i.e. convergence). The authors also still talk about guarantees when the Roll-Back approach is added in (\"A GRL with a roll-back algorithm (GRL-RB) that helps to retain the performance guarantee of GRL while relaxing its assumptions\"), even though at that point it becomes clear that there is no guarantee (Roll-Back happens exactly when guarantee is violated; plots show performance can be much below threshold for a long time). Generally I think one has to be more cautious with the term guarantee, e.g. in the abstract it is formulated better.\n\n4) Limited applicability when compared to all possible reward landscapes:\nThis is not such a big issue in general since guarantees even in just a few environments would be helpful. It's also briefly mentioned by the authors in the discussion.\n\n5) I think Fig 4a might be misleading - it's not clear when something is rolled back, it just looks like violations occur in almost every step.\n\nIt may be that I am misunderstanding some issues, so I am prepared to raise my score if the points can be addressed."
+            },
+            "questions": {
+                "value": "- The evaluation sample rates in the bottom plots 1-3 don't align with what I expected, i.e. why are the percentages of the static baselines not exactly .25 & .75 (e.g. fig 2b has them below .2 & at .6)? I presume the variations (shaded region) of the baselines are the difference between true parameter and sampling? The LD baseline does not appear to really reduce alpha by the same amount every time step, why is that?\n\n- One thing I also don't understand: Why is the alpha not degraded much faster? What I mean is why is it always degraded by $(1-\\alpha_0)$ and not by $(1-\\alpha_c)$ (algo 1, line 18) - if the assumptions on convergence you make were to hold, the updated alpha should be used for the next degradation or am I missing something?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper addresses guided reinforcement learning, utilizing prior task knowledge to enhance the agent\u2019s learning process. Specifically, it proposes a dynamic sampling rate adjustment for the guide policy, referred to as GRL, along with a variant featuring a roll-back capability, called GRL-RB. The experimental results demonstrate that the proposed methods ensure user-defined performance and outperform other baseline approaches."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "-  The paper addresses the critical issue of utilizing prior task knowledge to guide the agent's learning, a significant aspect of reinforcement learning.\n- The paper provides a comprehensive introduction and overview of related work, laying a solid foundation for the proposed methods."
+            },
+            "weaknesses": {
+                "value": "Overall, the paper writing and structure needs significant improvement, making it difficult to follow the overall flow.\n- The motivation behind the proposed method and its specific details remain largely unclear. For example, in section 3, the authors mention employing a similar sampling approach to Chang et al. (2015) and Chang et al. (2023), as well as a method akin to JSRL (Uchendu et al., 2023). However, it is not clear what these methods entail or how they relate to the current work; readers should not have to refer to external papers for this information. A more detailed formal description of the proposed method should be included in the main body of the text.\n- Additionally, several components of the method lack clarity and theoretical justification. For example, the rationale behind using $n_{\\pi_l}/t$ as an additional threshold is not explained. Similarly, the reasoning for the new guide sampling rate being $\\alpha-(1-\\alpha)$ and the theoretical benefits of the roll-back mechanism are unclear. These choices appear to be made heuristically.\n- The function of Section 3.2 is also confusing. The derivation of the sampling rate relies on perfect knowledge of the \u2018Combination Lock\u2019 task and the guiding policy, which is impractical for practical tasks like the AntMaze task used in this paper. While didactic examples can illustrate theoretical guarantees, the paper lacks more general theoretical results. As it stands, Section 3.2 only suggests that the method works under special conditions that require perfect information.\n\nIn summary, while the paper claims to provide a user-defined performance guarantee, it suffers from a lack of clarity and theoretical justification. The assertion that \u201cthe assumption of convergence between steps of $\\alpha$ is key to the success of GRL\u201d raises concerns. If the \"key\" to a method relies on an assumption, the authors should reconsider the method and adopt more conservative claims."
+            },
+            "questions": {
+                "value": "See the weaknesses noted above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

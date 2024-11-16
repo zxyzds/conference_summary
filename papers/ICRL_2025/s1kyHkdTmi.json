@@ -1,0 +1,172 @@
+{
+    "id": "s1kyHkdTmi",
+    "title": "An Evolved Universal Transformer Memory",
+    "abstract": "Prior methods propose to offset the escalating costs of modern foundation models by dropping specific parts of their contexts with hand-designed rules, while attempting to preserve their original performance. We overcome this trade-off with Neural Attention Memory Models (NAMMs), introducing a learned network for memory management that improves both the performance and efficiency of transformers. We evolve NAMMs atop pre-trained transformers to provide different latent contexts focusing on the most relevant information for individual layers and attention heads. NAMMs are universally applicable to any model using self-attention as they condition exclusively on the values in the produced attention matrices. Learning NAMMs on a small set of problems, we achieve substantial performance improvements across multiple long-context benchmarks while cutting the model's input contexts up to a fraction of the original sizes. We show the generality of our conditioning enables zero-shot transfer of NAMMs trained only on language to entirely new transformer architectures even across input modalities, with their benefits carrying over to vision and reinforcement learning.",
+    "keywords": [
+        "Transformers",
+        "Evolution",
+        "Memory",
+        "KV cache",
+        "attention"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We propose a new memory system designed for transformers able to achieve performance improvements in language tasks, and zero-shot transferring to different architectures and input modalities.",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=s1kyHkdTmi",
+    "pdf_link": "https://openreview.net/pdf?id=s1kyHkdTmi",
+    "comments": [
+        {
+            "summary": {
+                "value": "They propose a learned strategy for maintaining the size of your KV cache. An auxiliary model utilizes the attention map to produce a score of how important each key-value pair is for predicting future tokens. This model is small (1-layer transformer). They train this auxiliary model using the attention maps of Llama 3 8B for long-context language tasks, but show that this auxiliary model is compatible with other models (Llama 3 70B) and can transfer to other modalities (video). The KV cache management reduces the memory of the cache, but performance does not decrease by much, sometimes improving upon using the full cache."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The algorithmic design seems sound and seems to perform well based on their results. It\u2019s interesting that the auxiliary model can then transfer to other models and modalities. I liked some of their ablation studies, such as showing that NAMM drops more tokens from later layers than earlier layers. This seems to imply that there is much more to learn from attention scores than what manually-designed algorithms do."
+            },
+            "weaknesses": {
+                "value": "There are a couple problems with the paper presentation (missing citations) + rigor of their experiments. I highly recommend that these problems are addressed for the score to be raised. \n\n\nThere are some problems with the flow of the paper due to many of the details being relegated to the Appendix. \n- The related works paragraph in the main body is a bit too short, and poses NAMM to be the first method to propose a learned black-box strategy. However, previous works already do this. For example, Pyramid-BERT [1] does exactly that, and DMC [2] proposes a continual pre-training objective. \n- Please include limitations of the method in the main body or refer to the Appendix section where you do somewhere. \n- Limitations should also address the computational complexity of this method. How slow is NAMM compared to other methods? \n- There should be an algorithm block in the main body detailing exactly how NAMM is used during inference. The written description is too vague. Especially include details such as the 512-chunking that is detailed in the Appendix. \n- There are no details of exactly how the auxiliary model is trained in the main body or the appendix, except for a sentence mentioning that the auxiliary model optimizes the performance of 3 benchmarks. Please detail the exact objective somewhere. \n\n\nWeaknesses in experiments:\n- They should report the computational complexity of NAMM, how much longer is it to do inference using NAMM versus other baselines? In other words, how expensive is it to generate scores from the auxiliary model for each attention layer? \n- A result that they particularly emphasize in this paper is that models do better on long-context benchmarks with NAMM cache management over utilizing the full KV cache. That makes sense, the auxiliary model seems to pick out the most important tokens as the aux model is _trained on long-context benchmarks itself_. However, I worry that the significance of these results is not rigorously tested and may simply be because they do not use any fine-tuning strategy to adapt the  base model to long-context tasks, as it is standard to do in practice.\n  - All the reported results apply NAMM on top of a Llama-3-8B model that they adapt to use long-context using \u201cNTK-aware positional interpolation,\u201d a zero-shot method that can be found in a Reddit post. I am not aware of the validity or the limitations of this approach. They should also apply NAMM on top of standard long-context models already out there, such as Mistral 7b with 32k context. Does NAMM still do significantly better? \n   - NAMM is only compared against L2 and H2O, but it should also compare against other finetuning strategies e.g. DMC, and strategies that also utilize the attention scores explicitly such as FastGen [3].\n- The degree to which each baseline prunes the KV cache varies significantly, so it is hard to tell whether NAMM has better performance on benchmarks simply because it does not prune the cache to the degree the other baselines do. It would be good to actually control the hyperparameters of each method, such as the threshold at which a key-value pair is pruned, such that performance between methods is compared for some fixed cache size. Ideally, there should be a plot depicting this with x axis as cache size and y axis as performance. \n\n\n1. Pyramid-BERT: Reducing Complexity via Successive Core-set based Token Selection https://arxiv.org/pdf/2203.14380\n2. Dynamic Memory Compression: Retrofitting LLMs for Accelerated Inference \n3. Suyu Ge,  et al.   Model tells you what to discard:  Adaptive KV cache compression for LLMs."
+            },
+            "questions": {
+                "value": "1. Paper seems to imply they transform the attention map after applying the causal mask. Is this true? If so, what is STFT doing exactly? Is it doing anything meaningful? \n2. How important is it to use the  fourier transformation to the signals instead of the original attention map?\n3. I found the intuition for the gradient analysis section fairly confusing, and I am not sure what the takeaway is or why the quantities they measure matter. I wish this was better motivated, or it could be moved to the Appendix."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Transformers are known to suffer from quadratic memory blow-ups. This paper attempts to make Transformers more efficient by using Neural Attention Memory Models (NAMMs). This involves pruning the KV cache memory using NAMMs."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The idea behind the contribution is simple and easy to understand.\n2. NAMMs can be zero-shot transferred to other Transformers, which is quite interesting.\n3. The benchmarks are diverse (but not comprehensive as discussed in weakness 2)."
+            },
+            "weaknesses": {
+                "value": "1. Pruning is lossy, meaning that it results in losing some of the information in the KV cache memory. For example, during the pruning process, you may very well discard information that the model could have found useful later on.\n2. KV cache memory pruning (more broadly KV cache management) has been investigated in the last couple of years, and while the authors compare against some of them, like H2O and L2, they do not discuss or compare against some of the other relevant work. Some of the relevant work (in language modelling) include:\n   - Model Tells You What to Discard: Adaptive KV Cache Compression for LLMs, ICLR 2024\n   - CacheGen: KV Cache Compression and Streaming for Fast Large Language Model Serving, SIGCOMM 2024\n\nI appreciate that comparing against so many related works can be cumbersome. However, it is crucial that the authors discuss the related work and either compare their work against them or discuss why they are not comparable."
+            },
+            "questions": {
+                "value": "Please see the weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes Neural Attention Memory Models (NAMMs), a network learned via evolution (CMA-ES) that can be applied to Transformers, reducing the number of tokens needed (KV-cache) at inference time. \nResults show that NAMMs outperform recent methods for pruning the KV-cache and occasionally improves the performance of the base model."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The performance gains using NAMMs over H2O are significant. \n\nImproving the performance using NAMMs over the base model is impressive."
+            },
+            "weaknesses": {
+                "value": "H2O has some advantages over NAMMs. Notably, H2O does not require any new training. In contrast, NAMMs are trained using evolution. As such, NAMMs may require significantly more compute. The paper, however, lacks information regarding the computational resources needed by the method.\n\nFurthermore, in practice, we care about the cache size and inference computational complexity. It is unclear how (1) the performance of NAMMs fare when varying the cache size and (2) the complexity (runtime and memory) of applying NAMMs at inference time.\n\nSeveral details are missing to understand if the idea will generalize to other models. In this paper, only Llama 3 8B was considered. However, in contrast, the H2O paper considered several architectures (e.g., OPT,\nLLaMA, and GPT-NeoX), showing their idea generalizes across architectures. However, in this case, it's unclear how NAMMs performance will generalize across different language models. \n\nThe results on Decision Transformer (DT) are odd considering that several papers (e.g., the original DT and Online DT papers) showed results that are significantly better than what is reported in Table 7. \n\nBenchmarks in the paper are mentioned by name (e.g., Long Bench, InfiniteBench, LongVideoBench, MLVU, D4RL etc...) without concrete details (e.g., types of tasks in the benchmarks' datasets). It is unclear to readers who are unfamiliar with the various fields."
+            },
+            "questions": {
+                "value": "The cache size is important for complexity. However, in practice, what we actually care about is the empirical runtime and memory complexities. What is the runtime and memory needed to process new tokens compared to that of the baselines (e.g., H2O)?\n\nEvolution is typically expensive to train using. What are the computational resources used to train NAMMs in terms of the runtime and memory?\n\nConsidering that language models get significantly larger than 8B, it is important that the idea generalizes to larger settings. How would the resources needed to train and perform inference scale with the size of the base models?\n\nWhen pruning, the size of the cache size affects the performance significantly. In practice, we may want to select an optimal cache size that trades off performance and computational resources. In this paper, only 1 cache size was chosen for each dataset. How was this cache size determined for each model? And why are the results reported for only a single cache size? \n\nRelatedly, in H2O, plots are shown with the x-axis being the cache size (ratio) and y-axis being the performance. As a result, we can see the performance trade-off with respect to the cache size. Could you elaborate on why the results were not shown the same way? And could you include these plots?\n\nCould you include details in the Appendix regarding the various datasets (e.g., Long Bench, InfiniteBench, LongVideoBench, MLVU, D4RL etc...)?\n\nThe paper runs experiments on D4RL using Decision Transformers. However, the reported results are significantly worse than what is reported in many papers (e.g., original DT paper, Online DT, Aaren, etc..). Could you elaborate on why this is the case? Could you add details regarding the experimental setup that resulted in these numbers?\n\nFor the LongBench results, the overall numbers are reported as \"All tasks\". However, a subset of the tasks are used for training NAMM. Reporting \"All tasks\" seems unfair for evaluating generalization. Instead, could you report separate aggregate scores for (1) the tasks used in training and (2) the held-out tasks not used in training, to more clearly show generalization performance.\"\n\n\n\nInterestingly, using NAMM improves over even the base model in several cases. What is your intuition as to why there's such a large improvement in some cases?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper focuses on optimizing the memory management of Transformers. The authors introduce the NAMMs (Neural Attention Memory models) method, which employs trainable parameters to learn the importance of token column vectors. By removing less important tokens, this approach reduces resource requirements and enhances efficiency. The effectiveness of the proposed method is validated through experiments conducted on multiple datasets."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is well-structured with a clear logical flow, making it easy for readers to follow. Figures are appropriately placed alongside the relevant text, contributing to a harmonious overall layout. The experimental results are effectively highlighted and processed, allowing readers to easily grasp the key points. This is a significant strength of the paper.\n\n2. The NAMMs method proposed in the paper achieves a reduction in model parameter size, which facilitates training.\n\n3. The architecture introduced by the authors is straightforward and easily reproducible. Extensive experiments have been conducted to substantiate its effectiveness, further validating the claims made in the paper."
+            },
+            "weaknesses": {
+                "value": "1 My understanding is that the method involves the fusion of column vectors for all tokens (3.1 169\uff09. However, if the dimensionality is too high, could this lead to substantial additional computational time? Please provide some computational complexity analysis or empirical runtime comparisons.\n\n2 Removing tokens with importance scores <0 implies that the number of removed tokens may vary each time. How can the consistency of dimensions be guaranteed? Without consistent dimensions, subsequent training would be impossible. Does this require an additional constraint? I feel this point was not clearly explained in the paper. (How is the following issue implemented\uff1f\uff09\n a.How they handle varying numbers of removed tokens in practice\n b.If there are any mechanisms to ensure dimension consistency\n c.Whether any additional constraints are used \n\n3 In my understanding, compression is performed before assessing the importance of tokens. Would it be possible to compare the effects without compression? It seems that compression also has its advantages. Please conduct an ablation study specifically comparing performance with and without the compression step.\n\n4.Could you list specific learning rates, parameter settings, and other details? Publishing the experimental code would also be beneficial. (Please provide the following materials.)\n a.A table of hyperparameters used for each experiment\n b.Any details on hyperparameter tuning processes\n c.Information on where to access their code or if they plan to release it This would give readers a clearer picture of how to reproduce the results."
+            },
+            "questions": {
+                "value": "1 Removing tokens with importance scores <0 implies that the number of removed tokens may vary each time. \n\n 2.How can the consistency of dimensions be guaranteed? Without consistent dimensions, subsequent training would be impossible. \n\n3.Does this require an additional constraint? I feel this point was not clearly explained in the paper.\n\n4.In my understanding, compression is performed before assessing the importance of tokens. Would it be possible to compare the effects without compression? It seems that compression also has its advantages.\n\n5.Could you list specific learning rates, parameter settings, and other details? Publishing the experimental code would also be beneficial."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

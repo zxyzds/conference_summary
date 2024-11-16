@@ -1,0 +1,147 @@
+{
+    "id": "g3VCIM94ke",
+    "title": "Multi-domain Distribution Learning for De Novo Drug Design",
+    "abstract": "We introduce DrugFlow, a generative model for structure-based drug design that integrates continuous flow matching with discrete Markov bridges, demonstrating state-of-the-art performance in learning chemical, geometric, and physical aspects of three-dimensional protein-ligand data. We endow DrugFlow with an uncertainty estimate that is able to detect out-of-distribution samples. To further enhance the sampling process towards distribution regions with desirable metric values, we propose a joint preference alignment scheme applicable to both flow matching and Markov bridge frameworks. Furthermore, we extend our model to also explore the conformational landscape of the protein by jointly sampling side chain angles and molecules.",
+    "keywords": [
+        "Drug Discovery",
+        "Flow Matching",
+        "Markov Bridge",
+        "Equivariance"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-14",
+    "forum_link": "https://openreview.net/forum?id=g3VCIM94ke",
+    "pdf_link": "https://openreview.net/pdf?id=g3VCIM94ke",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to reviewer 6xpR (2/2)"
+            },
+            "comment": {
+                "value": ">**Q1: FlexFlow samples side chain configurations additionally\u2014does pocket data exist pre- and post-binding? If absent, how does this approach differ from treating the pocket as context?**\n\nPocket backbone atoms and amino acid types are provided as input and are not changed during the generation process. Only the side-chain $\\chi$-angles are variable and denoised by FlexFlow. We clarified this with a new sentence (lines 84-86). The training data consists of bound pocket poses.\n\n>**Q2-Q3** \n\nsee W2 and W3\n\n>**Q4: How does the paper synthesize preference pairs, as noted in line #206?**\n\nSection 2.4 (including the mentioned line) introduces our general method for preference optimization using any preference pairs, while Section 3.5 (lines 428-430) provides a detailed description of what metrics were used and how pairs were assembled. We added a sentence in Section 2.4 that refers to Section 3.5 for clarity.\n\n>**Q5: Why does the author evaluate bonds using the Wasserstein distance in Table 1, whereas other studies [1] and [2] apply KL and Jensen-Shannon divergences?**\n\nWe decided to use Wasserstein distance for bond lengths and bond angles because, unlike KL- and JS-divergence, it takes into account the underlying metric space. For a concrete example why this matters, please see https://stats.stackexchange.com/a/351153. If we assume the x-axis of these plots represents bond lengths or bond angles, the distributions on the left are arguably less similar than the distributions on the right, which is correctly captured by the Wassertstein distance but not by the KL-divergence.\n\nWe appreciate your comment and are aware that prior works made a different experimental design choice. To account for this, we added a new table providing Jensen-Shannon divergence results for the same quantities (Table 5).\n\n>**Q6: Why does the reported Wasserstein distance for QED, SA, and logP differ from those in Table 1 of paper [3]?**\n\nWe used the publicly available codebases to sample molecules and computed the Wasserstein distances using our own evaluation scripts. Small differences could be explained by implementation details. More importantly, however, we use the training set as our reference distribution whereas reference [3] used the substantially smaller test set, which explains the different numerical results.\n\n**References**\n\n[1] Xingang Peng, Shitong Luo, Jiaqi Guan, Qi Xie, Jian Peng, Jianzhu Ma, \"Pocket2Mol: Efficient Molecular Sampling Based on 3D Protein Pockets\" \n\n[2] Jiaqi Guan, Wesley Wei Qian, Xingang Peng, Yufeng Su, Jian Peng, Jianzhu Ma. \"3D Equivariant Diffusion for Target-aware Molecule Generation and Affinity Prediction\" \n\n[3] Arne Schneuing1, Charles Harris, Yuanqi Du, Kieran Didi, Arian Jamasb, Ilia Igashov, Weitao Du, Carla Gomes, Tom L. Blundell, Pietro Lio, Max Welling, Michael Bronstein. \"Structure-based Drug Design with Equivariant Diffusion Models\"\n\n[4] Lakshminarayanan, Balaji, Alexander Pritzel, and Charles Blundell. \"Simple and scalable predictive uncertainty estimation using deep ensembles.\" Advances in neural information processing systems 30 (2017).\n\n[5] Nix, David A., and Andreas S. Weigend. \"Estimating the mean and variance of the target probability distribution.\" Proceedings of 1994 ieee international conference on neural networks (ICNN'94). Vol. 1. IEEE, 1994.\n\n[6] Kalman, Rudolph Emil. \"A new approach to linear filtering and prediction problems.\" (1960): 35-45."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to reviewer 6xpR (1/2)"
+            },
+            "comment": {
+                "value": "We thank the reviewer for the critical assessment of our manuscript. We have addressed all concerns and updated the manuscript accordingly, with detailed responses provided below. \nThe reviewer\u2019s comments have helped us improve the technical soundness of our work and we hope it now meets the standards for publication at ICLR. If any additional concerns not mentioned in the initial review prevent the reviewer from raising their score, we encourage the reviewer to let us know, and we will be happy to address them as well. \n\n>**W1: The treatment of the pocket is inadequately detailed\u2014it is unclear whether the pocket is generated jointly with the molecule or used as context.**\n\nWe thank the reviewer for this comment. Indeed, DrugFlow is the model that always uses the pocket as fixed context, and FlexFlow generates pocket side chain angles jointly with the molecule while still keeping amino acid identities and backbone coordinates fixed. To clarify this, we added the sentence \u201cBoth DrugFlow and FlexFlow are conditioned on fixed protein backbone coordinates and amino acid types, which are used as context for denoising.\u201d in the introduction (line 84-86).\n\n>**W2: In Section 2.1, the uncertainty estimation involves several ambiguities:**\n>- **In line #133, the assumption of the error being normally distributed is neither evident nor justified.**\n\nThe Gaussian error model is indeed a modelling assumption (and thus not derived). It is very commonly used in related literature [4,5,6]. Even though this choice was not initially motivated by empirical observations, we now added an illustrative plot of the regression error derived from one training batch of DrugFlow to demonstrate that the empirical error distribution closely resembles a Normal distribution (Figure 15). We think the empirical evidence provides a better justification of our modelling assumption and we thank the reviewer for their remark.\n\n>- **In line #143, $\\dot{x}_t$ is inaccurately referred to as a ground truth vector field; it should be considered a conditional vector field, given $x_0$ is known.**\n\nWe agree with this comment and added \u201cconditional\u201d to this line to reduce the ambiguity of the formulation.\n\n>- **In line #987, $\\max_\\theta$ is mistakenly used instead of argmax; also, maximizing Equation 30 is not equivalent to minimizing Equation 31, despite sharing the same minima\u2014the loss surfaces differ.**\n\nWe appreciate that the reviewer performed such a thorough inspection of the provided equations \u2013 it additionally ensures the correctness of the theoretical foundation of our method. We agree with this comment and replace the max operations with argmax which allows us to omit the constant without any problems. We additionally expand the transition from (30) to (32) in more detail to demonstrate its correctness and remove the term \u201cequivalent\u201d to avoid any ambiguities.\n\n>- **The described technique resembles regularization, yet its role in quantifying an atom's uncertainty score remains unclear.**\n\nThis method has been successfully used as an uncertainty estimate in the past [4,5], and here we demonstrate its utility for out-of-distribution detection in structure-based drug design empirically (Figure 2). The motivation is discussed in Sections 2.1, A.2 and A.3. To summarize the intuition behind the technique, the model estimates the variance of its own predictions in addition to the mean (the most likely value). If this variance is high, the model \u201cbelieves\u201d the true value could be far away from the predicted value, i.e. the model is uncertain.\n\nWhile we would be happy to further improve the clarity of this section, we struggle to understand the concern raised by the reviewer. We kindly ask the reviewer to specify what is unclear and we will be happy to address any further questions.\n\n>**W3: In Section 2.2, the concept of a virtual node demands more explanation; specifically, it's unclear whether virtual bonds exist when virtual nodes are incorporated.**\n\nAll virtual nodes are disconnected from all other nodes in the graph, i.e. all edges of virtual nodes are assigned the \u201cNone\u201d type. We clarified this in Section 2.2 (line 170-171). We will be happy to provide additional clarifications if needed."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces DRUGFLOW, a generative model designed for structure-based drug design. It seamlessly combines continuous flow matching with discrete Markov bridges to capture the chemical, geometric, and physical characteristics of three-dimensional protein-ligand data. The model provides an uncertainty estimate to detect out-of-distribution samples and employs a joint preference alignment strategy to guide sampling towards desirable metric values. Furthermore, the paper extends the model to explore protein conformational landscapes by concurrently sampling side chain angles."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is articulated clearly and concisely.  \n- Figures and tables effectively present complex data and comparisons, enhancing accessibility for readers.  \n- The methodology is detailed thoroughly, supporting reproducibility."
+            },
+            "weaknesses": {
+                "value": "The primary concern lies in the paper's technical soundness:  \n\n1. The treatment of the pocket is inadequately detailed\u2014it is unclear whether the pocket is generated jointly with the molecule or used as context.  \n2. In Section 2.1, the uncertainty estimation involves several ambiguities:  \n   - In line #133, the assumption of the error being normally distributed is neither evident nor justified.  \n   - In line #143, $\\dot{x}_t$ is inaccurately referred to as a ground truth vector field; it should be considered a conditional vector field, given $x_0$ is known.  \n   - In line #987, $\\underset{\\theta}{\\max} $ is mistakenly used instead of argmax; also, maximizing Equation 30 is not equivalent to minimizing Equation 31, despite sharing the same minima\u2014the loss surfaces differ.  \n   - The described technique resembles regularization, yet its role in quantifying an atom's uncertainty score remains unclear.  \n3. In Section 2.2, the concept of a virtual node demands more explanation; specifically, it's unclear whether virtual bonds exist when virtual nodes are incorporated."
+            },
+            "questions": {
+                "value": "1. FlexFlow samples side chain configurations additionally\u2014does pocket data exist pre- and post-binding? If absent, how does this approach differ from treating the pocket as context?  \n2. In line #134, on what basis is the error assumed to be normally distributed?  \n3. During training, while virtual nodes are added to each sample, are virtual bonds similarly included?  \n4. How does the paper synthesize preference pairs, as noted in line #206?  \n5. Why does the author evaluate bonds using the Wasserstein distance in Table 1, whereas other studies [1] and [2] apply KL and Jensen-Shannon divergences?  \n6. Why does the reported Wasserstein distance for QED, SA, and logP differ from those in Table 1 of paper [3]?\n\n[1] Xingang Peng, Shitong Luo, Jiaqi Guan, Qi Xie, Jian Peng, Jianzhu Ma, \"Pocket2Mol: Efficient Molecular Sampling Based on 3D Protein Pockets\"\n[2] Jiaqi Guan, Wesley Wei Qian, Xingang Peng, Yufeng Su, Jian Peng, Jianzhu Ma. \"3D Equivariant Diffusion for Target-aware Molecule Generation and Affinity Prediction\"\n[3] Arne Schneuing1, Charles Harris, Yuanqi Du, Kieran Didi, Arian Jamasb, Ilia Igashov, Weitao Du, Carla Gomes, Tom L. Blundell, Pietro Lio, Max Welling, Michael Bronstein. \"Structure-based Drug Design with Equivariant Diffusion Models\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes DrugFlow, a multi-modal flow matching model for structure-based drug design. DrugFlow jointly models the distribution of ligand structures and receptor sidechain structures. It also includes an uncertainty estimate module and an adaptive ligand size selection module that address the issues overlooked by previous work. In addition, preference alignment techinique is used for property optimization, which increases the value of this work. Overall, this is a nice work that orchestrated various machine learning techniques, which are all well justified in the context."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The model considers side-chain flexibility, which is critical in ligand docking and design as receptors are mostly non-rigid. The side-chain flexibility issue has also been overlooked in previous SBDD methods until this work, to the best of my knowledge.\n- This model provides an estimate of uncertainty, which is improtant in molecular modeling area and can increase the practicality of the method. Uncertainty estimation has been a common practice in structure prediction settings, but it has also been overlooked in the previous structure-based drug generation methods.\n- This work demonstrated the use of preference alignment to control the properties of generated molecules, which increases the value of the model as in SBDD, there are many properties other than receptor structures need to be considered.\n- All the techniques introduced in this work are well justified by clearly organized experiments (Section 3.2-3.5). Notably, uncertainties visualized in Figure 2 are very informative and I find unrealistic structures (long carbon chains with bifurcation) were assigned high uncertainties, which agrees with the intuition that such unrealistic structures are uncommon in the dataset."
+            },
+            "weaknesses": {
+                "value": "- Does the evaluation presented in Section 3.1 consider side-chain flexibility? It seems that the DrugFlow and FlexFlow are separate variants and only the FlexFlow considers side-chain flexiblity.\n- If Section 3.1 does not model side-chain flexibility, why not? Did the authors consider jointly sampling both ligand structures and side-chain torsional angles?"
+            },
+            "questions": {
+                "value": "See Weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper describes DrugFlow, a diffusion model for drug-like molecules in 3D. Contributions over existing work are 1) uncertainty estimates from diffusion model 2) an adaptive size selection method 3) protein conformation sampling module 4) a preference alignment optimization scheme."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper had a lot of strong positives but also some strong negatives. Starting with the positives:\n\n- Good knowledge of the field: unlike many ML papers in this area, this work has no statements about drug discovery that seemed to portray an embarrassing lack of domain knowledge on behalf of the authors. I also agree with the assessment that many works train models for distribution matching and then evaluate them for optimization, which does not make sense\n- The end-to-end uncertainty estimate is a really nice idea (even though it isn't clear that it works well, see below)\n- The ability to add or delete models during generation is a nice idea and seems to work reasonably well\n- I liked that the authors tested a wide range of tasks in the experiments section\n- Presentation of the paper is really good, definitely in the top 10%. Regardless of the other criticisms I raise below, I can tell that the authors crafted the manuscript very well"
+            },
+            "weaknesses": {
+                "value": "In my opinion, the biggest weaknesses of this paper all come from the experiments. I've organized them under the following headings\n\n### You might not be measuring the right things\n\nEssentially all metrics in the paper are about how well the distribution of molecules generated by the model matches the training distribution. However:\n\n- Only _marginal_ (1D) distributions seem to be measured, rather than _joint_ distributions of properties (i.e. does the joint distribution of SAscore and logP look the same between training and test). In general, matching the marginal distribution _does not_ imply that the joint distribution matches. Figure 4 is an exception to this.\n- QED/logP/SA are all very simple quantities which _do not depend on the 3D structure in any way_. The significance of matching these values is not very clear to me.\n\n### Complete disregard for statistical variation => significance of results is unclear\n\nAlmost every quantity estimated is estimated from a finite sample of generated molecules (including Wasserstein distances, JS-distances, coverage of chemical space). This means that all quantities in tables are _statistical estimates_ with finite-sample variation. Moreover, there is additional variation due to the randomness of model training, etc. This variation is not accounted for in any of the Tables (as far as I can tell), making the claims of performance differences poorly supported. I think the paper needs to include measures of variation and/or statistical significance tests to qualify its claims.\n\n### Significance aside, performance over the baselines is unclear\n\nFirst, the performance of all baselines presumably varies with training. Presumably, more training would give a closer match. Did the authors re-train the baseline models themselves or use a pre-trained checkpoint? Were all models trained a similar amount? Even if the results are statistically significant for a given pair of models, I think it would help to know how much these differences change with training. Perhaps include a plot or table showing how performance changes with training size? (not a specific request, feel free to provide a similar but different piece of evidence if you think it is more appropriate)\n\nSecond, it would be helpful to include more baseline models, particularly ones using 2D (ie graph-based) methods. A simple 2D method could be a random perturbation of the SELFIES string for a molecule in the training set. Another option could be an RNN trained on SMILES strings. For any metrics that require 3D coordinates, they could be generated using force fields from rdkit (or some comparable method). I would not expect these baselines to be state-of-the-art, but knowing the performance of simpler methods helps contextualize the performance of more complex ones.\n\nThirdly, it seems that no baselines were run for the preference optimization experiment?\n\nFinally, it is unclear that the OOD performance described in section 3.2 is _practically_ significant. The uncertainty estimates seem to vary by only a tiny amount (I see that the color bar in Figure 2B has a range of only 0.008). This seems to suggest that the model is not actually very well-calibrated?"
+            },
+            "questions": {
+                "value": "See weaknesses above. The common thread between the weaknesses is answering the question \"how well does the model work\". Anything the authors can do to answer this question would be helpful."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

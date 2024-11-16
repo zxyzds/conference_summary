@@ -1,0 +1,129 @@
+{
+    "id": "5BSlakturs",
+    "title": "Enhancing Compositional Text-to-Image Generation with Reliable Random Seeds",
+    "abstract": "Text-to-image diffusion models have demonstrated remarkable capability in generating realistic images from arbitrary text prompts. However, they often produce inconsistent results for compositional prompts such as \"two dogs\" or \"a penguin on the right of a bowl\". Understanding these inconsistencies is crucial for reliable image generation. In this paper, we highlight the significant role of initial noise in these inconsistencies, where certain noise patterns are more reliable for compositional prompts than others. Our analyses reveal that different initial random seeds tend to guide the model to place objects in distinct image areas, potentially adhering to specific patterns of camera angles and image composition associated with the seed. To improve the model's compositional ability, we propose a method for mining these reliable cases, resulting in a curated training set of generated images without requiring any manual annotation. \nBy fine-tuning text-to-image models on these images, we significantly enhance their compositional capabilities. For numerical composition, we observe relative increases of 29.3\\% and 19.5\\% for Stable Diffusion and PixArt-$\\alpha$, respectively. Spatial composition sees even larger gains, with 60.7\\% for Stable Diffusion and 21.1\\% for PixArt-$\\alpha$.",
+    "keywords": [
+        "Diffusion models",
+        "text-to-image generation"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "Some seeds are more reliable for compositional text-to-image generation. We propose a seed mining strategy and develop methods to leverage these seeds.",
+    "creation_date": "2024-09-22",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=5BSlakturs",
+    "pdf_link": "https://openreview.net/pdf?id=5BSlakturs",
+    "comments": [
+        {
+            "summary": {
+                "value": "In this paper, the author explores the random noise for the diffusion-based generation, especially for the text-to-image generation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The idea is easy to follow. \nThe problem is well-designed. \nThe finding is interesting to many diffusion users."
+            },
+            "weaknesses": {
+                "value": "1. Section 3.2 are not well-proved for the correlation. I am not convinced about the heatmap results. \n- How do you decide the correct / incorrect in Figure 4?  Do this process bring the bias or prefrency over the distribution?\n- Which layer is used for the heatmap? the output of diffusion model before VAE decoder? \n- The four coins can be parallel or any position arrangement. So why the heatmap in Figure 4 is coincidently splited the 4 grids?\n\n2. More compositional generation results and failure cases\nHow to generate the partially overlapped objects? \nThe samples showed are almost no overlapped. \n\n3.  The definition of seed. \nSo you just fix the seed rather than the noise? \nEverytime we will resample the noise according to the seed? \nSo why there will be a preferency over certain seed in Section3.3?\n\n4. Minor problem\nWhat are the \"these images\" in abstract? You may training images, which is collected by you? Please specify it.  \n\n5. Scalability to unseen prompts.\nHow about 7 or 8 objects? \nHow about the ``boundary'' or ``corner''?"
+            },
+            "questions": {
+                "value": "Please see the Weakness for details.\n\nMy main concern is as follows. \n(1) Correctness is decided by the large model CogVLM2.  It will also lead to the bias, like preferring non-overlapping layout. \nFinetuning makes the model overfitted. \n\n(2) Fixed System Seed. You mean the input noise is also fixed? Actually, we fixed the input noise.\n\n(3) Overlapped result is hard to generate."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper tackles two main aspects of diffusion models: Numerical and spatial generations. The aim is to use the diffusion model as is without additional inputs such as layouts. First, reliable seeds are mined which produce correct results for the numerical and spatial generations. Then, these seeds are used to create a generative dataset and the model is fine-tuned on this dataset to improve performance."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The main advantage of this work is that no additional modules/trainable parameters need to be added to the diffusion model which incorporate layouts or bounding boxes like other works usually do.\n2. Extensive experimentation is conducted to validate the reliable seeds hypothesis.\n3. Once reliable seeds are mined, the authors have experimented with a broad spectrum of ways to use that to enhance the model's performance."
+            },
+            "weaknesses": {
+                "value": "1. Baselines: Newer methods to accomplish this task have developed such as [1] after LMD, which show an improvement over LMD. This work should be compared with [1] instead of LMD to demonstrate the efficacy of this approach.\n\nI have clubbed the other points in the questions section\n\n---\n[1] Feng, Yutong, et al. \"Ranni: Taming text-to-image diffusion for accurate instruction following.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2024."
+            },
+            "questions": {
+                "value": "1. What are the numbers when compared to that of [1]?\n\n---\n\n2. Comparison against baselines: As 512x512 implementation of Stable Diffusion is used for LMD and Multi Diffusion, comparing it with 768x768 version becomes unfair. What are the numbers for Table 4 when using the 512x512 Stable diffusion of this method instead of the 768x768?\n\n---\n\n3. Mixture of objects for numerical compositions. All the results seem to display numerical compositions of a single object. How are the results when I compose multiple objects, such as \"2 airplanes and 4 birds in the sky\", and how do the baselines compare with this method for such cases?\n\n---\n---\nI will reconsider my rating if these concerns are addressed.\n\nPlease correct me if you think I have misunderstood any aspect of the paper."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the challenges faced by text-to-image models in handling compositional prompts, such as accurately rendering object quantities and spatial relations. It highlights the impact of initial random seeds on the arrangement and fidelity of generated images, proposing a method to improve model performance by identifying and leveraging \u201creliable seeds.\u201d The paper\u2019s main contributions include: 1) a generation strategy based on reliable seeds to reduce the need for manual annotations by automatically generating a high-quality dataset; 2) fine-tuning the model on self-generated reliable data to enhance numerical and spatial compositional accuracy; and 3) implementing a seed-based sampling strategy that improves generation accuracy without additional computation or training."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Provides a novel, data-efficient method to improve compositional accuracy in text-to-image generation by harnessing seed variability.\n2. The automatic generation of a training dataset with reliable seeds reduces the labor-intensive process of manual annotation.\n3. Extensive quantitative and qualitative evaluations demonstrate the approach\u2019s effectiveness in improving both numerical and spatial compositional tasks across different models."
+            },
+            "weaknesses": {
+                "value": "1. The reliance on selected seeds may limit the diversity of generated outputs, as increasing accuracy through reliable seeds could restrict the model\u2019s range of variations.\n2. There is no method presented for automatically selecting reliable seeds during inference, limiting the approach\u2019s applicability to other models and use cases.\n3. Potential decline in overall image generation quality when fine-tuning on self-generated data remains unexplored, especially concerning aesthetics and real-world accuracy.\n4. The approach assumes that data generated with reliable seeds is of higher quality for model fine-tuning, but lacks empirical comparisons with real-world datasets or alternative high-quality sources.\n5. Limited generalization testing to other diffusion models beyond Stable Diffusion and PixArt-\u03b1; therefore, the approach\u2019s adaptability to diverse architectures is unclear."
+            },
+            "questions": {
+                "value": "The citation format is slightly less standardized and the consistency of the references in the citation section should be ensured.\n\nOne key limitation is the lack of an automatic, inference-time method to select reliable seeds for generating accurate compositions. Would the authors consider developing a mechanism, such as a predictive model or algorithm, to dynamically choose reliable seeds based on prompt characteristics? This would significantly improve the model\u2019s generalizability and practical use.\n\nFine-tuning on self-generated data inherently risks reducing image diversity or amplifying generation biases. Could the authors clarify how they ensured that this self-generated dataset maintains high quality compared to real-world or externally validated datasets? Additionally, what safeguards are in place to prevent potential degradation in image quality or unintended biases?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

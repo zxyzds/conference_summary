@@ -1,0 +1,130 @@
+{
+    "id": "ijwYWoChN9",
+    "title": "Domain Shift Tuning over Knowledge Gap",
+    "abstract": "This paper introduces Domain Shift Tuning (DST), a novel framework designed to guide pre-trained language models (PLMs), including Large Language Models (LLMs), in overcoming domain discrepancies (i.e., source-target).\nPLMs, pre-trained on extensive and diverse corpora, the source domain, often encounter domain gaps after fine-tuning over the target domain.\nUnlike conventional adapters or Parameter-Efficient Fine-Tuning (PEFT) methods, \nDST conceptualizes domain gaps as differences in knowledge encapsulated within multiple subnetworks of PLMs. \nTo bridge this gap, \nour challenge is to find a subnetwork set that corresponds to these pieces of knowledge and their weight.\nThis direction leads DST to employ a lightweight subnetwork, the Knowledge Steering Layer (KSL), and a training objective, Knowledge Distribution Modeling (KDM). \nThese components enable DST to fine-tune PLMs by aligning the knowledge weights of the source domain with those of the target domain. \nExperimental results on diverse datasets demonstrate that DST effectively mitigates the domain gap, allowing PLMs to generate text that closely aligns with even a small target corpus, thereby significantly enhancing domain adaptation for PLMs at lower computational cost.",
+    "keywords": [
+        "PEFT",
+        "Domain gap",
+        "Domain Shift"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "Domain Shift Tuning (DST), conceptualizes domain gaps as differences in knowledge encapsulated within multiple subnetworks of PLMs and guides the PLM in closing this gap.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ijwYWoChN9",
+    "pdf_link": "https://openreview.net/pdf?id=ijwYWoChN9",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents Domain Shift Tuning (DST), a framework for enhancing domain adaptation in PLMs. DST tackles the challenge of domain shift, where PLMs trained on a large, generalized corpus underperform on a specific target domain. DST introduces two key components:  Knowledge Steering Layer (KSL) and Knowledge Distribution Modeling (KDM). Through these, DST fine-tunes PLMs to align domain-specific weights with the target domain, thus overcoming the domain gap and reducing computational costs associated with large-scale fine-tuning."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- By framing domain adaptation as knowledge distribution alignment, DST minimizes computational overhead and sidesteps catastrophic forgetting. This is particularly beneficial for limited-resource settings, allowing PLMs to adapt to new domains effectively with minimal data.\n- The experimental results demonstrate that the proposed method outperforms several baslines."
+            },
+            "weaknesses": {
+                "value": "- The motivation in introduction is presented in a somewhat cursory manner, lacking clear logical connections between sentences. In line 32, the claim that \u201csize discrepancy can lead to catastrophic forgetting and poor generalization\u201d is not convincingly supported by the cited references. Additionally, the transition to \u201cGiven the swift diversification of PLM applications\u2026\u201d feels abrupt, missing a logical connection that ties it smoothly to the preceding discussion.\n- The foundational hypothesis that \"PLMs encapsulate multiple pieces of knowledge as subnetworks\" (Lines 38-40) lacks supporting references or verification experiments. Furthermore, the approach of representing domain gaps by differences in model parameters between source and target domains is not sufficiently justified. Although empirical results support DST\u2019s effectiveness, the Introduction lacks a clear causal rationale for these core design choices.\n- In Table 4, the absence of performance metrics for base methods such as PEFT on LLMs limits the comprehensiveness of the evaluation.\n- Writing Issues:\n  - Figures and tables, such as Figure 1\u2019s left side, appear cluttered, detracting from clarity.\n  - The citation style disrupts readability; author names would be clearer within parentheses.\n  - Minor issues, such as the incorrect symbol following \"else\" in equation (6)."
+            },
+            "questions": {
+                "value": "refer to the comments"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a domain adaptation technique called domain shift tuning which consists of a lightweight knowledge steering layer (KSL) and a training method called knowledge distribution modeling (KDM). The KSL is a layer affixed after the last transformer layer in a pre-trained LM, and KDM is applied as an auxiliary loss to attempt to align topic/knowledge latent representations with textual similarity. The KSL predicts a topic and selects a weight accordingly to project the final hidden before projecting again into the vocabulary. The model is kept frozen while the KSL is fine-tuned using a modified CE loss accounting for knowledge vectors and the KDM. The method is tested on encoder models for topic clustering and decoder-LMs for text generation."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The authors test their method against an impressive number of baselines, from both domain adaptation and other PEFTs\n2. The use of rKSL is important and helpful to understand how much more knowledge than the residual is being used, and it is interesting to see values much bigger than 0. \n3. The method is seemingly model-agnostic which strengthens its applicability to things beyond just language and just Transformers.\n4. The subnetwork motivation and integration with the knowledge steering layer is an interesting and intuitive motivation.\n5. The authors test on both clustering and text generation. It is great to see a method that applies to both of these tasks, especially as there is a lot of need for good embedding models in addition to LMs."
+            },
+            "weaknesses": {
+                "value": "1. Although the KSL is smaller compared to the size of the model, it must have some sort of slow-down associated with it since it appears as an additional layer with an additional step across K subcomponents. What is the speed reduction in using this method?\n2. This paper makes multiple references to VAEs as inspiration for the latent vector $z$, but this connection is never formally introduced, nor are any details about what is being referred to in VAEs. Some formal background and direct linking would strengthen the work.\n3. The notation and writing is not always the most clear, where some key variables are not clearly defined, and some motivation is not clearly written. For example, latent \u201cknowledge\u201d vector $z$ is not clearly defined nor is its length $K$, and the notion of knowledge is redefined several times in the text, including as a \u201clatent relative concept\u201d or \u201cco-occurence pattern of tokens with similar semantics\u201d. \n4. The published parameter settings for each baseline may not be the fair comparison here, what may be more fair is scaling the baselines according to the parameter budget or throughput associated with the DST method.\n5. The LLM experiments are not compared to few-shot/zero-shot prompting despite these models being able to perform in-context learning. The LLM experiments (Table 4) need some sort of baseline to compare to, like in Table 3. \n6. $L_{KDL}$ is not ablated to show its usefulness in this work. \n7. Some code or pseudocode would strengthen knowing how the KSL/KDM is actually implemented. For example, it is unclear how the selection process works for the Waz matrices, and the minimum operation in KDM is also unclear as to how this is differentiated."
+            },
+            "questions": {
+                "value": "1. Is $z$ length $K$ for each index in $|x|$? It is defined as length $K$, but then also indexed over the t indices along with the sequence length. Is it different at each sequence index? And if yes, how can it be a scalar as in equation 4 without some sort of argmax/softmax operation, and why should it be different for the same utterance? And if it is argmaxed, how can it be useful in KL divergence unless it remains continuous?\n2. What is meant by \"KSL considers knowledge as a quantized sample of the underlying token distribution\"? Like in a vector quantized/code book sense?\n3. Why is $SIM_z$ KL-divergence and $SIM_{TID}$ cosine? Are the $z$ vectors softmaxed and probability distributions? How do these different functions affect the minimization term in KDM?\n4. What is the number of fine-tuning steps? It is missing, which is important for defining linear decay, and understanding the cost of the method. \n5. Why minimize the minimum $SIM_z$- $SIM_{TID}$ rather than the maximum for minimax?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents Domain Shift Tuning (DST), an innovative framework designed to enhance the adaptability of pre-trained language models (PLMs), across different domains. DST addresses the challenge of domain discrepancies by conceptualizing these gaps as variations in knowledge encapsulated within multiple subnetworks of PLMs. To bridge these gaps, the framework introduces two key components: Knowledge Steering Layer  and Knowledge Distribution Modeling."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The idea of this work is interesting. DST introduces a new perspective by treating domain gaps as differences in knowledge subnetworks.\n\n2. KSL provides a lightweight mechanism for representing domain-specific knowledge without changes to the underlying PLM architecture.\n\n3. DST achieves domain adaptation improvements with lower computational overhead"
+            },
+            "weaknesses": {
+                "value": "1. Citation Formatting: When adhering to the ICLR template guidelines, replace all instances of  `\\cite` with `\\citep` to ensure proper citation formatting.\n\n2. Motivation: The paper posits that the discrepancy in `dataset sizes` can lead to catastrophic forgetting and poor generalization, but authors have not provided sufficient empirical evidence in the era of LLMs. \n\n2. Outdated References and Baselines:  Most of the previous work discussed and baselines compared are already 2 years ago.\n\n3. Marginal Improvements on modern models Llama and BLOOM:  In Table 4, the application of DST on the Llama and BLOOM models results in only negligible improvements, calling into question the effectiveness of the proposed method for these specific models."
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

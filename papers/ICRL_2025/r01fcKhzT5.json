@@ -1,0 +1,167 @@
+{
+    "id": "r01fcKhzT5",
+    "title": "Breaking the Reclustering Barrier in Centroid-based Deep Clustering",
+    "abstract": "This work investigates an important phenomenon in centroid-based deep clustering(DC) algorithms: Performance quickly saturates after a period of rapid early gains. Practitioners commonly address early saturation with periodic reclustering, which we demonstrate to be insufficient to address performance plateaus. We call this phenomenon the \u201creclustering barrier\u201d and empirically show when the reclustering barrier occurs, what its underlying mechanisms are, and how it ispossible to Break the Reclustering Barrier with our algorithm BRB. BRB avoids early over-commitment to initial clusterings and enables continuous adaptation to reinitialized clustering targets while remaining conceptually simple. Applying our algorithm to widely-used centroid-based DC algorithms, we show that (1) BRB consistently improves performance across a wide range of clustering benchmarks, (2) BRB enables training from scratch, and (3) BRB performs competitively against state-of-the-art DC algorithms when combined with a contrastive loss.",
+    "keywords": [
+        "deep clustering",
+        "unsupervised learning",
+        "representation learning"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "Centroid-based deep clustering suffers from performance plateaus, and we introduce a method to break through these plateaus.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=r01fcKhzT5",
+    "pdf_link": "https://openreview.net/pdf?id=r01fcKhzT5",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors explore a (known) problem when training a clustering model from scratch as follows. The architecture has an encoder followed by a clustering head. With end-to-end optimization, the encoder is updated by the gradients which flow back to it through the clustering head. This means that if and when the clustering head is saturated at a local minima, the encoder will stop learning. This can happen before the encoder has learnt a good encoding, resulting in a model which ceases to learn further despite performing poorly.\n\nThe authors demonstrate the problem, their method (a periodic weight perturbation strategy with cluster centroid reinitialization), show experiments comparing against relevant baselines, and analyze the behavior of their method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "The problem is well presented and salient to the field. As far as I am aware, the proposed method is novel. The analysis is thorough, with ablations as well."
+            },
+            "weaknesses": {
+                "value": "It would be better if the work studied some harder datasets/tasks, such as ImageNet-1k or some taxonomic image datasets (iNaturalist, BIOSCAN, etc.). A lot of the datasets considered are simpler digit classification datasets. The work could be further improved by evaluating on other modalities.\n\n**Minor points**\n\nSome references are badly formatted and need some attention to correct them.\n- Incorrect casing (\"em algorithm\", \"hungarian method\", \"Spagcn\", \"rna\")\n- DOIs shouldn't include the domain name and should actually be links (the latter is fixed by importing the latex `doi` package in main.tex) \"DOI: https://doi.org/10.24432/C50P49\" -> \"doi:[10.24432/C50P49](https://doi.org/10.24432/C50P49)\". When the DOI is a link, you don't need to also include the URL field.\n- It's good for readers if you can include links in the references (ideally as DOIs) as much as possible, so the reader can easily navigate to the article being cited (and know they are looking at the work you meant to cite)"
+            },
+            "questions": {
+                "value": "Why do the authors only consider the CIFAR100 supersets (CIFAR100-20) instead of clustering 100 classes?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper discusses 'reclustering barrier', a common and important phenomenon that occurs in centroid-based deep clustering methods, where performance quickly saturates in the very early stage of the training phase. The authors carefully discuss when and why reclustering barrier happens and propose BRB which prevents this early commitment to initial clustering and gain performance over the training with the reinitializing clusters after every few epochs. They apply BRB on top of several existing deep clustering methods to verify its advantage. The paper contains simulation results to support its main claims."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "### SIGNIFICANCE:\nThis work is important because it seeks to overcome an important phenomenon commonly seen in centroid based deep clustering methods and this can be studied further over other recent deep clustering methods (also not centroid based as they may also face the similar issue).\n\n### ORIGINALITY:\nThis work is novel because it demonstrates the application of BRB over some existing methods that improves the performance further.\n\n### CLARITY:\nThis work is well-written and well-organized. It clearly explains the key components of the method and their functions. For example, the discussion about the hyperparameter $T$, $\\alpha$ and learning rate is complete and important for the reproducibility and understanding of this work. In addition, I also have some questions regarding this method (see the next section).\n\n### QUALITY:\nThe quality of this work is good. The work includes carefully designed simulations that are sufficient to support the claim of the paper."
+            },
+            "weaknesses": {
+                "value": "1. The biggest weakness is the baselines (on top of which BRB has been applied) are too old to compare, the latest one is from 2017. It would be good to see applying BRB on top of one or two recent DC method (like SCAN, GCC or SeCu mentioned in the paper) and report those results. This would provide a clearer comparison to the state-of-the-art.\n\n2. Hyperparameter sensitivity. It would be good to report similar hyperparameters (T, \u03b1 and learning rate) sensitivity (figure 8) to other one or two datasets besides MNIST."
+            },
+            "questions": {
+                "value": "1. You are computing inter-CD and intra-CD to measure variation within ground truth classes (for example, in figure 2). Why is this so important? What about this metrics for the predicted clustering by BRB? I suggest to include a comparison of these metrics for both ground truth classes and predicted clusters, which would provide a more complete picture of BRB's performance.\n\n2. Again for figure 2, it seems even after 400 epochs the clustering labels are changing, but the accuracy is not. What is happening here? Are the clustering labels flipping only?\n\n3. Is BRB optimizing based on the clustering metric (say accuracy)? Or is it updating for a specific epochs (say 500) and after that you are computing the relevant metrics? In other words, is BRB using trues labels while training? At what points the evaluation metrics are computed?\n\n4. Accuracy, NMI or ARI, all of these metrics are supervised and need true labels. However, in practice, we don't have any true labels to compute these metrics. Can you include some unsupervised metric (say Silhouette Coefficient) in your evaluations and comparisons, in addition to the supervised metrics? This would provide insight into the method's performance in more realistic unsupervised scenarios.\n\n5. As BRB modifying the encoding space after each reclustering step, the encoding space may degrade and may not represent the original data point anymore, did you verify it with the original data point with reconstruction loss? I suggest to report reconstruction loss for one or two datasets comparing to baselines, which would help to understand the underlying encoding structure.\n\n6. Momentum resets section is not clear enough, can you elaborate more like how are you exactly re-initializing the momentum for the cluster centers after reclustering?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the issue of rapid early performance gains followed by quick saturation in deep clustering (DC). It introduces the concept of the \"reclustering barrier\" and explores when and why this phenomenon occurs. To overcome it, the authors propose the Break the Reclustering Barrier (BRB) algorithm, which avoids early over-commitment to initial clusters and allows continuous adaptation to reinitialized targets. The paper demonstrates that BRB improves performance across several clustering benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper addresses an important issue in deep clustering, performance saturation.\n- The writing is smooth and easy to follow, with the primary contributions well-communicated.\n- The empirical evaluation is thorough, and the BRB algorithm is shown to enhance performance across benchmarks."
+            },
+            "weaknesses": {
+                "value": "1. While the concept of reclustering is mentioned early in the paper, the term can carry specific meanings in the context of deep clustering. Typically, reclustering refers to periodically or iteratively reassigning data points to clusters. However, since DC algorithms inherently involve iterative steps of representation learning and clustering, the authors should better contextualize their use of the term. \n\n2. Building on the previous point, many existing DC methods already incorporate some form of iterative clustering. As such, the distinction between \"DC\" and \"DC+Recluster\" groups in the paper\u2019s figures could be unclear. The authors should explicitly explain what differentiates these two groups and how their use of reclustering is unique. This will help readers better interpret these figures.  \n\n3. The core innovation of BRB lies in its use of weight resets, which the paper notes is inspired by a technique from reinforcement learning. Weight resetting is also known as a popular regularization technique in deep learning, where a portion of layer weights is periodically reinitialized during training. While applying this idea to deep clustering is somewhat novel, this contribution could be perceived as incremental. \n\n4. Some choices in the implementation seem empirical. For example, the authors mention resetting only the last ResNet block and the MLP encoder, and they use hyperparameters such as LR = 0.001, alpha = 0.8, and T = 20. While these values are derived from extensive experimentation, it would strengthen the work to provide more intuitive or theoretical justification for these decisions. This would also make it easier to generalize the choice of hyperparameters (especially alpha) to other settings and DC algorithms.  \n\n5. The algorithms tested in the experiments are relatively older. The authors are encouraged to apply BRB to more recent deep clustering methods to better demonstrate its effectiveness and relevance. This would enhance the impact of the work and align it with the latest advancements in the field.  \n\n6.  The paper uses widely-known data augmentation techniques such as contrastive learning and self-labeling, which are not novel,  in the main results. Therefore, combining these techniques and comparing BRB with SOTA algorithms like SCAN, GCC, and SeCu may not represent a fully fair comparison. The authors should clarify whether the improvements stem from BRB itself or the use of these auxiliary techniques, ensuring a more balanced evaluation of the proposed method.\n\nMinor:\nSome grammar error:  (line 128) Its output are => its output is"
+            },
+            "questions": {
+                "value": "In addition to the questions raised in the Weaknesses section:\n\n1. alpha is a critical hyper parameter. From Figure 8, it appears that \u03b1 = 0.9 yields better performance across various settings. It is unclear why the authors recommend \u03b1 = 0.8 instead. Additionally, should the choice of \u03b1 = 0.9 or 0.8 remain consistent across all DC algorithms, or is there room for algorithm-specific tuning? Clarifying whether this parameter can or should be personalized for different algorithms would enhance understanding.\n\n2. How does the approach extend to deep clustering methods that are not centroid-based?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper addresses the problem in deep clustering of early over-commitment to sub-optimal partitions. They propose a method to combat this by periodically modifying the network weights and reclustering."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The considered problem is an important one, and is reasonably well introduced the paper.\n\nThe method is intuitive.\n\nThe experimental results on CIFAR looking convincing.\n\nThere is some helpful surrounding discussion of how the method works to improve accuracy, e.g. Figures 6 and 7."
+            },
+            "weaknesses": {
+                "value": "The method itself is intuitive but maybe a bit simple--just slightly modifying the weights and then reclustering. The weight reset comprises two parts: contracting the current values and then adding noise. It would be good to compare the reset as per Eq (1) to just adding noise to the weights, from the same or similar distribution as the weight distribution (at least the same mean and variance). This would determine whether the contraction part is doing anything.\n\nThe comparison to SOTA methods on Cifar is reasonably convincing, but there's no such comparison on MNIST, KMNIST, USPS, FMNIST, OPTDIGITS and GTSRB. Does that mean your results are substantially worse than SOTA on those datasets?\n\nSome information from the appendices would be better placed in the main paper. The paragraph 'implementation details' is mostly just pointers to various sections in the lengthy appendices, when it could just give the details directly. Specifically, it would be good to specify (1) the initial weight distribution, (2) the frequency across epochs that you performing resetting, and (3) which image augmentations and how exactly they are used. Presumably you just create multiple augmentations for each image and enforce them all to be in the same cluster, but I wasn't sure."
+            },
+            "questions": {
+                "value": "What is the initial weight distribution? As this is a part of the reset mechanism, it should be specified in the main paper.\n\nFor the main results, how frequently do you reset?\n\nWhich image augmentations do you how and how exactly are they put to use?\n\nHow does your method compare to SOTA on MNIST, KMNIST, USPS, FMNIST, OPTDIGITS and GTSRB?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

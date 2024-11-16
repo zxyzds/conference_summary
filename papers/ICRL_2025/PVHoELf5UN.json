@@ -1,0 +1,217 @@
+{
+    "id": "PVHoELf5UN",
+    "title": "Interpretable Unsupervised Joint Denoising and Enhancement for Real-World low-light Scenarios",
+    "abstract": "Real-world low-light images often suffer from complex degradations such as local overexposure, low brightness, noise, and uneven illumination. Supervised methods tend to overfit to specific scenarios, while unsupervised methods, though better at generalization, struggle to model these degradations due to the lack of reference images. To address this issue, we propose an interpretable, zero-reference joint denoising and low-light enhancement framework tailored for real-world scenarios. Our method derives a training strategy based on paired sub-images with varying illumination and noise levels, grounded in physical imaging principles and retinex theory. Additionally, we leverage the Discrete Cosine Transform (DCT) to perform frequency domain decomposition in the sRGB space, and introduce an implicit-guided hybrid representation strategy that effectively separates intricate compounded degradations. In the backbone network design, we develop retinal decomposition network guided by implicit degradation representation mechanisms. Extensive experiments demonstrate the superiority of our method. The code will be released soon.",
+    "keywords": [
+        "unsupervised learning",
+        "low-light image enhancement",
+        "image denoising"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-16",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=PVHoELf5UN",
+    "pdf_link": "https://openreview.net/pdf?id=PVHoELf5UN",
+    "comments": [
+        {
+            "comment": {
+                "value": "We thank the reviewer for the constructive feedback and recognition.\n\n**Q1**: The authors are encouraged to clarify the differences between their approach and these methods, highlighting any improvements that address over-smoothing issues.\n\n**Answer2Q1**:Indeed, we have drawn inspiration from the masking strategies used in Neighbor2Neighbor and MAE for self-supervised training. A key distinction in our approach is the use of gamma enhancement on sub-images while constructing the mask, which allows the model to generalize to low-light noisy image enhancement. The theoretical feasibility of this method is demonstrated in Section 3.2.\n\n**Regarding the solution of over-smoothing**: we believe the over-smoothing in related works arises from not utilizing full pixel information during training. In $L_{reg}$ (Section 467 and 303), in addition to enhancing the masked images, we apply the model to the original scale images before masking. By comparing the results with previous ones, this ensures the network learns information from the original scale while avoiding identity mappings due to the loss function. The effectiveness of Lreg is supported by the ablation study in Table 4.\n\n---\n\n**Q2**: provide a clearer understanding of the mask\u2019s effectiveness in enhancing visual quality\n\n**Answer2Q2**: We understand that the \"size of the neighboring mask\" you mentioned is similar to the masking percentage in MAE. However, this model is challenging to transfer to our task, as we perform downsampling after masking, reducing the image size to half and generating sub-images, meaning the mask covers 75% of the pixels. But we have conducted additional ablation experiments on different mask strategies, which can be found in Table 3 of the supplementary materials. We found that the Neighborhood Masking performs better than the mean masking used in ZS-N2N[1]. This improvement may be attributed to the fact that the sampling method in mean masking reduces randomness, resulting in fewer diverse training samples compared to the Neighborhood Masking approach.\n\n---\n\n**Q3**: The authors are encouraged to consider integrating an adaptive exposure adjustment strategy\n\n**Answer2Q3**: Indeed, we have drawn inspiration from the exposure loss function from zero-DCE, which relies on manually set exposure values. However, we have made additional modifications using LC-Net to address non-uniform lighting conditions. After performing retinex decomposition on the original image, LC-Net processes the illumination map and returns a correction factor. The goal is to adaptively adjust the illumination to better align with perceptual lighting. This enables the network to not only learn the degree of enhancement but also determine the enhancement direction based on the inherent illumination, thus improving generalization across different lighting conditions. We have demonstrated this in the ablation study, as shown in the left side of Figure 8.\n\nIn the future, we will consider further optimizing the exposure setting in the loss function. We appreciate your constructive feedback.\n\n---\n\n**Q4**: fully validate the method's denoising capabilities\n\n**Answer2Q4**: We agree with your point that relying solely on the LOL dataset may not fully demonstrate the applicability of our method in real-world scenarios. Therefore, we conducted additional validation experiments using the SIDD-Srgb dataset, which is specifically designed for denoising tasks. This dataset was captured in real-world environments and contains images with varying illumination levels. We focused on the low-light images for our experiments. The detailed results can be found in Table 2 and Figure 7, where we achieved the best performance among the compared methods.\n\n---\n\nThanks for the reviewer's constructive feedback and recognition. If you have any further questions or concerns, please feel free to contact us."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your constructive feedback and recognition. Below are our responses, which we hope will address your concerns.\n\n**Q1**: Clarify the shape of P1,how it is learned, what constraints are used, and whether it can be visualized?\n\n**Answer2Q1**: The specific calculation process of $P_1$ can be found in Section 3.3, \"Frequency-Illumination Prior Encoder.\"$P_1$ is obtained by concatenating the spectral maps from the DCT decomposition along the channel dimension, followed by deep convolutional learning. It is jointly trained end-to-end with the main network. In our experiments, $P_1$ is set to have 64 channels, with the same size of $H,W$ as the input image, which can be visualized. We plan to present these results in the supplementary materials.\n\n**Q3**: Could the authors please provide an explanation for L_{reg}?\n\n**Answer2Q3**: Due to space limitations, the explanation of $L_{reg}$ has been placed in Section 4.3, \"Ablation Study,\" specifically at line 467 in the main text.\n\n**Q4**: what is the difference between the first and third terms of equ.15?\n\n**Answer2Q4**: In the third item, we applied gradient freezing during the calculation of $L_1$ using the function $\\text{L1.detach()}$, which helps stabilize training. We will clarify this point in the revised version. A sample decomposition result is shown in Figure 2, and additional visual results will be included in the supplementary materials.\n\n**Q7**: What's the author's method over the SCI method in Fig.6?\n\n**Answer2Q7**: In Figure 6, our results are closer to the reference image in terms of color, while SCI's results exhibit lower color saturation. More visual comparisons between our method and SCI can be found in Figures 3 and 4 of the supplementary materials.\n\n**Q8**: about the Neighbor2Neighbor comparative experiment\n\n**Answer2Q8**: We would like to clarify that our experiments were conducted on the SIDD-srgb dataset, while the results presented in the official Neighbor2Neighbor paper were obtained using the SIDD-raw dataset. Images in the SRGB domain exhibit more complex noise characteristics due to the camera processing pipeline, and thus we aim to compare the generalization ability of algorithms under more challenging conditions. In Tables 1 and Figures 1 of the supplementary materials, we compare our method with the denoising-enhancement method based on Neighbor2Neighbor. The results demonstrate a clear advantage of our approach. We have also successfully reproduced Neighbor2Neighbor, ensuring the correctness of our training process.\n\n**Q9**: introduce qualitative comparisons to demonstrate generalization performance\n\n**Answer2Q9**: We have added experiments on the LIME, NPE, MEF, DICM, and VV datasets, with the comparison methods selected being trained on the LOL dataset. In the revised version of the paper, we will include more visual comparison results (presented similarly to those in RetinexFormer).\n\n| **Method** |   | **LIME** |   | **NPE** |  | **MEF** | | **DICM** |  | **VV**  |\n|------------|-------|----------|--------|---------|-------|---------|-------|----------|-------|---------|\n|            | NIQE$\\downarrow$  | BRSIQUE$\\downarrow$  | NIQE$\\downarrow$   | BRSIQUE$\\downarrow$ | NIQE$\\downarrow$  | BRSIQUE$\\downarrow$ | NIQE$\\downarrow$  | BRSIQUE$\\downarrow$  | NIQE$\\downarrow$  | BRSIQUE$\\downarrow$ |\n| RUAS       | 5.376 | 28.937   | 7.060  | 49.594  | 5.423 | 33.817  | 7.052 | 46.522   | 5,297 | 51.085  |\n| PairLIE    | 4.569 | 23.699   | 4.137  | 21.528  | 4.288 | 28.388  | 4.064 | 30.833   | 3.648 | 31.213  |\n| SCI        | 4.182 | 19.701   | 4.473  | 27.657  | **3.634** | **14.399**  | 4.073 | 27.706   | **2.934** | **21.431**  |\n| Ours       | **4.109** | **16.382**   | **3.802**  | **17.140**  | 3.758 | 18.997  | **3.859** | **26.592**   | 3.748 | 29.701  |\n\n**Answer2Q2&5&6**: Thank you for your valuable writing suggestions. Due to time constraints during the submission of the paper, several details were not fully refined. We plan to submit our revised version next week, where we will address the improvements. We appreciate your constructive feedback."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces an interpretable, unsupervised framework for joint denoising and low-light enhancement of images, focusing on real-world scenarios. \n\nThe method employs physical imaging principles and Retinex theory for decomposing images into illumination and reflection components."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper combined the Retinex model and data-driven methods since the first effort of RetinexNet. \n2. Experiments are sufficient.\n3. Frequency domain decomposition is well-used. \n4. The unsupervised low-light enhancement method is a promising direction. \n5.  The self-supervised denoising method based on neighboring pixel masking is well-aligned with the challenges of handling zero-reference images."
+            },
+            "weaknesses": {
+                "value": "1. For low-light enhancement task, I want to see more results on LIME, NPE, MEF, DICM and VV. Since these datasets do not have ground truth, then is more fair to justify the effectiveness.\n\n2. Missing citations of real-world low-light enhancement methods,\n[1] Enhancing Visibility in Nighttime Haze Images Using Guided APSF and Gradient Adaptive Convolution\n\n3. The paper lacks a discussion on the computational complexity and runtime efficiency of the proposed model."
+            },
+            "questions": {
+                "value": "1. How does the proposed method handle edge cases such as extreme noise or heavy color distortions, which may not follow typical low-light degradation patterns?\n\n2. Given the success of the DCT-based frequency decomposition, have the authors considered combining this with other frequency-domain transforms (e.g., wavelets) to enhance robustness across diverse types of degradation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes an interpretable unsupervised joint denoising and enhancement method suitable for real-world low-light scenes. Based on the physical imaging principles and Retinex theory, discrete cosine transform (DCT) is used for frequency domain decomposition, and an implicitly guided hybrid representation strategy is introduced to effectively separate complex compound degradations, thereby realizing the detection and optimization of complex degradation problems caused by low-light conditions. The authors conduct experiments to verify the effectiveness of the proposed method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The authors explore the difficulties traditional methods face in dealing with complex degradation issues such as noise, brightness, and contrast, and propose solutions that significantly outperform existing technologies.\n2. Technically, the authors introduce a spatial frequency domain filtering module that uses discrete cosine transformfor explicit multi-band separation, which facilitates the decomposition of enhanced images into illumination and reflectance maps.\n3. Experiments depict the effectiveness of the proposed method on multiple datasets."
+            },
+            "weaknesses": {
+                "value": "1. Some of the latest methods are not compared, such as RetinexFormer\uff0c and Rerinex-Diffusion. Besides, the experiments do not provide statistical indicators such as standard deviation or confidence interval in Table 1 and Table 2, which makes the reliability and stability of the results unclear. Moreover, the generalization ability of the proposed method is not explored, for example, when training the method in low-light environment and testing it one other exposure scenes.\n\n2.  Although authors claim the proposed method is new, quantities of methods have explored introducing frequency-based techniques into image enhancement including some components-decomposition-based methods (such as [1])\uff0c what are the special characteristics of the proposed method that introducing the techniques that used above into retinex-based mechanism?\n\n[1] Unveiling Advanced Frequency Disentanglement Paradigm for Low-Light Image Enhancement, ECCV 2024.\n\n3.  There are too few visual results, for example, the visualization results of more real-world scenes (other low-light datasets or other exposure scenes) can be provided. Moreover, the detailed mechanism of why the proposed method works is not presented. How it has better performance than previous methods?"
+            },
+            "questions": {
+                "value": "Please see the Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this article, to address the complex degradation issues of images in low-light scenarios, the author proposes a training strategy based on physical imaging principles and retinal theory. Specifically, first, the author derives a novel training strategy from paired images under varying lighting conditions and noise levels; second, the author introduces an implicit guidance hybrid representation strategy through DCT transformation, effectively separating complex composite degradation; finally, the author develops a retinal decomposition network based on the implicit degradation representation mechanism. The article demonstrates the effectiveness and reliability of the proposed method through extensive experiments."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The author proposes a novel retinal decomposition network based on an implicit degradation representation mechanism in the article, which shows certain effectiveness in image enhancement for low-light scenarios;\n2. The language of the article adheres to English writing standards and is fluent;\n3. The article provides mathematical proofs for each module of the network, making the logic of the article strong;"
+            },
+            "weaknesses": {
+                "value": "1. On page 4, lines 175-180, the author proposes the use of Discrete Cosine Transform (DCT) to separate different frequencies of images (including chromatic, semantic information, edge contours, and noise intensity). What is the theoretical basis for this approach? Or is it more of an empirical practice? If so, would the performance of the model be affected if different methods were used to decompose the feature maps after Discrete Cosine Transform?\n2. On page 6, lines 322-333, the author presents the loss function of the model. However, during the experiments, the author seems to have not conducted an in-depth exploration between the loss function and the performance of the model. If such research were included, it would make the argument of the paper more complete."
+            },
+            "questions": {
+                "value": "1. On page 4, lines 175-180, the author proposes the use of Discrete Cosine Transform (DCT) to separate different frequencies of images (including chromatic, semantic information, edge contours, and noise intensity). What is the theoretical basis for this approach? Or is it more of an empirical practice? If so, would the performance of the model be affected if different methods were used to decompose the feature maps after Discrete Cosine Transform?\n2. On page 6, lines 322-333, the author presents the loss function of the model. However, during the experiments, the author seems to have not conducted an in-depth exploration between the loss function and the performance of the model. If such research were included, it would make the argument of the paper more complete."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This manuscript introduces an interpretable, unsupervised framework designed to enhance and denoise real-world low-light images without the need for paired training data. The proposed method leverages physical imaging principles and retinex theory to derive a training strategy based on paired sub-images with varying illumination and noise levels. The framework employs the Discrete Cosine Transform (DCT) to perform frequency domain decomposition in the sRGB space."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. It is technically sound to incorporate the neighbor2neighbor denoiser with the task of unsupervised LLIE \n2. The authors provided code in the supplementary materials."
+            },
+            "weaknesses": {
+                "value": "1. In Equation (8), the term P1 is introduced without prior explanation, and it appears that the FIcoder is omitted in the process. Additionally, while the authors describe P1 in Equation (15), the description is still quite vague. Could the authors please clarify the shape of P1, how it is learned, what constraints are used, and whether it can be visualized?\n\n2. If Equations (9) and (13) are identical to the standard DCT/IDCT transformations, there is no need to present them in the paper.\n\n3. In Equation (14), the L_{reg} term is not explained. Could the authors please provide an explanation for this term?\n\n4. In Equation (15), what is the difference between the first and third terms? Additionally, the authors are requested to show several decomposed illumination and reflection maps to demonstrate that the constraints in this equation are sufficient to learn reasonable Retinex decomposition results.\n\n5. On Line 150, the reference year for noise2noise is incorrect; the paper was published in 2018, not 1803.\n\n6. Figures 1, 2, 3, and 5 are not explained in the main text (at least I could not find them), while Figure 4 is explained but not correctly referenced.\n\n7. In Figure 6, I do not see the advantage of the author's method over the SCI method, and the authors avoid explaining this point in the paper.\n\n8. In Figure 7, the author's method still leaves noticeable noise, which I did not see in the Neighbor2Neighbor comparative experiment. Is there an issue with the author's training process?\n\n9. The authors should introduce qualitative comparisons on an independent test set to demonstrate the superiority of their generalization performance. I personally believe this is a key experiment to distinguish whether a low-light enhancement model is valuable, and it should also be an advantage of unsupervised methods. Recommended datasets include LIME, NPE, MEF, DICM, and VV, as used in the Retinexformer."
+            },
+            "questions": {
+                "value": "See the weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper develops a zero-reference joint denoising and low-light enhancement framework designed for real-world applications. \nThe framework incorporates a self-supervised optimization strategy and physical priors to effectively capture complex degradations. \nGrounded in Retinex theory, the optimization process generates paired low-light and enhanced images by dynamically adjusting brightness, thereby establishing mutual self-supervision. \nA Discrete Cosine Transform (DCT) is employed to extract degradation representations across varying levels, facilitating degradation decomposition and removal within the frequency domain."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper presents a zero-reference joint denoising and low-light enhancement framework that operates without the need for paired or unpaired images, a crucial feature for real-world applications.\n\n2. The framework introduces a novel neighboring pixel masking strategy and creates paired images with varying brightness levels to enable self-supervised image denoising and decomposition.\n\n3. Experiments on real-world datasets show that the proposed framework outperforms existing zero-reference low-light image enhancement methods."
+            },
+            "weaknesses": {
+                "value": "1. The reviewer notes that the proposed neighboring pixel masking strategy appears to draw from methods like Neighbor2Neighbor [1] and MAE [2], which are known to sometimes produce over-smoothed results. The authors are encouraged to clarify the differences between their approach and these methods, highlighting any improvements that address over-smoothing issues.\n\n2. Conducting ablation studies on the size of the neighboring mask would be beneficial to assess its impact on preserving texture details. Such analysis could provide a clearer understanding of the mask\u2019s effectiveness in enhancing visual quality.\n\n3. The exposure loss function relies on a pre-defined exposure level, similar to the approach in Zero-DCE. However, in scenarios with non-uniform or overexposure, the results may tend toward overexposure and color distortion. The authors are encouraged to consider integrating an adaptive exposure adjustment strategy in future work to address these limitations.\n\n4. While the authors claim that the proposed framework can both denoise and enhance images, the LOL dataset\u2014characterized by slight noise degradation\u2014may not fully validate its denoising capabilities. It would be beneficial to conduct experiments on low-light image enhancement datasets with significant noise levels, such as LSRW or other image denoising datasets, to substantiate the framework's performance in more challenging conditions.\n\n[1] Huang T, Li S, Jia X, et al. Neighbor2neighbor: Self-supervised denoising from single noisy images[C]//Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2021: 14781-14790.\n\n[2] He K, Chen X, Xie S, et al. Masked autoencoders are scalable vision learners[C]//Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2022: 16000-16009."
+            },
+            "questions": {
+                "value": "Please refer to Weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

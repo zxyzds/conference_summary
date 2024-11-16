@@ -1,0 +1,215 @@
+{
+    "id": "EXsiGFkwV6",
+    "title": "Realistic-Gesture: Co-Speech Gesture Video Generation through Semantic-aware Gesture Representation",
+    "abstract": "Co-speech gesture generation is crucial for creating lifelike avatars and enhancing human-computer interactions by synchronizing gestures with speech in computer vision. Despite recent advancements, existing methods often struggle with accurately aligning gesture motions with speech signals and achieving pixel-level realism. To address these challenges, we introduce Realistic-Gesture, a groundbreaking framework that transforms co-speech gesture video generation through three innovative components: (1) a speech-aware gesture tokenization that incorporate speech context into motion pattern representation, (2) a mask gesture generator that learns to map audio signals to gestures by predicting masked motion tokens, enabling bidirectional contextually relevant gesture synthesis and editing, and (3) a structure-aware refinement module that employs differentiable edge connection to link gesture keypoints to improve video generation. Our extensive experiments demonstrate that Realistic-Gesture not only produces highly realistic and speech-aligned gesture videos but also supports long-sequence generation and video gesture editing applications.",
+    "keywords": [
+        "gesture generation; motion representation; video generation"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-21",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=EXsiGFkwV6",
+    "pdf_link": "https://openreview.net/pdf?id=EXsiGFkwV6",
+    "comments": [
+        {
+            "comment": {
+                "value": "### Response to Concerns About Novelty in Core Components:\n\nWe appreciate the reviewer\u2019s feedback and recognize that the **VQ + Masking-based Representation Learning** for gesture generation may seem similar to existing work. However, the primary novelty of our method lies in **contextual distillation through contrastive alignment** for learning speech triggers that drive gesture patterns, as discussed in Section 4.1. To the best of our knowledge, no prior work has explored the **benefits of audio-motion representation learning for constructing contextualized motion representations to achieve better gesture generation**.\n\nTo further highlight the contribution of our approach, we plan to add additional experiments [here](https://anonymousaisubmission.github.io/) comparing our method with other approaches focused solely on gesture pose generation (without video synthesis), including:\n\n1. **EMAGE**: Towards Unified Holistic Co-Speech Gesture Generation via Expressive Masked Audio Gesture Modeling  \n2. **TalkSHOW**: Generating Holistic 3D Human Motion from Speech  \n3. **BEAT**: A Large-Scale Semantic and Emotional Multi-Modal Dataset for Conversational Gesture Synthesis  \n4. **Rhythmic Gesticulator**: Rhythm-Aware Co-Speech Gesture Synthesis with Hierarchical Neural Embeddings (as suggested by Reviewer P3xu)\n\nThese works utilize VQ+masking-based models or contrastive domain alignment, making them relevant baselines for comparison. We will conduct these experiments using the **BEAT-X dataset** for a fair comparison. For consistency, we will exclude the image-animation component from our method and extend gesture representation from 2D to 3D poses, incorporating SMPL-X expressions for facial gestures, as done in the literature.\n\n---\n\n### Response to Pose Alignment:\n\nWe apologize for any confusion caused by our previous explanation. To address variations in human skeletal structure, the pose representation for a sequence is calculated as the difference in position (\u0394x, \u0394y) relative to the coordinates of the starting frame, combined with the original position of that frame. This is represented as [\u0394x, \u0394y, x\u2081, y\u2081]. This formulation ensures that pose alignment is achieved since all subsequent frames\u2019 motions are conditioned on the starting frame\u2019s pose.\n\n---\n\n### Response to Detailed Comparison:\n\nRegarding speech-gesture alignment: \n\nIn works like [1] and [2], contrastive learning is employed to align audio and gesture modalities, initializing the audio encoder for gesture generation. However, our method differs in the following key ways:\n\n1. **Contextualized Motion Representation**: We directly encode alignment information into the motion representation using an RQ-codebook. This allows the semantics and contextual triggers from speech (e.g., pronouns like \u201cthis\u201d or \u201cthey\u201d) to be fused into the motion embedding. This enables the generator to easily identify the corresponding motion representation in response to speech triggers during generation. In contrast, [1] and [2] lack such a strategy for creating more contextualized motion representations.\n\n   Our ablation study in Table 3 (b), (c) shows that, with modality alignment alone, we achieve an FGD score of around 21. However, applying contextual distillation through contrastive learning further refines the motion representation, leading to better contextual-aware generation.\n\n2. **Temporal Alignment**: In addition to high-level, global sequence alignment, we also address **temporal alignment** by applying temporal masking and audio beat classification. None of the other works consider this intricate temporal alignment between speech and gestures.\n\nFor **VQ + Masking-based Generation**:\nWorks such as [4], [5], and [6] explore VQ-quantization with autoregressive, or diffusion-based generation techniques. While these methods do utilize VQ-based frameworks, we believe our contribution in the generator design is unique in that we apply a **Iterative re-masking-based approach specifically to co-speech gesture generation**. \n\nGenerating gestures as long sequences presents a challenge for autoregressive or diffusion models, as they are often too slow for real-time generation. In contrast, our approach using masking-based generation can efficiently generate gestures in just **5 steps**, with further steps potentially degrading quality by disrupting the temporal relationships between the modalities (different from text-motion domain where more step masking will be more beneficial in [5). Our extensive experiments in Tab. (e) and (f) in generator design and generation procedures is non-trival but presenting results potentially be helpful for future.\n\nAdditionally, while [3] shares the same domain (co-speech gesture generation), it does not present overlapping or similar novelties to our work."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thanks for your valuable suggestions and comments to this work. We address some of the technical details as follows:\n\n### Reply to Masking Strategy and Clarification:\nThank you for pointing this out. To clarify, for an 80-frame video, we randomly select 24 continuous frames to mask during training. We conducted a preliminary experiment to assess the effect of random masking by comparing it with a setting that did not use any masking. The results are summarized in the table below. We include this \"no mask\" setting in the manuscript, in addition to the two original settings described in the Appendix.\n\n### Speech-Face retrieval vs. Face-Speech retrieval\n| **Setting**          | **R@1 \u2191**  | **R@2 \u2191**  | **R@3 \u2191**  | **R@5 \u2191**  | **R@10 \u2191** | **R@1 \u2191**  | **R@2 \u2191**  | **R@3 \u2191**  | **R@5 \u2191**  | **R@10 \u2191** |\n|----------------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|\n| **(a) All**          | 0.181      | 0.350      | 0.485      | 0.722      | 1.343      | 0.226      | 0.361      | 0.429      | 0.677      | 1.207      |\n| **(a) w/o mask**     | 0.142      | 0.326      | 0.388      | 0.656      | 1.112      | 0.158      | 0.299      | 0.343      | 0.612      | 1.026      |\n| **(b) Small batches**| 26.230     | 45.318     | 59.330     | 77.019     | 89.858     | 24.977     | 44.822     | 59.894     | 77.775     | 90.264     |\n| **(b) w/o mask**     | 25.373     | 44.221     | 60.432     | 78.141     | 88.232     | 24.534     | 44.532     | 59.121     | 74.232     | 87.675     |\n\n### Speech-Body retrieval vs. Body-Speech retrieval\n| **Setting**          | **R@1 \u2191**  | **R@2 \u2191**  | **R@3 \u2191**  | **R@5 \u2191**  | **R@10 \u2191** | **R@1 \u2191**  | **R@2 \u2191**  | **R@3 \u2191**  | **R@5 \u2191**  | **R@10 \u2191** |\n|----------------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|------------|\n| **(a) All**          | 0.102      | 0.237      | 0.327      | 0.587      | 1.230      | 0.158      | 0.271      | 0.406      | 0.654      | 1.320      |\n| **(a) w/o mask**     | 0.112      | 0.143      | 0.303      | 0.494      | 1.023      | 0.144      | 0.253      | 0.384      | 0.599      | 1.187      |\n| **(b) Small batches**| 25.542     | 43.660     | 57.954     | 77.471     | 90.309     | 24.052     | 43.874     | 58.495     | 76.986     | 89.745     |\n| **(b) w/o mask**     | 23.437     | 40.653     | 54.332     | 74.983     | 88.273     | 22.454     | 40.235     | 56.383     | 74.436     | 88.675     |\n\n\nFrom these results, we conclude that global contrastive learning can be enhanced by incorporating simple random masking, which helps improve the temporal alignment between audio and gesture features.\n\n---\n\n### Reply to Technical Details (Sequence Length and Audio2Pose Generation):\nFor both contrastive learning and the audio2pose generation tasks, we use 80-frame videos, which correspond to approximately 3.2 seconds of video. This information is also availble in Appendix, Implementation-Detail Section.\n\n---\n\n### Reply to Model Efficiency (Resolution and GPU Memory):\nThank you for raising this point. We\u2019ve added additional details in the table below, along with a comparison to the resource consumption of other models. For reference, we provide a link to our anonymous webpage demonstrating the comparison: [here](https://anonymousaisubmission.github.io/). The visual comparisons with Animate Anyone will be uploaded by next two days.\n\n### Resource Consumption Comparison with Stable-Diffusion-based Image-Animation Models (1 NVIDIA A100 GPU), Inference for 80-frame Videos\n\n* denotes our re-implementation on the PATS dataset.\n\n| **Methods**       | **Training \u2193** | **Batch Size** | **Resolution** | **Memory \u2193** | **Training Task**  | **Inference \u2191** |\n|-------------------|----------------|----------------|----------------|--------------|-------------------|------------------|\n| AnimateAnyone*    | 10 days        | 4              | 512            | 40 GB        | Pose-2-Img        | -                |\n| AnimateAnyone*    | 5 days         | 2              | 512            | 42 GB        | Img-2-Vid (24 frames)         | 15s              |\n| **Ours**          | 2.5 days       | 64             | 256            | 64 GB        | Img-Warp          | \u2264 1s             |\n| **Ours**          | 1 day          | 64             | 256            | 48 GB        | Img-Refine        | \u2264 1s             |\n| **Ours**          | 3.5 days       | 32             | 512            | 60 GB        | Img-Warp          | \u2264 1s             |\n| **Ours**          | 1 day          | 32             | 512            | 40 GB        | Img-Refine        | \u2264 1s             |\n\n---"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper addresses challenges in co-speech gesture video generation through a proposed method called Realistic-Gesture. This method incorporates three main components: a speech-aware gesture motion representation, a masked gesture motion generator, and a pixel-level refinement module. Experimental results show that the proposed approach generates realistic co-speech gesture videos, while also enabling long-sequence generation and video editing capabilities."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The authors identify three key challenges in co-speech gesture video generation and propose solutions to address each one.\n\n2. Amount of ablation studies are conducted to verify the effectiveness of the proposed modules."
+            },
+            "weaknesses": {
+                "value": "Generally, some challenges identified in this paper have been addressed in prior research; however, the authors failed to cite these studies or compare their findings with the experiments conducted in this work. Notable examples include:\n\n1. **\"Rhythmic Gesticulator: Rhythm-Aware Co-Speech Gesture Synthesis with Hierarchical Neural Embeddings.\"** This study proposed a shared hierarchical embedding for both speech content and motion, which closely resembles the approach taken by the authors.\n  \n2. **\"Make-Your-Anchor: A Diffusion-based 2D Avatar Generation Framework.\"** This research adopted SMPL-X parameters as motion representations for co-speech video generation, enhancing the clarity of hand movements.\n\nAdditional weaknesses include:\n\n1. While the proposed method can perform gesture inpainting, the authors inaccurately claim that it supports video gesture editing. This assertion is misleading, as the inpainted gestures are not controllable.\n\n2. In some of the \"Gesture Pattern Transfer\" videos, the character appears distorted, likely due to differences in body proportions between the source and target characters."
+            },
+            "questions": {
+                "value": "See weaknesses part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes Realistic-Gesture, a framework that enhances this process through speech-aware gesture tokenization, a mask gesture generator for audio-to-gesture mapping, and a structure-aware refinement module. The results demonstrate that Realistic-Gesture creates realistic, speech-aligned gesture videos and supports long-sequence generation and editing."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This paper proposes a framework for generating co-speech body-gesture videos, dubbed Realistic-Gesture. Realistic-Gesture integrates a speech-aware gesture motion representation, a masked gesture motion generator, and a pixel-level refinement module to facilitate high-quality video generation. The strengths of this work are summarized as follows:\n1. The insight of the work is interesting and significantly practical in real-life applications.\n2. The experimental workload is solid and persuasive.\n3. The demo videos are helpful for reviewers to have a comprehensive understanding of this work."
+            },
+            "weaknesses": {
+                "value": "However, I still find some weaknesses and some main questions in this manuscript:\n\n1. In the introduction section, the authors put much effort into introducing existing works. This may lead to much overlap with the ``related work'' section. The motivation and insight of this work could be summarized more compactly. Authors can leverage more space to elaborate on the high-level technical contribution of their work.\n\n2. The teaser figure (Fig. 1) seems confused. I cannot obtain significant insight into it. Meanwhile, there are no effective captions in the manuscript.\n\n3. There are some typos, e.g., in line 173, To achieve this goal, We... The letter ``W'' should be lowercase.\n\n4. The technical novelty seems a little bit weak. The Residual Gesture Generator, Masked Gesture Generator are very similar to the previous works, like:\n\n[1] Generating Holistic 3D Human Motion from Speech, in CVPR 2024.\n\n[2] EMAGE: Towards Unified Holistic Co-Speech Gesture Generation via Expressive Masked Audio Gesture Modeling, in CVPR 2024.\n\n[3] BEAT A Large-Scale Semantic and Emotional Multi-Modal Dataset for Conversational Gestures Synthesis, in ECCV 2022.\n\n5. I am very curious that the FGD and FVD in Experimental Table 1 seem a bit weird. While the authors' method achieves a larger marginal improvement in FGD than the suboptimal S2G (1.303 vs 23.646). The FVG of these two methods is very propinquity (476.120 vs 486.134). Does this mean that the author's proposed ``STRUCTURE-AWARE IMAGE REFINEMENT'' is not effective?\n\n6. The proposed ``learnable edge heatmaps'' is similar to the work named [4]. I suggest the authors compare with it.\n\n[4] Audiodriven neural gesture reenactment with video motion graphs, in CVPR 2022."
+            },
+            "questions": {
+                "value": "Please refer to Weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes Realistic-Gesture, a gesture video generation model with speech audio and the first video frame inputs. The proposed method first learns a joint embedding of the speech audio and gesture motions for speech-gesture alignment with CLIP-like contrastive learning. The pose features are 2D face and body landmarks from MMPose. The speech-audio features are the concatenation of WavLM, Mel spectrogram, and beat detections. The gesture motions are tokenized using Residual VQ (RVQ) with the distillation to minimize the cosine similarity with the motion encoder output in the gesture-audio joint embedding. Inspired by VALL-E, the method uses the Masked Gesture Generator for RVQ's base layer and the Residual Gesture Generator for residual layers. The Masked Gesture Generator is a transformer with the cross-attention between the audio embedding and the gesture embedding with AdaIN after the feed-forward layer to condition the model with the speaker identity. The Masked Gesture Generator is trained with randomly masked tokens. The Residual Gesture Generator is similar but consists of embedding layers corresponding to the RVQ residual layers. During training, one residual layer is randomly selected. The inference iteratively predicts the mask probabilities conditioned by the audio embedding to remask the token with the lowest probability for the next iteration. Finally, the source image is warped with TPS [Zhao and Zhang 2022] with the edge maps from the generated keypoints, followed by the image refinement GAN conditioned by the same edge maps, to generate the gesture videos."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Speech-gesture alignment with CLIP-like joint embedding with contrastive learning\n- Motion tokenization with RVQ distilled by the joint embedding above\n- Audio-conditioned Masked Motion Model with dedicated residual generators for the RVQ residual layers"
+            },
+            "weaknesses": {
+                "value": "The contributions boil down to the motion representation and the motion generation model. There is not much to the image generation module. The visual quality may also be suffering because of the image generation module (see below).\n\nQualitatively, the generated videos from this method generally look better than other methods in comparison (ANGIE, MM-Diffusion, S2G-Diffusion), especially if I focus on the speech-gesture motions. However, there are moments where the human generation is creepier than others with this method, e.g. in noah1.mp4, the head and the body look disconnected. I am not too surprised that the TPS warping will introduce unnatural human poses, especially with larger 3D motions. Perhaps the image warper and the refiner need more work. The motion representation and the generation model perhaps could be hooked up to some other conditional image/video generator.\n\nThe writing is somewhat unclear on the image generation module. The main text directly jumps to the image refinement module without mentioning the TPS image warping, which confused me a bit. Perhaps 4.3 should be titled differently and recap the image warping module while clarifying this is not the paper's contribution (no strong opinion here).\n\nI understand that the space is very limited but I would like more elaborations on the ablations, especially on the motion representation and the generator design, so I can be confident that the main contributions of this paper are indeed effective. See my question."
+            },
+            "questions": {
+                "value": "Can authors provide videos for the ablation study, especially on the motion representation and the generator designs? I want to be confident that the use of the CLIP-like joint embedding to distill the RVQ for the Masked Motion Model to generate tokens is helping to improve the visual quality.\n\nThe speech-gesture joint embedding could perhaps be used to evaluate the alignment of the speech audio and gestures, like the CAPP model from VASA-1 [Xu et al. 2024]."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Legal compliance (e.g., GDPR, copyright, terms of use)"
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "The dataset seems to be scraped off from YouTube. While the metadata shared in PATS [Ginosar et al. 2019] may be licensed under \u201cCC BY - NC - ND 4.0 International,\u201d I do not think this means the videos linked by the metadata have the same license."
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a framework aimed at generating realistic co-speech gesture videos. This framework tackles the challenges of establishing correspondences between speech signals and body movements, inferring suitable gestures from speech samples, and rendering the target speaker performing these gestures in a lifelike manner. The authors propose three innovative components to accomplish this:\n1. A speech-aware gesture representation that aligns facial and body gestures with speech semantics, enabling fine-grained control.\n2. A mask gesture generator that maps audio signals to gestures by predicting masked motion tokens, thereby enabling bidirectional and contextually relevant gesture synthesis and editing.\n3. A structure-aware refinement module that uses a multilevel, differentiable edge connection to link gesture keypoints for the generation of detailed videos.\n\nThe paper's contributions include the production of highly realistic, speech-aligned gesture videos, as well as support for long-sequence generation and video gesture editing applications. The experiments demonstrate the method's superiority over existing approaches in both quantitative and qualitative metrics."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper presents a well-articulated approach to generating co-speech gesture videos, demonstrating a clear understanding of the associated challenges and the necessity for a sophisticated method to address them.\n- The authors have crafted a compelling narrative surrounding the design of their method, offering adequate motivation for each component.\n- From a visual standpoint, the proposed method surpasses existing state-of-the-art techniques.\n- The integration of speech-aware gesture representation, masked gesture generation, and structure-aware refinement is a significant strength, enhancing both the realism and controllability of gesture synthesis."
+            },
+            "weaknesses": {
+                "value": "**Long Sequence Generation Quality**: The author identifies the capacity to generate long sequences as a primary contribution of their method. However, the supplementary video material reveals that the quality of long sequence generation is subpar; in later stages, the hands become blurry, and behavioral patterns tend to repeat. Furthermore, the author provides a limited number of videos and fails to present quantifiable metrics for assessing the quality of long sequence generation. Consequently, I have significant doubts regarding the framework's ability to generate long sequences effectively.\n\n**Lack of Novelty in Core Components**: Although the framework offers an integrated approach to gesture synthesis, its core components\u2014speech-aware gesture representation and masked gesture generation\u2014have been examined in various forms in recent literature.\n- The contrastive learning approach for speech-gesture alignment has been utilized in gesture synthesis methods [1,2,3] and is very similar to the CSMP introduced in [1].\n- Similarly, the use of RVQ [4,5] and masked gesture synthesis techniques [6] is not new to the field.\n\nThe paper should offer a more detailed comparison with these methods and present a more comprehensive review of the related works.\n\n[1] Deichler, Anna, et al. \"Diffusion-based co-speech gesture generation using joint text and audio representation.\" Proceedings of the 25th International Conference on Multimodal Interaction. 2023.\n\n[2] Liu, Xian, et al. \"Learning hierarchical cross-modal association for co-speech gesture generation.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022.\n\n[3] Xu, Zunnan, et al. \"Chain of generation: Multi-modal gesture synthesis via cascaded conditional control.\" Proceedings of the AAAI Conference on Artificial Intelligence. Vol. 38. No. 6. 2024.\n\n[4] Zhang, Zeyi, et al. \"Semantic Gesticulator: Semantics-Aware Co-Speech Gesture Synthesis.\" ACM Transactions on Graphics (TOG) 43.4 (2024): 1-17.\n\n[5] Wang, Congyi. \"T2M-HiFiGPT: Generating High Quality Human Motion from Textual Descriptions with Residual Discrete Representations.\" arXiv preprint arXiv:2312.10628 (2023).\n\n[6] Mao, Xiaofeng, et al. \"MDT-A2G: Exploring Masked Diffusion Transformers for Co-Speech Gesture Generation.\" Proceedings of the 32nd ACM International Conference on Multimedia. 2024."
+            },
+            "questions": {
+                "value": "- This method utilizes 2D keypoints as guiding conditions. However, variations in human skeletal structure and facial shape may result in distortions of the generated portrait identity. Has alignment been performed in this context? If so, what techniques are employed for alignment?\n- What is the quality of generation for long sequences? Can the author provide quantitative indicators to support their findings?\n- Can the author provide a more detailed description of the differences compared to the literature referenced in the Weakness? If the author can offer sufficient explanations to enhance the novelty of the paper, I will consider increasing the score."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper improves two-stage co-speech video gesture generation method in two main aspects. Two-stage here is auido2pose and pose2video stages. The authors:\n\n**1. Improve audio2pose stage by contrastive pretraining.**\n\n- The baseline started from a mask represenation learning and Residual VQ-VAE, refer to MoMask [Guo et al. 2024]. The authors modify it to fuse audio feature by cross-attention. \n- The authors pretrain gesture encoders, and audio encoders using a audio2pose contrastive learning. Then, the audio encoder in audio2pose generation stage is initialized by pretrained audio encoder. The gesture encoder, in generation stage is distilled to keep the similarity to pretrained gesture encoder.\n\n**2. improve pose2video stage by learned edge-map for image warping.** \n\n- The baseline is a pixel-level image-warping based pipeline. Using Thin Plate Splines (TPS) as mentioned in Appendix. G. The image was initially warpped and then refined by network.\n- The authors propose a thickness learnable edge heatmap. And using this heatmap to improve the warping results. \n\nThe authors present experiments to show the overall results outperform previous methods, and have the ablation studies for demonstrating each improvement is effective."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The proposals in this paper are correct and have insights:\n\n**1. Improve audio2pose stage by contrastive pretraining.**\n\nThe concept of improving the audio2pose generation via contrastive learning pretraining is correct and from the results, it improves the audio2pose generation significantly.  In image generation field, researchers use pretrained text-image CLIP encoder to improve the results. this paper shares the same insight in audio2pose domain. \n\n**2. improve pose2video stage by learned edge-map for image warping.**\n\nThis is a valuable improvement to pixcel-level image warping based approach. Firstly, most of current methods may focus on the improvement of latent-diffusion based methods, but they are typically slow in real-world applications, and have noisy background which require further post-processing. The pixcel-level approach, is very valuable for improvement due to the clean background and faster inference speed. Second, it is correct the most important problem is the correctness of \"flow\" for warpping based approach, and the thickness of flow is the most important factor. using a learned approach to solve this avoid a lot of manually parameter adjustments.\n\nThe experiments, in particular for the ablation part, show the effectiveness of each proposed module."
+            },
+            "weaknesses": {
+                "value": "I have a few unclear implementation details.\n\n1. Random mask for contrastive learning training. in Line 211-212. \"we random mask 30% ...\" I'm confused the mask is in a continues short-sentence level or frame-level. and why it could improve the low-level similarity learning. I suggest writing more explainations here."
+            },
+            "questions": {
+                "value": "The questions will influence my score is: \n\n1. Random mask for contrastive learning training. in Line 211-212. \"we random mask 30% ...\" I'm confused the mask is in a continues short-sentence level or frame-level. and why it could improve the low-level similarity learning. I suggest writing more explainations here.\n\n2. What is the sequence length used for training the contrastive learning and audio2pose generation?\n\n3. Similarly, what is the resolution for the image training and evaluation stage, will the image-warping based approach suffer a GPU memory issue when resolution increase? \n\nThe question will not influence my score is:\n\n1. some discussion about early stage audio2pose + pose2video work like speech2gestures [Ginoar et al. 2019] and Speech Driven Template [Qian et al. 2021]. in related work section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

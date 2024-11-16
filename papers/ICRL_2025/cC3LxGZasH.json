@@ -1,0 +1,222 @@
+{
+    "id": "cC3LxGZasH",
+    "title": "Beyond FVD: Enhanced Evaluation Metrics for Video Generation Quality",
+    "abstract": "The Fr\u00e9chet Video Distance (FVD) is a widely adopted metric for evaluating video generation distribution quality. However, its effectiveness relies on critical assumptions. Our analysis reveals three significant limitations: (1) the non-Gaussianity of the Inflated 3D Convnet (I3D) feature space; (2) the insensitivity of I3D features to temporal distortions; (3) the impractical sample sizes required for reliable estimation. These findings undermine FVD's reliability and show that FVD falls short as a standalone metric for video generation evaluation. After extensive analysis of a wide range of metrics and backbone architectures, we propose JEDi, the JEPA Embedding Distance, \nbased on features derived from a Joint Embedding Predictive Architecture, measured using Maximum Mean Discrepancy with polynomial kernel.  Our experiments on multiple open-source datasets show clear evidence that it is a superior alternative to the widely used FVD metric, requiring only 16% of the samples to reach its steady value, while increasing alignment with human evaluation by 34%, on average.",
+    "keywords": [
+        "Video quality metrics",
+        "Frechet Video Distance",
+        "Inflated 3D Convnet",
+        "VideoMAE",
+        "VJEPA",
+        "kernel metrics"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=cC3LxGZasH",
+    "pdf_link": "https://openreview.net/pdf?id=cC3LxGZasH",
+    "comments": [
+        {
+            "comment": {
+                "value": "Dear Reviewer,\n\nThank you for your thorough review and insightful feedback.\n\nJEDI and FVD are generative distribution assessment metrics that rely on reference datasets for evaluations (cannot be used for no-reference quality assessment). We appreciate your recommendation to evaluate our metric using AI-generated conten, and we conducted experiments on the T2VQA database, comparing the JEDi and FVD distances.\n\nFirstly, the T2VQA database has the following characteristics:\n- Each video is associated with a single Mean Opinion Score (MOS) aggregating ratings for text-video alignment and video fidelity, obtained through a 0-100 slider (Section 3.2 of [1]).\n- Human-evaluated scores exhibit significant variance, clustering around 50 with a standard deviation of 16.6 (Figure 3 and Section 3.2 of [1]).\n- The database contains generations from 10 different AI models. Many models yield similar MOS scores, resulting in an ambiguous ranking of the models if used directly (Figure 3 of [1]).\n- T2VQA-DB lacks a \"ground-truth\" video set. To address this, we identified corresponding videos from WebVid10M using the same prompts and utilized them as our ground-truth distribution for evaluation.\n\nWe selected generations from three models (#2, 7, and 9) that exhibit a clear gap in video quality, with average rankings of 10 (worst), 5, and 1 (best), respectively, based on MOS scores. Both FVD and JEDi scores ranked these models consistently, with model #2 as the worst and model #9 as the best. Our evaluation results are\n|                                 | Model #2    | Model #7    | Model #9    |\n|---------------------------------|-------------|-------------|-------------|\n| Ranks according to MOS          | Worst          | Median           | Best           |\n| JEDi (#. conv samples) | 4.427 (100) | 2.164 (200) | 0.722 (300) |\n| FVD (#. conv samples)  | 884.1 (600) | 445.6 (800) | 279.9 (900) |\n\n Importantly, JEDi achieved convergence with significantly fewer samples, compared to FVD: the number of samples to converge for JEDi are 100, 200 and 300; the number of samples to converge for FVD are 600, 800 and 900.\n\nWe initially planned to evaluate JEDi and FVD on the LGVQ and GAIA datasets. However, the LGVQ dataset is not yet available, and GAIA lacks a ground-truth set, with its scores also reflecting action-tag alignment. We are currently exploring alternative AIGC datasets that offer decoupled visual quality scores from human raters alongside a ground-truth set. We will keep you updated on our progress.\n\nRegarding your comment on NIQE evaluator:\nWe acknowledge NIQE's effectiveness in image quality assessment, but highlight its limitations for video data. Specifically:\nImage evaluators, like NIQE, overlook temporal consistency crucial for video evaluation.\nNIQE assesses single-image quality, whereas our work focuses on evaluating generation distribution quality, which examines a model's generalization capability.\nNIQE's reference-free approach differs from our metric, which measures distance from the ground-truth distribution.\n\nAddressing your concern about the monotonicity assumption in Figure 5, we provide visualizations of generation results at various training checkpoints in Figure 22 \u2013 the video version of which is uploaded here: [link](https://accio-muggle.github.io/anonymous-results.github.io/). As shown, the generated videos are visibly higher quality as the number of iterations increases. \n\n*[1] Kou, T., Liu, X., Zhang, Z., Li, C., Wu, H., Min, X., Zhai, G., & Liu, N. (2024). Subjective-Aligned Dataset and Metric for Text-to-Video Quality Assessment. ArXiv, abs/2403.11956.*"
+            }
+        },
+        {
+            "comment": {
+                "value": "Dear Reviewer,\n\nThank you for your valuable feedback. We will revise our writing based on your suggestions.\n\n*For Points 1 & 2:*\nWhile many studies focus on single-video generation quality, our work centers on a different aspect: assessing generation distribution quality. To our knowledge, the only other work addressing this is FVD.\nEvaluating video distributions requires mapping the videos into feature spaces. For example, the I3D network used in FVD was trained on a human-action classification task; its features are biased toward spatial content (for recognizing actions) but are less suitable for evaluating temporal consistency. In contrast, VideoMAE and V-JEPA features, pretrained on self-supervised tasks, may be more appropriate for assessing overall video quality. Therefore, we believe defining the feature extractors and their feature space characteristics is important to facilitate understanding of distribution evaluation throughout the paper.\n\n*For Point 3:*\nWe will adjust the scaling of the figures to improve readability.\n\n*For Point 4:*\nIn the Table 1 experiment, the testing video dataset is subjected to noise distortions, including low blur (\u03c3 \u223c [0.05, 0.75]), medium blur (\u03c3 \u223c [0.1, 1.5]), and high blur (\u03c3 \u223c [0.01, 3]), where \u03c3 represents the per-frame blur intensity. A larger range indicates greater temporal inconsistency. We will update this information in the table caption.\n\n*For Points 5 & 6:*\nWe will add new experimental results using the T2VQA database, which contains 10K generated videos from 10 AI models along with human evaluation scores. Key details of the database include:\n- Each video is associated with a single Mean Opinion Score (MOS) aggregating ratings for text-video alignment and video fidelity, obtained through a 0-100 slider (Section 3.2 of [1]).\n- Human-evaluated scores exhibit significant variance, clustering around 50 with a standard deviation of 16.6 (Figure 3 and Section 3.2 of [1]).\n- The database contains generations from 10 different AI models. Many models yield similar MOS scores, resulting in an ambiguous ranking of the models if used directly (Figure 3 of [1]).\n- T2VQA-DB lacks a \"ground-truth\" video set. To address this, we identified corresponding videos from WebVid10M using the same prompts and utilized them as our ground-truth distribution for evaluation.\n\nWe selected generations from three models (#2, 7, and 9) that exhibit a clear gap in video quality, with average rankings of 10 (worst), 5, and 1 (best), respectively, based on MOS scores. Both FVD and JEDi scores ranked these models consistently, with model #2 as the worst and model #9 as the best. Our evaluation results are\n|                                 | Model #2    | Model #7    | Model #9    |\n|---------------------------------|-------------|-------------|-------------|\n| Ranks according to MOS          | Worst          | Median           | Best           |\n| JEDi (#. conv samples) | 4.427 (100) | 2.164 (200) | 0.722 (300) |\n| FVD (#. conv samples)  | 884.1 (600) | 445.6 (800) | 279.9 (900) |\n\n Importantly, JEDi achieved convergence with significantly fewer samples, compared to FVD: the number of samples to converge for JEDi are 100, 200 and 300; the number of samples to converge for FVD are 600, 800 and 900.\n\nAdditionally, we are exploring alternative AIGC datasets that provide decoupled visual quality scores from human raters and include a ground-truth set. We will keep you updated on our progress.\n\nAlso, thank you for pointing out the formatting issue in Section E.3. Table 4 was intended to be under Section E.3 but was mistakenly shifted. We will correct this in the updated file.\n\n*For Point 7:*\nWe have included plots of I3D and VideoMAE's feature sensitivities to various distortions in Figures 17 and 18. Figure 17 demonstrates that I3D features are highly sensitive to spatial distortion (salt & pepper noise), while Figure 18 shows that VideoMAE-PT features perceive medium elastic distortion as worse than high elastic distortion on the UCF dataset. Additionally, we included the correlation between evaluated feature distances under different distortions and human opinions in Table 4.\n\n*For Point 8:*\nWe will revise the equations in Appendix B to improve readability.\n\nThank you for your feedback. We appreciate your insights and will incorporate these changes in our updated submission.\n\n*[1] Kou, T., Liu, X., Zhang, Z., Li, C., Wu, H., Min, X., Zhai, G., & Liu, N. (2024). Subjective-Aligned Dataset and Metric for Text-to-Video Quality Assessment. ArXiv, abs/2403.11956.*"
+            }
+        },
+        {
+            "comment": {
+                "value": "Dear Reviewer,\n\n\nThank you for your insightful feedback. We appreciate your suggestion and acknowledge that our paper focuses specifically on evaluating video distribution generation quality, which is one aspect of broader video qualities. To clarify this scope, we plan to revise our title and abstract accordingly.\n\n\nRegarding the potential application of our findings to single video evaluation, this work highlights the advantages of evaluating video quality within the V-JEPA feature space over I3D and VideoMAE spaces. Based on this, we believe that the V-JEPA could serve as an effective extractor for single video quality evaluation by comparing the likelihood of a video against ground-truth video sets. Although this direction was not explored in the current paper, it offers a promising direction for future research.\n\nThank you for suggesting AIGC data for evaluation. We conducted experiments using the T2VQA database [1] and would like to provide context before presenting our results:\nThe T2VQA database has the following characteristics:\n- Each video is associated with a single Mean Opinion Score (MOS) aggregating ratings for text-video alignment and video fidelity, obtained through a 0-100 slider (Section 3.2 of [1]).\n- Human-evaluated scores exhibit significant variance, clustering around 50 with a standard deviation of 16.6 (Figure 3 and Section 3.2 of [1]).\n- The database contains generations from 10 different AI models. Many models yield similar MOS scores, resulting in an ambiguous ranking of the models if used directly (Figure 3 of [1]).\n- T2VQA-DB lacks a \"ground-truth\" video set. To address this, we identified corresponding videos from WebVid10M using the same prompts and utilized them as our ground-truth distribution for evaluation.\n\nWe selected generations from three models (#2, 7, and 9) that exhibit a clear gap in video quality, with average rankings of 10 (worst), 5, and 1 (best), respectively, based on MOS scores. Both FVD and JEDi scores ranked these models consistently, with model #2 as the worst and model #9 as the best. Our evaluation results are\n|                                 | Model #2    | Model #7    | Model #9    |\n|---------------------------------|-------------|-------------|-------------|\n| Ranks according to MOS          | Worst          | Median           | Best           |\n| JEDi (#. conv samples) | 4.427 (100) | 2.164 (200) | 0.722 (300) |\n| FVD (#. conv samples)  | 884.1 (600) | 445.6 (800) | 279.9 (900) |\n\n Importantly, JEDi achieved convergence with significantly fewer samples, compared to FVD: the number of samples to converge for JEDi are 100, 200 and 300; the number of samples to converge for FVD are 600, 800 and 900.\n\nWe initially planned to evaluate JEDi and FVD on the LGVQ and GAIA datasets. However, the LGVQ dataset is not yet available, and GAIA lacks a ground-truth set, with its scores also reflecting action-tag alignment. We are currently exploring alternative AIGC datasets that offer decoupled visual quality scores from human raters alongside a ground-truth set. We will keep you updated on our progress.\n\n[1] Kou, T., Liu, X., Zhang, Z., Li, C., Wu, H., Min, X., Zhai, G., & Liu, N. (2024). Subjective-Aligned Dataset and Metric for Text-to-Video Quality Assessment. ArXiv, abs/2403.11956."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the issues present in currently popular evaluation metrics in the field of video generation by proposing a new evaluation metric. It points out the assumptions underlying existing evaluation methods and the problems associated with these assumptions. The newly proposed metric shows better performance in terms of cosine similarity with human evaluations and demonstrates significant improvement in the number of samples needed to converge."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper comprehensively considers the strengths and limitations of existing metrics and systematically reviews the assumptions underlying these metrics, along with the problems associated with these assumptions. It delves into the accuracy of The Fr\u00e9chet distance (FD) and its consequences when these assumptions do not hold. Building on this foundation, the paper addresses some of the issues present in current evaluation strategies. The new evaluation strategy proposed shows a significant improvement in consistency with Cosine Similarity with Human Evaluation."
+            },
+            "weaknesses": {
+                "value": "The paper emphasizes that JEDi, as a video generation evaluation metric, has an advantage in the number of samples required for convergence, achieving faster convergence. However, the number of samples required for convergence should not be considered the primary concern of an evaluation strategy, as not all datasets face the issue of insufficient samples affecting precision; there are still many datasets that meet the necessary conditions. While JEDi performs well in consistency with human evaluations, further experimental validation is needed to assess its performance in other aspects as an evaluation metric.\nAlthough the author said in the experiment that the resolution can be arbitrary, since this work relies on the representation capability of SreamDiffusion[3] based on SD-Turbo or LCM, many \"high-resolution\" images are not included in the training set of SD-Turbo or LCM. Can Promptus effectively transmit videos with various resolutions and high resolutions that it has not seen during SD training?"
+            },
+            "questions": {
+                "value": "Please refer to the Weakness section. \nAdditionally, the paper provides limited explanation of the proposed evaluation metric, JEDi. It might be beneficial to reduce the amount of reiteration about other evaluation metrics and instead increase the logical exposition of JEDi to provide a more comprehensive understanding of its strengths and limitations."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper reveals that FVD falls short as a standalone metric for video generation evaluation, then analyzes a wide range of metrics and backbone architectures, and proposes JEDi, the JEPA Embedding Distance, based on features derived from a Joint Embedding Predictive Architecture, measured using Maximum Mean Discrepancy with polynomial kernel."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The proposed JEDi eliminates the need for parametric assumptions about the underlying video distribution, unlike FVD which relies on the Gaussianity assumption to make its metric feasible.\nJEDi significantly reduces the number of samples needed to make an accurate estimate.\nJEDi has better alignment with human evaluations compared to FVD."
+            },
+            "weaknesses": {
+                "value": "1.\tThe tile of the paper is relatively too broad, as video generation quality as well as its evaluation cover many aspects, however JEDi can only cover an aspect of quality.\n2.\tThe proposed JEDi is a distribution-based evaluation metric, which can not work for a single case, for example to evaluate the quality of a single generated video.\n3.\tThe single video AIGC video quality assessment should also be discussed and compared, including the state-of-the-arts and its differences and similarities with the distribution metrics.\n4.\tThe authors conduct a subjective evaluation which is a very small scale study. More evaluations on existing large-scale AIGC video quality databases should be conducted.\n5.\tMore comparisons with the single AIGC video quality assessment metrics are suggested to be included."
+            },
+            "questions": {
+                "value": "Following the above weaknesses, some questions are suggested to be answered.\n1.\tAs we known, video generation quality covers many aspects, thus the authors are suggested to specify which aspect of quality this paper focuses on.\n2.\tThe possibility of applications on single video quality evaluation should be discussed.\n3.\tThe are many studies for single generated image or video quality assessment studies in the image/video quality assessment communities.\n4.\tIn some open AIGC video quality assessment databases, both generated videos and human labels are given, for example the Text-to-Video Quality Assessment DataBase (T2VQA-DB), Large-scale Generated Vdeo Quality assessment (LGVQ) dataset, Generic AI-generated Action (GAIA) dataset. The alignment with human ratings on these databases are suggested to be tested.\n5.\tFollowing the above comment, the performance comparisons with these AIGC video quality models are suggested to be given."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work analyzes the limitations of FVD and proposes the JEPA Embedding Distance based on features derived from a Joint Embedding Predictive Architecture. The authors commit to develop effective, robust metrics with small sampling size for guiding the current surge in video generation research. The experiments on open-source datasets show that compared to the widely used FVD metric, the proposed method requiring only 16% of the samples to reach its steady value, while increasing alignment with human evaluation by 34%, on average."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The authors note three key hurdles in video generation: (1) Data size, (2) Computational resources, and (3) Metric convergence speed, and commence by developing metrics with higher sample efficiency with fast convergence.\n2. The authors investigate the correlation between metric with distortion level and training duration and gain valuable observations to further improve the FVD metric."
+            },
+            "weaknesses": {
+                "value": "1. The content arrangement is not sufficiently appropriate. For example, Section 2.1 and 2.2 introduce a lot of consensus information about Inflated 3D ConvNet, video masked autoencoder, and the definition of Fr \u0301echet Distance, which should be moved to Appendix. In contrast, more related work about the evaluation metrics for video generation should be reviewed [1, 2]. \n2. The organization of Section 1 should be improved to enhance its readability. Line53: a video generation model \u2026\u2026 produce \u2026.. with diverse features? The two examples in Line53-57 are limited in scenarios. Line 59 - 60 only mentioned some full-reference video quality metrics,  however, lack of the introduction of no-reference video quality assessment (VQA) metrics ([1, 2]), which are more practical in real-world applications.\n3. Fig. 3 is difficult to interpret without zooming in. Improving the resolution, providing clearer annotations or changing the scale could make the results more convincing.\n4. What is the meaning of the items in red font in Table 1? Lack of explanation. And what is the meaning of blur (low, mid, high)? Are they mean the distortion Level? These should be noted in the Table caption.\n5. The experiment is not comprehensive enough. Only two I2V models and three noise distortion types are included. I recommend that the authors add more image-to-video models for evaluation, both proprietary and open source, to support your findings. Since there are low-level distortion (blur, noise, artifacts) and high-level distortion (semantic, composition) in generated videos, it is necessary to evaluate the proposed JEDi in these scenarios.\n6. The details of human evaluation in Section5.4 are vague. Since the normativity of the subjective study largely affect the reliability of these results. The content in App. E.3 is empty.\n7. Line378: I3D and VideoMAEPT are not ideal feature spaces for building video quality metrics, as they do not capture blur distortion well. How about other distortions?\n8. The equations in App. B should be better arranged to increase their readability.\n\n[1] Ghildyal, Abhijay, et al. \"Quality Prediction of AI Generated Images and Videos: Emerging Trends and Opportunities.\"\u00a0*arXiv preprint arXiv:2410.08534*\u00a0(2024).\n\n[2] Min, Xiongkuo, et al. \"Perceptual video quality assessment: A survey.\"\u00a0*arXiv preprint arXiv:2402.03413*\u00a0(2024)."
+            },
+            "questions": {
+                "value": "see weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper provides critical analysis about FVD, which is the commonly used quality evaluation metric for generated videos. Three major limitations of FVD are discussed: 1) over-reliance on Gaussianity assumptions, 2) high-dimensional feature spaces, and 3) low sample efficiency. Furthermore, this paper proposes a new metric named JEDi, which computes Maximum Mean Discrepancy (MMD) in a V-JEPA feature space. Extensive experiments are conducted and the results demonstrate its robustness and effectiveness in terms of distortion-sensitivity, high sample efficiency, and high correlation with human ratings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tThe limitations of FVD are systematically identified and analyzed, especially regarding the non-Gaussianity of the I3D feature space and the low sample efficiency. \n2.\tFindings and insights derived from comprehensive comparison experiments are interesting and convincing, such as the importance comparison of feature space and distance metrics, and the distortion-aware feature space selection.\n3.\tA well-justified metric name JEDi is proposed that addresses the main issues in FVD. The methodology is clearly explained, and the effectiveness of JEDi is well verified through extensive experiments."
+            },
+            "weaknesses": {
+                "value": "1. Due to the limitations of the small-scale human evaluation, it would be better to evaluate the quality evaluation performance on large-scale video quality assessment datasets of generated content. In the human evaluation, only comparison ratings as the human preference are provided, lacking the overall quality ratings which can be obtained by single stimulus. Since JEDi is targeting quality evaluation for generated videos where the quality is practically measured without reference, i.e., no-reference quality assessment, it would be more comprehensive to evaluate JEDi on large-scale open-source video quality databases of AI-generated content, such as T2VQA-DB [1] and GAIA [2].  \n2. Lacking of reviewing and analyzing relevant literatures. Similar to FID ant its variants, NIQE [3] evaluates the quality by measuring distribution distance in the feature space. Targeting measure quality of non-generated images, NIQE extracts neurostatistical features, fit the features with Multivariate Gaussian Model, and compute distribution distance by Mahalanobis Distance. It would be very insightful to include the Mahalanobis Distance into the discussion of the effective distance metrics, and to analyze the difference of algorithm design among FID/FVD, NIQE, and JEDi. Quantitive experiments are expected to provide holistic analysis.\n\n[1] GAIA: Rethinking Action Quality Assessment for AI-Generated Videos, arXiv 2024\n[2] Subjective-Aligned Dateset and Metric for Text-to-Video Quality Assessment, arXiv 2024\n[3] Making a \u201ccompletely blind\u201d image quality analyzer[J]. IEEE Signal processing letters, 2012"
+            },
+            "questions": {
+                "value": "Can the monotonicity with training iterations in Fig. 5 imply the accuracy as well? Fig.5 only demonstrate the better monotonicity of JEDi during training over that of FVD and other metrics, yet it can not tell the superiority of quality evaluation accuracy of JEDi. Refer to the commonly used index, SROCC, PLCC, and RMSE, for measuring the performance of quality assessment metrics."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper makes a strong empirical case for the JEDi metric, which is based on features derived from a Joint Embedding Predictive Architecture, measured using Maximum Mean Discrepancy with polynomial kernel, as a superior alternative to FVD in evaluating video generation models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Interesting metric. The paper introduces the JEDi , a new metric for evaluating video generation quality, addressing several limitations of the existing FVD. JEDi is shown to improve alignment with human evaluations by 34%, which is a significant improvement.\n\n2. Clear Identification of FVD\u2019s Limitations. The authors thoroughly analyze the shortcomings of FVD, including:\n    a.Non-Gaussianity in feature space.\n    b. Insensitivity to temporal distortions.\n    c.The impractically large sample sizes required for reliable metric estimation.\n\nThese are important challenges in the field of video generation, and addressing them demonstrates the paper's relevance.\n\n3. Good Efficiency. One of the key claims is that JEDi requires only 16% of the samples compared to FVD to reach its steady value, which could make it a more practical metric for real-world applications."
+            },
+            "weaknesses": {
+                "value": "First I want to declare that I am not very familiar with this area and I am going to summarize some weaknesses that matter to me.\n1. Missing Analysis on Long-Term Temporal Distortions. Although the paper mentions the insensitivity of FVD to temporal distortions, the experiments primarily focus on shorter-term consistency and aesthetics. It would be beneficial to see deeper analysis on how JEDi handles long-term temporal coherence in video.\n\n2. Issues About Human Evaluation.  Are these human subjects trained and qualified to evaluate video quality? Do the randomly selected videos adequately represent the entire set, and is there sufficient diversity? Has there been consideration of increasing the number of evaluation videos and including more subjects to ensure the reliability of the conclusions?\n\n3.  In 5.1 section, how is the degree of blur determined, and are there any objective metrics for it? For the detection and assessment of noise and blur, many no-reference quality evaluation algorithms can perform this task. It is recommended to include some quality evaluation metrics for comparison, such as NIQE and Q-Align."
+            },
+            "questions": {
+                "value": "See the weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

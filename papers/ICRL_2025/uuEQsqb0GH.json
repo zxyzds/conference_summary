@@ -1,0 +1,200 @@
+{
+    "id": "uuEQsqb0GH",
+    "title": "Avoiding Catastrophe in Online Learning by Asking for Help",
+    "abstract": "Most learning algorithms with formal regret guarantees assume that no mistake is irreparable and essentially rely on trying all possible behaviors. This approach is problematic when some mistakes are _catastrophic_, i.e., irreparable. We propose an online learning problem where the goal is to minimize the chance of catastrophe. Specifically, we assume that the payoff in each round represents the chance of avoiding catastrophe that round and try to maximize the product of payoffs (the overall chance of avoiding catastrophe) while allowing a limited number of queries to a mentor. We first show that in general, any algorithm either constantly queries the mentor or is nearly guaranteed to cause catastrophe. However, in settings where the mentor policy class is learnable in the standard online model, we provide an algorithm whose regret and rate of querying the mentor both approach 0 as the time horizon grows. Conceptually, if a policy class is learnable in the absence of catastrophic risk, it is learnable in the presence of catastrophic risk if the agent can ask for help.",
+    "keywords": [
+        "online learning",
+        "AI safety",
+        "asking for help",
+        "irreversibility"
+    ],
+    "primary_area": "learning theory",
+    "TLDR": "If a policy class is learnable in the absence of catastrophic risk, it is learnable in the presence of catastrophic risk if the agent can ask for help.",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=uuEQsqb0GH",
+    "pdf_link": "https://openreview.net/pdf?id=uuEQsqb0GH",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Reviewer E2Pc"
+            },
+            "comment": {
+                "value": "We thank the reviewer for helpful comments. We respond to each of the weaknesses mentioned.\n\n1. **Lack of algorithmic novelty**. Although we agree that the algorithm is quite simple, this can also be seen as an advantage, since simple algorithms are both more accessible to readers and more likely to be used in practice. Also, although our analysis utilizes many prior results, we believe that the packing technique we use to bound the number of queries is novel. Essentially, we have provided a technique for bounding the number of data points needed to cover a particular set with respect to the realized actions of the algorithm. For merely covering the set without regard for the algorithm\u2019s actions, existing packing/covering number bounds would suffice, but our technique may be useful in contexts where a more refined packing argument is needed than one which deals with all data points in aggregate. See also lines 508-514 in the paper.\n\n2. **Related work on CMDPs**.  The two linked papers study a related but distinct problem. Both papers assume that the learner knows a safe policy (what the reviewer calls \u201ca feasible solution\u201d) upfront, and ask whether the learner can obtain high reward while also remaining safe. In our setting, the learner has no prior knowledge about which actions are safe, and must learn a safe policy from scratch. In this sense, our work complements theirs: our goal is essentially to learn the baseline safe policy that their algorithms require. One can also view our problem as the \u201cpessimistic\u201d model and their problem as the \u201coptimistic\u201d model, with some applications better captured by our model while other applications are better captured by theirs. We will add a discussion of this related work to our paper."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer kZKp"
+            },
+            "comment": {
+                "value": "We thank the reviewer for helpful comments. We respond to each of the weaknesses mentioned and also to the reviewer\u2019s question (which corresponds to one of the weaknesses).\n\n1. **Connections to AI risk**. The AI risk literature discusses in depth the importance of safety guarantees, but has had comparatively little success in formally establishing those guarantees. In particular, to our knowledge, we are the first to formally guarantee avoidance of catastrophe with a computationally tractable algorithm (e.g., without Bayesian inference). Although we do not claim that our model perfectly captures all real-world safety concerns, our model is quite flexible, allowing a wide range of state/context sequences, mentor policies, payoff functions, etc. We view our work not just as a stylized model of catastrophe, but as a real step towards the practical safety guarantees sought by the AI risk literature. If future work extends our results to not only avoid catastrophe but also guarantee high reward (e.g., in an MDP), one can start thinking about using such algorithms in practice.\n\n2.  **Local generalization**. We agree with the reviewer on the importance of justifying assumptions, and we appreciate the opportunity to respond. Local generalization states that if the mentor told us that an action is safe in state $s\u2019$, the action is likely also safe in a similar state $s$. To be precise, $\\mu(s, \\pi^m(s))$ is the payoff from taking the actual safe action in the current state $s$, while $\\mu(s, \\pi^m(s\u2019))$ is the payoff from using what we learned in a previous state $s\u2019$ in $s$. Local generalization states that the gap between these is bounded proportional to the similarity between those states: $|\\mu(s,\\pi^m(s)) - \\mu(s, \\pi^m(s\u2019))| \\le L||s-s\u2019||$. The concept of borrowing knowledge from similar experiences seems fundamental to learning and is well-understood in the psychology literature ([example](https://link.springer.com/article/10.1007/s00426-023-01800-4)) and education literature ([example](https://files.eric.ed.gov/fulltext/EJ1217940.pdf)). \n\n    Crucially, our state space is not necessarily the 3D orientation of the agent, but can be any feature embedding of the agent\u2019s situation. This allows for more abstract notions of \"similarity\". Also, our algorithm does not require knowledge of the feature embedding (see lines 406-409) and does not need to know $L$, so it suffices that there exists _some_ feature embedding which satisfies local generalization. The agent does not even need to know which embedding it is.\n\n    Finally, note that in the case of an optimal mentor, local generalization implies the more familiar Lipschitz continuity (Proposition E.1). The assumption of Lipschitz continuity is common in the bandit literature (see Chapter 4 of this [book](https://arxiv.org/pdf/1904.07272)).\n\n3. **Euclidean space**. The reviewer makes a fair point regarding our Euclidean space assumption and the spirit of online learning. However, this assumption is actually not necessary: all of our results go through for a general metric space, with the difference that the regret would then depend explicitly on the packing number. We thought this would be less intuitive for readers since the subconstant nature of our regret bound is less obvious with the packing number present, and we also think that most real-world applications would involve feature embeddings in $\\mathbb{R}^n$. However, we can switch our analysis to a general metric space if the reviewer thinks the trade-off is worth it.\n\n4. **Online learning with log loss**. We agree that this literature is relevant, and thank the reviewer for pointing it out. The key difference is that those regret bounds are **sublinear** in T while our regret bound is **subconstant** in T. In other words, the help of a mentor and local generalization can reduce the regret by an entire factor of T. We will add a discussion of this to the paper.\n\n5. **Imitation learning**. Thank you for the pointer; we will also add a discussion of imitation learning.\n\n6. **The term \u201cstate\u201d**. We agree with this point and ask whether the reviewer would be okay with the term \u201cinput\u201d, which we hope is intuitive to readers from both online learning and RL."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer FhGj"
+            },
+            "comment": {
+                "value": "We thank the reviewer for helpful comments. We respond to each of the weaknesses and also to the reviewer\u2019s question.\n\n**Weaknesses**:\n1. The formal definition of $\\mu(s_t, a_t)$ is actually the chance of catastrophe at time $t$ conditioned on no prior catastrophe (line 263). (Note that the probability of catastrophe at time $t$ conditioned on prior catastrophe already occurring is irrelevant, since the agent has already failed.) Formally, if $E_t$ is the event that catastrophe is avoided at time $t$, then the chain rule of probability implies that $$\\Pr[\\text{no catastrophe ever}] = \\Pr[\\cap_{t=1}^T E_t] = \\prod_{t=1}^T \\Pr[E_t \\mid \\cap_{k=1}^{t-1} E_k] = \\prod_{t=1}^T \\mu(s_t, a_t)$$ We will update the paper to better explain the role of this conditioning.\n\n2. We have two responses here: \n\n    (A) If $\\sum_{t=1}^T - \\log \\mu^m(s_t)$ is not bounded by a constant, this implies that $\\prod_{t=1}^T \\mu^m(s_t)$ goes to 0. In other words, the environment is sufficiently dangerous and/or the mentor is sufficiently fallible that the mentor\u2019s own policy is guaranteed to eventually cause catastrophe. In such cases, perhaps the task should be avoided altogether; we are imagining applications where the mentor does know a reasonably safe policy.\n\n    (B) The reviewer is correct that subconstant regret becomes trivial if $\\sum_{t=1}^T - \\log \\mu^m(s_t)$ is unbounded and thus $\\prod_{t=1}^T \\mu^m(s_t)$ goes to 0, but our results say more about the regret than simply that it is subconstant: we also provide rates of convergence. In other words, even if the mentor is guaranteed to eventually cause catastrophe, we can estimate the time horizons on which we can expect the agent to still be relatively safe. If the reviewer recommends this, we could emphasize our convergence rate bounds more in the introduction.\n\n\n3. The reviewer is roughly correct that taking a logarithm can convert our multiplicative objective into an additive objective. Without help from a mentor, subconstant regret (additive or multiplicative) is impossible because the agent essentially must guess on the first time step, so the agent is wrong with constant probability (and that\u2019s just the first time step). With sublinear queries to a mentor, subconstant additive regret is indeed achievable: we actually prove this as an intermediate step to our main result (lines 1050-1054). To our knowledge, this is a novel result in online learning, which we could also highlight if the reviewer recommends.\n\n    Also, even after the transformation to an additive objective, our problem remains harder than standard online learning. This is because we only receive feedback from queries (whose rate tends to 0 as $T \\to \\infty$), while online learning typically assumes that payoffs are observed on every time step.\n\n**Question**:\n\n$Q_T$ is in fact a random variable since $a_1,\\dots,a_T$ are random variables. We will add an explicit mention of this to avoid confusion."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer Qo6Q"
+            },
+            "comment": {
+                "value": "We thank the reviewer for helpful comments. We respond to each of the questions and weaknesses stated by the reviewer.\n\n**Questions**:\n1. We are not aware of other impossibility results, including in the Bayesian regime (except for the trivial result that the problem is hopeless without some sort of help, since the agent has no way to prevent the first action it takes from causing catastrophe). We do believe that our impossibility result is a significant contribution, and we will make this clearer when revising. Thank you for pointing this out.\n2. Recall that the payoff is the chance of *avoiding* catastrophe that round (conditioned on no prior catastrophe), not the chance of *causing* catastrophe. Under this definition, the chain rule of probability implies that the product of payoffs is exactly the overall chance of avoiding catastrophe. Our goal is to _maximize_ that product. If the agent has 0% chance of avoiding catastrophe on the first round, then catastrophe is in fact guaranteed. This is worse than the second sequence, which retains a nonzero probability of avoiding catastrophe. Correspondingly, $0 \\cdot 0.999^3 < 0.1^4$.\n\n**Weaknesses**:\n1. We first remind the reviewer that we do not assume the mentor to be optimal. More importantly, we are motivated by applications in which there exists an actual human supervisor (or potentially a more powerful AI model) who can respond to queries. Examples include a human doctor supervising AI doctors, a robotic vehicle with a human driver who can take over in emergencies, autonomous weapons with a human operator, and many more. In fact, we suggest that it is crucial for any high-stakes AI applications to have a designated supervisor who can be asked for help. In such applications, the target for queries is known to the agent.\n\n    Also, if we understand correctly what the reviewer means by \u201cfind out who the optimal target to query in the policy class is\u201d, this essentially makes queries useless. For example, suppose the policy class contains only the mentor policy and its complement: the agent has no way to know which is which and thus has no way to know which policy it should query. Let us know if we have misunderstood.\n\n2. We will flesh out this discussion in the paper and are also happy to briefly elaborate here. The technical challenge is that vanilla packing arguments do not consider the actions of the algorithm. Our overall proof requires a set of queries which cover the observed state space with respect to the realized actions of the algorithm, and our technical contribution is to provide a novel method to deal with this scenario. Our technique may be useful for other contexts where a more refined packing argument is needed than one which deals with all data points in aggregate.\n\n3. Thank you for this feedback. We will address these issues when revising."
+            }
+        },
+        {
+            "summary": {
+                "value": "The submission studies an online disaster avoidance problem. The learning agent is allowed to query the mentor to acquire information to avoid disaster. To circumvent the tractability issue of Bayesian methods, a hedge-based algorithm is proposed under an additional assumption called \u201clocal generalization.\u201d Also, unlike conventional online learning, the regret is defined in a multiplicative way, and the proven regret bound (Theorem 5.2) is subconstant. Besides the positive result, the submission also shows an impossibility result (Theorem 4.1) in a general case."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- A non-Bayesian approach to address the online disaster avoidance problem.\n- The analysis simultaneously controls the regret and the query frequency.\n- A novel packing argument is developed to bound the query complexity."
+            },
+            "weaknesses": {
+                "value": "- (1) It seems to be too advantageous for the learning agent to be able to query the optimal policy (i.e., the mentor), given that a local generalization assumption has been made for exploitation. Practically speaking, if querying is allowed, the learning agent should also have to find out who the optimal target to query in the policy class is.\n- (2) The argument (lines 508\u2013514) for the novel packing (line 460) is not clear enough. An explanation of the difficulty and the technical contribution is needed.\n- (3) There are confusing sentences hindering the readability. These are the sentences in line 126 (As a corollary, \u2026) and line 134 (We initially \u2026)."
+            },
+            "questions": {
+                "value": "- (1) Are there other impossibility results besides Theorem 4.1, especially in the Bayesian regime? If the submission provides the first impossibility result, that is a contribution, too. If there are other impossibility results, we should list them and compare them with Theorem 4.1. \n- (2) Is the multiplicative objective really a good choice? For example, consider the following two payoff sequences: (0, 0.999, 0.999, 0.999) and (0.1, 0.1, 0.1, 0.1). The total payoff (multiplicative) of the first sequence is 0 and is smaller than that of the second one. But intuitively, the second sequence may have a better chance of avoiding a disaster."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new model of online learning, with the performance measured in terms of the product of the per-step value (probabilities). Under this new setting, the authors provide both difficulty results and an algorithm for VC/Littlestone classes."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "I believe it makes much sense to formulate \"asking for help\" in terms of query complexity. It is clearly of importance to understand how access to expert advice helps online learners. The proposed algorithm, though looks standard, may also be of techical interest,"
+            },
+            "weaknesses": {
+                "value": "I am a little bit skeptical of the formulation of regret. \n\n1. The probabilistic interpretation of the product $\\prod_{t=1}^T \\mu(s_t,a_t)$ is unclear. Given the observed sequence of $(s_1,a_1,...,s_T,a_T)$, the product is the probability of avoiding catastrophe only if the catastrophe at step t does not affect the s_{t+1}.\n\n2. For the regret to be non-trivial, it is necessary that $\\sum_{t=1}^T -\\log \\mu^m(s_t)$ to be bounded by a constant as T tends to infinity. I believe this is a very strong assumption on the mentor, and the hence the upper bound can be trivial for most scenarios. It is possible to consider a less restrictive setting? The hardness result may not be an excuse here.\n\n3. It looks possible to take a logarithm and convert this problem to the standard no-regret learning setting, with the goal of achieving sub-constant regret. Given that the mentor needs to achieve constant loss, this goal seems to be achievable. It would be beneficial to include a discussion on why it is infeasible."
+            },
+            "questions": {
+                "value": "In Sec 3, Q_T is defined to be a deterministic quantity of the algorithm. But all the bounds are in terms of E[Q_T]."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper considers a new variant of the classical online learning setting in which the aim is to avoid \"catastrophe\" relative to a mentor policy \\pi^m. Concretely, letting \\mu denote the reward, the aim is to choose a sequence of actions a_1, ..., a_T based on a sequence of covariates s_1, ..., s_T such that the following notion of regret is small:\n\n\\prod_{t=1}^{T}\\mu(s_t, pi^m(s_t)) - \\prod_{t=1}^{T}\\mu(s_t, a_t).\n\nThat is, compared to the standard online learning formulation (e.g., Cesa-Bianchi and Lugosi), which considers regret of the form \\sum_{t=1}^{T}\\mu(s_t, pi^m(s_t)) - \\sum_{t=1}^{T}\\mu(s_t, a_t), we care about the product of rewards instead of the sum of rewards. This reflects the fact that we are averse to catastrophe, since a very small reward at any round $t$ can completely ruin our prospects of achieving low regret.\n\nBeyond the differences above, the setting the authors consider also has the feature that the reward is never observed. Rather, the learner can choose to query the mentor at each round $t$ and observe pi^m(s_t). The aim is to ensure the regret and the number of mentor queries is sublinear in $T$.\n\nThe authors provide the following results:\n* When (1) the mentor satisfies a \"local generalization\" property related to Lipschitzness and (2) their policy belongs to a class \\Pi which is either a Littlestone class or a VC class (with the additional assumption that outcomes are \"smooth\") it is possible to achieve sublinear regret and expert queries through a variant of the exponential weights algorithm.\n\n* Without the Littlestone or VC assumptions, sublinear regret is impossible, even under the local generalization assumption."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper makes a reasonable contribution to the online learning literature by proposing what is, to my knowledge, a novel setting and problem formulation. I believe the upper and lower bounds the authors provide are novel and do not necessarily follow from existing work. I also found the paper to be generally well written and easy to follow."
+            },
+            "weaknesses": {
+                "value": "The main drawbacks preventing me from giving a higher score are as follows:\n\n* While the problem formulation is loosely inspired by literature on AI risk, it is unclear whether the new problem formulation the authors provide actually has implications for this literature. Spelling out potential connections and implications of the results seems important, as otherwise I am worried the impact might be rather limited (e.g., a niche setting of interest to online learning experts, but not necessarily of interesting outside the core theory community). Overall, if there are interesting consequences of algorithic results here it would be great to highlight this.\n\n* Given that the main contribution of the paper is to introduce a new problem formulation, it seems important to justify all of the assumptions and argue that they are fundamental. Here, I am somewhat concerned about the local generalization assumption, which seems a bit arbitrary and inelegant. While I can believe that some assumption of this type might be required, it is not clear that this specific one is fundamental. In particular, I do not like that the assumption requires that $s$ lies in Euclidean space, which feels quite arbitrary and not really in the spirit of online learning (which is generally agnostic to the space of covariates, and depends on it only through assumptions on the class \\Pi itself). Nailing down what is the right notion of local generalization would definitely strengthen the paper.\n\n-----\n\nSome minor comments:\n* The authors may want to compare with the literature on online learning with the logarithmic loss. E.g., if we do standard online learning with additive regret, but choose \\log(\\mu(s_t, a)) as the reward, then a standard additive regret bound of the form \\sum_t reward(s_t, \\pi^m) - reward(s_t, a_t) \\leq Reg implies that \\log(\\prod \\mu(s_t, pi^m)/\\mu(s_t, a_t)) \\leq Reg. This is a different guarantee from what the authors provide, but has a similar flavor, so it might be interesting to compare.\n\n* This setting also has an imitation learning flavor, so it would be good to add some discussion on how it connects to the IL literature.\n\n* The term \"state\" is a bit confusing/misleading since this is a standard online learning setting as opposed to RL (i.e., we just take the states as given, and are not interesting in counterfactuals wrt how they might have evolved if we had acted differently). Calling them \"contexts\" or \"covariates\" would be more clear."
+            },
+            "questions": {
+                "value": "Is the local generalization assumption fundamental? See comments above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel online learning framework in which the learner aims to minimize the catastrophe probability, that is, avoid choosing catastrophic actions. In order to do that, it is assumed the possibility to query a mentor (the baseline) at time $t\\in[T]$, which returns the mentor's action associated with the current state $s_t$. Moreover, local generalization of the mentor policy is assumed (namely, a sort of continuity assumption between states given the mentor policy). The performance metrics used to evaluate the online algorithms are the regret between the product of the avoiding catastrophe probabilities attained by the learner and the mentor and the number of queries performed. First, the authors show the impossibility of learning in the general setting. Thus, the authors focus on the case of finite VC or Littlestone dimension. In such a setting, the authors provide a simple hedge-kind of algorithm that attains sub constant regret and a sublinear number of queries to the mentor during the learning dynamic."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "I believe that the setting proposed in this work is of interest from a theoretical perspective.\nIndeed, to the best of my knowledge, the framework is novel, and as pointed out in the work, it presents some peculiar theoretical challenges. The results seem correct and reasonable to me. Finally, the authors put much effort into explaining the main ideas behind the theoretical results."
+            },
+            "weaknesses": {
+                "value": "To me, there are two main weaknesses in this work. The first one is the lack of particular algorithmic novelty. The algorithm proposed is a clear, simple adaptation of hedge. Moreover, this work strongly relies on many different results from statistical learning theory and online learning (see Section 5.2, where all the results belong to existing works). This is indeed not a sufficient reason for rejection, but somehow, it worsens the contribution of the work. \n\nThe second weakness concerns the practical relevance of the setting. While I agree that the setting is interesting from a theoretical perspective, it is not clear to me why it should be of interest in real-world scenarios. Specifically, the authors clearly state that this setting is of practical relevance since, unlike standard online learning, it allows for the avoidance of catastrophic actions. In contrast, the standard exploration-exploitation trade-off requires, in general, to try all the possible actions, even really dangerous ones. Nevertheless, there exist many works on learning in the presence of **unknown** constraints which exactly tackle the problem specified above. While without further assumptions, it is not possible to satisfy unknown constraints in every round, it is sufficient to require a feasible solution in input, to be simultaneously no-regret w.r.t. the rewards and avoiding possible dangerous actions with high probability (see, e.g., [Liu et al. 2021], [Stradi et al. 2024] for online learning in MDPs). Moreover, notice that those papers do not need any query to the mentor, and as previously specified, do not focus only on avoiding bad actions, but they maximize specific unknown rewards functions. Finally, while their regret is sublinear in $T$, their regret definition seems to be much stronger since the baseline is the optimal solution and not a general mentor policy.\n\n\n[Liu et al., 2021] \"Learning policies with zero or bounded constraint violation for constrained mdps.\"\n\n[Stradi et al. 2024] \"Learning Adversarial MDPs with Stochastic Hard Constraints\""
+            },
+            "questions": {
+                "value": "Could you please discuss on the second weakness? Which are the main advantages of your setting w.r.t. the one described above?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

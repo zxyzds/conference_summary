@@ -1,0 +1,129 @@
+{
+    "id": "K9Elg2JrvY",
+    "title": "FROM LOW TO HIGH-VALUE DESIGNS: OFFLINE OPTIMIZATION VIA GENERALIZED DIFFUSION",
+    "abstract": "This paper presents a new perspective on offline optimization. Instead of viewing it as a surrogate or inverse modeling task -- mapping either from an input design to its corresponding performance or from a desired performance to potential input candidates -- we approach offline optimization as a distributional translation task that transforms an implicit distribution of low-value inputs (i.e., the offline data) into a (better) distribution of high-value inputs (i.e., the solution candidates). This avoids explicitly modeling the target function, which is ultimately constrained by the limited amount of offline data. In contrast, our view of offline optimization as a distributional translation task is substantiated through a generalized Brownian bridge diffusion process mapping between two implicit data distributions, which can be more reliably learned using additional low- and high-value inputs drawn from synthetic functions similar to the target function. This is enabled by fitting multiple Gaussian processes with different parameterizations to the offline data and using them as functional posterior to generate artificial functions similar to the target function. Our experiments show that this approach is consistently more effective than previous methods, establishing a new state-of-the-art performance.",
+    "keywords": [
+        "Diffusion Model",
+        "Probabilistic Method"
+    ],
+    "primary_area": "probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",
+    "TLDR": "We view offline optimization from the new lens of a distributional translation task which can be modeled with a generalized Brownian Bridge Diffusion process mapping between the low-value and high-value input distributions",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=K9Elg2JrvY",
+    "pdf_link": "https://openreview.net/pdf?id=K9Elg2JrvY",
+    "comments": [
+        {
+            "summary": {
+                "value": "This is a high-potential paper which could be much better written. I suggest a full review of the paper for readability. For example, the second line of the abstract is 4 lines long.  The goal of the paper is not clear from reading the introduction. \n\nThe paper seeks to learn surrogate parameterized functions which learn the data distribution. Using these surrogates, the data is augmented, and this augmented data can then be used to train a model. The issue with such augmentation is that both the (x,y) pairs must be learnt, and predicting the x may lead to OOD generations. This is usually solved through inverse mappings, or search. This paper proposes ideas from Brownian bridge diffusion, which was previously proposed in computer vision to extend to tasks in the Design Bench."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The use of diffusion in design tasks is quite novel. \n- The results are strong. But note that the best of 128 samples is reported in Table 1. The algorithm itself may not have access to \"best score\". So while the algorithm reaches good results in best case, median or avg may have to be considered."
+            },
+            "weaknesses": {
+                "value": "- Why use the brownian bridge diffusion process? How do other diffusion processes perform?\n- Section 3.1 what is the stochastic translation operator? why use terms before defining them?\n- The paper has spent a lot of space on Section 3.1 which comes without explanation of what the goal is. For example what is g in this setting? Are these the equivalents of the noise estimates in DDPM? What is the reason for the specific form in equation 13? Please rewrite thsi section with what you are attempting in this section. While reading this section, it is extremely unclear what the mathematics is leading towards, and hence why a stochastic translation is required.\n- There is no algorithm section translating the mathematics of Section 3 into the experiments of Section 4. I do not see what was the optimization implemented, or how it was obtained.\n- The paper does not report running times of the algorithms. Given diffusion can be significantly costlier it is worth reporting the wall-clock time.\n- The paper reports max score in Table 1, but without external evaluation, it is not clear that the algorithm may know what is best. Hence this is not the expected performance. Can  you also show the mean score?"
+            },
+            "questions": {
+                "value": "- Why do you set the value of zeta to t/T? and delta_t to zeta_t(1-zeta_t)?\n\n### Suggestions:\n\n- Could you consider revising your abstract? The goal of the paper was not immediately clear.\n- Please consider a rewrite of section 3.1. Start with what the optimization function is. Then follow through with the derivations on how it was obtained. Please mention how this is used in an algorithm.\n- Happy to raise my score given some changes to the manuscript.\n\n### Typos\n- Line 233: \"as follows\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper considers the offline optimization problem, where offline (x, y) pairs are given, and the goal is to return samples x with better value. The paper proposes a distribution shifting approach by first learning the underlying function via a mean estimate of the Gaussian process under difference kernel functions and creating two sets of samples $X^+$ and $X^-$ by taking gradient ascent and gradient descent based on the estimated function starting from the offline samples. Then a diffusion model is learned via translating the data from $X^-$ to $X^+$ via assumed conditional Gaussian distribution. Experiments are conducted on the variance of benchmarks and the proposed method is compared to be comparable/superior to some offline linear optimization baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The problem of offline optimization is important and has many potentials. \n\nThe experiments are presented clearly and the proposed method indeed has improvements compared to baselines."
+            },
+            "weaknesses": {
+                "value": "The originality of viewing the offline optimization as a distribution shift is not novel. See [a]. \n\nThe derivations are not correct. The proposed method is not theoretically justified, merely a theoretically motivated heuristic. For example, the Assumption of Eq (13) cannot be justified given Eq (12), thus giving no evidence for Eq (14) as combining both equations. Thus the overall learning procedure lacks of justifications. Take another example of Eq (3), the optimal solution x^* is a function of the unknown function g, and thus g(x^*) conditioned on the offline data is not Gaussian. It is the maximum of several Gaussian since $x^*$ is also a random variable. \n\nThe diffusion approach generates data outside of the distribution of the samples (outside of the distribution coverage) thus leading to critical generalization issues. This issue is not sufficiently addressed. \n\nOverall, it is a work based on a wrong assumption/mathematics though has engineering improvement. \n\n[a] Zhang, Q., Zhou, R., Shen, Y. and Liu, T., 2024. From Function to Distribution Modeling: A PAC-Generative Approach to Offline Optimization. arXiv preprint arXiv:2401.02019."
+            },
+            "questions": {
+                "value": "In the paper, notation $\\omega$ is used in multiple places. Is it a random variable indicating the randomness of the underlying function and offline data? In Eq (12) and follows, is it $\\omega^*$ or $\\omega$?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a new perspective on offline optimization, framing the optimization task as a distributional translation from low-value points to high-value points. It uses diffusion models to learn this translation. The paper shows the effectiveness of this new perspective through theoretical analysis and experimental validation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The new perspective of viewing the optimization problem as a diffusion translation problem is quite novel and intuitive.\n\n2. The method proposed in this paper is direct and clear: It uses synthetic data from fitted gaussian process for data augmentation and then employs a diffusion model to learn the distributional translation from low-value to high-value regions.\n\n3. The presentation of this paper is clear and well-structured.\n\n4. The experiments are comprehensive."
+            },
+            "weaknesses": {
+                "value": "The method needs to fit multiple Gaussian processes to generate synthetic data, which might have high time complexity in high-dimensional cases. Besides, the reverse diffusion process also requires multiple denoising steps, which also increases the time complexity."
+            },
+            "questions": {
+                "value": "NA"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,169 @@
+{
+    "id": "moWiYJuSGF",
+    "title": "Web Agents with World Models: Learning and Leveraging Environment Dynamics in Web Navigation",
+    "abstract": "Large language models (LLMs) have recently gained much attention in building autonomous agents. However, performance of current LLM-based web agents in long-horizon tasks is far from optimal, often yielding errors such as repeatedly buying a non-refundable flight ticket. By contrast, humans can avoid such an irreversible mistake, as we have an awareness of the potential outcomes (e.g., losing money) of our actions, also known as the \"world model\". Motivated by this, our study first starts with preliminary analyses, confirming the absence of world models in current LLMs (e.g., GPT-4o, Claude-3.5-Sonnet, etc.). Then, we present a World-model-augmented (WMA) web agent, which simulates the outcomes of its actions for better decision-making. To overcome the challenges in training LLMs as world models predicting next observations, such as repeated elements across observations and long HTML inputs, we propose a transition-focused observation abstraction, where the prediction objectives are free-form natural language descriptions exclusively highlighting important state differences between time steps. Experiments on WebArena and Mind2Web show that our world models improve agents' policy selection without training and demonstrate our agents' cost- and time-efficiency compared to recent tree-search-based agents.",
+    "keywords": [
+        "Web Agent",
+        "World Model",
+        "Digital Agent",
+        "Planning",
+        "LLM"
+    ],
+    "primary_area": "applications to robotics, autonomy, planning",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=moWiYJuSGF",
+    "pdf_link": "https://openreview.net/pdf?id=moWiYJuSGF",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes an approach for enhancing the performance of LLM-based web agents in long-horizon tasks. The authors introduce a World-Model-Augmented (WMA) web agent that simulates the outcomes of its actions through a \"world model.\" This design enables the agent to anticipate the effects of actions, thus reducing errors and improving decision-making in dynamic web environments. By employing a transition-focused observation abstraction, the model processes large state transitions without redundant data. Experiments conducted on WebArena and Mind2Web indicate that the WMA agent outperforms other agents in various metrics."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper considers the application of world models within LLM-based web agents, creating an interesting direction for improving policy selection in web-based navigation tasks.\n\n2. The proposed transition-focused observation abstraction helps to reduce redundant data, lowering computational costs and allowing the model to focus on critical changes.\n\n3. The authors show that the WMA model can be easily integrated into existing web agents, making it a versatile addition to LLM-based navigation models."
+            },
+            "weaknesses": {
+                "value": "1. While the paper demonstrates improved single-step action selection, it does not address multi-step planning comprehensively, which is crucial for certain long-horizon tasks.\n\n2. The approach is limited to text-based web interactions, and although HTML trees are effective, omitting visual elements could restrict the model's applicability in web navigation tasks where visual cues are essential.\n\n3. While the transition-focused abstraction reduces redundancy, it may oversimplify complex web elements, potentially leading to reduced accuracy in actions involving nuanced page layouts.\n\n4. The paper does not discuss how the proposed world model scales when dealing with significantly larger action spaces, which is critical for broader applicability."
+            },
+            "questions": {
+                "value": "1. Can the model extend to handle visual inputs alongside text-based observations? This would make it more versatile for environments where visual information is vital.\n\n2. How does the model perform in extended multi-step planning scenarios? Would recursive application of the world model effectively address multi-step planning challenges?\n\n3. How does the observation abstraction perform in very dynamic web environments? In fast-changing states, does it retain relevant information, or does it risk omitting crucial details?\n\n4. What is the impact of scaling the action space on the computational efficiency of the WMA model? Would the model maintain its efficiency with a larger action candidate set?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper explores using explicit world models in LLM-based web agents. An (explicit) world model is a model able to predict the future state given an action on the current state. Their preliminary analysis shows that existing models cannot successfully predict the results of their actions, but that knowing that information would significantly help LLM-based agents. \n\nTheir contributions are \n1) a training algorithm for web-agent world models that predicts an abstracted version of the transition to the observation after an action is applied. \n2) an algorithm for using the world model to improve performance. \n\nThe training algorithm uses trajectory data to produce observation diffs from each action, then summarizes these changes with an LLM. The world model LLM is then trained to output the summaries (predict what will change in natural language)\n\nThe policy optimization algorithm uses a trained value function in addition to the world model. It works by sampling multiple potential actions, using the world model to predict changes, and then using the value function to predict the value. This can be thought of as a two-step Q-value function where the first step is the world model and the second step is evaluation. The value function is trained using reward data from Mind2Web. \n\nThey have main results on WebArena and Mind2Web. There is also further analysis by category, and other experiments, including ablations over the reward estimation, training of world model, and use of abstracted observations."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Originality:\nThe paper provides an original algorithm for training web-agent world models and an original algorithm for using such models to improve LLM-based web agents. \n\nClarity:\nThe clarity of the problem domain is quite good. The introduction lays a good case for how world models could improve web agents. The approach is quite clear. Figure 3 is nice. There is some breakdown of the clarity for some of the results but overall it was easy to follow along and understand what was being done. \n\nSignificance:\nThe utility of world models for web-agents is quite clear but still under-explored. Both the training and inference time algorithm presented here could have significance down the line."
+            },
+            "weaknesses": {
+                "value": "The primary weakness of this paper is that the main results are quite weak. On WebArena, this significantly underperforms the listed baselines, and other newer baselines also exist. \n\nThe second weakness is that it is not always clear what is being tested or shown. There are a number of questions (see below) that need to be clarified. \n\nTo me the paper should focus more on the web-agent *world model* than on the web agent itself. There is some analysis on failure modes but not enough analysis on the world model itself. This may stem from the fact that abstract transition representations may be hard to analyze. A full world model would be able to show things like per-element accuracy. Perhaps there are other creative ways to analyze how to assess the learned world model and how it functions. \n\nThe paper really dives into this one way of using the world model when it could take a broader view. For instance, why not use WMA/policy optimization"
+            },
+            "questions": {
+                "value": "Clarifying questions:\n\n1) What is \u201cpolicy optimization\u201d as applied to Tree Search Agent (Kuh et al, 2024). I thought Figure 3 bottom shows \u201cpolicy optimization\u201d which seems like it would only apply to World Model Agent. \n\n2) Correspondingly, what is \"no policy optimization\"? Is that just CoT? If so, why are the results different? Why is Tree Search Agent better?\n\n3) Is value function trained with the world model data or is it a pure value function? If pure value function, how does that work with the abstracted observations? \n\n4) Line 284: I don\u2019t get this line and how the citation matches. \u201cexplore diverse next states st+1 \u2208 S (Wang et al., 2022)\u201d\n\n5) Table 5: The value function is fine-tuned. Is the Q-value function being fine-tuned as well and in the same way? If not, does not seem like a fair ablation. Also, is the Q-value function given ability to reason about what the action will do before outputting the value?\nOther questions:\n\n6) Why is the user instruction included in the data? Shouldn't the world model be able to predict the changes based on the action without needing to know the intent?\n\n7) Table 2: Why not include the baselines from table 1? At least the tree search agent which is repeatedly compared to. \n\n8) Figure 1 shows that commercial LLMs cannot predict the next state well by looking at actual observations. Perhaps they would be able to pick the correct abstracted transition-focused observation? Running that same experiment with the transition focused observation version (ground truth, not predicted) could be interesting. \n\n9) Which leads me to the following question, how do larger commercial LLMs fare at predicting the next abstract transition? It would be nice to see Table 5 row 2 with a few different base LLMs. \n\n10) Why is HTML-T5 considered SOTA for Mind2Web? It seems like there are many much stronger algorithms presented in table 1. Mind2Web is also an offline evaluation dataset so does not account for different ways of completing a task or different action spaces. \n\nOther notes:\n\n11) Line 184: \u201cThese findings highlight the necessity of world models in LLM-based web agents\u201d: \n- Not sure I agree with this. I would say something more like, \u201cThis findings highlight the benefit world models could provide to LLM-based web agents\u201d.\n- The findings show that (my words) \u201cLLMs do not have good world models for web activity\u201d and \u201chaving a better world model would improve web agent performance\u201d. This does not add up to \u201cnecessity\u201d\n\n12) \u201cIn Table 1 (middle), we first compare our WMA web agent (16.6%) with vanilla CoT (13.1%) and observe significant improvements over almost all domains in WebArena as detailed in Table 2.\u201d \nThis is confusingly written. Table 1 is the main table and there is only half a sentence of analysis. \n\n13) I do not like the y-axis bounds selection on many of the figures. It would be easier to read with 0 as lower bound (or at least a bit more space). E.g. Figure 6 is hard to tell what the k=1 line is at."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes Wold-Model-Augmented (WMA) web agents. The authors present detailed analysis on the inability of current LLMs in estimating action consequences on the web and propose to abstract webpage state presentation as state transition description in natural language accordingly. Based on the abstraction, a world model for web navigation is trained and used for enhancing web agents. On two popular benchmarks, WebArena and Mind2Web, the proposed WMA web agent shows sizable performance gain over the baseline LLM and demands lower cost than tree-search methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. To the best of my knowledge, this work is among the first to employ the world model in web agents. Its technical contribution includes a novel state representation, world model training method, and world model augmented agent design.\n2. The resulting method shows improved performance and higher efficiency over baselines.\n3. The experiment setup is overall reasonable. The authors provide sufficient ablation study and detailed analysis on performance, efficiency, and error distribution, contributing valuable insights to the community.\n4. The writing and presentation of this paper is clear and easy to follow."
+            },
+            "weaknesses": {
+                "value": "1. The experiments only cover end-to-end evaluation of agent performance. A directly evaluation on world modeling performance would be helpful for understanding the quality of the world model itself. For example, this evaluation can follow the same setting as the analysis of section 3.\n2. The performance of Vanilla CoT and WMA web agent w/o policy optimization differs (13.1% vs 12.8% in Table 1). What are the differences between them? In addition, WMA web agent underperforms the tree search agent. Although tree search leverages additional signals and more compute, I think it is important to discuss if WMA web agent could scale to higher compute and deliver competitive performance under similar budget. \n3. The proposed method and evaluation is limited to the text modality. Recent studies have suggested that visual features are critical for good web navigation performance. It remains unclear if WMA could adapt to multimodal settings and advance the state-of-the-art of web navigation."
+            },
+            "questions": {
+                "value": "1. In section 4.1.1, training data for the world model is sampled from an LLM as web agent. Does this strategy create a dependency between the world model and the underlying agent, which could potentially hinder generalization?\n2. The proposed method, particularly the state abstraction method, is limited to the text modality (HTML and accessibility tree). Can it be easily extended into a multimodal setup?\n3. As stated in weaknesses, clarification of Vanilla CoT and WMA web agent /o policy optimization is needed."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper explores the introduction of world knowledge models into the field of agents, particularly within the context of web navigation. Specifically, the study finds through exploratory experiments that \n1. existing large models lack sufficient predictive capability regarding the consequences of their actions. \n2. Enabling these models to anticipate such consequences can significantly enhance their planning capabilities. \nBased on this finding, the authors trained a world knowledge model (WKM) to predict the potential outcomes of an action.  The proposed transition-focused observation abstraction plays a crucial role in the training stage.\nThe paper conducts comprehensive experiments to demonstrate the necessity and superiority of using WKM."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The introduction of this paper is well-constructed. Through experiments, it identifies the issue that existing models cannot effectively predict the potential consequences of their actions, and it highlights that enabling models to understand these consequences can enhance their planning capabilities. The proposed approach is very reasonable.\n2. The explanations in this paper are clear and easy to understand. The formulas and figures effectively illustrate the method proposed by the authors.\n3. The authors conducted multi-dimensional experiments that effectively address potential questions from readers."
+            },
+            "weaknesses": {
+                "value": "1. Although this paper claims to be the first to introduce a world knowledge model into LLM-based agents, to my knowledge, this may not be the case. For example, the work \"Agent Planning with World Knowledge Model\" might also explore this area. The authors may need to conduct a more extensive literature review to compare and discuss the similarities and differences between their proposed method and existing approaches.\n2. The performance improvement brought by the experiments in this paper is not significant. Additionally, the authors' WKM is limited to a depth of 1. It might be worth considering deeper levels."
+            },
+            "questions": {
+                "value": "1. As discussed in weakness 1, could the authors conduct a more extensive literature review to discuss the similarities and differences between existing WKM-based methods and their proposed approach? Although this is mentioned in section 6.1, too few works are considered.\n2. As discussed in weakness 2, while the authors have considered the impact of exploration breadth in WKM during the ablation study, could they conduct experiments to consider the impact of depth as well?\nIf the authors can adequately address the questions above, I would be willing to reconsider the review."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

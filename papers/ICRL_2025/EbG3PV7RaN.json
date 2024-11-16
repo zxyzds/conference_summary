@@ -1,0 +1,175 @@
+{
+    "id": "EbG3PV7RaN",
+    "title": "RePaFormer: Ferocious and Scalable Acceleration of MetaFormers via Structural Reparamterization",
+    "abstract": "We reveal that in the realm of Vision Transformers (ViTs), the feed-forward network (FFN) layers play a significant role in introducing latencies. This effect scales up quickly as the model size escalates, and hence presents a major opportunity in efficiency optimization for ViTs by employing structural reparameterization on FFN layers. However, it is difficult to directly reparameterize linear projection weights due to the non-linear activation function in between. In this work, we propose an innovative channel idle mechanism that creates a linear pathway through the activation function, which facilitates structural reparameterization on FFN layers during the inference stage. Consequently, we present a family of efficient ViTs embedded with the introduced mechanism called $\\textbf{RePa}$rameterizable Vision Trans$\\textbf{formers}$ (RePaFormers). This technique brings remarkable latency reductions with small sacrifices (sometimes gains) in accuracy across various architectures investigated in the experiments, and the effect scales consistently with model sizes. For example, with DeiT, Swin Transformer and MLPMixer as backbones, their RePaFormer variants demonstrate increasing efficiency improvements and narrowing accuracy gaps as the model sizes grow. Specifically, the RePaFormer variants for DeiT-Base, Swin-Base, and MLPMixer-l16 achieve 67.5\\%, 49.7\\%, and 89.2\\% increase in throughput with minor changes in top-1 accuracy (-0.4\\%, -0.9\\% and +0.3\\%), respectively. Even larger improvements in speed and accuracy are expected when applied to larger models. Our work is the first to apply structural reparameterization on FFN layers to expedite ViTs to the best of our knowledge, and we believe that it represents an auspicious direction for efficient ViTs. Codes are provided in the supplementary material.",
+    "keywords": [
+        "Efficient ViT",
+        "Structural Reparameterization",
+        "FFN Acceleration"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "",
+    "creation_date": "2024-09-18",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=EbG3PV7RaN",
+    "pdf_link": "https://openreview.net/pdf?id=EbG3PV7RaN",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Reviewer ufAp"
+            },
+            "comment": {
+                "value": "We thank Reviewer ufAp for the valuable comments concerning the two major designs of our RePaFormer models. We would like to provide clarification on these points below:\n\n---\n\n__1. Response to W1__ _(whether BatchNorm alone could improve the test performance)_:\n\nThis is a good question. In fact, a previous work [1] has already investigated leveraging BatchNorm instead of LayerNorm in ViT and discovered that directly applying BatchNorm in ViT would lead to irregular training crashes. To address this, [1] proposes a novel approach (FFNBN) to enable training ViT with BatchNorm. However, all the experiment results on both DeiT and Swin Transformer demonstrate that __BatchNorm consistently yields worse performance than LayerNorm on ViTs__. We cite the results from [1] in the table below:\n\n|Model|Normalization|Top-1 acc|\n|:-|-|-|\n|DeiT-S|LayerNorm|79.8%|\n|DeiT-S|BatchNorm+FFNBN|78.8%|\n|Swin-T|LayerNorm|81.2%|\n|Swin-T|BatchNorm+FFNBN|80.9%|\n|Swin-S|LayerNorm|83.0%|\n|Swin-S|BatchNorm+FFNBN|82.8%|\n|Swin-B|LayerNorm|83.3%|\n|Swin-B|BatchNorm+FFNBN|83.1%|\n\n---\n\n__2. Response to W2__ _(whether channel idle mechanism can be replaced by a single learnable linear function)_:\n\nWe thank the Reviewer for this insightful comment and believe this comment aligns with Reviewer nzL3's W2. We would like to interpret this weakness as comparing the RePaFormers: \n    \n  1. trained with $6C^2$ weights and then reparameterized into $C^2$\n  2. trained with a single $C^2$ linear projection weight from scratch\n\nThe table below shows the results of RePa-DeiT, RePa-Swin and RePa-LV-ViT when trained with a single $C^2$ linear projection weight. The training settings are the same as their counterparts outlined in the manuscript. After reparameterizing the BatchNorm, the differences in the inference speed and the number of parameters for these two cases should be negligible, so we only report their accuracies. The _NaN_ values represent that the training crashes. \n\n|Backbone|$6C^2$ weights + channel idle|$C^2$ linear projection weight|\n|:-|-|-|\n|RePa-DeiT-Tiny|__64.3__|59.6|\n|RePa-DeiT-Small|__77.1__|75.0|\n|RePa-DeiT-Base|__81.4__|_NaN_|\n|RePa-Swin-Tiny|__78.5__|77.1|\n|RePa-Swin-Small|__81.6__|79.3|\n|RePa-Swin-Base|__82.6__|79.6|\n|RePa-LV-ViT-S|__81.6__|_NaN_|\n|RePa-LV-ViT-M|__83.6__|_NaN_|\n\nAs shown in the table, training with $6C^2$ parameters and subsequently reparameterizing them into $C^2$ __consistently achieves better performance__, in line with the findings in [2,3,4] that train-time overparameterization improves the performance.\n\n---\n\nIn conclusion:\n* __Purely using BatchNorm alone does not enhance ViT testing performance.__\n* __Relying solely on a single linear projection for the channel idle process results in lower performance.__\n\nThe above discussions and experimental results will be included in the revised version. We hope our explanation can resolve the Reviewer's concerns and __respectfully request consideration for a score increase__.\n\n[1] Yao, Zhuliang, et al. \"Leveraging batch normalization for vision transformers.\" ICCV, 2021.\n\n[2] Vasu, Pavan Kumar Anasosalu, et al. \"FastViT: A fast hybrid vision transformer using structural reparameterization.\" ICCV, 2023.\n\n[3] Vasu, Pavan Kumar Anasosalu, et al. \"Mobileone: An improved one millisecond mobile backbone.\" CVPR, 2023.\n\n[4] Ding, Xiaohan, et al. \"Repvgg: Making vgg-style convnets great again.\" CVPR, 2021."
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a reparameterization technique for vision transformers (ViTs) to improve their test-time efficiency. It achieves this by leaving some channels idle, which are not passed through activation functions and can thus be merged at inference time. Experiments show that the proposed method can notably reduce the latency of ViT-based classification models at the cost of some accuracy loss."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper is clearly written and easy to follow.\n\n2. The proposed method is motivated by a comprehensive latency analysis.\n\n3. Experiments demonstrate that the proposed method significantly improves the throughput of ViT-based classification models."
+            },
+            "weaknesses": {
+                "value": "1. The main concern with this paper is the significant accuracy drop induced by the reparameterization. As shown in Table 2, the throughput improvement comes at the cost of a substantial accuracy loss, such as -7.9% on DeiT-Tiny and -6.7% on PoolFormer-s12. It appears that the proposed method scales poorly to smaller models, and simpler compression techniques like pruning might be a better option for model acceleration.\n\n2. Another major concern is the lack of analysis and comparison with other reparameterization strategies. Specifically, it is unclear why the proposed method is preferable to RepVGG-style multi-branch reparameterization, as leaving some channels idle without passing through activation functions can be considered a special case of a dual-branch structure. The authors should analyze the underlying reasons and key differences that make the proposed method distinct.\n\n3. The experimental benchmarks are insufficient. A comparison with (1) vanilla reparameterization techniques (e.g., RepVGG-style multi-branch structure) and (2) other compression methods that offer different accuracy-efficiency trade-offs should be included.\n\n4. The latency improvement on dense prediction tasks is small, potentially because FFNs occupy a smaller portion of the runtime for high-resolution inputs.\n\n5. Minor: Tables 1 and 2 have considerable overlap. Retaining only Table 2 should be sufficient."
+            },
+            "questions": {
+                "value": "My questions and concerns are listed in the weakness section. My main question is why the proposed method is a better choice than RepVGG-style multi-branch reparameterization."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the feed-forward network (FFN) layers in MetaFormer architecture and finds it play a significant role in introducing latencies. Based on this observation, the authors propose ReParameterizable Vision Transformers (RePaFormers) with the structural reparameterization technique and reduces the latency remarkably with minor sacrifice in accuracy. Extensive experiments on various tasks and datasets demonstrate the effectiveness of the proposed method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The idea of applying structural reparameterization in FFN layers in great and it brings actually speedup in GPU latency.\n2. The experimental results are extensive as the method is validated not only on classification tasks, but on downstream tasks and self-supervised learning setting as well, which highlight the generalization ability of the proposed method.\n3. Overall, the paper is clear written and well-organized."
+            },
+            "weaknesses": {
+                "value": "1. Advantage over other model compression techniques. The goal of the proposed method is to increase the efficiency of current architectures, while it can be also realized by other model compression techniques, including pruning, distillation or quantization. The reviewer understands that comparing with those methods is out of the scope of this work, but it would be great if the authors could provide some justification of the advantage of the proposed method. For example, whether the proposed method is more generalizable across model architectures, easier to implement, or has less impact on accuracy compared to other techniques.\n2. Performance gap with self-supervised baselines. It is noticeable that the performance gap with self-supervised baselines is larger than the gap in supervised learning, which may hinder its application on foundation models. Meanwhile, it is also unknown that if the proposed method will brings negative impact on the generalization ability of self-supervised learning methods, and experiments on downstream tasks like fine-grained classification may validate this point.\n3. Performance gap at downstream tasks. It is also noteworthy that the performance gap at dense prediction tasks is non-negligible compared to the gap in classification tasks. It would better if the authors could provide some explanations or analysis."
+            },
+            "questions": {
+                "value": "Apart from the questions in weakness, the reviewer has two additional questions:\n\n1. Training costs. What would be the training time of the proposed method compared to the vanilla version?\n2. The authors have mentioned in the abstract that 'improvements in speed and accuracy are expected on even larger models', which may not be convincing enough, as the improvements in accuracy should be supported by empirical results."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a new method for accelerating FFN layers in MetaFormer-structured architectures. The core idea is to combine structured reparameterization and partial channel skipping. Experiments are done on ImageNet classification, self-supervised learning, and dense prediction tasks. The proposed method can accelerate various ViT models with some accuracy drop."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed method is interesting and technically sound. \n2. The problem studied in this paper is critical, as FFN is a big efficiency bottleneck for ViTs.\n3. I appreciate seeing results outside ImageNet classification."
+            },
+            "weaknesses": {
+                "value": "1. This paper lacks direct comparisons with network pruning. \n2. This paper lacks an essential baseline, training Figure 1 (c) from scratch. \n3. This paper lacks direct comparisons with previous structured reparameterization methods in previous works (e.g., FastViT's design). \n4. According to the results, the proposed method still suffers from accuracy drops."
+            },
+            "questions": {
+                "value": "It seems the proposed method has to be used with BatchNorm. Is there any workaround to avoid using BatchNorm?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes RePaFormer, a novel approach that leverages a channel idle mechanism to enable structural reparameterization of Feed-Forward Network (FFN) layers during inference. Experiments on Vision Transformer families show its improved inference speed compared to baselines with minor performance loss."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is well-written and well-motivated."
+            },
+            "weaknesses": {
+                "value": "The major concern of the paper is that the current experimental setup raises concerns about the effectiveness of the proposed method.\n1. **The effects of BatchNorm.**  Specifically, if I understand correctly, the vanilla backbone uses LayerNorm while RePaFormer family uses BatchNorm. It is unclear whether BatchNorm alone could improve the test performance, i.e., accuracy, of the vanilla backbone. \n2. **Similarly, the effectiveness of channel idle mechanism is inadequately tested.** Specifically, consider the default case where $\\mu=1$, and 75% percent of the features are idle. This implies for the RePa Linear 3 (Figure 1), the features go through a linear transformation $W_2W_1$ where $W_1 \\in \\mathbb{R}^{3C \\times C}$ and $W_2 \\in \\mathbb{R}^{C \\times 3C}$. However, such transformation can be represented by a $C \\times C$ matrix, suggesting that the models use $6C^2$ parameters to learn a linear function that can be represented by just $C^2$ parameters. That means, RePaFormer will be useful only if it is much better in terms of accuracy than the baseline where the channel idle part is processed by a single linear layer with weight\u00a0 $W \\in \\mathbb{R}^{C \\times C}$. More specifically, this baseline should be in the form of Figure (b) [without BatchNorm inference reparameterization] and test its throughput and performance."
+            },
+            "questions": {
+                "value": "See my weaknesses part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

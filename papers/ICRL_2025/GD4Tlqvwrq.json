@@ -1,0 +1,203 @@
+{
+    "id": "GD4Tlqvwrq",
+    "title": "Noise Re-sampling for High Fidelity Image Generation",
+    "abstract": "Latent diffusion models (LDMs) have emerged as powerful tools for generating diverse and realistic samples across domains. However, their efficacy in capturing intricate details and small-scale objects remains a challenge. \nOur investigation reveals that VAE compression induces errors in the latent space and limits the generation quality. Furthermore, LDMs trained on fixed-resolution images struggle to produce high-resolution outputs without distortions, making simple resolution increases ineffective.\nIn this paper, we propose a novel **noise re-sampling** strategy that enables multi-scale generation of LDMs, allowing LDMs to \"zoom in\" and improve generation quality of local regions. By increasing the sampling rates from the noise perspective in the latent space, we effectively bypass the constraints imposed by VAE compression, thus preserving crucial high-frequency information. Our approach, a simple yet effective plugin for current LDMs, enhances the quality of image generation in local regions while maintaining overall structural consistency and providing fine-grained control over the scale of generation in latent diffusion models.\nThrough extensive experimentation and evaluation, we demonstrate the efficacy of our method in enhancing the generation quality across various LDM architectures. Our approach surpasses existing methods, including stable diffusion (SD) models, SD-based super-resolution methods and high-resolution adaptation methods, in generating high-fidelity samples of complex objects.",
+    "keywords": [
+        "Generative models",
+        "Diffusion based models"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "A Noise Re-sampling plugin for current LDMs, which enhances the generation quality of LDMs by enabling multi-scale generation and preserving high-frequency information",
+    "creation_date": "2024-09-22",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=GD4Tlqvwrq",
+    "pdf_link": "https://openreview.net/pdf?id=GD4Tlqvwrq",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes to use noise re-sampling to generate high-fidelity images. The method takes place in the inference stage of the diffusion model where 1) an image is sampled first using the original diffusion process 2) a patch is cropped and upsampled and then sent to the encoder to get the latent features 3) a random Gaussian noise is added to the latent and denoise back to get clean image 4) paste back to the image. The paper shows comparisons on multiple images especially human images which demonstrates the effectiveness of the method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The method is simple and does not need any training.\n2. The results show improvements in the cropped regions in the generated images."
+            },
+            "weaknesses": {
+                "value": "1. How would the method affect the inference speed? As the proposed method requires some more operations than the vanilla generation process, it would be better to understand the efficiency of the method as well.\n2. The method contains randomness as it involves the addition of the noise and the random selection of the cropped region, how would the method's robustness be? Will it keep outputting high-quality images regardless of the randomness?\n3. Could the authors also present some results on SD 3, the paper only shows some original results in Figure 1 but lacks the results output by the proposed method."
+            },
+            "questions": {
+                "value": "See the weaknesses part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes an interesting noise re-sampling technique aimed at improving the fidelity of image generation in Latent Diffusion Models (LDMs), particularly for small, detailed objects that are challenging to render accurately. Traditional LDMs suffer from detail loss due to Variational Autoencoder (VAE) compression, especially in high-frequency regions critical for intricate textures. The authors address this by locally increasing the sampling rate in noise space, allowing LDMs to generate high-resolution details without altering global structures. Additionally, they introduce a VAE-based upscaling method to ensure consistency between upsampled local patches and the global image. The approach demonstrates superiority over baseline models, including Stable Diffusion and super-resolution methods, by enhancing image detail and fidelity across multiple scales."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The identified issue in latent diffusion models is interesting and requires attention for better image generation.  \n- The perspective from signal processing is interesting, and provides a feasible direction for optimization with diffusion models.  \n-  From experimental evaluations, the authors demonstrated the generalizability of their approach for different models and in all cases, they further boosted the performance of the the backbone model."
+            },
+            "weaknesses": {
+                "value": "Firstly, the paper writing is poor. It's a little hard to capture the overall idea of this paper. A few more concrete comments include: \n- The whole method section makes it hard to capture the high-level idea. I am not sure if I understand this paper correctly, does the whole logic of the proposed method be as follows: Identify and decode local patches --> Upsampling in image space --> Re-encoding with added noise and denoising --> Merging with global image?   \n- Following the previous point, the whole method section should be revised with a clear problem formulation (i.e. what are the input and outputs, and what are the goals), a straightforward model pipeline, and consistent and well-explained notations. \n- Quite a few texts are redundant. The authors repeatedly discuss the motivation of their approach in the introduction, method, and experimental evaluations.   \n- Table 1 is hard to read. Does SD1.5, SD2 mean backbone models, and for all the compared models, they are built upon SD?  \n\nNext, the novelty of this paper is limited. The proposed method is more like an engineering-wise post-processing to enhance the fine-grained details of the diffusion models. There is no tech contribution from this paper, and the signal processing perspective does not fully align with the proposed method. Even if it is, the perspective itself is more like a way to explain why diffusion models miss fine-grained details rather than a contribution of this paper. \n\nOther questions:\n- high-frequent components or fine-grained details? In the paper, the authors take a unique perspective on signal processing, and reveal that VAE has a higher error on high-frequent objects. However, they essentially propose a resampling method to restore fine-grained details. Taking Figure 6 as an example, the proposed method did better restore the details, but the high-frequent components (boundaries) are not clearly better. In the method section, the ``resampling'' is simply crop-and-resize. In other words, the proposed method itself is not quite aligned with signal processing.  \n- How about the inference time? The proposed method runs two rounds of denoising and at least two rounds of VAE encoding and decoding, will the inference time doubled, and how to further optimize the inference time?  \n- In real practice, how would the proposed method work, without manually selecting resampling regions?"
+            },
+            "questions": {
+                "value": "See the previous section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work focuses on the noise sampling rate/resolution in LDMs, and proposes a local reference re-sampling strategy to improve the high-resolution image generation performance. \nThe proposed method uses the normal global noise-based denoised image as the reference, to further guide another branch which is focused on local region. \nMeanwhile, the method deploys a training-free mixed upsampling strategy to provide corresponding local latent noise aiming at generating patches with better quality.\nExtensive experiments show the proposed method achieves good performance, especially for complex objects and other local details."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The idea is quite simple but overall I think it is a good paper. Instead of directly increasing the sampling rate, using VAE to perform local space re-sampling in the image space is quite interesting, as it avoids the need for a higher-resolution dataset and re-training. Figure 5 also demonstrates that this method indeed captures more high-frequency information.\n\n2. The proposed re-sampling strategy is straightforward and can be plug-and-play for LDMs.\n\n3. The author's exploration of the impact of VAE compression on the generation quality of LDMs aligns with intuition, and this paper reminds me of a work IDM [1] that uses cascaded Diffusion Models for continuous super-resolution\n\n5. The authors provide a demo code which is worth encouraging. I've tried it and it works fine.\n\n[1] Gao S, Liu X, Zeng B, et al. Implicit diffusion models for continuous super-resolution[C]. CVPR 2023."
+            },
+            "weaknesses": {
+                "value": "1. Figure 4 is kind of ambiguous. \n\n     (1): If I understand correctly, the blue boxes in subfigures (a) and (b) should be the same size. I also suggest indicating the size of each box for clarity.\n\n     (2): I suggest removing the \"Direct latent space upsampling\" branch below subfigure (c), or replacing it with the noise re-sampling branch corresponding to Figure 5 (d). Additionally, the title for subfigure (c) appears twice.\n\n2. The statement in lines 367-369, \"The final re-sampled clean latent code can be directly pasted back to the corresponding local region of the original output after decoding\" is ambiguous. Based on Figure 4 (a), it should be decoded first, and then pasted back to the output image.\n\n3. I am a bit confused by the statement in line 395, \"This reference ensures that the denoising process aligns with the overall image\". Since the local reference image only selects a portion of the patch without including information from the surrounding areas, how does it ensure continuity between the patch edges and the rest of the image?\n\n4. I suggest conducting an ablation study on the selection of  \ud835\udc41 and the size of the local patch \ud835\udc60 to explore the impact of different combinations on performance and efficiency.\n\n5. How to determine the ratio \ud835\udefc_\ud835\udc61 of latent upscaling and VAE-based upscaling in Equation 8? Does it also gradually decrease as \ud835\udc61 increases?\n\n6. I think the Figure 3 (d) in line 264 should be Figure 3 (b).\n\n7. Some typos: for example, \"to generated\" should be \"to generate\" in line 299\n\n8. There are some minor errors in the reference. For example, Self-Cascade [1] in ECCV is not correctly referenced and is repeated in lines 044 and 048. Also ScaleCrafter [2] is published in ICLR23.\n\n[1] Guo L, He Y, Chen H, et al. Make a cheap scaling: A self-cascade diffusion model for higher-resolution adaptation. ECCV 2024.\n[2] He Y, Yang S, Chen H, et al. Scalecrafter: Tuning-free higher-resolution visual generation with diffusion models[C]. ICLR 2023."
+            },
+            "questions": {
+                "value": "Please see the Weaknesses part.\n\nOverall, I'm satisfied with the paper's quality and am willing to improve my score if the authors can address my questions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a Noise Re-sampling strategy to enhance high-fidelity image generation in Latent Diffusion Models (LDMs). This method selectively increases sampling rates in detailed local regions. Additionally, a VAE-based upscaling technique ensures consistency across local and global regions by upscaling latent spaces in the image domain. Experiments shows that the approach outperforms existing super-resolution and high-resolution adaptation methods on SD backbones."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper introduces the concept of Noise Resampling, which is somewhat novel to me in the context of latent diffusion.\n2. The paper studies the error in VAE reconstruction and attempts to address it with noise resampling. It's somewhat valuable.\n3. The paper is well organized."
+            },
+            "weaknesses": {
+                "value": "1. The proposed solution is straightforward. To address the low-quality fine-grained details in SD generation, the method adds noises to generated patches then conduct the backward denoising process again. Although some methods such as VAE upscaling has been proposed to improve this method, this idea is straightforward without many insights into the diffusion process. \n\n2. The proposed method requires massive denoising and VAE upsampling over different resolutions of the generation. This would introduce significant computational costs. Unfortunately, I didn't see any discussions on method efficiency in the paper.\n\n3. The performance improvement on global metrics, such as FID and KID, is trivial."
+            },
+            "questions": {
+                "value": "See above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a noise re-sampling strategy and VAE-based upsampling to address the lossy compression problem of VAE in latent diffusion models, which are almost essential in the text-to-image field. The authors observe distortions in small objects generated by latent diffusion models like Stable Diffusion 1, 2, and 3, and propose increasing the sampling rates of local regions. The proposed noise re-sampling method crops the local region of the latent image generated by the diffusion model, upscales it using the proposed VAE-based upsampling method to match the size learned by the diffusion model, and then refines the upsampled crop before attaching it to the original image. The paper compares this method with approaches like Stable SR and Multi-Diffusion, demonstrating superior qualitative and quantitative performance."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper highlights the issue that VAE compression errors are more prominent in lower-resolution images, a problem that the generative AI community has not paid close enough attention to.\n\n- The proposed method is training-free, making it easy to apply with minimal effort to any newly developed latent diffusion model."
+            },
+            "weaknesses": {
+                "value": "- The most fundamental way to address the VAE's lossy compression issue is by using a better VAE. For instance, OpenAI's consistency decoder [1] replaces the decoder of Stable Diffusion 1's VAE with a new diffusion model and releases model weights that can rapidly decode latents into images via consistency distillation [2]. Samples from the consistency decoder demonstrate strong reconstruction performance, particularly on low-resolution (256x256) images where reconstruction errors, like those mentioned in this paper, often occur. This paper should also include a comparison with the consistency decoder.\n\n- Another approach is to ensure the diffusion model generates better latents. Recent research on diffusion guidance [3] suggests that strong classifier-free guidance at middle noise levels enhances image detail. The proposed noise re-sampling method also requires experiments with various guidance scales.\n\n- Some implementation details are missing. The local patch chosen for upsampling should ideally be a small object prone to distortion, but how is this patch selected? What is the exact upsampling ratio used in experiments? When denoising the local patch with the diffusion model, what text prompt is used?\n\n- The proposed VAE-based upsampling seems counterintuitive because it relies on the same VAE that the paper argues to suffer lossy compression issues. This suggests that the upsampled patch might contain significant artifacts.\n\n- The paper lacks of qualitative results of SD3 and SDXL.\n\n[1] Open AI, https://github.com/openai/consistencydecoder\n\n[2] Song et al., Consistency Models, ICML 2023.\n\n[3] Kynk\u00e4\u00e4nniemi et al., Applying Guidance in a Limited Interval Improves Sample and Distribution Quality in Diffusion Models, 2024."
+            },
+            "questions": {
+                "value": "Stable Diffusion 3 is known for its ability to generate text well. Can noise re-sampling correct errors when text generation goes wrong?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

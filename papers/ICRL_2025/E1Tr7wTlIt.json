@@ -1,0 +1,240 @@
+{
+    "id": "E1Tr7wTlIt",
+    "title": "$\\lambda$-SecAgg: Partial Vector Freezing for Lightweight Secure Aggregation in Federated Learning",
+    "abstract": "Secure aggregation of user update vectors (e.g. gradients) has become a critical issue in the field of federated learning. Many Secure Aggregation Protocols (SAPs) face exorbitant computation costs, severely constraining their applicability. Given the observation that a considerable portion of SAP's computation burden stems from processing each entry in the private vectors, we propose Partial Vector Freezing (PVF), a portable module for compressing computation costs without introducing additional communication overhead. $\\lambda$-SecAgg, which integrates SAP with PVF, \"freezes\" a substantial portion of the private vector through specific transformations, requiring only $\\frac{1}{\\lambda}$ of the original vector to participate in SAP. Eventually, users can \"thaw\" the public sum of the \"frozen entries\" by the result of SAP. To enhance privacy, we devise Disrupting Variables Extension for PVF. We demonstrate that PVF can seamlessly integrate with various SAPs and it poses no threat to user privacy in the semi-honest and active adversary settings. We include $7$ baselines, encompassing $5$ distinct types of masking schemes, and explore the acceleration effects of PVF on these SAPs. Empirical investigations indicate that when $\\lambda=100$, PVF yields up to $99.5\\times$ speedup and up to $32.3\\times$ communication reduction.",
+    "keywords": [
+        "Secure aggregation",
+        "Federated learning"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "A plug-and-play module to compress computation overhead in secure aggregation protocols for federated learning, requiring only $\\frac{1}{\\lambda}$ of the original vector to participate in the protocol.",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=E1Tr7wTlIt",
+    "pdf_link": "https://openreview.net/pdf?id=E1Tr7wTlIt",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces $\\lambda$-SecAgg, a secure aggregation protocol for federated learning (FL) designed to reduce computational and communication overhead through Partial Vector Freezing (PVF). This paper claims that by freezing and processing only a fraction of the private vector entries, the method significantly reduces the burden on the server and participating devices while ensuring all vector entries are eventually aggregated. To further enhance privacy, the paper incorporates Disrupting Variables Extension (DVE). The authors empirically demonstrate substantial performance gains in terms of speedup and communication reduction across various secure aggregation protocols.\n\nWhile the paper presents an interesting method to reduce the overhead in secure aggregation, the privacy analysis in Section 4.1 is fundamentally flawed. The authors underestimate the information leakage from $y^{i}$, which compromises the claimed privacy guarantees."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper considers a timely and important problem in secure aggregation protocol to reduce computational and communication overhead."
+            },
+            "weaknesses": {
+                "value": "1. Most importantly, the privacy analysis in Section 4.1, which claims no privacy leakage from $y^{i}$, is flawed. Although the paper asserts that no specific element of the original vector $x$ can be deduced directly from $y^{i}$, this does not mean there is no privacy leakage. In fact, $y^{i}$ reveals significant information about $x$. For example, in the case where $\\lambda = 2$ and $x$ has two elements, the server can infer $x_1$ in terms of $x_2$ from $y^{i} = a_{11}x_1 + a_{12}x_2$. While $x_1$ cannot be fully determined without $x_2$, the conditional probability of guessing $x_1$ correctly is now $1/p$ instead of $1/{p^2}$. This reduction in entropy, $H(x)$, shows that $y^{i}$ contains valuable information, thus reducing privacy. The authors should revise the privacy analysis and clarify the impact of knowing $y^{i}$ on the security of the original vectors."
+            },
+            "questions": {
+                "value": "Please see the comment in the weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors present a new system to improve the computational overhead of secure aggregation using a new approach called Partial Vector Freezing. This approach reduces the number of entries processed in the secure aggregation protocol, by projecting chunks of the client input vector onto a different space, and only aggregating $1/\\lambda$ of the entries of each chunk securely and sending the rest of the entries in the clear. The server aggregates the entries from all clients and recovers the original input vectors by projecting the inputs back to the original space. The paper further bolsters privacy through the Disrupting Variables Extension, which applies noise calibrated for Local Differential Privacy to frozen vectors. Experimental results demonstrate substantial computation improvements compared to state-of-the-art secure aggregation protocols."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The focus of privacy-preserving federated learning is a crucial topic\n- Extensive evaluation that covers a wide range of existing secure aggregation protocols"
+            },
+            "weaknesses": {
+                "value": "- The approach impacts the robust privacy guarantees traditionally upheld by state-of-the-art secure aggregation protocols. These protocols typically ensure that an adversary gains no additional information about the inputs of honest clients beyond what is inferred from the aggregated output. However, Partial Vector Freezing (PVF) significantly reduces this privacy. As pointed out by the authors, it is possible for the server to learn whether two clients have similar vector chunks. Although the authors propose a mitigation strategy through Local Differential Privacy to reduce the detection of exact matches, this measure does not fully mitigate the issue of input privacy. The noised client inputs may still leak partial information that allows the server to deduce similarities between inputs. Given this trade-off, the computational gains provided by PVF do not justify the notable privacy impact. For instance, in the context of PracAgg, the masking computation is relatively lightweight. It involves field operations and pseudorandom generator evaluations, typically implemented with efficient cryptographic functions like AES. Additionally, the more computationally intensive pairwise key agreements are independent of the vector size and remain necessary regardless of the implementation of PVF.\n- Another concern is the soundness of the security proof presented in Theorem 1. Specifically, the claim that the protocol execution is indistinguishable from random simulation seems to be inaccurate. The distribution of Hybrid 1 is not indistinguishable from that of Hybrid 0, as the distribution of frozen vectors $y_i$ does not exhibit properties of uniformly sampled vectors. While the random vectors are sampled uniformly from $\\mathbb{Z}_p$, the frozen vectors in the protocol are the actual inputs masked with centered Gaussian noise of bounded variance. This results in a non-uniform distribution over $\\mathbb{Z}_p$ undermining the indistinguishability between the two hybrids. Furthermore, other parts of the security proof are incomplete.  For instance, in Hybrid 3, it is stated that the adversary-controlled clients $\\mathcal{C}$ call the ideal functionality. However, in simulation-based proofs, it is typically the simulator, not the adversary, that has direct access to the ideal functionality. Clarifying this aspect would strengthen the proof\u2019s rigor and ensure alignment with standard cryptographic practices."
+            },
+            "questions": {
+                "value": "1. The baseline runtime figures for the secure aggregation protocols presented in Figure 1 and Table 1 appear notably higher than those reported in related literature. For instance, in the case of PracAgg with a vector length of 100k elements, Figure 1 shows a client runtime of 14 seconds and a server runtime of 140 seconds. In contrast, the original paper by Bonawitz et al. (2017) reports significantly lower runtimes for similar conditions, with client runtimes around 300 milliseconds (Figure 6a) and server runtimes at most 5 seconds (Figure 7a). Could you clarify the reasons for this discrepancy in runtime comparisons?\n2. Could you provide a more detailed analysis of the privacy impact of your scheme, particularly focusing on the amount of differentially private noise that would be sufficient to mitigate privacy risks effectively? A clearer discussion on how the noise level was determined and its implications on both privacy and utility would be valuable."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel method called \u03bb-SecAgg, which integrates a module named Partial Vector Freezing (PVF) into Secure Aggregation Protocols (SAPs) for federated learning. The main goal of this method is to reduce the computational overhead by \u201cfreezing\u201d most of the entries in user update vectors, allowing only a fraction (1/\u03bb) of the original vector to be processed through secure aggregation. The frozen entries can later be \u201cthawed\u201d to recover the full aggregated vector, ensuring that no information is lost in the final aggregation. Additionally, the paper proposes a Disrupting Variables Extension (DVE) that enhances privacy by adding noise to the frozen entries using Differential Privacy (DP). The authors perform extensive empirical evaluations across seven baselines, demonstrating that PVF can achieve up to 99.5\u00d7 speedup and 32.3\u00d7 communication reduction without compromising user privacy or security."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Innovation: The concept of freezing and unfreezing vector entries in the context of secure aggregation is very novel. This approach effectively reduces the computational burden on SAP, which has been a significant bottleneck in real-world federated learning applications, especially for large-scale models such as Large Language Models (LLMs).\n\nComprehensive Evaluation: The authors evaluate their approach on seven different baselines covering various secure aggregation protocols (e.g., homomorphic encryption-based, SMPC-based, mask-based). The experimental results show substantial improvements in computation time and communication cost.\n\nPrivacy and Security: The paper proves the privacy guarantees of \u03bb-SecAgg under semi-honest and active adversary models through security analyses. In addition, the authors introduce extensions such as DVE, which further strengthens the privacy guarantees."
+            },
+            "weaknesses": {
+                "value": "Clarity and readability: Although this paper presents a novel approach, some sections are dense and difficult to understand, especially the mathematical derivations and safety analyses. It is suggested that the authors could improve the readability of these sections by providing more intuitive explanations and breaking down the steps as much as possible. In addition, the readability of some diagrams and formulas (e.g., those in Sections 3 and 4) is too low, and it is suggested that the reader could improve them by simplifying them or providing more detailed explanations.\n\nImpact of noise on accuracy: Although the paper claims that the impact of DVE (adding noise to DP) on accuracy is negligible, the experimental results on the loss of accuracy due to DP noise are not detailed enough. It is suggested that the authors can add relevant experiments for this part.\n\nScalability to Multiple Users: This paper focuses on performance improvements for single users and servers, but does not discuss scalability to multiple users. It is suggested that the authors validate the approach of this paper in the context of multiple simultaneous users, especially with respect to communication overheads and system latency."
+            },
+            "questions": {
+                "value": "This paper presents a novel and practical approach to reduce the computational overhead of secure aggregation in federated learning by proposing \u03bb-SecAgg with partial vector freezing (PVF). The strengths of the method lie in its innovative design, theoretical rigor and comprehensive evaluation, showing significant performance improvements. However, there are areas that could benefit from further clarification, particularly in terms of readability, real-world evaluation, and the impact of noise on accuracy. It is recommended that the authors consider the above comments to further refine and optimize the paper."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper addresses the challenges of secure aggregation in federated learning, particularly the high computation costs associated with Secure Aggregation Protocols (SAPs). The paper introduces a novel approach called Partial Vector Freezing (PVF), designed to reduce computation without increasing communication overhead. In addition, the paper proposes the disrupting variable extension to PVF to support enhanced privacy. The extensive experiments show the effectiveness of the proposed proposal."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The PVF significantly compresses the length of the vector involved in SAP.\n2. The disrupting variables extension method improves privacy, without the computational overhead.\n3. The authors conduct extensive experiments"
+            },
+            "weaknesses": {
+                "value": "1. Lack of Novelty in the Proposed Solution:\nWhile I appreciate the clarity and straightforwardness presented in your methodology, I am concerned about the apparent simplicity of the proposed solution. The approach, as described, seems to lack the level of innovation. Consider expanding on the theoretical background, comparing your method with others in detail, and emphasizing any novel insights or improvements that your solution offers.\n2. Informality in Security Analysis:\nThe security analysis section of your paper appears to be somewhat informal and lacks the rigor typically required for a comprehensive evaluation of a proposed system or method. Security is a critical aspect in many research domains, and a thorough, formal analysis is essential to establish trustworthiness and robustness. I recommend conducting a more structured and detailed security analysis, possibly incorporating formal security proofs, case studies, or simulations to demonstrate the effectiveness of your security measures."
+            },
+            "questions": {
+                "value": "1. In practical applications, how should this value \\lambda be determined?\n\n2. Are there any fundamental differences between the aggregation method of k^i and that of y^i?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper devises a portable module named \\lamba-SecAgg for secure aggregation in federated learning. The authors also propose an extension involving disrupting variables to enhance privacy. Through extensive experiments, they demonstrate the efficiency of the proposed method, achieving up to 99.5\u00d7 speedup and up to 32.3\u00d7 communication reduction."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.Theoretical proofs.\n2.The experimental results demonstrate that PVF achieved 99.5 \\times speedup and up to 32.3 \\times communication reduction."
+            },
+            "weaknesses": {
+                "value": "1. Writing/technical issues:\n(1) In the Introduction section, the author methioed that \"the minimal noise added by DP is insufficient to thwart attacks\", yet they also suggest considering \"DP in the extension for enhanced privacy.\" Is there a deeper reason or gap that I might have overlooked?\n(2) The introduction of \"compression-based techniques\" in Figure 3 and Section 2 feels somewhat abrupt, primarily due to the lack of clarity in the classification of existing solutions outlined in the Introduction section. I suggest providing a clearer explanation of the criteria used to categorize the methods into secure aggregation techniques and compression-based techniques. Additionally, providing an analysis of the limitations of existing methods would help readers better understand the motivation behind the development of the PVF.\n(3) The definition of adversary in threat model is not very clear, particularly regarding key aspects such as adversary knowledge and adversary capabilities, which have not been adequately explained or defined.\n(4) Figure 4 is too abstract to understand.\n(5) In Section 3.3, while discussing secure aggregation, it is noted that the requirements for data accuracy are relatively high. However, the introduction of DP typically involves adding noise to the data. It would be beneficial to clarify how the accuracy of the data can be maintained after noise has been added, particularly in the context of the freezing and melting processes.\n\n2. Experimental issues:\n(1)The neural network architectures and datasets are not intruduced in the \u2018Experimental settings\u2019.\n(2)The setting of (\\lambda = 100) in some experiments requires further explanation.\n(3)The experimental validation, although comprehensive, is limited to specific neural network architectures and datasets. Its generalisability to other models and types of data may require further examination."
+            },
+            "questions": {
+                "value": "Please refer to the weakness above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper studies how to reduce the computational cost in privacy-preserving federated learning (FL) with secure aggregation (SecAgg). SecAgg is a primitive that improves the privacy-utility trade-off in FL as it hides individual model updates sent to the server. However, most efficient applications require to mask each parameter of the model with random noise, incurring into a large computational cost if models are big. \n\nThe current work proposes a technique that reduces the computational cost by only performing SecAgg to a subset of model parameters, while still recovering the (claimed to be) private aggregation of the entire model."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- Reducing the communication cost in privacy preserving ML an interesting topic.\n\n- The presentation of the protocol is fairly clear."
+            },
+            "weaknesses": {
+                "value": "# Main Weaknesses \n\nThe major weakness of the protocol is the **lack of any standard notion of security**. The protocol is based on the fact that revealing the undetermined system of linear equations $\\breve{A}x = y$ where $\\breve{A}$ and $y$ are public does not compromise the privacy of $x$. From a security point of view, letting the adversary gain the knowledge of $\\breve{A}x$ is **completely unsafe**. A clear example is already given the detailed comments subsection below for certain choices of $\\breve{A}$. \n\nEven if the paper proposes some defenses to avoid the most obvious threats in the choice of $\\breve{A}$ (i.e. if the system of equations already directly exposes some coordinates of $x$), these defenses are only a minor improvement in the overall security. The protocol is in fact insecure for any $\\breve{A}$. For example, consider that a party joins the aggregation protocol with a vector $x = (x_1, 0, \\dots, 0)$ (i.e., a vector where $x_1$ is the only non-zero value). In this case, values of $\\breve{A}x$ will always be multiples of $x_1$. Therefore, the claim of Theorem 1 does not hold: multiples of $x_1$ are *distinguishable* from uniformly random numbers, contrary to what is claimed in hybrid 1 ($H_1$) in the proof of Theorem 1 (Appendix D.1).  This renders the proof of Theorem 1 incorrect. \n\nThe computational improvements of this protocol come from the insecure modification described above. This makes the protocol inapplicable. Moreover, the attempts to further \"complicate\" the linear equations by the presented enhancements also follow an unsafe methodology lacking proper proofs (see my detailed comments below). \n\nIn addition to the above, the work ignores important lines of work in compression under privacy constraints (e.g. see [R1-R5] below) and differentially private-based aggregation (e.g., by the use of correlated noise [R6-R8]), directly related to the current contribution. \n\n\n# Detailed Comments \n\n- Page 2, Section 2: \n    - \"Mask-based\" approaches are an instantiation of \"SMPC-based\" approaches. \n    - \"(i) improving the masking mechanism\":  it is not clear what this means \n    - \"Note that the security of FL remains an open issue\": this is too broad and it is not clear what \"security\" means in this context\n- Page 3: \n    -  Section 2: \"However, their ability to prevent poisoning attacks is limited (Ma et al., 2023)\": not sure how the reference is relevant here. Does  (Ma et al., 2023) provides evidence about this statement? \n    - Section 3,  \"ultimately imposing significant computational burdens\": \"burdens\" $\\rightarrow$ \"burden\"; is this computational burden significant with respect to the computational cost of local training steps required by ML? \n- Page 4: \n    - Def 1: \"... where $AK$ denotes the additional knowledge ..\": so far no mention of \"additional knowledge has been made\", so it is not clear to what this refers. Also, it should be explicitly clarified that $rank(A, Ax)$ means the rank of the horizontal concatenation of $A$ and $Ax$. \n   - \"... rendering it impossible to determine that specific confidential vector.\" this is an overly strong statement (at least if no additional context is given). Consider for example that $A$ equals the identity matrix. Indeed $\\breve{A}x$ has infinite solutions (all possible values of the removed coordinate of $x$). However, almost all coordinates of $x$ will be revealed if $\\breve{A}x$ is revealed. \n- Page 5, Sec 3.3: \n    -  \"... even if some secagg entries are compromised\": There is no motivation of the extra defense, explaining how these entries would be compromised. \n    - \"complicating the relationships among entries and further enhancing privacy\": This lacks a proof. Providing privacy by obscurity (i.e, providing an obfuscation technique without proving that indeed it reduces to hard problem for the adversary) is a bad practice in the field of security.\n\n\n# References \n\n[R1] Bassily, Raef, and Adam Smith. \u201cLocal, Private, Efficient Protocols for Succinct Histograms.\u201d In Proceedings of the Forty-Seventh Annual ACM Symposium on Theory of Computing, 127\u201335. STOC \u201915. New York, NY, USA: Association for Computing Machinery, 2015. https://doi.org/10.1145/2746539.2746632.\n\n[R2] Feldman, Vitaly, and Kunal Talwar. \u201cLossless Compression of Efficient Private Local Randomizers.\u201d In Proceedings of the 38th International Conference on Machine Learning, 3208\u201319. PMLR, 2021. https://proceedings.mlr.press/v139/feldman21a.html.\n\n[R3] Liu, Yanxiao, Wei-Ning Chen, Ayfer \u00d6zg\u00fcr, and Cheuk Ting Li. \u201cUniversal Exact Compression of Differentially Private Mechanisms.\u201d arXiv, May 28, 2024. https://doi.org/10.48550/arXiv.2405.20782.\n\n[R4] Shah, Abhin, Wei-Ning Chen, Johannes Ball\u00e9, Peter Kairouz, and Lucas Theis. \u201cOptimal Compression of Locally Differentially Private Mechanisms.\u201d In Proceedings of The 25th International Conference on Artificial Intelligence and Statistics, 7680\u20137723. PMLR, 2022. https://proceedings.mlr.press/v151/shah22b.html.\n\n[R5] Triastcyn, Aleksei, Matthias Reisser, and Christos Louizos. \u201cDP-REC: Private & Communication-Efficient Federated Learning.\u201d arXiv, December 7, 2021. https://doi.org/10.48550/arXiv.2111.05454.\n\n[R6] Imtiaz, Hafiz, Jafar Mohammadi, and Anand D. Sarwate. \u201cDistributed Differentially Private Computation of Functions with Correlated Noise.\u201d arXiv, February 22, 2021. https://doi.org/10.48550/arXiv.1904.10059.\n\n[R7] Kairouz, Peter, Brendan Mcmahan, Shuang Song, Om Thakkar, Abhradeep Thakurta, and Zheng Xu. \u201cPractical and Private (Deep) Learning Without Sampling or Shuffling.\u201d In Proceedings of the 38th International Conference on Machine Learning, 5213\u201325. PMLR, 2021. https://proceedings.mlr.press/v139/kairouz21b.html.\n\n[R8] Sabater, C\u00e9sar, Aur\u00e9lien Bellet, and Jan Ramon. \u201cAn Accurate, Scalable and Verifiable Protocol for Federated Differentially Private Averaging.\u201d Machine Learning 111, no. 11 (November 1, 2022): 4249\u201393. https://doi.org/10.1007/s10994-022-06267-9."
+            },
+            "questions": {
+                "value": "Could please you address the points raised in \"Main Weaknesses\" above? \n\nIn addition to these questions: \n- Could you illustrate in more detail what which masking operations of the compared SecAgg protocols do you avoid by the use of your proposal? It seems that either performing a matrix-vector multiplication or masking operations does not eliminate the dependency of the dimension of a vector $x$ in the computation. \n\n- If we compare the computational cost of the SecAgg protocol and the computational cost of a local training step for a client, what proportion of the computation the SecAgg overhead represents? How does this change for different models?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,130 @@
+{
+    "id": "fsX9nFwMNj",
+    "title": "As Simple as Fine-tuning: LLM Alignment via Bidirectional Negative Feedback Loss",
+    "abstract": "Direct Preference Optimization (DPO) has emerged as a more computationally efficient alternative to Reinforcement Learning from Human Feedback (RLHF) with Proximal Policy Optimization (PPO), eliminating the need for reward models and online sampling. Despite these benefits, DPO and its variants remain sensitive to hyper-parameters and prone to instability, particularly on mathematical datasets. We argue that these issues arise from the unidirectional likelihood-derivative negative feedback inherent in the log-likelihood loss function.\nTo address this, we propose a novel LLM alignment loss that establishes a stable Bidirectional Negative Feedback (BNF) during optimization. \nOur proposed BNF loss eliminates the need for pairwise contrastive losses and does not require any extra tunable hyper-parameters or pairwise preference data, streamlining the alignment pipeline to be as simple as supervised fine-tuning.\nWe conduct extensive experiments across two challenging QA benchmarks and four reasoning benchmarks. \nThe experimental results show that BNF achieves comparable performance to the best methods on QA benchmarks, while its performance decrease on the four reasoning benchmarks is significantly lower compared to the best methods, thus striking a better balance between value alignment and reasoning ability. \nIn addition, we further validate the performance of BNF on non-pairwise datasets, and conduct in-depth analysis of log-likelihood and logit shifts across different preference optimization methods.\nWe will release all the source code, checkpoints, and datasets on GitHub.",
+    "keywords": [
+        "LLM Alignemnt",
+        "Preference Learning",
+        "Text Generation"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We propose a novel LLM alignment loss that establishes a stable Bidirectional Negative Feedback (BNF) during optimization, which does not require any tunable hyper-parameters or pairwise preference data.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=fsX9nFwMNj",
+    "pdf_link": "https://openreview.net/pdf?id=fsX9nFwMNj",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes an alternative to DPO and its variants such that $|\\frac{\\partial{\\mathcal{L}}}{\\partial{z_y}}|$, the norm of the derivative of the loss with respect to the logits of a given outputs, decreases linearly as $p(y|x)$ deviates from the $p_{ref}(y|x)$ in either direction. The loss is called Bidirectional Negative Feedback, in contrast to what the paper describes as unidirectional negative feedback in the likelihood loss, namely that $|\\frac{\\partial{\\mathcal{L}}}{\\partial{z_y}}|$ increases as $p(y|x)$ decreases. \n\nThe paper also demonstrates how various DPO-series methods avoid excessive decreases in the likelihood of dispreferred samples relative to a loss that just applies NLL to the preferred samples and its negation to dispreferred samples: the gradient for these losses includes and additional scaling term $\\mathcal{C}(y_w, y_l, p_\\theta, p_{ref})$ that decreases as the gap between $p_\\theta(y_w|x)$ and $p_{ref}(y_l|x)$ increases. However, they argue that these losses are unideal due to their sensitivity to the hyperparameter $\\beta$.\n\nExperimentally, BNF outperforms other DPO-style losses overall when evaluated across 2 instruction-following QA datasets and 4 logical reasoning datasets, using the preference training datasets from the SimPO paper. Moreover, because BNF is not a pairwise contrastive loss, it is applicable even with non-pairwise data (e.g., sometimes just a preferred or a dispreferred sample without a counterpart), and experiments show that BNF can still improve over the base model in such settings. The authors also show that BNF exhibits the least amount of log likelihood shifts as well as the lowest Gini coefficient in the logit shifts across tokens in a sequence."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper exhibits strong experimental results supporting the use of BNF over the baselines tested.\n2. The paper is easy-to-follow and makes progress on a relevant topic for the ICLR community.\n3. BNF is novel and well-motivated by the desire to decrease gradient norms as the log probs deviate more from the reference log probs.\n4. BNF improves upon DPO-like methods empirically and in applicability (going beyond pairwise data alone)."
+            },
+            "weaknesses": {
+                "value": "1. The authors point to two problems for DPO-like baselines (i.e., training collapse and alignment tax) but only seem to show positive results of BNF for one, i.e., less alignment tax. It would be helpful to see a precise definition of training collapse and show that BNF experiences less of it (or avoid framing the paper's story with training collapse).\n2. The authors mention that DPO-like baselines with an additional NLL term have limitations (i.e., poor chat and QA performance), but it is not clear to me that BNF overcomes these specific limitations when trained on the same datasets.\n3. While I believe that the paper makes sound and sufficient contributions, #1 and #2 point to a misalignment between the motivation for the work in the introduction and the contributions demonstrated in the body of the paper. Section 2.3 and Figure 2 are another example; they discuss various challenges and limitations, but it is not clear how each relates back to the paper's contributions. Also, for how focused this section is on the specifics of pairwise preference data in reasoning tasks, it is strange that the experiments don't explore training on such data.\n4. The paper could benefit from being more careful in distinguishing claims from hypotheses. For instance, in lines 496-471: \"This suggests that BNF achieves a balanced optimization strategy, reducing the gradients for tokens already showing large differences from the reference, thereby effectively preventing over-fitting and reducing the alignment tax.\" The logical leaps from smaller gradients for large differences to less overfitting and less alignment tax are not directly supported in the paper. Also, in the same section, it is not clear why a lower Gini coefficient is necessarily desirable in the first place; for instance, for some sequences it may be more desirable to just decrease the probability of the incorrect tokens rather than all tokens. Moreover, lines 54-55 state: \"we argue that the instability of DPO stems from a more fundamental cause: the unidirectional likelihood-derivative negative feedback inherent in log-likelihood loss.\" While this is a reasonable hypothesis, it is not a claim that has been definitively proven; thus, rephrasing this section as a hypothesis that guides the development of an alternative loss may be more apt."
+            },
+            "questions": {
+                "value": "1. Could the authors provide evidence of BNF's favorability with respect to training collapse?\n2. If BNF is meant to be an alternative to simply adding a NLL loss term to DPO-like methods, can the authors compare the proposed method with these baselines?\n3. Could the authors explain how each point made in Section 2.3 connect to a contribution or result in the paper / positive property of BNF?\n4. Could the authors clarify the central claims in the paper and distinguish them from statements that are hypotheses?\n5. Could the authors explain why the BNF loss is the way it is, e.g., why it necessarily needs to look as complex as it is when the main goal is to simply avoid an increasing gradient norm for large deviations? \n\nI would be happy to raise my score if these above concerns are addressed."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new LLM alignment loss to address the issues of DPO variants being sensitive to hyper-parameters and unstable in mathematical tasks. The loss can maintain Bidirectional Negative Feedback (BNF) during optimization and eliminate the need of additional hyperparameters and pairwise preference data. Finally, they evaluate the method on multiple tasks and backbones to verify its effectiveness."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tThis paper clearly outlines the previous methods and theoretically identifies their weaknesses. The motivations of this paper are clear.\n2.\tIn terms of these issues, the authors propose their method and validate the effectiveness through theory and extensive experiments on multiple tasks and LLMs.\n3.\tThe structure of this paper is clear, and the equations and charts are well-presented."
+            },
+            "weaknesses": {
+                "value": "1.\tFigure 2 illustrates the challenges of creating a substantial log-likelihood gap in mathematical tasks. Could you demonstrate the advantages of your method with similar examples in mathematical tasks?\n2.\tI am somewhat puzzled by Eq.(6). What are the motivations behind designing the equations where $y_i \\neq t_i$? It appears to be a careful design."
+            },
+            "questions": {
+                "value": "See above weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes Bidirectional Negative Feedback (BNF), an LLM alignment loss that does not rely on pairwise contrastive losses.  Consequently, it does not require pairwise data and has fewer hyper-parameters compared to DPO. The authors empirically show that the models` reasoning ability is less affected when using BNF for preference optimization. They compare BNF to previous approaches such as DPO, IPO, KTO, SLiC-HF, ORPO, SimPO on QA and reasoning benchmarks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- BNF has fewer hyper-parameters compared to DPO. If the method is robust to hyper-parameter tuning, this could make LLM alignment more compute efficient. \n- BNF does not require pairwise data. \n- The baselines are diverse and strong. The hyper-parameters of the other approaches were fine-tuned (although not directly by the authors)."
+            },
+            "weaknesses": {
+                "value": "- The performance across benchmarks is still relatively close to DPO. \n- Gemma lacks proper baselines as the scores were only copied from another paper."
+            },
+            "questions": {
+                "value": "- Is BNF more sample efficient because it does not require pair-wise dataset? Is there a relationship between sample efficiency and loss/dataset type?\n- Do you expect the other baselines to close in on BNF with further hyper-parameter tuning? \n- How sensitive is BNF to hyper-parameter tuning? Is it possible that the hyper-parameters are harder to tune despite the fact that they are fewer? \n- Is the performance difference on the benchmarks significant?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

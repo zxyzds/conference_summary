@@ -1,0 +1,183 @@
+{
+    "id": "bHNVmLDtFo",
+    "title": "Towards Optimizing Top-$K$ Ranking Metrics in Recommender Systems",
+    "abstract": "In the realm of recommender systems (RS), Top-$K$ metrics such as NDCG@$K$ are the gold standard for evaluating performance. Nonetheless, during the training of recommendation models, optimizing NDCG@$K$ poses significant challenges due to its inherent discontinuous nature and the intricacies of the Top-K truncation mechanism. Recent efforts to optimize NDCG@$K$ have either neglected the Top-$K$ truncation or suffered from low computational efficiency. To overcome these limitations, we propose SoftmaxLoss@$K$ (SL@$K$), a new loss function designed as a surrogate for optimizing NDCG@$K$ in RS. SL@$K$ integrates a quantile-based technique to handle the complex truncation term; and derives a smooth approximation of NDCG@$K$ to address discontinuity. Our theoretical analysis confirms the close bounded relationship between NDCG@$K$ and SL@$K$.  \n    Besides, SL@$K$ also exhibits several desirable properties including concise formulation, computational efficiency, and noisy robustness. Extensive experiments on four real-world datasets and three recommendation backbones demonstrate that SL@$K$ outperforms existing loss functions with a notable average improvement of 6.19\\%.",
+    "keywords": [
+        "Recommender Systems",
+        "Surrogate Loss",
+        "Top-K Recommendation",
+        "NDCG@K"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "This paper proposes a novel recommendation loss in the form of weighted SL, which directly optimizes Top-$K$ ranking metrics such as NDCG@$K$.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=bHNVmLDtFo",
+    "pdf_link": "https://openreview.net/pdf?id=bHNVmLDtFo",
+    "comments": [
+        {},
+        {
+            "title": {
+                "value": "Clarifications for AC, reviewers, and future readers (Part 1/2)"
+            },
+            "comment": {
+                "value": "We have received the reviewers' comments. We are very disappointed that the contributions of this paper, the problem this paper addresses, and even the entire field of recommendation loss, are misunderstood or neglected. It seems that this manuscript is not suitable for this venue, and we have decided to withdraw this submission.\n\nBelow are some clarifications for anyone reading this paper:\n\n**C1. Recommendation loss.**\n\nRecommendation loss is a rapidly evolving field that has significantly enhanced recommender systems. The goal of recommendation loss is to improve the efficiency of learning user/item features, and this improvement should be *model-agnostic*. The development of ranking loss began with BPR (UAI '09) [1] and has seen substantial progress over the past decade. We list the baselines from our paper: Softmax Loss (SL) (TOIS '24) [2], BSL (ICDE '24) [3], AdvInfoNCE (NIPS '24) [4], LLPAUC (WWW '24) [5], LambdaLoss (CIKM '18) [6], LambdaLoss@$K$ (SIGIR '22) [7], etc. For more details, please refer to Related Work in our paper (Appendix A).\n\n**C2. The problem we address.**\n\nOur goal is to design an NDCG@$K$ surrogate loss to directly optimize for the NDCG@$K$ metric, which is commonly used in recommender systems. Unlike global metrics such as NDCG, Recall, or AUC, NDCG@$K$ involves a Top-$K$ truncation. Therefore, optimizing for global metrics may yield suboptimal solutions for NDCG@$K$ (i.e., there may be inconsistencies or biases, cf. Figure 1a).\n\n**C3. Our contributions.**\n\nThrough rigorous theoretical derivation, we have developed a new NDCG@$K$ surrogate loss --- SL@$K$. Optimizing NDCG@$K$ is challenging, and so far, only LambdaLoss@$K$ provides a strict NDCG@$K$ surrogate loss, while other methods either optimize only for NDCG or use model to fit the metric.\n\nIn contrast, our SL@$K$ loss has the following advantages:\n\n- **Effective**: Directly optimizes for NDCG@$K$ with theoretical accuracy guarantees (Section 3.1), obtaining impressive performance improvements (avg. 6.19%) over SOTA methods.\n- **Efficient**: Similar complexity to SL, offering higher efficiency, especially compared to LambdaLoss with quadratic complexity (Section 3.2 and Table 3).\n- **Easy and Flexible**: Formulated as a simple weighted SL, applicable in any scenario where SL can be used, requiring minimal code changes, and supporting further adjustments like LogQ correction and IPS debiasing.\n\n**Reference:**\n\n- [1] BPR: Bayesian personalized ranking from implicit feedback. UAI, 2009.\n- [2] On the effectiveness of sampled softmax loss for item recommendation. TOIS 2024.\n- [3] BSL: Understanding and improving softmax loss for recommendation. ICDE 2024.\n- [4] Empowering Collaborative Filtering with Principled Adversarial Contrastive Loss. NIPS 24.\n- [5] Lower-Left Partial AUC: An Effective and Efficient Optimization Metric for Recommendation. WWW 2024.\n- [6] The lambdaloss framework for ranking metric optimization. CIKM 2018.\n- [7] On optimizing top-k metrics for neural ranking models. SIGIR 2022."
+            }
+        },
+        {
+            "summary": {
+                "value": "Summary:\n\nThis paper proposes a new loss function named SoftmaxLoss@K (SL@K), which could be an alternative choice when it comes to optimizing NDCG@K for recommender system."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Strengths:\n\n-\tThe idea is simple and intuitive, easy to understand.\n-\tThe experiments are conducted based on well-known datasets and baselines (and algorithms)\n-\tThe authors also provided ablation studies \n-\tThe authors provided source code for reproducibility and details in the Appendix are also given."
+            },
+            "weaknesses": {
+                "value": "Weaknesses:\n\n-\tIn my opinion, the contribution is marginal, as compared with previous works in [1, 2, 3].\n-\tIt\u2019s still not very clear about the benefits of using SL@K. Simply looking at Table 1, 2, 3, it appears that the best baseline performance is not stable across scenarios, is it an advantage of SL@K for stable / trustable performance?\n-\tSince the work focuses on SL@K; it\u2019s worth to explore more numbers of K (e.g., 5,10,15,20,25,\u2026100) instead of just a few Ks.\n-\tAs a follow-up, it\u2019s better to compare SL@K, NDCG@K, and LambdaLoss@K across experiments (e.g., Figure 3 and Table 4)\n-\tIf the authors would like to emphasize on the practical applications (as compared to LambdaLoss@K for example), more examples should be given with large dataset such as Netflix or MovieLens20M. I understand Table 3 is given, but in my opinion, small datasets with MF backbone cannot guaranteed its practical application for large-scale RS (as mentioned in L183-200"
+            },
+            "questions": {
+                "value": "Please refer to the weaknesses section; I may have more questions later."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a novel ranking loss function that optimises ndcg@k a popular evaluation metric utilised in recommender systems. The authors base the loss function on a sampled version of the softmax loss version where a quantile technique is used to separate the items in the top K from the rest. The authors provide a comparison to other similar loss functions and a fairly extensive experimental section which demonstrates significant gains compared to other loss functions. '\nThe related work, analysis of the lambda loss function and proofs are included in the appendix."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is well written and easy to follow for the most part. \nThe loss function can be of potential practical use in some recommender systems applications. \nThe experimental section is fairly extensive."
+            },
+            "weaknesses": {
+                "value": "The contribution of the paper is rather limited, over the last 10 years a large number of ranking loss functions have been proposed. \nThe core topic of this paper falls somewhat outside of the core interests of this conference, a IR or recommender systems conference might be more appropriate. \nCode is not included in the submission\nIt is unclear how this loss function would perform compared to the large number of already proposed loss function for recommendation. \nWhile optimising for IR evaluation metrics is a good way of showing increases in offline experimental results in recommender systems papers it is unclear how relevant these gains are in real online recommendation systems as techniques as off-policy correction and IPS seem to produce bigger gains in real world recommendation engines rather than then latest ranking loss function."
+            },
+            "questions": {
+                "value": "My main suggestion is to find a more appropriate venue for this paper that is closer to the core audience that could be interested in the topic."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors propose a new softmax loss as a surrogate for optimizing NDCG@K in ranking tasks. My primary concerns revolve around the paper's motivation and experimental validation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The topic of this paper is highly interesting.\n2. The paper provides a theoretical guarantee for optimizing the proposed method.\n3. The proposed methods demonstrate significant improvements in experiments."
+            },
+            "weaknesses": {
+                "value": "1. The motivation of this paper is problematic.\n2. The softmax loss is not novel; therefore, the paper should clarify its novelty and distinguish the proposed methods from existing solutions.\n3. The experiments only include small datasets and traditional ranking methods. I highly recommend that the authors use large-scale recommendation datasets and incorporate modern recommendation and ranking models."
+            },
+            "questions": {
+                "value": "The authors\u2019 exploration of ranking loss is compelling and relevant to real-world applications. My concerns center on the following aspects. Firstly, the inconsistency between NDCG and NDCG@K appears similar to the difference between NDCG@K1 and NDCG@K2 for different values of K. However, this observation alone does not provide a basis for questioning the NDCG metric itself, as NDCG@K is designed to evaluate ranking performance for the top-K items, which naturally varies with different values of K. I highly encourage the authors to clarify their motivation further. Additionally, if they wish to highlight this observation, it would be useful to evaluate the inconsistency between SL@K1 and SL@K2 as well.\n\nI appreciate the authors' effort in introducing a new loss function, and I suggest they summarize the distinctions between their proposed loss function and existing softmax loss functions [1]. In the experiments, I recommend including models such as DeepFM [2], DIN [3], and SIM [4], as MF and LightGCN are less common in real-world recommendation settings.\n\n[1] On the Effectiveness of Sampled Softmax Loss for Item Recommendation\n[2] DeepFM: A Factorization-Machine based Neural Network for CTR Prediction\n[3] Deep Interest Network for Click-Through Rate Prediction\n[4] Search-based User Interest Modeling with Lifelong Sequential Behavior Data for Click-Through Rate Prediction"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Recommender systems are often referred to as top-K item recommendation tasks, and as such, much of the literature over the past decade has sought solutions to optimize these top-K ranking metrics. This paper makes a similar argument and proposes a new ranking loss called SoftmaxLoss. The authors provide a reasonable analysis of the difficulty of optimizing NDCG and derive a mathematical derivation of how NDCG might be optimized. In particular, the authors make multiple approximations in Equations 3.3b, 3.3d, 3.3e. Finally, in Equation 3.5, they derive the so-called loss. They perform extensive experiments to show that SoftmaxLoss is a good optimizer for top-N ranking."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "(1) The paper is well written and easy to understand, with clear motivation and ideas\n\n(2) The authors provide a rationale for the NDCG optimization problem\n\n(3) A large number of experiments are performed to support the claim"
+            },
+            "weaknesses": {
+                "value": "(1) While I agree that optimizing top-K metrics such as NDCG or MRR is important for recommendation tasks, the existing literature over the past decade is extensive. Although numerous new solutions have been proposed, the commonly used loss functions still primarily include cross-entropy loss, batch softmax loss [1], and negative sampling-based pairwise ranking [2,3,5]. In my view, this particular solution does not significantly advance the field, as the ranking problem has been well-established in recent years; it is a relatively old topic.\n\n(2) The proposed solution primarily addresses the recall stage, while CTR prediction tasks continue to focus on AUC during the offline phase. The relative improvements in the recall stage may not have a substantial impact on the final ranking stage.\n\n(3) As I mentioned, there is an abundance of related literature, and the authors may have overlooked some key works. For example, the authors compare their approach to BPR loss, which is a well-known baseline function. Many studies have indicated that incorporating negative sampling can significantly enhance BPR's performance. The authors should consider comparing their results with other relevant literature, such as WARP loss[2], LambdaFM loss[3], and batch softmax loss[1].\n\n(4) Additionally, while the topic falls under the realm of learning to rank, it is noteworthy that learning-to-rank has not been prominently featured in recent literature. The 2011 Yahoo Learning to Rank Challenge highlighted that optimization of top-K ranking metrics is not particularly impressive compared to classical regression and classification losses.\n\nAll in all, the topic discussed in this article is not really interesting to me personally and it does not address a very important problem in the field of current recommender systems. It feels like just another paper on the subject. \n\n\n[1] Sampling-bias-corrected neural modeling for large corpus item recommendations. Recsys2019\n\n[2] WSABIE: Scaling Up To Large Vocabulary Image Annotation. IJCAI 2011\n\n[3] LambdaFM: Learning Optimal Ranking with Factorization Machines Using Lambda Surrogates. CIKM2016\n\n[4] Yahoo! learning to rank challenge overview. Proceedings of the learning to rank challenge 2011\n\n[5] Co-Factorization Machines: Modeling User Interests and Predicting Individual Decisions in Twitter.WSDM 2013"
+            },
+            "questions": {
+                "value": "No"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

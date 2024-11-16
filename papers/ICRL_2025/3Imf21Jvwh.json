@@ -1,0 +1,167 @@
+{
+    "id": "3Imf21Jvwh",
+    "title": "Hard-Constrained Neural Networks with Universal Approximation Theorem",
+    "abstract": "Incorporating prior knowledge of input-output relationships into machine learning models has gained significant attention, as it enhances generalization from limited data and ensures trustworthy predictions. However, most existing approaches use soft constraints by penalizing violations through regularization, which offers no guarantee of constraint satisfaction---a critical requirement in safety-critical applications. On the other hand, imposing hard constraints on neural networks may hinder their representational power, adversely affecting performance. To address this, we propose HardNet, a practical framework for constructing neural networks that inherently satisfy hard constraints without sacrificing model capacity. Specifically, we encode affine and convex hard constraints, dependent on both inputs and outputs, by appending a differentiable projection layer to the network\u2019s output. This architecture allows unconstrained optimization of the network parameters using standard algorithms while ensuring constraint satisfaction by construction. Furthermore, we show that HardNet retains the universal approximation capabilities of neural networks. We demonstrate the versatility and effectiveness of HardNet across various applications: fitting functions under constraints, learning optimization solvers, optimizing control policies in safety-critical systems, and learning safe decision logic for aircraft systems.",
+    "keywords": [
+        "constrained optimization",
+        "universal approximation",
+        "surrogate models"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=3Imf21Jvwh",
+    "pdf_link": "https://openreview.net/pdf?id=3Imf21Jvwh",
+    "comments": [
+        {
+            "summary": {
+                "value": "The proposes a new layer able to project the output of the neural network (which might be non-compliant with a set of hard constraints) back into a \"safe space\" where the constraints are guaranteed to be satisfied."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "In general, I like this paper quite a lot and I think it has different strengths (listed below):\n\n- The paper handles a very important problem. \n- The paper is technically sound \n- The paper is written very well"
+            },
+            "weaknesses": {
+                "value": "The paper has only one major flow: it is not well placed in the literature. \n\nIndeed, I do not think the authors are familiar with the Neuro-symbolic AI literature, where the problem of learning with hard constraints has already been studied. In particular, there is a research group that has worked a lot on creating layers that are make neural networks compliant by construction with a set of hard constraints [1,2,3]. [1] is the first work that proposed this kind of approach with constraints expressing hierarchies over the outputs. In the latest works they worked with hard constraints expressed in propositional logic [2] and as linear inequalities [3]. Obviously I believe [3] is particularly relevant to your paper and it would be nice to have a comparison between the two methods (at least in terms of discussion for the rebuttal phase and experimental only for the camera ready). Delving more on the logical side you have works like Semantic Probabilistic Layer that gives a probabilistic perspective to hard constraints expressed in propositional logic and can guarantee their satisfaction by construction [4].  Finally, you can find an entire line of work which maps the outputs of the neural network into logical predicates and allows reasoning on top of these predicates (see e.g., [5,6,7]) which then also guarantees the satisfaction of the constraint. \n\nThe final rate is below the acceptance threshold because of this. However, I am fully aware that it is often very hard to keep up with the extensive literature available in ML, so I will be very open to increasing my score. \n\nReferences:\n\n[1] Eleonora Giunchiglia and Thomas Lukasiewicz. Coherent hierarchical multi- label classification networks. In Proc. of NeurIPS, 2020.\n\n[2] Eleonora Giunchiglia, Alex Tatomir, Mihaela Catalina Stoian, and Thomas Lukasiewicz. CCN+: A neuro-symbolic framework for deep learning with requirements. International Journal of Approximate Reasoning, 171, 2024.\n\n[3] Mihaela C. Stoian, Salijona Dyrmishi, Maxime Cordy, Thomas Lukasiewicz, and Eleonora Giunchiglia. How Realistic Is Your Synthetic Data? Constraining Deep Generative Models for Tabular Data. In Proceedings of International Conference on Learning Representations, 2024.\n\n[4] Kareem Ahmed, Stefano Teso, Kai-Wei Chang, Guy Van den Broeck, and Antonio Vergari. Semantic probabilistic layers for neuro-symbolic learning. In Proceedings of Neural Information Processing Systems, 2022.\n\n[5] Robin Manhaeve, Sebastijan Dumancic, Angelika Kimmig, Thomas Demeester, and Luc De Raedt. DeepProbLog: Neural probabilistic logic programming. In Proceedings of Neural Information Processing Systems, 2018.\n\n[6] Connor Pryor, Charles Dickens, Eriq Augustine, Alon Albalak, William Yang Wang, and Lise Getoor. Neupsl: Neural probabilistic soft logic. In Proceedings of International Joint Conference on Artificial Intelligence, 2023.\n\n[7] Emile van Krieken, Thiviyan Thanapalasingam, Jakub M. Tomczak, Frank Van Harmelen, and Annette Ten Teije. A-neSI: A scalable approximate method for probabilistic neurosymbolic inference. In Proceedings of Neural Information Processing Systems, 2023."
+            },
+            "questions": {
+                "value": "As I liked a lot the paper, here I also include a series of suggestions to further improve the paper:\n\n- At page 4, shouldn't the sup-norm be defined as $||f||_\\inf = sup_{x \\in \\mathcal{X}} |f(x)|$?\n- At page 5, I think it would have been great to have a small example with just a neural network with two outputs $y_0$ and $y_1$ and the constraint $y_0 \\ge y_1$. Then you could for example show that if $y_0 = 3$ and $y_1 = 4$ then $a(x)=[\u22121,1]$, $b(x) =0$ and \n$$\n\\mathcal{P}(f_\\theta)(x) = f_\\theta(x) - \\frac{a(x)}{\\||a(x)\\||^2} \\text{ReLU}(a(x)^\\top f_\\theta(x) - b(x)) = [3.5, 3.5].\n$$\n- At page 5, among the assumptions there is written that the constraints need to be feasible. Just to improve the readability of the paper and also make sure everything is well defined, it would help to add the meaning of the word feasible (i.e., \"that there exists at least one solution or point within the domain of interest that satisfies all the constraints simultaneously\")\n- At page 5 the authors give the assumptions for which the number of constraints needs to be lower or equal than $n_{out}$. I think it would be really helpful to add a simple example with a set of constraints that cannot be captured (e.g., $x \\ge 0, y \\ge 0, x+y \\ge 0$)\n- At page 8, in the experimental analysis, the constraints you show clearly define a non-convex space. However, for your layer to work you need to have a set of constraints that defines a convex space. Are you simply applying different projections on the ground of the value of $x$? If that is the case, I personally find this experiment a bit misleading as this only works because $x$ is a known input. I do not think your layer would work in a setting where you have a constraint of the type if $y_1 > y_2$ then $y_2+ y_3 < 1$, tight?\n- Finally, I think it would also be nice if you could extend on how this type of work is relevant for the SafeAI literature, as creating models that are complaint by design with a set of constraints obviously increases their safety."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a type of hard-constrained neural network by introducing differentiable projection layers. Specifically, if the constraints are affine and the number of constraints are no greater than the output dimension, the projection can be found in closed form. For other convex constraints, the authors propose to apply the differentiable optimization framework to compute the projection iteratively. The authors use experiments including learning an optimization solver and controlling a safety-critical dynamical system to demonstrate the effectiveness of the proposed work."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "I have not worked on constrained neural networks, and hence I am unfamiliar with a lot of the cited literature. That being said, judged based on the content of this submission, the results are promising and meaningful, and the presentation is mostly clear."
+            },
+            "weaknesses": {
+                "value": "- To use the closed-form projection algorithm Eq.(7), we need $n_{ineq} + n_{eq}$ to be no greater than the output dimension. Is this restrictive in practice? In the included experiments, which one of them uses closed-form projection?\n- For Eq.(11), should $u$ also be a function of $t$, i.e., $u (t)$?\n- In Table 4, why are rows 2 and 4 marked as red even though they are feasible?"
+            },
+            "questions": {
+                "value": "- I am a little confused about part iii) of Proposition 4.2. Namely, the projection preserves the distance from the boundary of the feasible set when $\\bar{f}_\\theta (x)$ satisfies the constraint. Would you mind sharing a geometric intuition?\n- I am also confused about the $C_\\leq (f (x))$ notation in line 359. What does $C$ denote? This is different from the $C (x)$ in Eq.(4), right?\n- Regarding Figure 2, it looks like all models perform reasonably good in the region which the training data lie in, and the difference occurs outside of data coverage. I am confused why \"Soft\" seems much worse than others. If I understood it correctly, \"Soft\" penalizes when the model output violates the constraints. Since all training points are feasible, I intuitively expect \"Soft\" to behave similarly to \"NN\", but this is not the case. Could you please explain why such difference? Also, how would \"Soft + proj\" look like?\n- For the \"safe control policy\" experiment in Section 5.3, what do you think is the biggest advantage of the proposed method compared with non-learning methods such as model predictive control?\n- Line 500 mentions that the constraint in Eq.(12) can be conservative, leading to worse performance compared to \"Soft\" and \"DC3\". Is it possible to adjust the level of conservativeness by changing $\\alpha$?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents HardNet, an approach to train neural networks that satisfy hard constraints by construction.\nThe core idea of the paper is to append a projection layer at the end of the network in order to bring the network output onto the feasible set.\nTwo different schemes are presented: one using a closed-form (non-orthogonal) projection for affine constraints, and one resorting to previous work presenting differentiable convex optimization solvers, in case of more general convex constraints.\nUniversal approximation theorems for the architectures are presented.\nExperimental results on a variety of benchmarks are presented, demonstrating that HardNet attains good performance while satisfying the constraints."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The idea to enforce hard constraints by construction through a projection layer is simple and neat. \nDifferently from previous work in the area, universal approximation theorems are provided.\nThe experiments show that, at least for affine constraints supported by HardNet-Aff, HardNet works quite well in practice (albeit at a small scale).\nFinally, I found the related work section to be well-written and fairly comprehensive."
+            },
+            "weaknesses": {
+                "value": "The main weaknesses of the paper are threefold: HardNet-Cvx, the assumptions behind HardNet-Aff, and the experimental section.\n\n*HardNet-Cvx*: the idea to use differentiable optimizers to perform the projection does not appear to be completely novel. DC3 discusses it in related work, excluding it because of large computational cost (this large cost is definitely confirmed at inference in the experiments in Table 5). The rayen paper uses it as a baseline (named PP in their paper). I do not know if the authors are aware of this, but these points absolutely need to be acknowledged throughout the paper. Furthermore, the only example over HardNet-Cvx is used (Table 5) appears to nevertheless use affine constraints (albeit, as far as I understand, too many to be supported by HardNet-Aff). In this instance, its runtime is extremely large, questioning its practical applicability.\n\n*HardNet-Aff assumptions*: the assumptions required for HardNet-Aff seem very strong to me. It seems to be that a simple interval constraint per network output coordinate would already be unsupported, hence incurring the large cost associated to HardNet-Cvx. Could the authors comment on this?\n\n*Experiments*: my main concern over the experimental section is the surprisingly bad performance of DC3. In the original paper, all constraints appear to be satisfied in practice. Is there anything I am missing here? Was DC3 run for an insufficient number of iterations? I understand that for HardNet the constraints hold by construction, but DC3 appears to be fairly strong empirically, in the original paper. Important details such as training times for each scheme appear to be omitted (or at least, do not feature prominently). \"DC3 + Proj\" would also appear to be a missing, yet very interesting baseline. Further details are provided as questions."
+            },
+            "questions": {
+                "value": "- Could the authors train DC3 for longer, or with more inner iterations to satisfy the inequality constraints? If this is deemed infeasible, can the authors provide an explanation on the discrepancy with the results in the original paper?\n- Would it be possible to provide \"DC3 + Proj\" results?\n- Why is DC3 absent from Table 5?\n- In the toy example, training points are sampled from [-1.2, 1.2], but then the networks are evaluated on [-2, 2]. Aren't samples in that area OOD, in a sense? Couldn't that explain the performance of the baselines? I understand that guaranteed constraint satisfaction is an advantage of the proposed approach, but these points should be discussed. (e.g., by providing results on [-2, 2] training)\n- What is lost by the fact that HardNet-Aff does not rely on an orthogonal projection? Does this imply anything concerning the hardness of learning the function through gradient-based method? An interesting ablation would be to compare HardNet-Aff with HardNet-Cvx on a setup where both are supported.\n- It would be interesting to see some experiments on (even slightly) larger networks. Would some methods benefit more from the additional capacity than the others?\n\nIn general, I think the quality of the work would clearly increase if the authors were more honest on the limitations of the proposed approach (see weaknesses above)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a simple framework for imposing constraints on input-output relations in neural networks.\nThe approach consists in appending a final projection layer to the network, ensuring that the constraints are satisfied by construction. Moreover, the authors show (formally) that this projection operation does not hinder the expressivity of the network, and empirically evaluate the approach on various scenarios."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The paper is very clear in its presentation. It is well structured and reads well. The contributions of the paper are clearly presented and well summarized, both in text and by images and tables. The empirical evaluation include plenty of relevant and diverse scenarios."
+            },
+            "weaknesses": {
+                "value": "I have some doubts regarding the novelty of the paper and the technical discussion. \n\nThe idea of satisfying hard constraints using a final differentiable projection layer is mentioned in the works cited as reference, and many other works referencing the idea exist (i.e. https://arxiv.org/abs/2111.10785 and https://arxiv.org/abs/2307.10459). If the contribution is simply the extension of the idea to input dependent constraints, it should be more clearly stated.\n\nAs for the soundness of the approach, while the additional projection layer is differentiable, its derivative is not well behaved.\nClaims such as \"meeting the required constraints while allowing its output to be backpropagated through to train the model via gradient-based algorithms\" and \"This allows us to project the output $f_\u03b8(x)$ onto the feasible set $C(x)$ and train the projected function via conventional gradient-based algorithms\" are not substantiated by a proper discussion on the gradient properties of the resulting network.\nIn fact, as presented, the gradient is always orthogonal to the constraint. \nThis observation is not novel, and from my understanding is the main motivation driving the development of alternatives to projection methods."
+            },
+            "questions": {
+                "value": "I'd like to explain more in detail my doubts.\nConsider the simple case of $1-d$ output and a single affine constraint. The projection layer reduces a simple rescaled ReLU, and the whole network has zero gradient where the constraint is not satisfied. \n\nThis effect is true in general. In fact, if we evaluate the Jacobian of the projection layer when the constraint is not satisfied ($J_{\\mathcal{P}} = I-a(x)a(x)^T$), we can see that the gradient of the network will be always orthogonal to the constraint vector $a(x)$. \n\nFor this reason, if $f_\\theta$ is initialized outside the feasible region, it should be impossible to \"re enter\" it by simply following the gradient. This means that the whole optimization would get \"stuck\" on the boundary of the feasible set, which might not be ideal. In stochastic gradient descent, this issue might be mitigated, however, i believe this is an important discussion to have in the paper.\n\nThe proposed projection (for the affine variant) works in two steps, reducing the dimensionality of the output space using the equality constraints, and performing a projection in the reduced space. Is this better than simply treating equalities as a pair of inequalities? This aspect should be investigated to justify the additional complexity of the method."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

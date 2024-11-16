@@ -1,0 +1,133 @@
+{
+    "id": "Lz0XW99tE0",
+    "title": "A Periodic Bayesian Flow for Material Generation",
+    "abstract": "Generative modeling of crystal data distribution is an important yet challenging task due to the unique periodic physical symmetry of crystals. Diffusion-based methods have shown early promise in modeling crystal distribution. More recently, Bayesian Flow Networks were introduced to aggregate noisy latent variables, resulting in a variance-reduced parameter space that has been shown to be advantageous for modeling Euclidean data distributions with structural constraints (Song, et al.,2023). Inspired by this, we seek to unlock its potential for modeling variables located in non-Euclidean manifolds e.g. those within crystal structures, by overcoming challenging theoretical issues. We introduce CrysBFN, a novel crystal generation method by proposing a periodic Bayesian flow, which essentially differs from the original Gaussian-based BFN by exhibiting non-monotonic entropy dynamics. To successfully realize the concept of periodic Bayesian flow, CrysBFN integrates a new entropy conditioning mechanism and empirically demonstrates its significance compared to time-conditioning. Extensive experiments over both crystal ab initio generation and crystal structure prediction tasks demonstrate the superiority of CrysBFN, which consistently achieves new state-of-the-art on all benchmarks. Surprisingly, we found that CrysBFN enjoys a significant improvement in sampling efficiency, e.g., ~ 100x speedup (10 v.s. 2000 steps network forwards) compared with previous Diffusion-based methods on MP-20 dataset.",
+    "keywords": [
+        "Crystal Generation",
+        "Bayesian Flow Networks",
+        "Crystal Structure Prediction"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "We propose a periodic Bayesian flow with a novel mechanism to generate material under entropy guidance, achieving consistent better performance and significant higher sampling efficiency.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Lz0XW99tE0",
+    "pdf_link": "https://openreview.net/pdf?id=Lz0XW99tE0",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a new crystal generative model for materials using Bayesian Flow Networks, a diffusion-like generative model but supports more types of prior for noise distributions. To effectively enforce E(3) equivariance in generation, the fractional coordinates are generated on the hyper-torus manifold defined in Jing et al. 2022. Instead of standard Gaussian noise used for generation of torsion angles, von Mises distribution is used with derived Bayesian update. To ensure the receiver belief entropy is linearly decreasing, a numerical binary search is done for determining the schedule of the sender\u2019s accuracy (noise) level. In experiments, this method performs better than SOTA methods such as DiffCSP, FlowMM and CDVAE. When compared with diffusion-based method DiffCSP, this method excels at sampling with fewer steps (NFEs)."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The major strength of the method is using Bayesian Flow Networks for crystal material generation. The von Mises distribution is used and its Bayesian update is used for training the BFN model, where previous BFN models only use Gaussian distribution. And for this special distribution, the authors identified that it is important to condition the model with the entropy of the receiver\u2019s belief instead of the time. \n\nThe other strength is the improved sampling efficiency of BFN model as compared to diffusion-based method such as DiffCSP. But it is unclear how it compares with ODE sampling method such as flow matching or diffusion with ODE sampler."
+            },
+            "weaknesses": {
+                "value": "Major weakness is on experiment evaluation.\n\n- For baselines to compare, the latest DiffCSP++[1] (which gives better performanc) and MatterGen[2] are not included.\n- For metrics, what about uniqueness, novelty, and stability? The goal of material generation is generating novel unique materials that are stable. Hence, these metrics are the most important to measure for use case of material generation.\n- For comparing methods with same number of network forward evaluations, the sampling stepsizes should be adjusted, i.e. $\\Delta t = 0.01$ if sampling $100$ steps. It\u2019s not clear from the current description. Also diffusion models with stochastic samplers are known to need more steps in sampling. For better comparison, maybe consider flow matching (such as FlowMM) or diffusion model with ODE sampler, and with adjusted sampling stepsizes.\n\nThe presentation of BFN can be improved. Maybe with a small toy example to explain how it works. Also for introducing the parameters of von Mises distribution, might be good to refer to Figure 5 and illustrate how each parameter affect the distribution."
+            },
+            "questions": {
+                "value": "- SE(3) or E(3) equivariance? Is reflection included when generating the fractional coordinates on the hypertorus. Only translation and rotation are mentioned to be preserved in the paper (also in Jing et al. 2022 as well), which corresponds to SE(3).\n- Comparison with baselines with same number of NFEs: how are the methods evaluated, are the stepsizes $\\Delta t$ adjusted by the number of sampling steps as well?\n    \n    Also for small NFEs, it makes more sense to compare with flow matching or diffusion model with ODE sampling, such as FlowMM? Since diffusion models use stochastic sampler which in general requires more steps as seen in the EDM paper[3]. How does FlowMM (which uses ODE sampler) perform with fewer steps?\n    \n- Compare with SOTA: DiffCSP++ [1] should be considered as another baseline to compare to, and also with fewer steps of sampling. Its performance seems to be better than DiffCSP. Also MatterGen-MP should be considered as a baseline for reference.\n- Evaluation on metrics such as uniqueness, novelty and stability?\n- Training time comparison: How does training time compare for different methods? Does the introduced von Mises distribution Bayesian update incur additional training cost per batch?\n\n[1] Jiao, Rui, Wenbing Huang, Yu Liu, Deli Zhao, and Yang Liu. \"Space group constrained crystal generation.\"\u00a0*arXiv preprint arXiv:2402.03992*\u00a0(2024).\n\n[2] Zeni, Claudio, Robert Pinsler, Daniel Z\u00fcgner, Andrew Fowler, Matthew Horton, Xiang Fu, Sasha Shysheya et al. \"Mattergen: a generative model for inorganic materials design.\"\u00a0*arXiv preprint arXiv:2312.03687*\u00a0(2023).\n\n[3] Karras, Tero, Miika Aittala, Timo Aila, and Samuli Laine. \"Elucidating the design space of diffusion-based generative models.\"\u00a0*Advances in neural information processing systems*\u00a035 (2022): 26565-26577."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper extends BFNs to von-Mises distributions on the product of 1-spheres (flat torus) and applies this method to modeling conditional material generation (conditioned on atom type, generate positions)."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Method seems novel and using a different model for geodesic generative modeling seems interesting.\n- Results seem good and competitive."
+            },
+            "weaknesses": {
+                "value": "- My main concern is I found the definitions and exposition on Bayesian Flow Networks very unclear.\n- Some minor concerns about the experiments."
+            },
+            "questions": {
+                "value": "About BFN extension:\n  - Can the torus example in Figure 3 be explained through geodesic interpolations of $\\theta_{i-1}$ and $y$?\n  - I don't have sufficient background in BFN to understand the preliminaries, as it immediately uses terminology from BFNs. Can you summarize the basic BFN framework and explain why extending to periodic is not easy in 2-3 sentences in layman terms? \n  - There may be missing information about the sampling in Eq (3). How is y_1 defined? How do you sample the y_i sequence? Is that based on Phi?\n\nExperiments:\n  - Why not also report stability rate for Table 2? As I understand, this is an important metric for material generation.\n  - FlowMM was also proposed for efficient sampling and has a similar (but weaker) plot of Figure 4 (Match rate vs NFE). Can you add FlowMM into Figure 4?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel generative model for creating crystal structures using a Periodic Bayesian Flow. Its unique contribution is adapting Bayesian Flow Networks (BFNs) to model periodic data on non-Euclidean spaces (specifically, the hyper-torus), which is essential for the spatial symmetry of crystals. Traditional BFNs, optimized for Euclidean data, are insufficient for the periodic nature of crystals, prompting this adaptation to account for non-monotonic entropy and periodicity. The authors introduce majorly these concepts; (a) Periodic Bayesian Flow on a hyper-torus, designed for non-Euclidean spaces to improve generative modeling accuracy for crystal data. (b) Entropy Conditioning instead of time-based conditioning, which better informs the model about the generation state due to non-additive entropy dynamics. (c) Fast Sampling Algorithm and reformulations of BFN for computational efficiency, achieving approximately 100x improvement in speed over previous diffusion-based methods. Experimental results demonstrate CrysBFN's performance advantages on tasks like ab initio crystal generation and crystal structure prediction, consistently outperforming existing methods (e.g., DiffCSP and FlowMM) in accuracy, efficiency, and property statistics across datasets such as Perov-5, Carbon-24, and MP-20. The paper establishes CrysBFN as a state-of-the-art approach in generative crystal modeling, with potential applications for other data types on periodic manifolds. The approach, validated through extensive experimentation, advances both theoretical and practical methodologies for material generation tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Overall, this work is thorough, well-written, and stands out as a valuable contribution to the literature on generative material models. The paper\u2019s strengths lie in its originality, quality, clarity, and significance. Its originality is evident in the introduction of CrysBFN\u2014the first periodic Bayesian Flow Network designed for modeling non-Euclidean crystal data on a hyper-torus. The following points highlight the paper\u2019s most impressive strengths.\n\n1. The paper introduces CrysBFN, the first Bayesian Flow Network designed for periodic, non-Euclidean crystal data.\n2. Authors propose a novel entropy-based conditioning that enhances modeling accuracy for periodic structures.\n3. Achieves a 100x speedup in sampling efficiency compared to previous diffusion-based methods.\n5. State-of-the-Art Results, outperforms leading models in crystal generation accuracy and structural validity across multiple datasets."
+            },
+            "weaknesses": {
+                "value": "1. Although not in the scope of the paper, but the paper may discuss on how CrysBFN could generalize to other non-crystal periodic or symmetrical data types. While CrysBFN shows strong results for specific crystal datasets, the paper could benefit from discussing its potential for generalization to other periodic or non-Euclidean data types beyond crystals. Including experiments or examples of how CrysBFN could extend to other symmetrical structures, such as molecular or lattice-based materials, would add depth and show broader applicability.\n\n2. The paper introduces entropy conditioning in place of traditional time-based conditioning, which adds complexity to the model. While the necessity of entropy conditioning is discussed, providing additional comparative analysis between the two methods across varied datasets (e.g., simpler vs. more complex structures) could clarify its practical advantages and help practitioners understand when to apply entropy conditioning.\n\n3. Though the model achieves a high sampling efficiency, the paper does not provide a detailed analysis of the overall computational cost for training and deployment. Adding a breakdown of the computational resources required, such as training time or GPU hours, would provide a clearer picture of the model\u2019s practicality for large-scale or industrial applications."
+            },
+            "questions": {
+                "value": "1. Given the scope of this work I do suggest that the section covering related work may be improved. The authors should do a good survey of the past work in cystal generations particularly in the field of crystal genration with other implicit generative models for crystal representations. Some of which I was able to find by searching for representation based genrative model in citations to CDVAE (Xie et. al.) paper are: 1. https://arxiv.org/abs/2306.04510, 2. https://arxiv.org/abs/2403.10846, 3. https://arxiv.org/abs/2408.07213 (kindly read and search for more). I request the authors to kindly include papers which are in the same field to address the concerns in this paper and how your research aligns or complements with these papers, so that this work becomes complete.\n\n2. The authors are suggested to kindly improve section 2 of their work where they have mentioned some aspects of previous related work, it would be better to include how the work is different and morevoer how does the work takes the research forward from the previous work. If the space becomes an issue (As the authors have already breached the page limitation part, then kindly include a section in complementary section) kindly add a complementary section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No concerns."
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

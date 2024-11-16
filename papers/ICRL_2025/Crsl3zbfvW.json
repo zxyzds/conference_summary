@@ -1,0 +1,208 @@
+{
+    "id": "Crsl3zbfvW",
+    "title": "Single-View 3D Representations for Reinforcement Learning by Cross-View Neural Radiance Fields",
+    "abstract": "Reinforcement learning (RL) has enabled robots to develop complex skills, but its success in image-based tasks often depends on effective representation learning. Prior works have primarily focused on 2D representations, often overlooking the inherent 3D geometric structure of the world, or have attempted to learn 3D representations that require extensive resources such as synchronized multi-view images even during deployment. To address these issues, we propose a novel RL framework that extracts 3D-aware representations from single-view RGB input, without requiring camera calibration information or synchronized multi-view images during the downstream RL. Our method employs an autoencoder architecture, using a masked ViT as the encoder and a latent-conditioned NeRF as the decoder, trained with cross-view completion to capture fine-grained, 3D geometry-aware representations. Additionally, we utilize a time contrastive loss that further regularizes the learned representation for consistency across different viewpoints. Our method significantly enhances the RL agent\u2019s performance in complex tasks, demonstrating superior effectiveness compared to prior 3D representation-based methods, even when using only a single, uncalibrated camera during deployment.",
+    "keywords": [
+        "3D scene representation",
+        "Single-view inference",
+        "NeRF",
+        "Reinforcement Learning"
+    ],
+    "primary_area": "applications to robotics, autonomy, planning",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Crsl3zbfvW",
+    "pdf_link": "https://openreview.net/pdf?id=Crsl3zbfvW",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes an interesting approach to utilize NeRF based pretraining to bake in viewpoint awareness into an RL system. The authors first pretrain a representation using cross-view completion objective visa NeRF rendering using time contrastive learning objective for scene regularization. The authors then use the pretrained scene encoder for downsteam reinforcement learning task. Relevant experiments are designed which demonstrate viewpoint awareness of the system in a synthetic setup."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "In my opinion, below are the strengths of the approach:\n\n1. Designing relevant experiments and showcasing improvement numbers that highlight the method is invariant to the viewpoint and camera matrices. Slight perturbation in the cameras from the reference views shows the learned policies are invariant to disturbances. \n\n2. The writing and flow of the paper is nice, and the presentation is clear. \n\n3. Strong qualitative improvement results against competing baselines."
+            },
+            "weaknesses": {
+                "value": "In my opinion, the weakness of the paper is as follows:\n\n1. The paper misses various key recent results both for 3D representation learning using NeRFs [1] and for baking in viewpoint awareness for policy learning [2,3]. In my opinion, the paper is incomplete without discussion or comparison to these approaches.  \n\n2. The paper doesn't show any real-world evaluation results while both [2,3] show real-world results. Is it an inherent limitation of the method that it only works in simulation?\n\n3. Follow-up to point 1. While the paper shows qualitative comparison to recent NeRF-based methods, how does the result compare to zero-shot generalizable NeRF-based method i.e. ZeroNVS (zero-shot vs. finetuned on their data) and NeRF representation learning method i.e. NeRF-MAE trained on their data?\n\n4. What is the pretraining data mix and how does it impact OOD policy learning? Can the model generalize to OOD in sim i.e. sim2sim generalization or OOD real i.e. sim2real generalization?\n\n[1] Irshad et al., ECCV 2024 NeRF-MAE: Masked AutoEncoders for Self-Supervised 3D Representation Learning for Neural Radiance Fields\n[2] Chen et al. CORL 2024, RoVi-Aug: Robot and Viewpoint Augmentation for Cross-Embodiment Robot Learning\n[3] Tian et al. CORL 2024, View-Invariant Policy Learning via Zero-Shot Novel View Synthesis\n[4] Sargent et al. ZeroNVS: Zero-Shot 360-Degree View Synthesis from a Single Real Image"
+            },
+            "questions": {
+                "value": "Please see my questions in the weakness section above. I look forward to author's responses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a framework that generates 3D-aware representations from single-view camera inputs, which can be rendered into observations for training RL models. The 3D reconstruction model uses an autoencoder architecture, with a masked ViT as the encoder and a latent-conditioned NeRF as the decoder, trained with cross-view completion objectives. Experimental results demonstrate that the proposed method greatly improves the RL agent's performance for complex tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The proposed method can reconstruct 3D scene representation from single-view images, eliminating the need for multi-sensor setup and calibration for learning downstream RL algorithms.\n* By using an autoencoder architecture to learn the NeRF representation, it bypasses the time-consuming optimization required in classical NeRF reconstruction methods and potentially predicts occluded regions, unlike traditional NeRF approaches.\n* The authors conduct extensive experiments to demonstrate that the proposed methods achieve superior performance for both volume rendering and downstream RL algorithms such as DrM."
+            },
+            "weaknesses": {
+                "value": "* The time contrastive loss (Eqn. 3) repulses state features at different timesteps. However, this does not hold for static scenes where the actor remains stationary between timesteps $t$ and timestep $t^\\prime$.\n* The 3D encoder-decoder model $\\Omega_\\theta$ is trained on multi-view images, with scene representation $z_t = \\Omega_\\theta(O_{t-2:t}^i, O_{t-2:t}^{r_1}, \\cdots, O_{t-2:t}^{r_K})$. How can it generalize when the inputs are from the same viewpoint, as in $z_t = \\Omega_\\theta(O_{t-2:t}^i, [O_{t-2:t}^i,] * K)$ (line 291)? \n* Table 1 claims that the proposed method does not require camera calibration. However, camera poses are needed to render multi-review reconstruction from $z_t$, making this claim inaccurate.\n* In the volume rendering experiments, the authors should also include comparisons with NeRF baselines for sparse views, such as RegNeRF, pixelNeRF, etc.\n* The RL experiments are conducted on toy environments. It would be valuable to see the method's performance in real-world robotic settings."
+            },
+            "questions": {
+                "value": "See the weakness above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Summary\nThis paper introduces a 3D representation reinforcement learning (RL) framework that utilizes a single view for inference. The downstream RL process leverages the latent code derived from the single image as input for the RL tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Strengths\n\nThe results of the proposed method demonstrate superior performance compared to previous relative methods."
+            },
+            "weaknesses": {
+                "value": "Weaknesses\n\nThe writing quality requires improvement, for example in line 300, where the meaning is unclear. The preceding sentence discusses a reinforcement learning (RL) algorithm, but the subsequent sentence shifts focus to data shuffling, creating a disjointed narrative. Additionally, this sentence is ambiguous  and difficult to comprehend (eg, why `randomize viewpoint` but not `random pick a viewpoint` ).\n\nIn line 93, the authors do not clarify the concept of a calibrated camera, both in this section and in subsequent ones. Additionally, the process for computing the (x,d) values during rendering is not explained. Therefore, the claim that the proposed method operates 'without requiring camera calibration' is misleading; instead, it could be interpreted that 'camera calibration is addressed through overfitting.' It appears that the authors are utilizing an absolute camera pose along with a fixed intrinsic matrix. Consequently, the image encoder and neural radiance fields (NeRF) are effectively learning a fixed RGB->pose mapping. This principle is referenced in [1] and may lead to poor generalization. Furthermore, recent multi-view stereo (MVS) reconstruction models demonstrate that a calibration matrix is not essential for creating MVS 3D models. The authors should explore relevant literature in the domains of lightweight regression models (LRM), single-view LRMs, LRM with Gaussian distributions, and indoor LRM-like methodologies.\n\nThe image encoder and NeRF appear to be overfitting to the given dataset, similar to previous dynamic NeRF approaches that attempt to learn a mapping of f(x,d,t)=c,\\rho. The latent variable z in the proposed method effectively serves as a latent code encompassing (t, action, state, pose, intrinsic parameters, and object). For instance, in Figure 3, if the proposed method utilizes only view V3 as input, it can accurately recover the clearly marked red annotation on the box, which is not visible in view V3. To the best of my knowledge, no existing methods\u2014whether single view to 3D, MVS to 3D, learning-based, diffusion-based, for objects, indoors, or outdoors\u2014 can achieve it whtiout overfitting.\n\nSeveral baseline comparisons are missing. Since the proposed method aims to illustrate the effectiveness of a single-view latent 3D representation for RL processes, it is essential for the authors to include baselines that utilize explicit 3D representations, such as depth maps or 3D volumes, as presented in the recent conference proceedings.\n\n[1] PoseNet: A Convolutional Network for Real-Time 6-DOF Camera Relocalization"
+            },
+            "questions": {
+                "value": "1. The author should explain more details about the camera calibration.\n2. The author should add some baselines with explicit 3d reapresentation in RL.\n3. The visualization result of snerl looks much worse than it original paper, it will be great to see the visualization on the same env and setting."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents SinCro, a framework for learning 3D-aware representations for reinforcement learning that can operate with single-view inputs during deployment. The key innovation is combining a masked ViT encoder with a latent-conditioned NeRF decoder, trained through cross-view completion and time contrastive learning. The method enables single-view 3D representation inference without requiring camera calibration during deployment, while previous approaches typically needed multi-view inputs or calibrated cameras."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The technical approach is well-motivated and addresses a practical limitation of existing 3D representation learning methods for RL - the requirement for multi-view or calibrated cameras during deployment\n- The empirical results demonstrate the method works as intended, achieving comparable performance to multi-view baselines while requiring only single-view input"
+            },
+            "weaknesses": {
+                "value": "My primary concerns are:\n\n- The evaluation is limited to MetaWorld environments, which are relatively simple by 2024 standards. Testing on more complex manipulation scenarios would strengthen the paper. There are a lot of other simulated environments like RLBench. Can you explain why MetaWorld is used?\n- The quantitative results in Figure 3 show an apparent contradiction - NeRF-RL achieves higher PSNR despite producing visibly blurrier reconstructions. This needs better explanation. Can you explain why NeRF-RL images are blurry but the PSNR is higher than SinCro?\n\nSome additional comments\n\n- The figures could be improved - Figure 2 is a PNG instead of vector graphics which reduces quality"
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "A 3D-aware representation learning approach is presented in which posed multiview data is leveraged to learn view-invariant representations from images. These representations can be used as auxiliary input to an RL policy, where it is shown they achieve superior performance relative to other such baselines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Learning viewpoint invariant embeddings is an important problem in robotics as prior work has shown the sensitivity of robot policies to out-of-domain camera viewpoints. \n\nThe experimental evaluation and ablation study as well as qualitative analysis are quite thorough and nice to see."
+            },
+            "weaknesses": {
+                "value": "* The proposed representation requires synchronized multiview video data to be trained, so it can only be trained on limited data. It would be good to compare against embeddings such as DinoV2 which do not have explicit geometry-aware nature but can be trained on a lot more data and probably have a notion of \u201cview-invariance\u201d to some degree due to their training strategy.\n\n* Table 1 is a bit misleading. While during deployment the proposed algorithm can indeed be run on single view input, if I\u2019m not mistaken during training of the actual embedding the requirement is still for posed multiview data. Perhaps it would be better to disentangle the deployment and training stages in this Table for the proposed method and for baselines as applicable. \n\n* I think the paper focuses slightly too much on the few- or single-view reconstruction results visually and wr.t. view synthesis metrics, which I don\u2019t think is particularly informative. Single- and few-view reconstruction is a huge field by itself and there are much stronger baselines to compare against if this is the goal such as PixelNeRF, NeRDi, GS-LRM, ZeroNVS, Cat3D, Reconfusion, etc. etc. The goal of the paper is not to solve single or few view 3D reconstruction but to learn 3D-aware representations for downstream RL."
+            },
+            "questions": {
+                "value": "Of course, it\u2019s not necessary to compare, but it may be good to discuss some concurrent related works, such as Dreamitate, VISTA, RoVi-AUG, which leverage generative models to learn view-invariant RL policies."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

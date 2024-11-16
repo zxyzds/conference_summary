@@ -1,0 +1,146 @@
+{
+    "id": "asGQQc7gNo",
+    "title": "Is Factuality Enhancement a Free Lunch For LLMs? Better Factuality Can Lead to Worse Context-Faithfulness",
+    "abstract": "As the modern tools of choice for text understanding and generation, large language models (LLMs) are expected to accurately output answers by leveraging the input context.\nThis requires LLMs to possess both context-faithfulness and factual accuracy.\nExtensive efforts have been made to enable better outputs from LLMs by mitigating hallucinations through factuality enhancement methods.\nHowever, they also pose risks of hindering context-faithfulness, as factuality enhancement can lead LLMs to become overly confident in their parametric knowledge, causing them to overlook the relevant input context.\nIn this work, we argue that current factuality enhancement methods can significantly undermine the context-faithfulness of LLMs.\nWe first revisit the current factuality enhancement methods and evaluate their effectiveness in enhancing factual accuracy.\nNext, we evaluate their performance on knowledge editing tasks to assess the potential impact on context-faithfulness.\nThe experimental results reveal that while these methods may yield inconsistent improvements in factual accuracy, they also cause a more severe decline in context-faithfulness, with the largest decrease reaching a striking 69.7\\%.\nTo explain these declines, we analyze the hidden states and logit distributions for the tokens representing new knowledge and parametric knowledge respectively, highlighting the limitations of current approaches.\nOur finding highlights the complex trade-offs inherent in enhancing LLMs.\nTherefore, we recommend that more research on LLMs' factuality enhancement make efforts to reduce the sacrifice of context-faithfulness.",
+    "keywords": [
+        "Large Language Models",
+        "In-Context Faithfulness",
+        "Factuality Enhancement"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=asGQQc7gNo",
+    "pdf_link": "https://openreview.net/pdf?id=asGQQc7gNo",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to reviewer Fg7q"
+            },
+            "comment": {
+                "value": "We greatly thank the reviewer Fg7q for his/her helpful and insightful comments. We provide our responses to the comments as follows.\n\n*Weakness 1: In Algorithm 1, the None checks for P_new and P_para mean that once these variables are assigned a value, the algorithm stops capturing additional tokens. This setup results in identifying only the first differing token between S_new and S_para, while ignoring any subsequent distinctions. Is this interpretation correct? If so, this approach seems limited because of ignoring the subsequent tokens. Please correct me if I make it wrong.*\n\nThank you for your insightful feedback on our Knowledge Token Capturing algorithm, which has helped us realize that the algorithm's nuances might not have been fully conveyed.\n\nYou are correct; **we only capture the first knowledge-distinguishing token, which means that once it is captured, we no longer focus on subsequent tokens. Instead, we observe the logits distribution and hidden states of this first token only.**\n\nAs described in our paper, **we concentrate on the distinctive elements, ignoring repetitive or non-meaningful parts.** To clarify this approach, let\u2019s consider an example. Given the question, \u201cIn which country is London located?\u201d an expected LLM output with injected context (\u201cLondon is a city in America\u201d) might be \u201cAnswer: United States,\u201d while the original parametric output without the injected context would be \u201cAnswer: United Kingdom.\u201d Here, $S_{new}$ is \u201cAnswer: United States,\u201d and $S_{para}$ is \u201cAnswer: United Kingdom\u201d in Algorithm 1.\n\nWhen capturing parametric knowledge from $S_{para} = \\text{\u201cAnswer: United Kingdom.\u201d}$, the first knowledge-distinguishing token we expect to capture is \u201cKing-.\u201d We avoid capturing \u201cAnswer:\u201d as it holds no factual meaning, nor do we focus on \u201cUnited\u201d since it is repetitive and does not reflect the core difference. **Additionally, after capturing \u201cKing-,\u201d we do not further consider the following tokens, such as \u201c-dom\u201d or the punctuation.**\n\nCapturing only the first distinctive token, without focusing on subsequent tokens, is a reasonable approach because, as widely acknowledged in existing literature, the first token plays a decisive role in sequence generation. For instance, in jailbreak studies, researchers induce LLMs to produce a non-refusal token initially, which effectively \u201cunlocks Pandora\u2019s box.\u201d A clearer example emerges in the logits distribution of generated tokens. When the LLM is uncertain about which token to generate, there are often two high-probability choices\u2014such as \u201cStates\u201d at 0.44 and \u201cKing-\u201d at 0.45\u2014while the probabilities of other tokens are close to zero. This reflects an \"illusion\" of choice between parametric and contextual knowledge, as both tokens appear \"equally competitive.\" However, once we select \u201cKing-\u201d as the next token, forming a new context for subsequent iterations, we observe that the likelihood of generating \u201c-dom\u201d next approaches 100%. This pattern is widespread and not limited to word suffixes, reinforcing that once the initial distinguishing token is chosen, the model\u2019s generation follows this preference with strong confidence.\n\n**This demonstrates that once the first distinctive token is generated, the subsequent tokens are generated with conviction, as if the LLM has made a definitive knowledge preference based on that initial choice.** Thus, our algorithm aims to capture the first distinctive token for interpretive exploration, as it best reflects the knowledge preference\u2014whether towards parametric knowledge or contextual knowledge.\n\n*Weakness 2: It could benefit from a forward-looking research agenda or recommendations for addressing this challenge. Practical suggestions or potential strategies for mitigating these trade-offs would strengthen the contribution and provide guidance for future work.*\n\nThank you for your valuable suggestion on proposing future work, which aligns closely with our original intent to encourage the community to focus on the trade-off between factuality and context-faithfulness, ultimately promoting the development of more trustworthy large language models.\n\nIn the final section of our paper, we offer some forward-looking insights. We believe that a high-performing LLM should integrate both factual accuracy and context-faithfulness. Therefore, we recommend that future research efforts focus on devising strategies to effectively and controllably balance these two crucial aspects. By tackling this duality, we can move closer to developing LLMs that provide accurate information while adhering faithfully to contextual cues, thereby enhancing their reliability and practical utility.\n\nWe will continue to work in this direction, and a revised version with additional recommendations would indeed strengthen the contribution.\n\nYour constructive input remains invaluable to us, and we appreciate your dedication to enhancing the quality of our manuscript. Once again, thank you for your insightful comments."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to reviewer YFbN"
+            },
+            "comment": {
+                "value": "We greatly thank the reviewer YFbN for his/her helpful and insightful comments. We provide our responses to the comments as follows.\n\n*Weakness 1: If I understand it correctly, Algorithm 1 assumes there is one token difference between S_new and S_para. Is there any rationale behind this assumption? Additionally, if this is true, I wonder if the findings in section 5 generalize to settings where S_new and S_para different by more than 1 token?*\n\nThank you for your insightful feedback on our Knowledge Token Capturing algorithm, which has helped us realize that the algorithm's nuances might not have been fully conveyed.\n\nFirst, we would like to clarify that **we do not restrict the difference between $S_{new}$ and $S_{para}$ to only one token.** Rather, $S_{new}$ and $S_{para}$ represent the LLM\u2019s textual responses to knowledge queries. For instance, consider the question: \u201cIn which country is London located?\u201d An expected LLM output with injected context (\"London is a city in America\") might be \u201cAnswer: United States,\u201d whereas the original parametric output without injected context would be \u201cAnswer: United Kingdom.\u201d **Here, $S_{new}$ is \u201cAnswer: United States,\u201d and $S_{para}$ is \u201cAnswer: United Kingdom.\u201d**\n\nAs described in our paper, we focus on the distinctive portions, ignoring repetitive or non-meaningful elements. For example, we avoid capturing \u201cAnswer:\u201d as it holds no factual meaning, nor do we focus on the token \u201cUnited\u201d as it is repetitive and does not reflect the key difference. Instead, our goal is to capture tokens that hold clear factual significance\u2014those that differentiate the newly introduced knowledge from the parametric knowledge inherent in the model. In this example, a token like \u201cKingdom\u201d serves as a critical marker of distinction, effectively highlighting the divergence between contextual information and the model's existing knowledge.\n\nCapturing the first distinctive token is essential because, as acknowledged in much existing literature, **the first token plays a decisive role in the generation of a sequence.** For instance, in the domain of jailbreak attempts, researchers try to induce LLMs to output a non-refusal token as the first token, which effectively \u201cunlocks Pandora's box.\u201d A clearer example can be observed when logging the logits distribution of generated tokens. For tokens that the LLM is uncertain about, there are often two high-probability tokens\u2014for instance, \u201cStates\u201d with a probability of 0.44 and \u201cKing-\u201d with a probability of 0.45\u2014while the probabilities of the remaining tokens are close to zero. This scenario highlights an \"hallucination\" of choice between parametric knowledge and contextual knowledge, as both knowledge tokens appear \"equally competitive.\" However, if we select \u201cKing-\u201d as the next token, forming a new context for the next generation iteration, we find that the probability of the subsequent token \u201c-dom\u201d approaches 100%. This pattern is quite common and is not limited to word suffixes.\n\n**This demonstrates that once the first distinctive token is generated, the subsequent tokens are generated with conviction, as if the LLM has made a definitive knowledge preference based on that initial choice.** Thus, our algorithm aims to capture the first distinctive token for interpretive exploration, as it best reflects the knowledge preference\u2014whether towards parametric knowledge or contextual knowledge.\n\n*Weakness 2: I do not find other critical flaws in the paper other than some typos.  For example, a closing parenthesis is missing from equation 2.  In Figure 3, the legend of the green bar should be \u201cFactuality\u201d.  There are some other few types like repeating words across the paper but these do not hinder the understanding of the paper.*\n\nThank you for your careful review.  We will address the errors you identified and make the necessary corrections to improve our paper in the revised version.\n\n*Question 1\uff1aIn algorithm 1, how did you obtain S_new and S_para? Are they both contained in the MQUAKE-STUBBORN dataset?*\n\nYes, the MQUAKE-STUBBORN dataset naturally contains both newly injected contextual knowledge and original factual knowledge, which we use as $S_{new}$ and $S_{para}$ for capturing the corresponding tokens.\n\nYour constructive input remains invaluable to us, and we appreciate your dedication to enhancing the quality of our manuscript. Thank you for your time and consideration.\n\nWe sincerely hope that your impression and recognition of our work will be enhanced! Thank you very much!"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper discusses the trade-offs between enhancing factual accuracy and maintaining context-faithfulness in large language models (LLMs). The authors argue that current methods aimed at reducing hallucinations and improving factual accuracy in LLMs tend to undermine the models\u2019 ability to remain faithful to the given context. Through a series of evaluations, they find that while factual accuracy might show inconsistent improvement, context-faithfulness suffers significantly, with notable declines observed\u2014up to 69.7%. The analysis of hidden states and logit distributions highlights the limitations of the current approaches, emphasizing the complex balance required between factual knowledge and context adherence. The authors suggest that future research should focus more on minimizing the adverse effects on context-faithfulness when developing methods for enhancing factuality in LLMs."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The findings presented in the paper are interesting and insightful, bringing the trade-off of faithfulness and factuality to the community\u2019s awareness.\n- The analysis conducted in this paper is rich and sufficient.\n- The paper is overall well written."
+            },
+            "weaknesses": {
+                "value": "- If I understand it correctly, Algorithm 1 assumes there is one token difference between S_new and S_para. Is there any rationale behind this assumption? Additionally, if this is true, I wonder if the findings in section 5 generalize to settings where S_new and S_para different by more than 1 token?\n\n- I do not find other critical flaws in the paper other than some typos. For example, a closing parenthesis is missing from equation 2. In Figure 3, the legend of the green bar should be \u201cFactuality\u201d. There are some other few types like repeating words across the paper but these do not hinder the understanding of the paper."
+            },
+            "questions": {
+                "value": "- In algorithm 1, how did you obtain S_new and S_para? Are they both contained in the MQUAKE-STUBBORN dataset?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper aims to analyze the trade-off between context-faithfulness and factuality enhancement. They first revisist factuality enhancement method and assess their effectiveness. Then, they perform experiments to show that these methods might have a severe decline in context-faithfulness. They finally provide analysis on hidden states and logic distributions to explain the limitation of current methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The papers provides valuable insight on the dual trade-off between factuality enhancement and context-faithfulness, recommendation future research to reduce the sacrifice of context-faithfulness.\n\n 2. The authors employ a comprehensive experimental setup, testing various methods such as contrastive decoding and representation editing.\n\n3. The presentation of the paper is well-organized and clear, facilitating easy comprehension of experimental findings and details."
+            },
+            "weaknesses": {
+                "value": "1. In Algorithm 1, the None checks for P_new and P_para mean that once these variables are assigned a value, the algorithm stops capturing additional tokens. This setup results in identifying only the first differing token between S_new and S_para, while ignoring any subsequent distinctions. Is this interpretation correct? If so, this approach seems limited because of ignoring the subsequent tokens. Please correct me if I make it wrong.\n\n2. While the paper effectively highlights the issue of reduced context-faithfulness with factuality enhancement, it could benefit from a forward-looking research agenda or recommendations for addressing this challenge. Practical suggestions or potential strategies for mitigating these trade-offs would strengthen the contribution and provide guidance for future work"
+            },
+            "questions": {
+                "value": "See the weakness above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes to examine the effect of \"factuality enhancement\" approaches that better exploit LLM parametric knowledge, specifically representation editing and contrastive decoding approaches. Experiments find that they could lead to better factuality and worse context faithfulness, while analysis of model internals provide some indicators."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "+ exploring the interplay between parametric knowledge and context faithfulness is promising\n+ the experiments are comprehensive"
+            },
+            "weaknesses": {
+                "value": "- I'm not sure if I could agree with the framing of \"factuality enhancement\" methods in this work. In the abstract, the authors claim that \"factuality enhancement can lead LLMs to become overly confident in their parametric knowledge\" (lines 17-18). However, retrieval-augmented generation is also a way of \"factuality enhancement\", and that certainly steers models away from parametric knowledge to varying extents. Although the broad term of \"factuality enhancement\" is employed, the investigated approaches are just a narrow subset.\n\n- Following up on the previous point, the included approaches \"representation editing\" and \"contrastive decoding\" are not representing broad walks of \"factuality enhancement approaches\", but rather approaches that specifically steer the models to better tap into parametric knowledge. As models better rely on internals, they are naturally less faithful to external contexts, hence the conclusion that \"models become less context-faithful after you apply these approaches\" become trivial. Essentially: if you use approaches that emphasize model internals, they will certainly be less reliant on external context, which is not a surprising/consequential finding.\n\n- Aside from representation editing and contrastive decoding, some earlier prompting-based approaches also claim to better elicit and employ parametric knowledge to enhance factuality, such as [1-2]. I'm not sure if they should be included as baselines, but I wonder if they might change the conclusion as to context faithfulness.\n\n- Section 2.1 is somewhat trivial and don't need to appear in the main paper.\n\n- Again, the authors claim that \"Current methods for enhancing factuality do not modify the underlying structure or parameters of LLMs.\" (lines 188-189) Why would factuality SFT [3] and factuality DPO [4] approaches not count as \"current methods for enhancing factuality\"? Readers might say that this is twisting the definition of \"methods for enhancing factuality\" to fit a pre-defined conclusion.\n\n- typo on line 499: \"Knowledge Conficts\"\n\n- Let's say if indeed \"factuality enhancement\" and \"context-faithfulness\" are two conflicting objectives. I wonder if this might be fixed by inference-time approaches that enhance context-faithfulness such as [5]. Essentially, take an LLM, do some \"factuality enhancement\" which might harm context faithfulness, and then apply things like [5] to patch it and get the best of both worlds.\n\n- The model internal analysis part is great and potentially useful. I wonder if the authors could offer some crisp conclusions/takeaways in addition to presenting some numbers and figures. In the abstract it says \"To explain these declines, we analyze the hidden states and logit distributions for the tokens representing new knowledge and parametric knowledge respectively, highlighting the limitations of current approaches.\" In the conclusion it says \"By examining the logits distribution and hidden states, we gained insights into the underlying causes of this decline\", which are both very vague. What are \"the limitations of current approaches\"? What are \"the underlying causes of this decline\"? Most importantly, I wonder if the authors have some actionable next steps or potential fixes as validated by this internal analysis part.\n\n- Perhaps there is a way to tone down the definition of \"factuality enhancement\" and make the claims/findings more rigorous or better scoped. This would be essential in making a decision about this submission.\n\n[1] Liu, Jiacheng, et al. \"Generated Knowledge Prompting for Commonsense Reasoning.\" ACL 2022.\n\n[2] Sun, Zhiqing, et al. \"Recitation-Augmented Language Models.\" ICLR 2023.\n\n[3] Hron, Jiri, et al. \"Training Language Models on the Knowledge Graph: Insights on Hallucinations and Their Detectability.\" COLM 2024.\n\n[4] Tian, Katherine, et al. \"Fine-Tuning Language Models for Factuality.\" The Twelfth International Conference on Learning Representations. ICLR 2024.\n\n[5] Shi, Weijia, et al. \"Trusting Your Evidence: Hallucinate Less with Context-aware Decoding.\" NAACL 2024."
+            },
+            "questions": {
+                "value": "please see above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,205 @@
+{
+    "id": "oK1zJCWBqf",
+    "title": "Soft Preference Optimization:  Aligning Language Models to Expert Distributions",
+    "abstract": "We propose Soft Preference Optimization (SPO), a method for aligning generative models, such as Large Language Models (LLMs), with human preferences, without the need for a reward model. SPO optimizes model outputs directly over a preference dataset through a natural loss function that integrates preference loss with a regularization term across the model's entire output distribution rather than limiting it to the preference dataset. Although SPO does not require the assumption of an existing underlying reward model, we demonstrate that, under the Bradley-Terry (BT) model assumption, it converges to a softmax of scaled rewards, with the distribution's ``softness\" adjustable via the softmax exponent, an algorithm parameter. We showcase  SPO's methodology, its theoretical foundation, and its comparative advantages in simplicity and alignment precision.",
+    "keywords": [
+        "RLHF",
+        "DPO",
+        "Preference Alignment",
+        "Large Language Models"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We propose a reward-model-free algorithm for aligning LLMs to expert preferences, which provably converges to expert distribution under some simplifying assumptions.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=oK1zJCWBqf",
+    "pdf_link": "https://openreview.net/pdf?id=oK1zJCWBqf",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes an offline alignment objective composed of the preference loss and regularization loss. In the preference loss, it uses a temperature parameter to control the \"softness\" of the preference; in the regularization loss, it uses KL under different prompts (than preference prompts). Theoretically, it shows the connection to the reward models. Empirically, it shows improved win rates against SFT among baselines"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The paper studies the important question of what regularization data for the alignment methods\n* The proposed objective is interesting and has connection to the reward model"
+            },
+            "weaknesses": {
+                "value": "I think the main weakness is that the proposed method is a combination of many components, and it's difficult to assess the utility of each one\n* First, the preference loss rewritten as $log \\sigma(log \\pi_\\theta(y_1) - log \\pi_\\theta(y_2))$ is similar to the DPO loss, but without calibration using $\\pi_0(.)$. The DPO has the calibration terms because of the KL regularization using in-distribution dataset. The paper can't convince me that getting rid of the calibration terms brings any advantage in itself (either theoretically or empirically). I think the calibration term could be important when for example $y_1$ is much more/less likely than $y_2$ under $\\pi_0$. Maybe the author could consider an ablation experiment comparing the two objectives (you can also use $\\alpha$ in both cases too). \n* Second question is when might out-of-domain regularization helps. Again, I am not convinced if, and when, such regularization helps. \n\nBesides, \n* I can't confidently assess the method's utility just looking at win rates in the experiments. A method could do very well in win rate by having a huge KL from the SFT --- maybe plotting KL vs win rate gives more convincing arguments. \n* The paper says RLHF uses out-of-domain prompts --- is that true? \n\nI will raise my points if my concerns get addressed."
+            },
+            "questions": {
+                "value": "I put my questions in the weakness"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces SPO (Soft Preference Optimization), a method for aligning language models with human preferences without requiring a reward model. SPO operates by optimizing model outputs directly using a loss function that combines preference loss with regularization across the full output distribution. While SPO doesn't require reward model assumptions, the authors prove it converges to a softmax of scaled rewards under the Bradley-Terry model, with adjustable softmax temperature. The method differs from predecessors like DPO in two ways: its preference loss formulation, and its application of regularization across the entire output distribution rather than just the preference dataset."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper presents a well-structured framework for preference loss without relying on Bradley-Terry/Plackett-Luce model assumptions. The development from basic to general algorithm is logical and easy to follow.\n2. The framework shows impressive versatility by handling multiple data types (pairwise, best-of-n, and ranked preference data), demonstrating a comprehensive approach to preference optimization.\n3. The introduction of global regularization rather than in-dataset regularization is a novel and well-justified approach that shows better empirical results.\n4. The theoretical foundations are solid, with clear proofs and convergence guarantees for each variant of the algorithm."
+            },
+            "weaknesses": {
+                "value": "1. The experimental evaluation has several limitations:\n* The experimental evaluation would benefit from broader model and dataset coverage. While the current results on Llama-2-7B and AlpacaFarm are present, only one setting might be not enough. Here are some suggestions for reference:  \nThe baseline performance is concerning, with several methods showing negative results on length-controlled win rates, suggesting potential issues with the experimental setup or hyperparameter tuning. You may want to consider including models from different families such as Mistral-7B to show architecture-agnostic performance. To mention but not significant problem, llama-2-7B is currently not among the most capable open-source LLMs according to leaderboards like AlpacaEval. Showing results for llama-3-8B might make the results more significant. Additionally, evaluating on diverse datasets like UltraFeedback (~3 times larger than the alpacaFarm dataset) would verify generalizability across different instruction-tuning distributions.  These additions would provide stronger evidence for the method's broad applicability.\n\n* Specific concerns are raised about the baseline performance that warrant further investigation. The baseline methods has at most 51.94% on the LC Win-rate against SFT, which seems unusually poor given their reported performance in original papers. Since you are fine-tuning starting from the SFT model, that means all the preference optimization baseline methods nearly not improve the quality at all, even worse the performance for R-DPO, CPO, SimPO, IPO.    \n                                           Is there any specific reason? While there could be various reasons, one possibility is suboptimal hyperparameter choices. I recommend using similar hyperparameter settings as successful implementations in previous work (e.g., Meng et al. 2024, SimPO paper reported strong performance with their specific configuration), to ensure a fair comparison of these baseline methods.\n\n2. Could you clarify the evaluation dataset sizes for each experiment? This information is particularly relevant when examining the global regularizer results, where some improvements show modest gains (e.g., from 59.9% to 60.8%). Given these subtle differences, I recommend including statistical significance testing to strengthen the results' interpretation."
+            },
+            "questions": {
+                "value": "1. Regarding the preference representation: While your method defines $p(y_w > y_l | x)$ without depending on BT/PL model assumptions, isn't it effectively equivalent in expressivity? Please correct me if I am wrong. It seems that $\\pi_\\theta(y_w | x)^\\alpha$ could be seen as an alternative parametrization of $\\exp(\\frac{1}{\\beta}r_\\phi(y_w, x))$, where $\\alpha$ and $\\beta$ serve similar roles, and $r_\\phi$ and $\\pi_\\theta$ map to equivalent functions. Could you clarify if/how your formulation provides additional expressivity?\n2. How does the choice of $\\alpha$ interact with different types of preference data (pairwise, best-of-n, ranked)? Is there a principled way to select optimal $\\alpha$ values for different scenarios or data distributions?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Soft Preference Optimization (SPO), a technique to fine-tune a LM to fit a dataset containing the preferred response to a given query, given some alternative, or given a ranking of possible responses. The main contribution of this paper is to model the preference probability $P_{\\pi_\\theta}(y_1 \\succ y_2)$ as $\\frac{\\pi_\\theta(y_1)}{\\pi_\\theta(y_1) + \\pi_\\theta(y_2)}$ and then fit the preference data using a log-likelihood loss plus a regularization term, which here is taken to be the commonly used KL divergence to the original model.\n\nThe model is further extended to include an (inverse) \"temperature\" parameter $\\alpha$ to regulate the entropy of the resulting distribution, and a weighting function $\\mu$ that is intended to down-weight preference data given on poor-quality samples (as judged by the model itself).\n\nAlso, a generalized loss to accommodate best-of-n preference data and ranked preference data is provided. \n\nThe model was evaluated on win-rates against a SFT-based competitor, comparing positively to a number of competitive baselines on pairwise data and also to DPO on best-of-n and ranked data. For the latter task, a dataset was generated which is provided in the anonymous link.\n\nFinally, a (biased, low-variance) estimator of the KL is proposed using token-level subsequences of the samples, which I think is another contribution of this paper, although I am not 100% sure of that."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "* S1: The paper proposes a simple and elegant model to fit preference data, including pairwise, best-of-n, and ranked data. The model is so simple in fact that it is surprising it had not been proposed before. (*1)\n* S2: It also includes an extensive theoretical analysis of the optimal solution to the proposed loss when the preference data is sampled from Bradley-Terry or Plackett-Luce models (*2)\n* S3: The presentation is very clear\n* S4: The empirical evaluation is sufficiently convincing of the competitiveness of the method\n\n(*1) In the related work, the authors do acknowledge a similar proposal in CPO by Xu et al.\n(*2) I have not carefully checked the calculations of the theorems proofs."
+            },
+            "weaknesses": {
+                "value": "None that I can think of"
+            },
+            "questions": {
+                "value": "1. \n> Moreover, SPO has an advantage over DPO and RLHF in avoiding determinism. In cases where the\npreference dataset is comparable to pre-training data size, regularization (DKL) becomes unnecessary,\nand RLHF and DPO loss functions tend to produce deterministic models; that is they tend to return a\nsingle high-quality response per query.\n\nDoesn't that depend on the value of the $\\beta$ parameter? See, for instance, Theorem 1 in https://arxiv.org/abs/2206.00761. You can see that as $\\beta$ becomes large, the optimal distribution reverts to the original model."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents Soft Preference Optimization (SPO), a generative model approach that aligns with human preferences without a reward model. SPO directly optimizes the model output by combining a natural loss function with a preference loss and a regularization term, covering the entire output distribution. It was theoretically proved that under the assumption of the Bradley-Terry model, SPO could converge to the Softmax distribution, and the output softness was adjusted by the algorithm parameters. Experiments on AlpacaFarm benchmark show that SPO outperforms SimPO, DPO and other alignment algorithms. The authors claim the advantage of SPO in avoiding determinism compared to DPO and RLHF."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper introduces the concept of Soft Preference Optimization (SPO) and elaborates on its theoretical foundations. The authors not only outline the goals and motivations behind SPO but also explore its distinctions from existing approaches, such as Direct Preference Optimization (DPO). The mathematical proofs presented in the paper are rigorous, particularly those of the main theorems detailed in the appendix. These proofs not only substantiate the effectiveness of the SPO method but also establish that SPO can converge to an optimal softmax distribution under specific conditions. Such rigorous mathematical derivations lay a solid foundation for the scientific validity and credibility of the SPO approach.\n\n2. In the experimental section, SPO outperforms some current baseline alignment methods, demonstrating its effectiveness in tasks such as instruction following. Moreover, SPO significantly outperforms other baselines in its ability to focus on the best data."
+            },
+            "weaknesses": {
+                "value": "1.The paper presents Soft Preference Optimization (SPO) as a novel method for aligning generative models with human preferences without relying on a reward model.  While the theoretical foundation is well-elaborated, the experimental section lacks a comprehensive evaluation of SPO across a broader range of pairwise alignment datasets and benchmarks.  A more extensive set of experiments is necessary to substantiate the claim that SPO can effectively focus on optimal data alignment without sacrificing performance in other areas.  It is crucial to include more experimental results and analyses to demonstrate that SPO enhances model alignment while maintaining or improving performance in related tasks. \n\n\n2. The authors highlight the differences between SPO and existing approaches like Direct Preference Optimization (DPO) and Reinforcement Learning from Human Feedback (RLHF).  While it is noted that SPO introduces a superior regularization term to prevent overfitting on preference data, the paper does not sufficiently address whether this approach might come at the expense of other model capabilities.  DPO, being a reward-model-free algorithm, is already designed to balance alignment with human preferences and model performance.  Therefore, it is essential for the authors to conduct additional experiments that validate whether SPO's emphasis on diversity and alignment comes at the cost of the model's ability to perform well on a broader range of tasks.  A thorough analysis comparing SPO against DPO and other baselines in terms of overall model performance, as well as alignment, would significantly strengthen the paper's contributions and claims.\n\n3. The experimental section of the paper, while demonstrating the effectiveness of Soft Preference Optimization (SPO), does not include an ablation study on the hyper-parameters used within the SPO framework. By including such analysis, the paper would offer a more complete picture of the method's robustness and the sensitivity to hyper-parameter tuning, which is valuable for both theoretical understanding and practical application."
+            },
+            "questions": {
+                "value": "1. Does the performance of the SPO come at the expense of other capabilities?\n\n2. Diversity and accuracy are inherently trade off, but why is there no discussion of this in the experimental section of the article?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose Soft Preference Optimization (SPO), which optimizes two key components: (1) a preference loss function aimed at maximizing the likelihood of favoring the chosen response over the rejected one, and (2) a KL-divergence regularization term applied to the model's samples. The authors extend SPO to handle other types of preferences, such as best-of-n and ranked preferences. They conduct experiments using various types of preference data, including pairwise, best-of-n, and ranked preferences. The ablation study further validates the choice of the regularization term and the additional weight function used in the objective."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The approach of integrating preference loss with explicit regularization makes sense. The experimental results across different preference settings appear promising."
+            },
+            "weaknesses": {
+                "value": "1. While the authors claim that reward-model-free alignment methods offer advantages, these methods, which solely optimize a preference dataset, may overfit or overestimate out-of-distribution data. This can result in degraded performance during inference. Therefore, to convincingly demonstrate the effectiveness of the proposed method, it is crucial to compare it against RLHF approaches like PPO. This can be achieved by replacing the preference loss with an on-policy loss term for a fair comparison.\n\n2. The derivation of Theorem 1, as well as the subsequent theorems, does not account for the regularization term, which is typically present in the analytic solutions of PPO or DPO. This omission compromises the theoretical results, given that the proposed method essentially optimizes a combination of two loss terms.\n\n3. The design of $\\mu$ lacks intuition despite its complication, e.g., subtracting the average in a batch. Also the effect of $\\gamma$ would be clearer with an ablation study of sweeping this hyper-parameter.\n\n4. Missing data on the top of page 9: \"improved win-rate from xx% to xx%\".\n\n5. Missing reference to related alignment methods [1,2,3] that match the model's output distribution.\n\n[1] Sessa, Pier Giuseppe, et al. \"Bond: Aligning llms with best-of-n distillation.\" Arxiv (2024).\n\n[2] Gui, Lin, Cristina G\u00e2rbacea, and Victor Veitch. \"BoNBoN Alignment for Large Language Models and the Sweetness of Best-of-n Sampling.\" Arxiv (2024).\n\n[3] Ji, Haozhe, et al. \"Towards efficient and exact optimization of language model alignment.\" ICML (2024)."
+            },
+            "questions": {
+                "value": "1. Could the authors provide a more detailed empirical comparison between PPO and SPO? Since SPO requires on-policy data sampling to compute the KL-regularization, introducing additional complexity that is typically avoided by off-policy alignment methods. Thereby, the key difference in performance between PPO and SPO might stem from the first term in Eq.(1). Would optimizing on off-policy preference data offer a significant advantage over on-policy sampled data, as in PPO, and could this be further explored? For example, training both methods on the same preference dataset, then evaluating them on a held-out test set (in-distribution) and a separate dataset from a different domain (out-of-distribution) respectively.\n\n2. Could the authors provide a clearer interpretation of the solution obtained by SPO when regularization is applied under the BT assumption and show how the regularizer affects the convergence properties of the algorithm, as this represents the actual objective being optimized. \n\n3. Could the authors conduct a more thorough analysis of the weighting function by breaking down its individual components and performing an ablation study, as it would help to justify the necessity of its complex form."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

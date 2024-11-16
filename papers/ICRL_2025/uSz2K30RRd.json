@@ -1,0 +1,132 @@
+{
+    "id": "uSz2K30RRd",
+    "title": "Weighted Point Cloud Embedding for Multimodal Contrastive Learning Toward Optimal Similarity Metric",
+    "abstract": "In typical multimodal contrastive learning, such as CLIP, encoders produce onepoint in the latent representation space for each input. However, one-point representation has difficulty in capturing the relationship and the similarity structure of a huge amount of instances in the real world. For richer classes of the similarity, we propose the use of weighted point clouds, namely, sets of pairs of weight and vector, as representations of instances. In this work, we theoretically show the benefit of our proposed method through a new understanding of the contrastive loss of CLIP, which we call symmetric InfoNCE. We clarify that the optimal similarity\nthat minimizes symmetric InfoNCE is the pointwise mutual information, and show an upper bound of excess risk on downstream classification tasks of representations that achieve the optimal similarity. In addition, we show that our proposed similarity based on weighted point clouds consistently achieves the optimal similarity. To verify the effectiveness of our proposed method, we demonstrate pretraining of text-image representation models and classification tasks on common benchmarks.",
+    "keywords": [
+        "contrastive learning",
+        "multimodal representation learning",
+        "theoretical analysis",
+        "InfoNCE",
+        "pointwise mutual information"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "We propose a new multimodal representation learning method and theoretically show benefits of our method.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=uSz2K30RRd",
+    "pdf_link": "https://openreview.net/pdf?id=uSz2K30RRd",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper presents a new understanding of the symmetric contrastive loss InfoNCE of CLIP, and clarify the point-wise mutual information is the optimal similarity that minimizes symmetric InfoNCE., then gives an upper bound of excess risk on downstream classification tasks of representations when the optimal similarity is achieved. Then, the paper proposes similarity based on weighted point clouds to consistently achieves the point-wise mutual information and the corresponding implementation of the proposed similarity."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper starts from a new understanding of contrastive loss, and proposes similarity measure that approximates the optimal formulation, which is theoretically well-founded.\n\n2. The paper combines theory with practice and has demonstrated the effectiveness of the proposed similarity through experiments."
+            },
+            "weaknesses": {
+                "value": "1. The innovation is limited. Some core concepts of the paper, such as suboptimality decomposition, are referenced from existing work.\n\n2. The role of weighted point cloud seems to be overstated. The paper did not use concepts related to point clouds, such as neighborhoods, connectivity. Only the \u201cweight\u201d is used in the weighted similarity aggregation.\n\n3. Some concepts or expressions need further clarification. For example, 1. What exactly does the similarity structure (line 41) mean? 2. Why is the rank of G greater than d+1, there exists a certain error of the approximation of G? (lines 309-310) 3. The assumption C.2 seems strong, can you provide a specific explanation based on practical examples? 4. The equation 3 has empty before ||, which seems a typo."
+            },
+            "questions": {
+                "value": "See weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors presented an analysis of the contrastive loss of CLIP that gave insight on the optimal similarity measure for this loss. Furthermore, inspired by their analysis of the optimal loss, the authors proposed a new similarity measure that achives optimal similarity values, with reasonable computational cost."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper presents an alternative to the inner-product similarity through the use of weighted sums of kernel function evaluations. As such, the method benefits from the kernel trick: whereas the simple inner-product similarity may require a high-dimensionality in feature space, the use of kernels reduces the dimensionality of the feature space and shortens the amount of calculations required. Conversely, the method allows for greater performance in downstream tasks for the same amount of computation, by approsimating more closely the (theoretical) optimal similarity measure."
+            },
+            "weaknesses": {
+                "value": "1. Inner-product similarity analysis\n\n     A key point in the argument for the superiority of the authors' method over the standard similarity measure of CLIP is given in section 5.1, regarding the approximation error between the inner-product similarity matrix and the optimal similarity matrix $G$. There is an assumption that the number of samples $N$ is greater than the dimensionality $d$ of the feature space, thus the rank of the inner-product similarity matrix is smaller than the rank of $G$, implying the existence of approximation error. However, it is not clear from the paper that the approximation error is indeed deleterious, since the effective rank of $G$ could be substantially smaller than $N$ - and the effectiveness of CLIP suggests that this may indeed be the case. \n     Another evidence in this direction is the fact that the authors had to use a combination of a linear kernel with a nonlinear kernel in their approach, and their ablation study showed that the linear-only kernel has comparable performance (by exceeding in the zero-shot classification task, and underperforming in the linear classification task, and in both cases by a small margin that is not evaluated in regards to its statistical significance).\n\n2. Need for linear-only and nonlinear-only results\n\n     The hyperparameter options for $(\\alpha_1, \\alpha_2)$ do not include a linear only $(1, 0)$ and nonlinear-only $(0,1)$ option. Given the ablation results, such choices were desirable."
+            },
+            "questions": {
+                "value": "It would be interesting to have an analysis of:\n\n- The effective rank of $G$ to clarify whether the stated deficiency of inner-product similarity is substantial. For instance, an analysis of the singular values of $G$ could be of value, since it would directly relate the rank disparity to the L2 error.\n\n- The effectiveness of linear-only kernels in addition to the experiments already in place."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes to replace the point-wise contrastive loss of CLIP with a dense contrastive loss calculated by using the contrastive loss on top of the average pair-wise similarity between dense features (the features prior to the final pooling layer of encoders). The authors show that this leads to better results (using the same evaluation as CLIP). The method is rigorously motivated by analyzing excess risk relative to the optimal downstream classifier head."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "(1) The introduction is especially well-written. I appreciated the motivation that many-to-many correspondences are not adequately represented by a single CLIP embedding.\n\n(2) The theory is nice (but Eq. 3 has typos)."
+            },
+            "weaknesses": {
+                "value": "(1) It is unclear how this method differs from dense contrastive loses. (For example: https://openaccess.thecvf.com/content/CVPR2021/papers/Wang_Dense_Contrastive_Learning_for_Self-Supervised_Visual_Pre-Training_CVPR_2021_paper.pdf)\n\n(2) Computational cost. The contrastive loss is already quite computationally expensive (square of mini-batch size if not using global hard negative mining). Now we multiply that cost by the square of number of feature vectors. \n\n(3) Practically speaking (not considering the theory), there is not much innovation in this paper. Similarity metrics over pairs of sets of features are well-established. For example: ColBERT (https://arxiv.org/pdf/2004.12832). The extension from a pure NLP setting to image-text is straightforward."
+            },
+            "questions": {
+                "value": "None."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

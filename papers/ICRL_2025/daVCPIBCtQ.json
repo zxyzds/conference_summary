@@ -1,0 +1,244 @@
+{
+    "id": "daVCPIBCtQ",
+    "title": "DyGNeX : Efficient Distributed Training of Dynamic Graph Neural Networks with Cross-Time-Window Scheduling",
+    "abstract": "Dynamic Graph Neural Networks (DGNNs) are advanced methods for processing evolving graph data, capturing both structural and temporal dependencies efficiently. However, existing distributed DGNN training methods face challenges in achieving load balance across GPUs and minimizing communication overhead, which limits their efficiency.  In this paper, we introduce DyGNeX, a distributed training system designed to address this issue. DyGNeX utilizes a cross-time-window snapshot group scheduling algorithm that balances computational loads across GPUs without introducing additional cross-GPU feature aggregation or hidden state communication. Based on the specific scenario, the scheduling algorithm is applied using greedy or Integer Linear Programming (ILP) methods, referred to as DyGNeX-G and DyGNeX-L, respectively. DyGNeX-L and DyGNeX-G achieve average reductions of 28\\% and 24\\% in per-epoch training time compared to state-of-the-art methods, maintaining load imbalance across GPUs at approximately 4\\% and 8\\%, while preserving model convergence across various DGNN models and datasets. In simulation experiments, as the number of GPUs increases, DyGNeX-G shows good scalability, efficiently handling clusters with up to 512 GPUs while maintaining 95\\% efficiency.",
+    "keywords": [
+        "Dynamic Graph Neural Networks",
+        "Distributed training",
+        "load balance"
+    ],
+    "primary_area": "infrastructure, software libraries, hardware, systems, etc.",
+    "TLDR": "This paper studies a distributed training system for DGNNs with load balancing.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=daVCPIBCtQ",
+    "pdf_link": "https://openreview.net/pdf?id=daVCPIBCtQ",
+    "comments": [
+        {
+            "summary": {
+                "value": "DyGNeX is a distributed training system for dynamic GNN. It achieves minimal communication and balanced workload. \n- To achieve (1), data parallelism is adopted so that only model weights/gradients need to be synchrnoized\n- To achieve (2), workload distribution is formulated and is optimized via ILP."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper studies an important research topic\n- The system-level performance is promising.\n- Experimental results show that DyGNeX boosts the efficiency of 4 popular dynamic GNN architecture."
+            },
+            "weaknesses": {
+                "value": "- Insufficient experiments."
+            },
+            "questions": {
+                "value": "- My major concern is the test accuracy of the proposed method. Only one dataset is used for evaluating accuracy. It's not clear whether the proposed method hurts model performance significantly.\n- Memory consumption of DyGNeX is not reported. However, this overhead might be significant as all node features are stored in each GPU (line 104)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work describes a method, DYGNEX, to improve the load balance and reduce the communication overhead of dynamic GNN training by distributing group-based snapshots of tasks between a collection of compute resources. DYGENEX first measures the training time required by each task then dynamically combines tasks for different time windows to improve load balance across all compute resources. The task groupings are computing using two different strategies, the first utilizes integer linear programming solvers to find a near-optimal assignment, at the expense of longer latency to find a solution, and a greedy method that finds a reasonable solution but not optimal considerably faster. Support for the performance of DYGNEX compared to other methods is provided in the evaluation section for different architectures, datasets, and data-partitioning strategies. The ILP solver reduces the training time per epoch considerably across different architectures and datasets while the greedy method outperforms competing methods but still underperforms the ILP approach. The merits of the greedy approach are analyzed using a distributed simulation for a larger cluster of devices where the time to compute the solution in the ILP approach becomes prohibitively expensive."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The proposed method outperforms comparable approaches for a range of different architectures, datasets, and data-partitioning approaches. The evaluation of the methods across all these hyperparameters is sufficient to draw out the novelty and innovations of the proposed method and the additional notes in the Appendix help to clarify some of the details missing in the main body of the text. \n- The tradeoff between the ILP and greedy methods is an interesting comparison and highlights the overhead associated with the near-optimal ILP solution and a greedy alternative. Table 3 is especially interesting for comparing the proposed method to previous approaches and between the 2 variations described in the text.\n- The main text, along with the Appendix, is generally well-written and provides enough details to follow the implementation of the analysis of DYGNEX."
+            },
+            "weaknesses": {
+                "value": "- While the gains compared to ESDG and BLAD are substantial the improvement compared with PSG is marginal in many cases, especially in comparison with the greedy variation.\n- The ILP solver is computationally expensive but it is unclear if loosening the optimality constraint would allow the solver to work faster and achieve results on par or better than the greedy variation. It may be beneficial to provide a cost analysis of the ILP solver vs the greedy variation as the optimality constraint is increased from 1% to 10%.\n- The use of a simulator instead of the actual runs is not ideal but does provide sufficient evidence that the ILP solve time and complexity would grow prohibitively with the number of compute resources."
+            },
+            "questions": {
+                "value": "- How does varying the number of snapshots impact the training time per epoch and the task scheduling overhead? It seems to be fixed at 30 in section 4.3.\n- How quickly does the dynamic connectivity of the graph change between epochs? I wonder if starting from a solution in a previous epoch would be informative to seed the solution in the current epoch and lower the time to compute a solution."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce DYGNEX, a distributed graph neural network (GNN) training system designed to address the issue of  inefficient resource utilization across GPUs.\nDYGNEX utilizes a cross-timewindow snapshot group scheduling algorithm that balances computational loads.\nThey integrate the scheduling algorithm into DYGNEX based on the specific scenario,  using greedy or Integer Linear Programming (ILP) methods.\nFrom the evaluation, DYGNEX achieves an impressive performance in per-epoch training compared to ESDG, BLAD, and PSG, while preserving model convergence across various DGNN models and datasets. \nIn conclusion, the paper presents a novel distributed dynamic GNN training system, that could help us better understand the challenges coming from load balance across GPUs and inter-GPU communication."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Scheduling DGNN snapshot groups from different time windows using Integer Linear Programming (ILP) or a greedy algorithm is an interesting idea. This approach effectively solve the load balance and inter-GPU communication problem, making it an intuitive and efficient solution.\n* The paper has good coherence, and is well-structured. \n* The paper is also very clear with thorough experiments and analysis."
+            },
+            "weaknesses": {
+                "value": "* The primary optimization objective of DYGNEX is to reduce the total training time per epoch to a minimum. However, the training time is influenced by both the number of GPUs in use and the size of the workload. Consequently, a key consideration is the construction of the load from snapshot groups across different time windows. It is evident that varying snapshot sizes and diverse time intervals can significantly affect the load. As such, the overall performance of DYGNEX could be influenced. Please elucidate the effects of snapshot configuration on performance and explain how these configurations are managed.\n* The sparsity of dynamic graphs can have a considerable impact on load distribution. How does DYGNEX mitigate the overhead associated with synchronization, especially given the potential variance between spectral and spatial work? My second concern is how DYGNEX achieves a balance between different Graph Neural Network (GNN) architectures and scales effectively with various types of dynamic graphs.\n* In Figure 3, only a comparison of accuracy rates on the arXiv dataset is presented. However, the arXiv dataset does not clearly highlight the advantages of the method, as the training time per epoch is only reduced by about 0.1 seconds. This indicates that there is no significant improvement in training efficiency. Could you provide the impact on accuracy for other datasets? Could provide a further data illustrating the changes in accuracy rates across other datasets, such as the Reddit dataset?\n* The scalability experiment in section 5.4 is somewhat misleading. At line 310, the author mentions that the experimental cluster consists of only 4 A100 GPUs. How were test data from other clusters obtained? Moreover, the paper does not clarify whether there is a linear relationship between throughput and the number of nodes, nor does it address whether using linear regression for prediction holds any practical value.\n* There is no mention of the limitations of DYGNEX. Please include a subsection to address this point."
+            },
+            "questions": {
+                "value": "* Please see the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces DyGNex, a distributed training system for Dynamic GNN (DGNN) that balances the workload across GPUs while minimizing the inter-GPU communication. It proposes a cross-time-window snapshot group scheduling algorithm for load balances. DyGNex profiles the timing for each task on GPUs, and use a CPU to schedule using a cross-time-window group combination, which combines tasks across different time windows. To find the optimal scheduling, it uses two methods: 1) ILP; 2) greedy algorithm. The evaluation shows that DyGNex reduces the epoch training time by 2x."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Discuss the difference between prior works (ESDG, BLAD) with DyGNex in Table 1, and Figure 1 shows the motivation (load imbalance) clearly.\n* The results show that it reduces the training time per epoch and reduce the imbalance ratio."
+            },
+            "weaknesses": {
+                "value": "* Profiling at runtime to estimate the time spent on training snapshot groups is time consuming. \n* Use ILP at runtime to solve the optimal scheduling problem is also time consuming. What if it takes too long and no solution is given. How would the system proceed in such a case.\n* The general idea of using runtime profiling data from different GPUs and using heuristics to schedule is not a new idea. It has been widely used in all distributed systems, like federated learning, LLM training stragglers, etc."
+            },
+            "questions": {
+                "value": "* In line 298, what is n in the time complexity? Is it the number of snapshots for number of GPUs? \n* How frequently do you need to do profiling and algorithm solving during the overall training process?\n* Do you think there may be other metrics (some features in the snapshots) to estimate the runtime on each snapshot rather than doing runtime profiling? \n* Table 3 shows that DyGNex reduces the training time per epoch by more than 2x, but in Figure 4, DyGNex  reduces the imbalance ratio from 1.5x to 1.0x, which is less than 2x. Could you explain why"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces DyGNeX, a multi-GPU distributed training system for dynamic graph neural networks (DGNNs) designed to handle discrete-time dynamic graphs (DTDGs). DyGNeX employs a cross-time-window snapshot group scheduling algorithm to balance computational workloads across GPUs during training by distributing mini-batches and sub-mini-batches. The paper presents two variants of this algorithm, using either greedy or integer linear programming (ILP) methods for scheduling. Experimental results demonstrate promising speedup compared to the state-of-the-art approach."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "S1: This paper presents an effective scheduling algorithm that addresses a crucial load balancing issue across GPUs for each training epoch\u2014a problem previously overlooked in the DGNN literature. \n\nS2: The proposed method is well-motivated, and its effectiveness is compelling. \n\nS3: Experimental results demonstrate promising speedup compared to the state-of-the-art approach, BLAD."
+            },
+            "weaknesses": {
+                "value": "W1: This paper is not self-contained. It fails to clearly and comprehensively define and discuss the research problem, technical challenges, and the proposed method.  \n1. Section 2 includes multiple concepts but without any figure illustrations or equations. Without reading the referenced papers, readers cannot know what the standard distributed DGNN training pipeline is, what are the current challenges, and what the contribution of this paper is. The authors should also clearly state what the dimensions in Table 1 specifically refer to (there\u2019s a Typo in Table 1, where the caption says there are four dimensions, but the table only shows three). \n2. Section 3 presents an overview of the entire system with multiple components, but the entire paper only gets into detail of the group strategy. What is the difference between other components with previous work BLAD? \n3. Section 4.3 is hard to understand where a lot of symbols are not defined or explained in advance. \n\nW2: One critical technical issue is that the proposed scheduling algorithm limits the randomness of training batches in each epoch. However, this paper does not provide rigorous theoretical analysis and requires more empirical evidence to justify how it ensures training quality. Figure 3, Figure 7, and Figure 8 show some extent of performance drop when training some DGNNs. The paper should also show how the scheduling algorithm affects training on other datasets. \n\nW3: This paper evaluates the proposed method by comparing it with one SOTA baseline (BLAD) and another weak baseline (ESDG). The paper also introduces a strong method called PSG, which represents a naive solution with uncompromised accuracy. However, PSG lacks a detailed definition, and the differences between PSG, NyGNeX, and BLAD are not clearly stated. Clearly discussing these differences would help more accurately identify which components of the system are effective."
+            },
+            "questions": {
+                "value": "Please see the weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a load balancing technique for training dynamic graph neural networks on multiple GPUs. The authors evaluated their technique on a four-GPU machine and showed good scalability with simulation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed technique (collecting the execution time of different tasks with profiling, formalizing the task grouping problem as an optimization, and solving the optimization problem using ILP) is reasonable."
+            },
+            "weaknesses": {
+                "value": "1. I don't see much challenge in the problem. Grouping the tasks according to the profiled execution time is straightforward. \n\n2. Related to the first point, I don't see new insight/contribution in this paper. Load balancing has been studied extensively in many graph algorithm settings. Even for the specific task considered in this paper (distributed training of DGNNs), this paper is not the first to propose a solution. \n\n3. While the paper targets GNNs, I don't see many ML components. The main problem it studies is the tradeoff between load balance and inter-GPU communication. This topic is more commonly studied in computer systems or high-performance computing conferences, which might be more suitable venues for the paper. \n\n4. Evaluation with larger graphs are needed. Currently, all of the graphs used in the evaluation fit in one single A100 GPU. To show the real contribution of the proposed technique, the authors need to evaluate with graphs large enough to require distributed training."
+            },
+            "questions": {
+                "value": "Please address my comments above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

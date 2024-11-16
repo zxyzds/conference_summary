@@ -1,0 +1,170 @@
+{
+    "id": "tuEP424UQ5",
+    "title": "On Generalization Within Multi-Objective Reinforcement Learning Algorithms",
+    "abstract": "Real-world sequential decision-making tasks often require balancing trade-offs between multiple conflicting objectives, making Multi-Objective Reinforcement Learning (MORL) an increasingly prominent field of research. Despite recent advances, existing MORL literature has narrowly focused on performance within static environments, neglecting the importance of generalizing across diverse settings. Conversely, existing research on generalization in RL has always assumed scalar rewards, overlooking the inherent multi-objectivity of real-world problems. Generalization in the multi-objective context is fundamentally more challenging, as it requires learning a Pareto set of policies addressing varying preferences across multiple objectives. In this paper, we formalize the concept of generalization in MORL and how it can be evaluated. We then contribute a novel testbed featuring diverse multi-objective domains with parameterized environment configurations to facilitate future studies in this area. Our baseline evaluations of state-of-the-art MORL algorithms on this testbed reveals limited generalization capabilities, suggesting significant room for improvement. Our empirical findings also expose limitations in the expressivity of scalar rewards, emphasizing the need for multi-objective specifications to achieve effective generalization. We further analyzed the algorithmic complexities within current MORL approaches that could impede the transfer in performance from the single- to multiple-environment settings. This work fills a critical gap and lays the groundwork for future research that brings together two key areas in reinforcement learning: solving multi-objective decision-making problems and generalizing across diverse environments.",
+    "keywords": [
+        "Reinforcement Learning",
+        "Multi-Objective Reinforcement Learning",
+        "Generalization"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "This paper formalizes generalization in Multi-Objective Reinforcement Learning (MORL) and paves the way for future research on developing more adaptable multi-objective agents.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=tuEP424UQ5",
+    "pdf_link": "https://openreview.net/pdf?id=tuEP424UQ5",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper studies generalization in the context of multi-objective reinforcement learning (MORL), which extends standard RL to the case in which the reward function is a vector containing multiple conflicting objectives. In particular, the paper defines the problem as a contextual multi-objective MDP, in which a context variable defines changes in the MDP\u2019s state-transition and reward functions. The goal of an agent is to learn a set of Pareto optimal policies that generalize over different contexts. Next, the paper introduces a set of environments that extends existing benchmark environments in MO-Gymnasium to the case in which the dynamics and the state space can be modified. The paper evaluates several state-of-the-art MORL algorithms in the introduced benchmark and shows that existing algorithms often do not generalize well to different contexts."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This is the first work, to the best of my knowledge, that studies MORL under environments with changes in its dynamics/state-transition function. \n- The introduced benchmarks are potentially useful to the community for designing novel MORL algorithms that can tackle problems in which the MOMDP's dynamics can change."
+            },
+            "weaknesses": {
+                "value": "- Since the main contribution of the paper is the testbed containing new extensions of MORL benchmarks and an extensive evaluation of existing algorithms, it is possible that this paper would be more suitable to the Dataset & Benchmarks track than the main track of the conference.\n- The theoretical contributions are limited to the definition of a contextual MOMDP, which follows directly from previously studied formalisms of MOMDP and contextual MDPs, and the definition of a normalized evaluation metric for evaluating agents in this formalism.\n- The paper requires clarifications regarding the mathematical formulation of the problem, and its implications on the evaluation metrics used and the experimental results (see below).\n- In particular, it is not clear if the existing MORL algorithms are performing poorly due to their limitations or if the proposed benchmark is actually impossible to solve with optimality (i.e., obtaining NHGR=1). For instance, in the Mujoco environments, it is impossible for an agent to act optimally w.r.t. all possible friction coefficients without having any form of access to the current coefficients."
+            },
+            "questions": {
+                "value": "Below, I have questions and constructive feedback to the authors:\n\n1) Regarding Definition 3, what does it mean for a policy to be \u201cgeneralized across contexts\u201d? There are two options here: (i) learn a single policy that maximizes its expected value over contexts, possibly being suboptimal because a policy that is optimal to every context simultaneously likely does not exist; or (ii) learn a policy that is conditioned on the context, and then can adapt its behavior depending on the context. I suggest discussing and clarifying this aspect of the problem defined in Section 3. In case (ii), the environments introduced should contain the context as part of the state space.\n\n2) In Definition 4, I suggest defining how the Pareto front is normalized and mentioning the range of the normalization, e.g., [0,1].\n\n3) Given that, in Definition 3, the authors are restricting to linear utility problems (which induce convex Pareto Fronts), it is worth noting that hypervolume is a metric that considers Pareto-optimal points in concave regions of the Pareto front, which are not useful for increasing the expected utility. For example, if we have an optimal convex Pareto front and we add a point in a concave region, this point would increase the hypervolume but would not increase the expected utility. For this reason, I suggest focusing on expected utility metrics (following the utility-based approach) instead of using hypervolume, which is an axiomatic metric. Currently, it is contradictory that the paper advocates for utility-based approaches, but mainly uses an axiomatic metric for evaluation. I suggest the authors either justify their use of hypervolume in this context or adopt metrics more consistent with their utility-based approach (e.g., normalized expected utility).\n\n4) It is unclear whether (in both the problem formulation and in the proposed benchmark) the context is part of the observation, i.e., whether agents know which context they are in. If the agents do not have access to the context, it is expected that generalist agents do not perform well. In general, a different policy is required to act optimally with respect to each context, and learning a policy that optimizes for the average context will be probably suboptimal to every context (unless contexts are too similar). Hence, the NHGR metric in Definition 5 would never be equal to 1, even assuming access to a perfect algorithm that learns the optimal policy in Definition 3. I suggest the authors clarify whether perfect generalization (NHGR=1) is theoretically possible in these environments.\n\n5) Regarding the MO-SuperMarioBros, the paper mentions that \u201cThere are a total of 32 possible stages\u201d. Is that correct? Based on the Appendix, there are 8 stages.\n\n6) In Section 6.1, what was the training budget in terms of environment interactions for the specialist and generalist agents? Since generalist agents have to learn to solve multiple contexts instead of only one, it would be fair that they are given sufficient time to learn them. Otherwise, would it be possible to explain the results solely on the fact that the generalist agents did not have enough training time?\n\n7) I also suggest discussing the hyperparameters used for the algorithms in the experiments. For instance, would it be necessary to use larger neural networks or larger replay buffers when we train an agent to optimize for many contexts simultaneously? It is not clear whether the algorithms do not perform well due to a lack of hyperparameter turning.\n\nMinor: \u201clong-term discounted reward\u201d - > long-term discounted sum of rewards."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "I identified no ethical concerns that need to be addressed in this paper."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigates a very important problem of generalization in multi-objective reinforcement learning (MORL), an area that has received limited attention compared to single-objective RL. The main contribution of the paper includes a novel testbed featuring diverse MORL domains with different contexts, which provides a systematic evaluation framework for generalization in MORL. The paper also presents a comprehensive analysis of state-of-the-art MORL methods (Envelope, GPI, CAPQL, PGMORL, MORL/D) using normalized hypervolume generalization ratio. Overall, the paper provides a foundation for understanding how MORL algorithms generalize across different environmental contexts and parameters, addressing a crucial gap in the current literature."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The paper contributes a novel testbed featuring various multi-objective RL environments with parameterized environment configurations, facilitating valuable research in MORL generalization. \n* The proposed framework for evaluating generalization in MORL using normalized hypervolume generalization ratio is sound and promising. \n* The paper provides reasonable coverage of relevant literature and effectively justifies its claims with thorough experimental evaluations.\n* The paper is generally well-written and easy to follow."
+            },
+            "weaknesses": {
+                "value": "* The proposed testbed appears to be a straightforward extension of MORL environments to generalization with limited variations, lacking clear evidence of full interpolation/extrapolation properties across context changes. \n* The evaluation lacks analysis of important MORL metrics such as sparsity, expected utility, and cardinality, which limits the comprehensive understanding of algorithm performance. For instance, while hypervolume measures Pareto coverage, it does not address how spread the solutions are within the Pareto front, which is an important concept in utility-based approaches. Similarly, the expected utility metric is essential as it directly reflects an agent\u2019s ability to maximize total utility, which is the ultimate goal in utility-based approaches. \n* The paper's focus on utility-based approaches with limited discussion of different utility or scalarization functions restricts the broader applicability. For instance, for linear scalarization functions, the resulting Pareto front is usually convex while for non-linear scalarization functions, the resulting Pareto front may have concave regions. It is unclear which class of scalarization method is used and how different classes affect generalization in MORL.\n* The empirical evaluation is limited to environments with a small number of objectives (maximum 4) which raise questions about scalability and generalizability. Testing in environments with higher objective counts, such as the Fruit Tree Navigation environment (5-7 objectives) by Yang et al. (2019) or the MO-highway environment from the mo-gymnasium API, which can be configured for more objectives, would strengthen the paper."
+            },
+            "questions": {
+                "value": "1. How does the proposed framework handle cases where utility functions are unknown, non-linear, or non-monotonic? \n2. What specific scalarization functions were used in the MORL algorithms, and how were weight vectors initialized in methods like the Envelope algorithm? \n3. Why were other MORL metrics such as sparsity, cardinality, and expected utility not considered during evaluation? \n4. How do MORL methods generalization affected by varying numbers of objectives in underlying environments? \n5. Can the authors explain the discrepancy in CleanRL SAC performance in default hopper environment which achieved 3000 episodic return vs the one reported in Figure 5 (left most plot)? Could this because of the hyperparameter? If yes, then a well-tuned SAC may outperform the MORL methods.\n\n\nMinor comments:\n\nIn Definition 1, should the reward be represented as a vector in bold notation for consistency with Section 2? \n\nThe related work should be placed in the main paper. This can be done by moving the detailed environment descriptions to the appendix for better space utilization."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper, based on the MuJoCo platform, presents a comprehensive set of parameter variations for different MORL (Multi-Objective Reinforcement Learning) testing scenarios. Additionally, it introduces a novel metric designed to standardize the evaluation of the Pareto front and hypervolume measurements. By establishing a wide range of parameterized benchmarks, this work evaluates recent state-of-the-art MORL algorithms across the proposed environment variations, highlighting the performance differences under diverse parameter settings. This serves as a valuable resource for researchers aiming to study the generalization capabilities of MORL algorithms, providing a flexible and well-defined platform for experimentation."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper introduces a substantial number of parameterized scenarios, significantly modifying standard MuJoCo test environments to induce pronounced changes in specific features. This extensive and detailed effort reflects a thorough approach in expanding the range of testing conditions.\n\n2. It challenges the widely-used hypervolume metric by proposing a new metric based on hyperarea coverage, aimed at standardizing the quality assessment of the Pareto front.\n\n3. Although there are some flaws in the writing, the overall readability is smooth, and the paper maintains a clear focus on its key contributions throughout the narrative."
+            },
+            "weaknesses": {
+                "value": "1. **On the Use of Lebesgue Measure and Hypervolume:**\n   The Lebesgue measure in two-dimensional space corresponds to calculating area. If we assume the solution set's Pareto front is a closed, well-defined curve, the area enclosed by the origin and the Pareto front can indeed be computed using the Lebesgue measure. In this specific two-dimensional case, where all solution sets are located in the first quadrant (i.e., all objective values are positive) and the origin is used as the reference point, the calculated hypervolume effectively becomes equivalent to the Lebesgue measure.\n\n   It is important to note that the magnitude of the Lebesgue value is smaller and does not alter the comparative outcomes of optimization results. A smaller hypervolume (HV) will still lead to smaller two-point Lebesgue values. Although $HV_{norm} $ and $NHGR$ exhibit slightly higher penalty effects compared to the default in challenging scenarios, they do not provide additional benefits in terms of interpretability. Therefore, the proposed normalization does not seem to address the issue of result surges caused by outliers, as mentioned by the authors. Consequently, the introduction of $NHGR$ based on the hyper-area ratio appears to lack sufficient motivation.\n\n2. **Regarding Metrics in Figure 3:**\n   The two metrics presented in Figure 3 are actually different measurement dimensions of the same indicator. The mirrored images illustrate the overlap between these two metrics, which suggests they cannot be considered as introducing two new metrics.\n\n3. **Multi-Objective Reward and Weight Vector Scalarization:**\n   Multi-objective reward and weight vector scalarization is a well-established method. A substantial body of work has demonstrated the inefficiency of single scalar rewards in MORL optimization, such as in PGMORL and dynamic-weight MORL. Incorporating this concept as part of the experimental results does not significantly contribute to your experimental results, as it reflects existing knowledge in the field.\n\n4. **Modifications to the Traditional Mujoco Environment:**\n  In the original Mujoco environment, altering these values only requires adding instructions in the `step()` function, which is facilitated by the Mujoco simulation environment's API. The paper does not clearly indicate or demonstrate any additional code development or engineering improvements in this aspect.\n\n5. **Efficiency of Benchmarking:**\n   The benchmarking approach appears inefficient, as no new algorithm is proposed to compare against the state-of-the-art (SOTA)."
+            },
+            "questions": {
+                "value": "1. **Selection of Mujoco Environments:**\n   Why were only certain environments from the Mujoco,i.e., only some of the two-ojective problems,  are selected as baselines for demonstration, while other important environments were omitted (problems of 3 or more objectives)? Including a broader range of environments would strengthen the validity and generalizability of the motivation.\n\n2. **Modifications to the Traditional Mujoco Environment:**\n   Is there any basis or reference for the numerical changes made to the standard Mujoco environment?\n\n3.**Normalization range (NR):**\n   Under what circumstances are NRs conducted, and why are they remain reliable despite changes in training or neural network parameters?\n\n4.**Mujoco modifications:**\n Can you provide more details on any specific challenges encountered or innovations that has been made in implementing these modifications."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a framework and testbed for evaluating generalization in multi-objective reinforcement learning (MORL). **The authors claim that generalization in MORL is a crucial research direction, but existing MORL algorithms are not sufficient for MORL generalization.** To support the claim, the authors propose the concept of a multi-objective contextual MDP and introduce the normalized hypervolume generalization ratio (NHGR) as a metric for assessing generalization in MORL. To empirically test this, they modify existing MORL environments by adjusting key environment parameters and applying domain randomization techniques during training. The paper reports NHGR performance across different MORL algorithms during the evaluation phase and concludes by highlighting the need for further research on MORL generalization."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Considering generalization in MORL is a sound direction in the RL community.\n* The necessity of MORL generalization is empirically demonstrated in Section 6.2, partly supporting the authors' claim."
+            },
+            "weaknesses": {
+                "value": "1. **The overall contribution and novelty of this paper remain incomplete.** While the paper highlights a promising research direction, it lacks a concrete solution for addressing the problem of MORL generalization. To enhance the paper\u2019s completeness, the authors should propose and integrate their own method to tackle MORL generalization effectively. \n\n2. **The authors' claim is not fully supported due to the unclear soundness of the proposed NHGR metric.**\n* 2-1. For clarity, does the combined specialist Pareto front consist of the *filtered* nondominated value vectors from the *union* of nondominated value vectors across the 8 MORL algorithms, each trained individually on a specific context? \n\n* 2-2. The computation of NHGR is highly demanding, especially as the number of MORL algorithms and contexts increases during evaluation. If performance can be directly computed for any given context, there would be little need for a generalized algorithm, as the \"combined specialist\" would suffice. This raises concerns about NHGR's practical applicability in scenarios with large computational requirements.\n\n* 2-3. A key weakness of NHGR is that its denominator relies on the performance of existing MORL algorithms, which may not perform well in certain contexts or in environments with many objectives. In such cases, where the \"combined specialist\" performs poorly, NHGR becomes an unreliable metric.\n\n* 2-4. The necessity for normalization in NHGR is questionable, especially since true upper and lower bounds for each objective are not typically known a priori. If these bounds are not tightly set, the reliability of NHGR results is compromised. Moreover, determining accurate bounds (e.g., $v^c_{min}$ and $v^c_{max}$) requires running multiple MORL algorithms, increasing computational complexity. Establishing these bounds is itself a challenging task, particularly during online training.\n\n\n* 2-5. A potentially better approach would be to use the expected standard hypervolume across evaluation contexts, supplemented by the expected standard sparsity to address the limitations of relying solely on hypervolume. \n\n\n* 2-6. Figure 1 does not align with the definition of normalization bounds $v^c_{min}$ and $v^c_{max}$. The reference point is determined by the x-coordinate of the upper-leftmost point and the y-coordinate of the lower-rightmost point.\n\n\n* 2-7. For clarity, is the number of the episodes evaluated for each context is set at 100/(number of evaluation contexts) (excluding Mario)?\n\n\n3. **The paper\u2019s organization needs improvement.**\n- 3-1.  It would improve the flow of the paper if Section 6.2 were moved closer to the background section to better emphasize the motivation behind the work.\n- 3-2. Including the related work section in the main body of the paper would enhance readability, as it is critical for contextual understanding.\n- 3-3. A more detailed explanation of how each MORL algorithm operates, such as the weight adaptation variant of MORL/D SB, would be beneficial (this could be placed in the Appendix for conciseness).\n\n4. **Several technical clarifications are needed.**\n- 4-1. Is SAC trained with a standard scalar reward function (described in Appendix D) for each context vector independently, or does it follow domain randomization (i.e., sampling random environment parameters for each episode)? I assume the authors intended the latter.\n- 4-2. In Line 479, the phrase \"...scalarized them using $f_{SORL}$\u200b...\" is unclear. Additionally, how many solution vectors are sampled for each algorithm?\n- 4-3. How is the optimality gap calculated?\n- 4-4. For the SAC implementation in Mario and LavaGrid, is it \"SAC-discrete\"? If so, how was SAC-discrete implemented, and how does its performance compare to DQN?\n- 4-5. In Section 6.2, what is meant by the \"upward speed\" in the scalar reward formulation (Line 461 and Figure 6)?\n\n5. Minor Suggestions:\n- I recommend dividing paragraphs to improve readability.\n- Line 302: \"We introduce an 8-dimensional parameter...\" should be corrected to \"7-dimensional.\""
+            },
+            "questions": {
+                "value": "Please see the weaknesses part above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

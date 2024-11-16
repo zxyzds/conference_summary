@@ -1,0 +1,130 @@
+{
+    "id": "8e9KpZyksc",
+    "title": "GeST: Towards Building A Generative Pretrained Transformer for Learning Cellular Spatial Context",
+    "abstract": "Learning the spatial context of cells through pre-training may enable us to systematically decipher tissue organization and cellular interactions in multicellular organisms. Yet, existing models often focus on individual cells, neglecting the intricate spatial dynamics between them. We develop GeST, a deep generative transformer model that is pre-trained on the task of using information from neighboring cells to iteratively generate cellular profiles in spatial contexts. In GeST, we propose a novel serialization strategy to convert spatial data into sequences, a robust cell quantization method to tokenize continuous gene expression profiles, and a specialized attention mechanism in the transformer to enable efficient training. We pre-trained GeST on a large-scale spatial transcriptomics dataset from the mouse brain and demonstrated its performance in unseen cell generation. Our results also show that the pre-trained model can extract spatial niche embeddings in a zero-shot way and can be further fine-tuned for spatial annotation tasks. Furthermore, GeST can simulate gene expression changes in response to spatial perturbations, closely matching experimental results. Overall, GeST offers a powerful framework for generative pre-training on spatial transcriptomics.",
+    "keywords": [
+        "Generative model",
+        "Transformer",
+        "Spatial Transcriptomics"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "We develop GeST, a deep generative transformer model that is pre-trained on the task of using information from neighboring cells to iteratively generate cellular profiles in spatial contexts.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=8e9KpZyksc",
+    "pdf_link": "https://openreview.net/pdf?id=8e9KpZyksc",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors present a generative pre-trained transformer model designed for spatial transcriptomics. The authors propose strategies to tackle common challenges in applying transformer models to ST data, including a serialization strategy, cell quantization method, and spatial attention mechanism."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The authors adopted a clever strategy to tokenize continuous gene expression profiles into discrete cell states. In particular, this helps mitigate error accumulation in autoregressive generation, a common issue when dealing with continuous data in transformer models.\n\n- The model demonstrates strong performance across multiple tasks, including unseen cell generation, niche clustering/annotation, and in-silico spatial perturbation analysis. This versatility showcases the model's potential as a foundation for various spatial transcriptomics applications."
+            },
+            "weaknesses": {
+                "value": "- The cell quantization strategy presented in the paper is not significantly different from previous strategies employed by existing methods for ST. For example, this problem of discretizing spatial data is addressed before by [1] Wen et al., [2] Yarlagadda et al, [3] Schaar et al.\n\n- The evaluation is focused mainly on mouse brain datasets - which are known to have organized spatial structures of various distinct cell types. Evaluating model on more challenging datasets like from cancerous tissues will help solidify the work.  While spatial serialization introduces an ordinal structure, its application might overlook the full potential of irregular spatial patterns within tissues, limiting the model\u2019s adaptability across different spatial configurations.\n\n- The multi-level cell quantization and hierarchical loss approach are suited for well preserved mouse brain tissues. But in practice, ST data have several artifacts due to poorly preserved tissues and not very clean - transformer models for ST tend to perform relatively poorly compared to their CNN counterparts for modeling hierarchical information in the tissues.\n \n- The reliance on a vocabulary to tokenize gene expression may lead to loss of subtle gene-level variations, potentially limiting the granularity of predictions, especially for rare cell subtypes.\n\n- The model\u2019s design does not fully account for dynamic gene-gene interactions within perturbed cells during in-silico simulations, which could lead to oversimplified, and often incorrect, biological interpretations.\n\n-  The Spatial Attention mechanism is computationally expensive, and not optimized for long-range dependencies in large tissue sections, which may lead to biased local predictions without sufficient contextual global information. The pre-training is computationally intense and require multiple GPUs - and the authors should report how the model generalizes to non-brain tissues without sufficient available ST data.\n\n- Authors use RMSE and Spearman correlation for evaluation, but lacks biologically relevant validation metrics, such as alignment with known cell types or tissue architectures.\n\n- While the authors mention error accumulation in autoregressive generation, they don't provide a detailed analysis of how this affects long-range predictions or the model's stability over multiple generation steps.\n\n[1] Wen, Hongzhi, et al. \"Single cells are spatial tokens: Transformers for spatial transcriptomic data imputation.\" arXiv preprint arXiv:2302.03038 (2023).\n\n[2] Yarlagadda, Dig Vijay Kumar, Joan Massagu\u00e9, and Christina Leslie. \"Discrete representation learning for modeling imaging-based spatial transcriptomics data.\" Proceedings of the IEEE/CVF International Conference on Computer Vision. 2023.\n\n[3]. Schaar et al. \"Nicheformer: a foundation model for single-cell and spatial omics.\" bioRxiv (2024): 2024-04."
+            },
+            "questions": {
+                "value": "- What is the impact of tissue preparation methods and batch effects on GEST's performance? \n\nHow does the model,\n- handle rare cell types or spatially isolated cells that may not have sufficient neighboring context? \n- perform across different tissue types beyond the mouse brain?\n- compare to graph-based approaches for ST data, such as spaGCN?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "I'm initially rating this paper as \"5: marginally below the acceptance threshold\".\n\nSummary: the paper proposes an auto-regressive generative model for spatial transcriptomic data. A notion of \"order\" is introduced thereby making use of (modified version of) pipelines for sequences with incremental updates. The method is evaluate on niche clustering, niche label annotation, unseen cell generation, and spatial perturbation prediction. To facilitate the generation of the final counts, a hierarchical clustering and meta-cell vocabulary is used."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Clear writing and explanatory figures\n-"
+            },
+            "weaknesses": {
+                "value": "- typo (not included in score): In line 236 the sentence shouldn't spot at \"$g(x)$. Instead ...\""
+            },
+            "questions": {
+                "value": "- My main question/concern is that there is no inherent order in cells located in spatial positions (as mentioned in the paper). Lines 150-160 explain a procedure to assign a \"pseudo-order\" to cells. This procedure contains cropping a square from the spatial data, selecting one of the anchors, and repeatedly selecting cells based on their spatial distance to the selected anchor. At least I do not intuitively understand why such a procedure should resemble \"an order\"?\n- For evaluating the generative power of the model, in Figure. 4 metrics like RMSE and correlation are used. Was there a reason for not using the commonly used metrics for this purpose, like Wasserstein distance, MMD, EMD, etc?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce an innovative generative pre-trained model (GeST) designed to learn the spatial context of cells within spatial transcriptomics. This model ingeniously converts two-dimensional spatial data into a serialized one-dimensional sequence to accurately capture and model the intricate spatial relationships between cells. This novel approach facilitates a deeper understanding of complex tissue organizations and provides a promising direction for further research in the field. Preliminary results demonstrate the model\u2019s effectiveness in capturing relevant spatial patterns, although further validation is required to assess its performance across diverse datasets and potential limitations in handling varying spatial resolutions."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors creatively employ a generative pre-trained transformer for the first time to understand spatial transcriptomics at the single-cell level, introducing innovative methods to the field."
+            },
+            "weaknesses": {
+                "value": "1. The introduction could be enhanced by comparing the proposed GeST model with other relevant models like GraphGT or SpaGCN, as CellPLM, which is mentioned, differs significantly in context and isn\u2019t directly related to spatial transcriptomics.\n2. The model appears to primarily apply the Vision Transformer architecture to spatial transcriptomics with minimal modifications, suggesting a lack of substantial innovation.\n3. The resolution variance among different spatial transcriptomics technologies should be more thoroughly addressed, potentially by incorporating datasets from Stereo-seq, Slide-seq v2, STARmap, and 10x Visium to provide a broader validation of the model\u2019s utility. However, it is important to note that the resolution of 10x Visium is based on spots rather than individual cells. Does the model still perform effectively under these conditions?\n3. In the ablation studies detailed in Table 3, it is unclear whether changes in the number of layers and heads simultaneously affect the window size. Clarification on how these architectural modifications impact the model\u2019s spatial resolution would be valuable.\n4. Consider the possibility of conducting an ablation study where the neighborhood  information is removed, to assess its impact on the model\u2019s performance and spatial understanding."
+            },
+            "questions": {
+                "value": "1. It is advisable to try data from multiple resolutions, as different technologies offer varying levels of resolution. For example, Stereo-seq can achieve subcellular resolution, which may allow the algorithm to examine the impact of organelles on the structure.\n2. When conducting biological experiments involving tissue sections, these sections are often assembled from multiple pieces. This assembly process can introduce inaccuracies that may impact the reliability of neighborhood information. How should this issue be addressed to ensure data integrity?\n3. As the authors mentioned, the model is expected to perform well in predicting genes with high spatial variation. It would be beneficial to validate this conclusion using cancer datasets, which are characterized by high variability. Additionally, considering cancer datasets could be crucial for addressing key questions about the tumor microenvironment."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

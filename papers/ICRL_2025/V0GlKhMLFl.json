@@ -1,0 +1,168 @@
+{
+    "id": "V0GlKhMLFl",
+    "title": "Diversify and Conquer: Diversity-Centric Data Selection with Iterative Refinement",
+    "abstract": "Finetuning large language models on instruction data is an important step in enriching the knowledge learned during pre-training and improving instruction-following capabilities. \nAs the number of instruction datasets continues to grow, selecting the right data to achieve optimal results becomes increasingly important.\nIn this work, we ask a prominent question: How can we determine the optimal subset of data for effective training?\nWhile much of the existing research primarily emphasizes local criteria, such as instance quality, for subset selection, we argue that a global approach focused on data diversity is more critical.\nOur approach utilizes $k$-means clustering to ensure that the selected subset effectively represents the full dataset.\nWe propose an iterative refinement method inspired by active learning techniques to resample instances from clusters, with the importance and sampling weight of each cluster being reassessed in every training iteration.\nThis method allows us to reduce the effect of outliers and automatically filter out clusters containing low-quality data.\nThrough extensive evaluation across natural language reasoning, general world knowledge, code and math reasoning tasks, and by fine-tuning models from various families, we observe consistent improvements, achieving a 7\\% increase over the random selection and a 3.8\\% improvement over state-of-the-art sampling methods.\nOur work highlights the significance of diversity-first sampling when finetuning LLMs to enhance performance across a broad array of evaluation tasks. Our code is submitted as supplementary materials.",
+    "keywords": [
+        "diversity",
+        "data selection",
+        "training efficiency",
+        "iterative refinement"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "We demonstrate that k-means clustering is still effective for selecting an diverse subset of instructional data; and we propose an iterative clustering method to further boost the performance.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=V0GlKhMLFl",
+    "pdf_link": "https://openreview.net/pdf?id=V0GlKhMLFl",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors propose a data subset selection strategy that considers both diversity and quality to select samples for finetuning LLM's. Specifically, the strategy clusters the points and selects samples with high quality/hardness scores from each cluster."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The paper is easy to understand and well-written, and the problem of selecting diverse and high quality samples for instruction tuning is important. However, I have several concerns regarding the design choices of the methodology and the experiments."
+            },
+            "weaknesses": {
+                "value": "## Weaknesses\n- **[Major]** The key sampling strategy used in this work is a reincarnation of strategies that have been used for a while in data pruning and active learning. For example, [1] (work not cited in this paper) first clusters the unlabeled set and chooses the samples with the highest uncertainty from each cluster in a round-robin fashion though it is very straightforward to substitute uncertainty with quality. \n- **[Major]** There are many missing baselines in the experiments. Many active learning and subset selection strategies can be used for this setting from the core ML community [2,3,4] many of which have been applied to the problem of supervised finetuning [5]. There are also subset selection works specifically for supervised finetuning that are missing, for example [6]. At least a few of these should be included as baselines in this work, and discussion of all of these works should be included in the related works section. \n- **[Major]** Additional ablations are necessary. What happens if we only use quality without any diversity prefiltering? \n- **[Major]** In most of the experiments, evaluation is only done on a single subset size. Evaluation on multiple subset sizes is fairly standard in data selection literature even at large scales [5,6], and should be included here as well.\n- **[Major]** The strategy first clusters the points and then samples based on quality. However, this does not guarantee diversity in the final subset. Using quality based sampling in the second stage can still induce redundancies **within a cluster**. There is nothing to prevent two identical high quality samples that belong to the same cluster from being selected. Filtering based on some score before applying diversity sampling prevents this (this has been done in [7]). \n- **[Minor]** Why is the sampling strategy randomized? From my understanding, sampling is performed only once for each iteration and scores must be computed for each sample to compute its probability so there doesn't seem to be any benefit for this in terms of computational cost. \n- **[Minor]** In Algorithm 1, why is $\\mathcal{D}'$ grown incrementally? In other words, a new set of points is sampled from $\\mathcal{D}/\\mathcal{D'}$ and added to $\\mathcal{D}'$ at each round, but shouldn't all of $\\mathcal{D'}$ be resampled? It seems as though points that the LLM has already been trained on will be easy and assigned a low score based on Eq. 4.  \n- **[Minor]** This claim \"The success of this simple and efficient method highlights the impact of prioritizing diversity in sampling.\" does not make sense given that the baseline method QDIT also is a diversity-based selection approach. \n\nI know I have listed several points and I understand that it may not be possible to address all of them in the short rebuttal period, so I would encourage the authors to prioritize addressing the **[Major]** points.\n\n## References\n- [1] Batch Active Learning at Scale (https://arxiv.org/pdf/2107.14263)\n- [2] Deep Batch Active Learning by Diverse, Uncertain Gradient Lower Bounds (https://arxiv.org/abs/1906.03671)\n- [3] D2 Pruning: Message Passing for Balancing Diversity and Difficulty in Data Pruning (https://arxiv.org/abs/2310.07931)\n- [4] Active Learning for Convolutional Neural Networks: A Core-Set Approach (https://arxiv.org/abs/1708.00489)\n- [5] An Experimental Design Framework for Label-Efficient Supervised Finetuning of Large Language Models (https://arxiv.org/abs/2401.06692)\n- [6] Diversity Measurement and Subset Selection for Instruction Tuning Datasets (https://arxiv.org/pdf/2402.02318)\n- [7] Submodularity in Data Subset Selection and Active Learning (https://proceedings.mlr.press/v37/wei15.html)"
+            },
+            "questions": {
+                "value": "See weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This study addresses the challenge of selecting optimal data subsets for fine-tuning LLMs on instruction datasets by focusing on data diversity rather than solely on local quality criteria. Utilizing a k-means clustering method, the approach aims to represent the entire dataset effectively, with an iterative refinement inspired by active learning to continuously adjust sampling weights and filter out low-quality data clusters. The experiemnts illustrate that this diversity-first approach leads to an improvement over random sampling showcasing the value of diverse data selection for enhancing LLM performance across various tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed data selection method achives a better downstream performance than evaluated baselines, which showcases the importance of diversity in data selection.\n\n2. The downstream analysis datasets are extensive."
+            },
+            "weaknesses": {
+                "value": "1. I think the baseline comparison is not complete. For example, there is a paper \"One-Shot Learning as Instruction Data Prospector for Large Language Models\" published on ACL 2024 which is higly related to this topic but not been included as baseline in this paper.\n\n2. The experiment still cannot persuade me that the diversity is the most imporant factor in selecting instruciton data. In Table 3, the proposed sampling method seems marginally better than the Random selection. In some datasets, it is even worse than Random selection, such as HumanEval on Llama-3."
+            },
+            "questions": {
+                "value": "1. Please refer to Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces use of clustering for data subset selection using clustering followed by quality score sampling for efficient instruction tuning. Paper proposes multiple variants of the clustering based method, and how to do unsupervised tuning of the cluster center hyperparameter. I also appreciate the use of reward model as a score function, which goes beyond the classic loss based score such as perplexity. Experiments and ablations are conducted over several datasets, including transferability, showing robustness of the proposed approach."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Paper proposes on how to do unsupervised tuning of the cluster center hyperparameter. I also appreciate the use of reward model as a score function, which goes beyond the classic loss based score such as perplexity. Experiments and ablations are conducted over several datasets. As far as this study is concerned for clustering based solutions, I like this work."
+            },
+            "weaknesses": {
+                "value": "A major weakness of this work is lack of literature review. For example, use case of diversity and some sort of quality score has been used in Machine Learning for a long time, from active learning [1], to curriculum learning [2, 6] (also see common followups to [6] which are on the similar lines, such as [7]), to more recent LLM instruction tuning based works [3, 4, 5]. However, paper fails to acknowledge these works except [3]. Submodular functions have been used for the purposes of inducing diversity for a very long time, which also includes determinantal point process. However, no discussion on submodularity has been provided in the related works. \n\nI believe [5] has done somewhat detailed study on submodular functions, its usecase with quality scores (uncertainty, confidence) and I think the perplexity based score function may have some correlation between confidence based score function.\n\n To summarize, I think this is a good paper when it comes to the clustering based methods, but it needs to benchmark against the submodular methods as well.  \n\nReferences - \n\n[1] Submodularity in Data Subset Selection and Active Learning\n[2] Curriculum Learning by Dynamic Instance Hardness \n[3] An Experimental Design Framework for Label-Efficient Supervised Finetuning of Large Language Models\n[4] Diversity Measurement and Subset Selection for Instruction Tuning Datasets\n[5] SmallToLarge (S2L): Scalable Data Selection for Fine-tuning Large Language Models by Summarizing Training Trajectories of Small Models\n[6] Coresets for Data-efficient Training of Machine Learning Models\n[7] Towards Sustainable Learning: Coresets for Data-efficient Deep Learning"
+            },
+            "questions": {
+                "value": "- For k-means, why is k-means++ initialization not used, instead of using 42 as random seed?\n- I am interested in seeing some run-time analysis, as usually the size of the instruction tuning dataset is large. \n- Can the authors try to run experiments using facility location alone, and then using that instead of clustering? It may be important to note that different choice of kernel in facility location can result in different performance (Cosine v/s RBF as done in [3]). Note that one has to do tuning, as they've also suggested a way to tune the resulting submodular function. \n- Can authors also try to compare against DPP as done in [4] ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Finetuning LLMs on instruction data is an important step to improve instruction following capabilities. This paper attempts to address how to determine the optimal subset of data for effective training. Unlike previous works that focused on local criteria (e.g., data quality), this paper claims that data diversity is more critical for effective training. This paper utilizes k-means clustering and proposes an iterative refinement method inspired by active learning techniques to resample instances from clusters. Experiments show that the proposed method achieves a 7% increase over the random selection and a 3.8% improvement over state-of-the-art sampling methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Even though the claim that data diversity is critical is well-known [1,2], the motivation of this paper is clear.\n2. The proposed method is sound. Using active learning is a straightforward idea to select the optimum subset of data.\n3. This paper is well-written and easy to follow. The released code and the data may facilitate reproducibility and future research.\n\nOverall, this paper attempts to address an important question and proposes an effective method that achieves better performance than the compared methods.\n\n[1] LIMA: Less Is More for Alignment\n\n[2] Data Diversity Matters for Robust Instruction Tuning"
+            },
+            "weaknesses": {
+                "value": "1. Baselines are weak: Even though the author attempts to demonstrate that data diversity is more important than data quality, the quality-based data selection method chosen by the authors is insufficient to support their claims, as they have selected only one method based on quality. (i.e., Deita,). There are still lots of published papers focusing on data quality [1,2,3]. Meanwhile, the improved performance compared with Random Selection is also not convincing.\n2. Evaluation is weak: Even though the paper claims that finetuning LLMs on instruction data is an important step to improve instruction following capabilities, there is no evaluation of the quality of the generated response (e.g., MT-Bench [4]). The evaluation in the paper mainly focuses on understanding tasks instead of instruction-following tasks.\n\n[1] From Quantity to Quality: Boosting {LLM} Performance with Self-Guided Data Selection for Instruction Tuning\n\n[2] Clustering and Ranking: Diversity-preserved Instruction Selection through Expert-aligned Quality Estimation\n\n[3] LESS: Selecting Influential Data for Targeted Instruction Tuning\n\n[4] Judging LLM-as-a-judge with MT-bench and chatbot arena"
+            },
+            "questions": {
+                "value": "None."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

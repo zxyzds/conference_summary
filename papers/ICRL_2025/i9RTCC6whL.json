@@ -1,0 +1,150 @@
+{
+    "id": "i9RTCC6whL",
+    "title": "MAMBA STATE-SPACE MODELS ARE LYAPUNOV-STABLE LEARNERS",
+    "abstract": "Mamba state-space models (SSMs) were recently shown to outperform state-of-the-art (SOTA) Transformer large language models (LLMs) across various tasks.  Despite subsequent widespread adaptation, little work has focused on Mamba LLMs' amenability for fine-tuning frameworks ubiquitously used for Transformer-based LLMs, e.g., mixed-precision fine-tuning (MPFT) and parameter-efficient fine-tuning (PEFT).  For the former, it currently remains an open question whether Mamba's recurrent dynamics are robust to small input changes, such as those encountered during MPFT.  Using dynamical systems theory (in particular, Lyapunov exponents), we answer this question in the affirmative.  We empirically validate this result through several experiments, showing that Mamba SSMs are significantly more stable to changes introduced by mixed-precision than comparable Transformers, even when both MPFT and PEFT are combined.  For PEFT, we show how targeting specific memory buffers in Mamba's customized CUDA kernels for low-rank adaptation regularizes SSM parameters, thus providing both parameter efficient learning and computational savings. Finally, with both MPFT and PEFT enabled, we explore the impact of instruction tuning Mamba SSMs for in-context learning (ICL) on natural language tasks.  While pretrained Mamba and Mamba-2 models only achieve 38% and 82% (respectively) of the ICL improvements of comparable Transformer-based LLMs, we show that instruction tuning allows Mamba models to narrow this gap to 81% and Mamba-2 models to skyrocket over this gap to 132%.",
+    "keywords": [
+        "Mamba",
+        "Mamba SSMs",
+        "SSMs",
+        "LLMs",
+        "PEFT",
+        "LoRA",
+        "Transformers"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "Fine-tuning Mamba LLMs is theoretically stable, and much more stable than Transformer LLMs in practice.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=i9RTCC6whL",
+    "pdf_link": "https://openreview.net/pdf?id=i9RTCC6whL",
+    "comments": [
+        {
+            "title": {
+                "value": "Reply to comment on instruction tuning experiments"
+            },
+            "comment": {
+                "value": "We thank the reviewer for their comments regarding our experiments, and address them below.\n\n>  Line 274: Why use MMLU as a proxy metric? For models at this scale, MMLU scores are generally around random (i.e., ~25%), leading to limited interpretability. Additionally, only the differential score is provided, without the original MMLU results, which weakens MMLU\u2019s reliability as a metric in this context.\n\nThis is standard practice, please see [3].\n\n> Instruction tuning experiments: Pythia feels like a weak baseline. And is it plausible to claim Mamba has an \u201cemergent ability\u201d (line 439) for in-context learning after instruction tuning, given SSMs' inherent limitations, as noted in [1,2]? Figure 3 also shows a performance drop for Mamba2 as shot count rises, likely due to state-space models\u2019 well-known difficulties with long-sequence processing and in-context learning.\n\nAs noted on lines 282-283, **Pythia and Mamba models were both pretrained using the same corpus, allowing the fairest comparison between SSMs and Transformers.**.\n\nFrom [4], we state the definition of an emergent ability:\n\n*An ability is emergent if it is not present in smaller models but is present in larger models.*\n\nThus, for model families above a particular size, consistently achieving non-negative performance in Figure 4 equates to an emergent ability.  Hence, both Mamba and Mamba-2 instruction tuned parameters conistently display ICL as an emergent ability for parameter counts of 370 million and greater.\n\nWith regards to SSMs' inherent limitations [1,2], we note that the cited references discuss such limitations for associative recall, a synthetic task.  However, [5] has already shown that Mamba models with a larger recurrent state (e.g., Mamba-2 models) can solve this synthetic task exactly.  Furthermore, *we novelly study ICL on natural language tasks*, and show that instruction tuned Mamba models demonstrate strong ICL relative to comparable Transformers on such tasks.  Thus, we have shown that Mamba instruction-tuned CL performance is not inherently limited for natural language tasks.\n\n## References\n\n[1] https://arxiv.org/abs/2402.18510\n\n[2] https://arxiv.org/abs/2402.18668\n\n[3] Dettmers, Tim, et al. \"QLoRA: efficient finetuning of quantized LLMs (2023).\" arXiv preprint arXiv:2305.14314 52 (2023): 3982-3992.\n\n[4] Wei, Jason, et al. \"Emergent abilities of large language models.\" arXiv preprint arXiv:2206.07682 (2022).\n\n[5] Dao, Tri, and Albert Gu. \"Transformers are SSMs: Generalized models and efficient algorithms through structured state space duality.\" arXiv preprint arXiv:2405.21060 (2024)."
+            }
+        },
+        {
+            "title": {
+                "value": "Reply to comments on theoretical results"
+            },
+            "comment": {
+                "value": "We thank the reviewer for their time and feedback.  Please find our response to your comments below.\n\n> Line 51: For some training framework it does not keep master weight in fp32 which problematic for Mamba. But Mamba was still trained with mixed precision using AMP.\n\nWe respectfully point out a potential misunderstanding.  Lines 48-53 are stating official Mamba sources suggest model training be performed in full precision, i.e., fp32.  The source of this concern is that recurrent neural models are prone to instability, discussed at length in [1, 2].  \n\nThe main point of the paper is to theoretically show that, unlike previously released recurrent models, Mamba SSMs are guaranteed to to be stable (Theorems 1 and 2).  Leveraging this theory, we then show that it is possible to efficiently train Mamba SSMs using mixed-precision, i.e., AMP.  Finally, we note that the paper exhaustively trains Mamba SSMs in full precision (without AMP), and compares learning using AMP to the full precision models (i.e., Figures 1 and 2, and Table 1).\n\n> Theory 1 seems shallow: Isn't Lemma 1 trivial to derive? ( dx_{t+1}/dx_t ) directly represents the decay rate, which must be (\\leq 1) to prevent exponential growth in cumulative products. This insight is obvious for any recurrent model, making Theorem 1\u2019s assertion about exponential decay rather redundant.\n\nWe respectfully disagree.  Firstly, as previously noted, the stability of recurrent neural models is not a given, with prior works promoting adjustment of the training schedule to combat unstable dynamics of such recurrent models [1, 2].  Secondly, calculating the lypanuv exponents of a recurrent model is nontrivial, i.e., we refer the reviewer to the proof of Lemma 1, which requires careful analysis of Mamba's state-space equations, variable activations, and variable domains.\n\n> Theory 2 seems unnecessary: It\u2019s clear that concatenating multiple weight matrices with LoRA applied to the larger matrix creates dependencies. However, there's no practical advantage demonstrated here, nor is there an empirical basis for this approach.\n\nWe respectfully disagree; given an arbitrary linear layer in a network, adding LoRA adapters to such a linear layer's weight matrix does not necessarily induce dependencies *across different model variables*.  As an example, rather than the large global memory cache currently used, assume Mamba was designed with individual linear-layer-weight matrices for the B_t, C_t, and \\Delta_t variables.  Clearly, adding LoRA adapters to each individual linear layer would not cause any weight tying for this design choice.  In contrast, the goal of Theorem 3 is to shed light on how the actual design of the recently released Mamba SSMs affects the most widely used PEFT method, LoRA.\n\nWe are currently adding empirical results to demonstrate the importance of Theorem 3, and will comment with the updated experiments.\n\n## References\n[1] Pascanu, R. \"On the difficulty of training recurrent neural networks.\" arXiv preprint arXiv:1211.5063 (2013).\n\n[2] Mikhaeil, Jonas, Zahra Monfared, and Daniel Durstewitz. \"On the difficulty of learning chaotic dynamics with RNNs.\" Advances in Neural Information Processing Systems 35 (2022): 11297-11312."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper aims to address a noticeable gap in research concerning the amenability of the Mamba model to popular fine-tuning frameworks such as PEFT and MPFT. Utilizing theoretical insights from dynamical systems, the paper demonstrates that minor input variations within the SSM layer of either model do not lead to outputs that deviate exponentially. This theoretical assertion is further validated by empirical experiments."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is well-written and easy to follow.\n2. The paper provides a theoretical analysis to support experimental performance.\n3. Comprehensive experiments compare the Mamba model with Transformer-based models across different scenarios."
+            },
+            "weaknesses": {
+                "value": "Though the theoretical analysis of this paper is really solid, since most researchers nowadays use MPFT and PEFT for Mamba, the contribution of this paper may be limited. It may be better if some weaknesses about MPFT and PEFT for Mamba are figured out and then optimized accordingly."
+            },
+            "questions": {
+                "value": "1. The introduction could be improved by adding a summary of contributions to provide clearer insight into the paper's impact and contribution.\n2. Is it appropriate to set the same learning rate for different models (e.g. Mamba and Pythia) when comparing training stability? Whether it is possible that a better-tuned Transformer model could demonstrate enhanced stability and performance, suggesting that the comparison might benefit from adjustments in learning rate settings. Conducting an ablation study or sensitivity analysis on the learning rates for different models maybe can help."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "- The authors work to demonstrate that the Mamba SSM is robust to small input perturbations during training, meaning that Mamba is compatible with mixed-precision fine-tuning (MPFT) and parameter-efficient fine-tuning (PEFT). The authors include both theoretical and empirical evidence for this finding.\n- Theory results are in section 3, using dynamical systems theory (Lyapunov exponents) to demonstrate that Mamba\u2019s recurrent dynamics are robust to small input changes\n- Section 5\u2019s empirical results contain the following experiments (this list defines the numbers which I\u2019ll use to refer to experiments later):\n  1. Main results: divergence in accuracy between FP32 and FP16 or BF16 inference, showing that the accuracy divergence for Mamba is roughly similar to that for pythia and OLMo\n  2. Non-divergent mamba fine-tuning: divergence in MMLU accuracy compared to full-precision for FP16 or BF16 models fine-tuned fully, or using LoRA on all or a subset of linear layers. Shows that divergence for Mamba is generally less than similar-size transformers.\n  3. Hardware throughput and memory-utilization improvements: Average tokens-per-second and maximum memory-per-token for mamba of varying sizes, using FP32 full fine-tuning, or FP16/BF16 LoRA on all or a subset of linear layers. Shows that any form of PEFT is faster and less memory-intensive than the FP32 full fine-tuning\n  4. Instruction tuning\u2019s impact on Mamba ICL for natural language tasks: authors claim that instruction tuning narrows the ICL gap between Mamba and Pythia\n  5. ICL as an emergent ability of Mamba SSMs: compares ICL performance for Mambas and several transformer models of varying sizes"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper addresses a very important problem that, until now, has helped to prevent the wider use of SSMs: training resources for an SSM have been greater than a similarly-sized transformer, because the transformer has been known to be compatible with efficient fine-tuning techniques. Addressing this disparity will help more people to consider working with SSMs, as their computational requirements will suddenly be within reach\n- The combination of both theory and empirical results is quite persuasive and is convincing that Mamba is indeed compatible with MPFT/PEFT\n- Theoretical results are simple, elegant and important. The proofs in the appendix are easy to follow and look solid.\n- Care has been put into the experimental setup, for instance everything being trained using the same batch size in the main results"
+            },
+            "weaknesses": {
+                "value": "- My most major critique is that there aren\u2019t any error bars or sense of the spread/randomness in the empirical results, especially for experiment 2 / figure 1, experiment 4 / figure 3 for the fine-tuned models and experiment 5 / figure 4 for the fine-tuned models.\n-  My second biggest critique is that each experiment is only performed with one dataset (MMLU, fine-tuning with Alpaca for fine-tuning experiments). Including more than one dataset or task would strengthen the claims you\u2019re drawing from the empirical evaluations. Experiment 5 includes more datasets, but the results for all datasets are averaged together and readers can\u2019t consider their performances separately\n- The graphs are nice in figures 1-4, but it would also be helpful to include the actual numbers in tables in the appendix\n- The paper seems to have a lot of extra contextualization in it, taking up room which could be devoted to more detailed empirical analysis. In particular, section 2 background and section 5 related work seem to just both be disjoint related work sections. Usually I would consider the \u201cbackground\u201d section to be merely preliminary information and definition of symbols that are necessary to understand the rest of the paper, like a statement of the SSM equations and formal definition of Lyapunov exponent. Then, related work would be a longer section detailing, well, related work. Just as an example for comparison, you can see this differentiation in roles between background and related work in this paper\u2019s sections 2 and 3 here: https://arxiv.org/pdf/2409.00717 Contextualization/related work is important to include, but I would consider prioritizing and moving at least some of it to appendix to include more empirical results\n- Some of the number references seem to be wrong:\n  - Line 345, \u201cFigure 5\u201d seems to actually be referring to Figure 1\n  - Line 379, \u201cFigure 5\u201d seems to refer to Figure 2 (did you maybe put your \\label{} command for the figures in the wrong spot inside your figures\u2019 code blocks?)\n  - Appendix theorem 3 corresponds to main paper theorem 2.\n\nOverall, I'm setting my rating to 6 due to the significance of the theoretical results. However, I would appreciate more detail to the empirical evaluations as I mention above."
+            },
+            "questions": {
+                "value": "Why did you choose to work with different sets of transformer models in the main results versus the other experiments? For instance, you give results for OLMo on the first experiment (Table 1) but not second, and results for OpenELM in all experiments but the first one."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies Mamba, a state-space model (SSM) that has previously been introduced as an efficient alternative to Transformers. The authors analyze Mamba's stability in mixed-precision and parameter-efficient fine-tuning by applying Lyapunov exponents, theoretically and empirically confirming its resilience against input perturbations. Experiments show that Mamba maintains stability better than comparable Transformers under mixed precision and achieves notable memory and computation efficiency. Additionally, instruction tuning enhances Mamba's in-context learning, suggesting that SSMs can approach or surpass Transformer models in certain few-shot tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This work provides promising evidence that fine-tuning Mamba on instruction-tuning data can improve its in-context learning abilities."
+            },
+            "weaknesses": {
+                "value": "- Line 51:  For some training framework it does not keep master weight in fp32 which problematic for Mamba. But Mamba was still trained with mixed precision using AMP.\n\n- Theory 1 seems shallow: Isn't Lemma 1 trivial to derive? \\( dx_{t+1}/dx_t \\) directly represents the decay rate, which must be \\(\\leq 1\\) to prevent exponential growth in cumulative products. This insight is obvious for any recurrent model, making Theorem 1\u2019s assertion about exponential decay rather redundant.\n\n- Theory 2 seems unnecessary: It\u2019s clear that concatenating multiple weight matrices with LoRA applied to the larger matrix creates dependencies. However, there's no practical advantage demonstrated here, nor is there an empirical basis for this approach.\n\n- Line 274: Why use MMLU as a proxy metric? For models at this scale, MMLU scores are generally around random (i.e., ~25%), leading to limited interpretability. Additionally, only the differential score is provided, without the original MMLU results, which weakens MMLU\u2019s reliability as a metric in this context.\n\n- Instruction tuning experiments: Pythia feels like a weak baseline. And is it plausible to claim Mamba has an \u201cemergent ability\u201d (line 439) for in-context learning after instruction tuning, given SSMs' inherent limitations, as noted in [1,2]? Figure 3 also shows a performance drop for Mamba2 as shot count rises, likely due to state-space models\u2019 well-known difficulties with long-sequence processing and in-context learning.\n\n[1] https://arxiv.org/abs/2402.18510\n\n[2] https://arxiv.org/abs/2402.18668"
+            },
+            "questions": {
+                "value": "See weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

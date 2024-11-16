@@ -1,0 +1,234 @@
+{
+    "id": "OW9TFoLuE4",
+    "title": "Phase-Driven Domain Generalizable Learning For Nonstationary Time Series Classification",
+    "abstract": "Monitoring and recognizing patterns in continuous sensing data is crucial for many practical applications. These real-world time-series data are often nonstationary, characterized by varying statistical and spectral properties over time. This poses a significant challenge in developing learning models that can effectively generalize across different distributions. In this work, based on our observation that nonstationary statistics for time-series classification tasks are intrinsically linked to the phase information, we propose a time-series domain generalization framework, PhASER. It consists of three novel elements: 1) Hilbert transform-based phase augmentation that diversifies non-stationarity while preserving discriminatory semantics, 2) separate magnitude-phase encoding by viewing time-varying magnitude and phase as independent modalities, and 3) phase-residual feature broadcasting by incorporating phase with a novel residual connection for inherent regularization to enhance distribution invariant learning. Extensive evaluation on 5 datasets from sleep-stage classification, human activity recognition, and gesture recognition against 12 state-of-the-art baseline methods demonstrate that PhASER consistently outperforms the best baselines by an average of 5% and up to 13% in some cases. Moreover, PhASER\u2019s principles can also be applied broadly to boost the generalizability of existing time-series classification models.",
+    "keywords": [
+        "Time Series; Domain Generalization; Machine Learning for Time Series data;"
+    ],
+    "primary_area": "learning on time series and dynamical systems",
+    "TLDR": "Incorporating phase information across augmentation, feature extraction, and residual connections stages enhances generalization performance in non-stationary time-series applications.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=OW9TFoLuE4",
+    "pdf_link": "https://openreview.net/pdf?id=OW9TFoLuE4",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Reviewer NDtH [2/2]"
+            },
+            "comment": {
+                "value": "## Questions:\n\n> The authors present their ideas with remarkable clarity; however, I have one question: Could the authors provide a more detailed explanation of the benefits of the Phase-driven Residual Broadcasting method employed in this study, particularly in comparison to other multimodal fusion approaches? What specific advantages does it offer in this context?\n\nA residual broadcasting-style network is used in many audio-event detection applications and is known to support generalizable learning while remaining conservative in model size [4, 5]. It may not be accurate to compare it with general multimodal fusion architectures (early fusion, late fusion, etc.), as we do not have distinct modalities but rather distinct representations (magnitude and phase) of the same modalities in the residual-broadcasting connection. It is more comparable to residual connections since this broadcasting unit can be repeated several times if the network is deeper.\n\n\n[3] Broadcasted Residual Learning for Efficient Keyword Spotting, Interspeech, 2021\n\n[4] Domain Generalization on Efficient Acoustic Scene Classification Using Residual Normalization, DCASE, 2021"
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer NDtH [1/2]"
+            },
+            "comment": {
+                "value": "We thank you for your time, and feedback and for commending our work on originality and contribution. We would like to respond to your questions and concerns below.\n\n## Weaknesses:\n\n> The paper employs the Hilbert Transform primarily because it effectively extracts phase information from signals and possesses non-parametric properties, making it particularly useful for handling nonstationary time series. However, wavelet transform offers significant advantages in processing nonstationary signals, especially in time-frequency analysis and multi-resolution feature extraction. Therefore, why is wavelet transform not utilized in this context?\n\nWe want to walk you through our design intuitions and justify our choice of using the Hilbert Transform's analytic expression to conduct a phase shift in nonstationary signals:\n\n* Wavelet transform can help in applying random phase shifts at localized temporal scales, but the choice of the mother wavelet which is application-specific heavily governs the performance of this transform. In contrast, the Hilbert transform is very simple and ensures consistent magnitude response too, making it an attractive choice across various applications for conducting phase augmentation.\n\n* As for the randomness of the phase augmentation within a signal, our preliminary analysis in Section 3.2, Figure 5, and the design explained in Section D.7.2 in the Appendix (Figure 10) using a modified version with Hilbert transform was not particularly beneficial. So, we don't find the motivation to go to extra lengths to discover a generally good wavelet to facilitate random phase augmentations through Wavelet transform.\n\n* Although, we did explore the empirical model decomposition technique where we could extract instantaneous frequency, and by combining it with the complex representation of the signal, we can achieve instantaneous amplitude and phase thus facilitating any arbitrary phase shifts too. However, our initial results were not promising as they heavily depended on the choice of the number of intrinsic mode functions based on the application. We briefly discuss this in Section B of the Appendix (lines 1073-1078).\n\nBut, we agree that a wavelet transform is an interesting tool that can be harnessed to explore other time-frequency representations instead of the STFT if we want to employ special signal processing elements for a given application, such as multirate signal analysis or localization of a particular frequency component. However, for purposes of a generic way to conduct phase-diversification through in-sample augmentation, we advocate the use of Hilbert Transform.\n\n\n> The paper highlights the importance of phase information in the classification of nonstationary time series. Could you elaborate on how phase information influences the model's learning process? What specific roles does phase information play in different application scenarios?\n\nOur intuition is that phase can serve as an approximate proxy for non-task-specific nonstationarities. We refer to Table 1, row 2, where using only phase features results in the lowest accuracy for activity recognition in the WISDM dataset. Task-specific nonstationarities are characterized through the Short-Time Fourier Transform (STFT), which ensures that information is not lost and allows the neural network to learn it if it aids in optimizing the objective. We demonstrate this intuition through our design process and show empirical evidence on 5 datasets and 11 baselines.\n\n\n\n> Image augmentation techniques, such as rotation, may significantly impact the input frequency and phase modalities, particularly when processing time series data. How can I determine the extent of these transformations to enhance performance without compromising the characteristics of the original data?\n\n\nYes, the direct application of augmentation techniques from the vision domain may not be suitable for all the time-series applications. Particularly for rotation, some past works on Human-activity recognition (HAR) [1] including a very recent work [2], suggest that it can help emulate different positions of placement of the Inertial-Measurement-Unit (IMU) which is usually the key sensor for wearable HAR. Therefore, we also explore it in the context of HHAR dataset briefly in Figure 5.\n\n\nWe do not attempt to propose a new type of time-series augmentation for general time-series representation learning; rather, we present our findings that phase anchoring through multiple stages supports domain generalization in time-series classification tasks, with augmentation being one of those stages. \n\n[1] Generalizable low-resource activity recognition with diverse and discriminative representation learning, KDD, 2023\n\n[2] UniMTS: Unified Pre-training for Motion Time Series, Neurips, 2024"
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer TvsP [2/2]"
+            },
+            "comment": {
+                "value": "Below we address your concerns and questions.\n\n## Weaknesses\n> My primary concern/question is, why changing the phase would preserve discriminative features. The implicit assumption is that the response is mainly determined by its magnitude. But without introducing how y is generated, it looks confusing to say that phase augmentation preserves discriminative features.\n\nWe do not assume that only magnitude contains discriminatory characteristics. In fact, the evidence in Table 1, where phase-only features achieve an accuracy of 0.62 in a six-class classification task\u2014significantly higher than chance accuracy\u2014supports the presence of task-discriminating attributes in the phase response. However, this accuracy is notably lower than that achieved with magnitude-only features (0.82). Our augmentation strategy, which uses the analytic signal from the Hilbert Transform, has the property of preserving the magnitude response for any arbitrary nonstationary signal. Hence, we say that phase augmentation can preserve task-relevant semantics for time series classification tasks.\n\n\n> Besides, the model assumes piecewise constant distribution in Eq. (1). Is it able to relax this assumption? It seems that many previous methods do not assume this, e.g., Diversify.\n\nA piecewise constant distribution is a reasonable assumption for approximating most real-world sensing signals. The step where this assumption manifests during implementation is the choice of window size for the STFT of the signal, which can be adjusted according to application-driven specifications.\n\nPrevious works, such as Diversify [1] and AdaRNN [2], which address domain generalization from a distributional perspective, attempt to uncover latent distributions by identifying sub-segments within a segment where distributions are constant. However, they rely on an assumption or a chosen hyperparameter regarding how many such latent distributions are present in a segment.\n\nOur approach, PhASER, is anchored in the phase response of a signal, following our intuition that it captures a dictionary of the signal's nonstationarity. By diversifying, separately encoding, and reintroducing the phase latent as a residual in a broadcasting operation, we are able to learn robust, generalizable time-series representations for classification.\n\nAnother supporting argument for our approach is that by not explicitly characterizing nonstationarity but rather diversifying its content (through phase augmentation) and compelling the model to perform the given task despite the reintroduction of nonstationarity-related features deeper in the layers (through phase-residual connections), we enhance generalization performance by minimizing the $\\epsilon$, which is influenced by the nonstationary statistics as shown in Eq. (13). This, in turn, minimizes the overall risk, $R_{\\mathcal{D}_\\mathrm{U}}$, as shown in Eq. (11).\n\n\n[1] \"Out-of-distribution representation learning for time series classification\", ICLR, 2023.\n\n[2] \"AdaRNN: Adaptive Learning and Forecasting for Time Series\", Proceedings of the 30th ACM international conference on information & knowledge management,2021.\n> Third, the theoretical part seems redundant. Its connection to the method is weak. Removing this part also makes the method self-motivated.\n\nThe theoretical justification grounds our empirical evidence with established theory, offering readers a well-rounded perspective on our method. We have intentionally structured the manuscript to make PhASER practically accessible without requiring readers to engage deeply with the theoretical foundations.\n\n\n## Questions\n\n> Have you compared your method with the Diversify method in the augmentation step?\n\nWe aim to maintain the paper's focus on Domain Generalization for Time-Series Classification, rather than shifting it toward proposing a new augmentation for general time-series learning (which is our follow-up work). Therefore, we do not conduct an extensive evaluation focused solely on augmentation but instead provide a pilot analysis with other common strategies in Section 3.2, Figure 5, to aid the reader's understanding of our method. Overall, we include Diversify as a baseline (finding it to be one of the strongest baselines across 4 out of 5 datasets) in all our evaluations."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer TvsP [1/2]"
+            },
+            "comment": {
+                "value": "We thank you for taking the time to read and provide feedback on our paper. However, we would like to clarify a few points that may have been misunderstood:\n\n1. Our paper does not focus on introducing a new type of time-series augmentation for general time-series representation learning; rather, it presents our findings that phase anchoring through multiple stages supports domain generalization in time series classification tasks, with augmentation being one of those stages.\n\n2. While we propose a simple in-sample, non-parametric augmentation using the Hilbert Transform, we also introduce two other model-related designs: separate magnitude-phase feature encoding and the use of phase residuals for a broadcasting operation.\n\n2. Beyond a comprehensive evaluation across 5 datasets and against 11 baselines, we systematically demonstrate the value of each component through ablation studies. We reiterate the respective average improvements achieved by separate phase-magnitude encoding and phase residuals, as shown in Table 5 below.\n\n\n| **Residual Connection Version**                                    | **Average Improvement (%)** |\n|--------------------------------------------------------------------|-----------------------------|\n| Only Magnitude Residual (Row 3)                                   | 9%                          |\n| Only Magnitude Input with Magnitude Residual (Row 7)              | 4.5%                        |\n| Phase-Magnitude Fusion Residual (Row 4)                            | 5.5%                        |\n| No Residual Connection (Row 5)                                    | 4%                          |"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a phase augmentation method to improve the robustness of the time-series prediction. The method is based on the Hilbert Transform, which does not change the magnitude response. Therefore, it is claimed that this augmentation can diversify the dataset while preserving discriminative features. Experiments are conducted on several datasets."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The domain generalization for time-series data is interesting. The experimental results verify the effectiveness of the proposed method. The organization is clear, although some details are not introduced clearly."
+            },
+            "weaknesses": {
+                "value": "My primary concern/question is, why changing the phase would preserve discriminative features. The implicit assumption is that the response is mainly determined by its magnitude. But without introducing how y is generated, it looks confusing to say that phase augmentation preserves discriminative features. \n\nBesides, the model assumes piecewise constant distribution in Eq. (1). Is it able to relax this assumption? It seems that many previous methods do not assume this, e.g., Diversify. \n\nThird, the theoretical part seems redundant. Its connection to the method is weak. Removing this part also makes the method self-motivated."
+            },
+            "questions": {
+                "value": "Have you compared your method with the Diversify method in the augmentation step?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This article describes a data augmentation procedure to create new time series using the magnitude and phase information of the short-term Fourier transform (STFT). The authors also propose to separately encode the magnitude and phase, and specific architecture (\"phase residual feature broadcasting\") to perform downstream tasks (such as classification)."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The study of non-stationary time series is an important topic in real applications. The proposed approach is an interesting addition to the augmentation strategies that create new time series with similar dynamics."
+            },
+            "weaknesses": {
+                "value": "There are many inaccuracies in the manuscript, making it difficult to follow.\n- Many definitions and statements are not mathematically sound.\n  * Equation 1: Left-hand size is a function, and right-hand size is a random variable.\n  * Definition of HT: It should be HT(x)(t) and not HT(x(t)) unless the authors mean that HT operates on a real value.\n  * $\\mathbf{x}= \\\\{ x_0,\\dots,x_t,\\dots \\\\} \\in\\mathbb{R}$\n  * Definition of $\\mathcal{D}_{\\bar{U}}$ in Theorem 2.5\n- When doing the ADF test, the authors should provide the p-values instead of the raw statistics, which are not interpretable.\n- In Definition 2.2, is there a connection between $S_{i} $ and $\\mathcal{X}_{{S}}$?\n- The definition of non-stationarity differs from what can be found in the literature. Usually, the definition of (2nd order or weak) stationarity is given, and non-stationary time series are time series that do not satisfy this definition.\n- The authors introduce a beta divergence, which is not the usual one [1]. Furthermore, it does not satisfy the properties of a divergence. Also, Equation 9, on which the theoretical analysis relies, must be clearly stated (not all terms are defined).\n- There needs to be more clarity between the claims and what the proposed methodology can achieve.\n  * The authors claim that PHASER is designed for domain adaptation, but which proposed mechanism contributes to domain adaptation?\n  * The augmentation strategy takes a non-stationary time series and returns another non-stationary time series. None of the methodology's other components are designed for non-stationary time series. The authors should be more specific about why the whole pipeline is adapted for non-stationary time series.\n  * The feature broadcasting mechanism is described purely from an implementation standpoint. There should be a more intuitive explanation of what it does, with some evidence or relation to the literature.\n- There is extensive literature on time series classification [2]. The choice of baselines needs to be more motivated as standard methods were excluded. Also, close to half of the baselines are from non-published articles.\n- There are poorly formulated sentences which can be surprising for readers (\"the joint distributions [\u2026] are similar but distinct.\", \"diversify non-stationarity,\" \"DFT is applicable for signals that are stationary and periodic.\"\n\n\n[1] Hennequin, R., David, B., & Badeau, R. (2011). Beta-divergence as a subclass of Bregman divergence.\u00a0IEEE Signal Processing Letters,\u00a018(2).\n\n[2] Ruiz, A. P., Flynn, M., Large, J., Middlehurst, M., & Bagnall, A. (2021). The great multivariate time series classification bake off: a review and experimental evaluation of recent algorithmic advances.\u00a0Data Mining and Knowledge Discovery,\u00a035(2)."
+            },
+            "questions": {
+                "value": "See my comments in the section above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a new network for nonstationary time series classification with domain generalization capabilities. The new network is based on a separate processing of the phase of the signal, which is extracted using the HT and employed in parallel to the processing of the magnitude of the signal. The advantages of the approach are demonstrated through experiments on several benchmarks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- To the best of my knowledge, incorporating phase information in this manner for the purpose of time-series classification is new.\n- The empirical evaluation is extensive, showing improvements over other methods across several benchmarks from different application domains."
+            },
+            "weaknesses": {
+                "value": "- The proposed approach, which adds phase information using the HT that in turn is processed in parallel with the signal's magnitude, is relatively simple. On its own, this may not be sufficient to justify publication in ICLR.\n- The theoretical justification in Section 2.5 is unclear, and Theorem 2.6, in particular, is unconvincing. Numerous features of a signal, other than the phase, could exhibit changes in \"nonstationary statistics\u201d. Additionally, the term \"nonstationary statistics\" is used frequently throughout the paper but is not clearly defined."
+            },
+            "questions": {
+                "value": "- I would like to ask the authors to clarify the meaning of their theoretical results, specifically a clearer explanation of Theorem 2.6 and a formal definition of \"nonstationary statistics\u201d."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents the PhASER (Phase-Augmented Separate Encoding and Residual) framework, designed to enhance domain-generalizable classification for nonstationary time series data. Recognizing the challenges posed by varying statistical and spectral properties in real-world applications, the authors propose a novel approach that leverages Hilbert Transform for phase augmentation, allowing for diversification of nonstationarity while preserving the discriminative semantics of the data. The framework consists of three key components: (1) phase augmentation through Hilbert Transform, (2) separate encoding of time-varying magnitude and phase responses, and (3) a broadcasting mechanism that incorporates phase information via residual connections to promote domain-invariant learning. Extensive evaluations across five datasets, including sleep-stage classification and human activity recognition, demonstrate that PhASER consistently outperforms state-of-the-art methods by an average of 5% and up to 13% in certain cases. The findings suggest that the principles of PhASER can be broadly applied to improve the generalizability of existing time-series classification models, addressing the critical need for robust pattern recognition in nonstationary environments."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper presents a commendable contribution to the field, demonstrating significant strengths. I believe it has two primary advantages:\n\n1. Enhanced Generalization Across Domains: The PhASER framework effectively addresses the challenges posed by nonstationarity in time series data by leveraging phase information obtained through the Hilbert Transform. This methodology enables the model to learn domain-agnostic representations, thereby enhancing its ability to generalize across various distributions and minimizing the effects of domain shifts frequently encountered in real-world applications.\n\n2. Robust Feature Integration: By separately encoding magnitude and phase responses, PhASER improves the integration of time-frequency information. This dual encoding strategy enables the model to more effectively capture the dynamic characteristics of time series data, resulting in enhanced classification performance. Furthermore, the implementation of a residual broadcasting mechanism reinforces the model's capability to retain critical features while mitigating the impacts of nonstationarity."
+            },
+            "weaknesses": {
+                "value": "While this paper makes valuable contributions to the field, it also has some notable shortcomings.  I would like to highlight three primary concerns:\n1. The paper employs the Hilbert Transform primarily because it effectively extracts phase information from signals and possesses non-parametric properties, making it particularly useful for handling nonstationary time series.  However, wavelet transform offers significant advantages in processing nonstationary signals, especially in time-frequency analysis and multi-resolution feature extraction.  Therefore, why is wavelet transform not utilized in this context?\n2. The paper highlights the importance of phase information in the classification of nonstationary time series.  Could you elaborate on how phase information influences the model's learning process?  What specific roles does phase information play in different application scenarios?\n3. Image augmentation techniques, such as rotation, may significantly impact the input frequency and phase modalities, particularly when processing time series data.  How can I determine the extent of these transformations to enhance performance without compromising the characteristics of the original data?"
+            },
+            "questions": {
+                "value": "The authors present their ideas with remarkable clarity; however, I have one question: Could the authors provide a more detailed explanation of the benefits of the Phase-driven Residual Broadcasting method employed in this study, particularly in comparison to other multimodal fusion approaches? What specific advantages does it offer in this context?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a framework for the classification of non-stationary time series based on the frequency domain. The framework consists of three steps. First, the data is augmented using the Hilbert transform. Second, a feature extraction step follows, where the magnitude and phase representation of the input data are calculated based on the STFT. Finally, a neural network is used for further feature extraction and the final classification. \nThe key contributions of the paper are the introduction of the \"PhASER\" framework and extensive empirical experiments, including an ablation study."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The combination of Hilbert transform for data augmentation, STFT for feature extraction and the proposed neural network for classification seem unique in the literature.\n- Classification of non-stationary time series is a highly relevant task. The results seem promising. \n- The empirical evaluation is extensive and the ablation study sheds light onto the importance of each step of the framework."
+            },
+            "weaknesses": {
+                "value": "- The mathematical formulations are not precise; the basic definitions seem flawed.\n- No theoretical guarantees of expected accuracy, true positive/negative rate etc. are provided.\n- The baseline models used are not really suitable: The baseline methods are domain generalization algorithms for non-time-series-data, and the used time series models were proposed for other tasks than classification. Strong state-of-the-art classification models for time series are missing.\n- Literature on non-stationary time series is abundant (also for classification). In this context, especially the generalization of stationary time series to local stationarity seems important. Further, classification methods from \"functional data analysis\" are relevant as well.\n- The ablation study seems to suggest that using only the Hilbert transform (and omitting steps 2 and 3) yield similar results. Yet, all the differences seem minimal and could be due to randomness. No quantiles, standard deviation, or similar are reported, so it remains open how useful the steps really are."
+            },
+            "questions": {
+                "value": "- Def. 2.1: What does the notation $Pr_{x\\sim\\mathcal{D}_x}(x)(t)$ mean?  The RHS of equation (1) looks like the common location-scale model. The LHS is a probability (in \\[0, 1\\]), are the values of the RHS expected to be in \\[0, 1\\] as well? What does this mean for $\\mu_t, \\sigma_t$ and $z$?\n- Def. 2.1 excludes stationary time series. How well is the proposed method expected to work if the time series is indeed stationary?\n- Def. 2.2: \n\t- What are $\\mathcal{X}_S$ and $\\mathcal{Y}_S$? \n\t- Are the samples independent? \n\t- How is determined from which source domain(s) $\\mathcal{S}_j$ a sample $(x_i, y_i)$ is drawn from? \n\t- What is defined in \"Definition 2.2\"? \n\t- Eq. (2) suggests that each observation $(x_i, y_i)$ comes from a single source, how is $Pr(X_S, Y_S)$ related to $Pr(X_{S_i}, Y_{S_i})$?\n\t- $D_U$ might denote \"any potential unseen target domain\". Is it fixed, so the optimization is well-defined, or could it be vary? \n\t- The composition $F\\circ g$ is interpreted as $g(F(x))$, which is not standard (usually: $(F\\circ g) (x)=F(g(x))$) \n- L108: \"Note that the joint distributions of different source domains are similar but distinct\" -> In which sense are they similar?\n- L180: What is the explicit effect of the phase shift on the distribution? Of course the data looks different, but what about its distribution? (partially answered with Thm. 2.6)\n- L186: Why can we assume that the time series $x$ is characterized by a deterministic function? This seems counterintuitive considering that time series are usually modeled as random\n- L200: So essentially, for each time series $x(t)$, we get a second (phase-shifted) time series $\\hat{x}(t)$?\n- L225: What is the distribution of $p_i$? How can it be uniformly distributed on the non-negative integers (and not a finite subset)? Why should the window length $W_i$ be random at all?\n- What is the overall intuition of the \"magnitue-phase separate encoding\"? Why is it assumed to work better than using the signal in the time domain (or the original signal concatenated with its phase shifted version)?\n- Def. 2.3: What does it mean for a domain to be built on an input variable?\n- Theorem 2.5: How is the risk defined?\n- L343: How is it good that the distribution is changed? Is the distribution of the Hilbert-transformed output similar to the original data from some domain? If not, it seems counterintuitive that by adding \"different data\", the classification tasks should be simplified.\n- Baseline Methods: Why are no strong baseline methods for time series classification used?\n- The only reported metric is the accuracy. Are the datasets balanced, so the accuracy is a reasonable choice? \n- Why is the \"Related Work\" section at the end of the paper? This seems to be non-standard.\n- L508: \"Our study is the first to rigorously address the impact of non-stationarity on time-series out-of-distribution classification\" -> This is the first time that OOD classification is mentioned in the paper, how is this addressed?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

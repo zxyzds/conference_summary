@@ -1,0 +1,200 @@
+{
+    "id": "gzxDjnvBDa",
+    "title": "Rethinking the role of frames for SE(3)-invariant crystal structure modeling",
+    "abstract": "Crystal structure modeling using geometric graph neural networks is important in various machine learning applications in materials science. In these applications, capturing SE(3)-invariant geometric features in crystal structures is a fundamental requirement for these networks. One approach is to model with orientation-standardized structures through structure-aligned coordinate systems called `frames.' However, unlike molecules, determining frames for crystal structures is not trivial due to their infinite and highly symmetric nature. In the search for effective frames for crystals, we point out that existing work assumes a statically fixed frame for each structure based solely on its structural information, regardless of the task under consideration. Here, we rethink the role of frames, *questioning whether such simplistic alignment with the structure is sufficient*, and propose the concept of *dynamic frames*. While accommodating the infinite and symmetric nature of crystals, these frames give each atom its own dynamic view of the structure, focusing only on those atoms actively interacting with it. We demonstrate this concept by utilizing the attention mechanism in a recent transformer-based crystal encoder, developing a new encoder architecture called  CrystalFramer. Extensive comparisons with conventional frames and crystal encoders show the superior performance of the proposed method in various crystal property prediction tasks.",
+    "keywords": [
+        "Materials Science",
+        "Invariant Networks",
+        "Transformer",
+        "Physics-Informed ML"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "Propose dynamic atom-wise frames aligned with interatomic interactions on the structure rather than with the structure itself.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=gzxDjnvBDa",
+    "pdf_link": "https://openreview.net/pdf?id=gzxDjnvBDa",
+    "comments": [
+        {
+            "title": {
+                "value": "Responses to Reviewer bzKy"
+            },
+            "comment": {
+                "value": "Dear Reviewer bzKy,\n\nThank you very much for recognizing the value of our work and providing constructive feedback. Below, we respond to your comments on the application for equivariant property prediction.\n\n---\n## Equivariant prediction\n> Previous relevant frame-based method ComFormer also provides equivariant version. I am wondering if this method can also be easily extended to SE(3)-equivariant? There\u2019re are many other equivariant properties for the materials such as force or high-order tensors. I would like to see the performance of equivariant version of this method if the extension is straightforward. Even for the invariant properties, it\u2019s interesting to know whether equivariant network can help invariant properties prediction.\n\nWe agree that extending our work for equivariant property prediction, such as force prediction, would be both interesting and valuable. In the \u201cEquivariant prediction\u201d of Sec 6, we discuss two possible approaches for this extension. One uses inverse projections, $F_i^{-1}$, similar to the original FA (Puny et al., 2022). The other uses relative position vectors to tie output vectors/tensors to the input structure, as $o_i = \\sum_j \\sum_n w_{ij(n)}(p_{j(n)} \u2212 p_i)$, similar to Graphormer3D (Shi et al., 2023).\n\nHowever, thoroughly evaluating these extensions on several equivariant tasks would require extensive experimentation, combining {tasks} x {existing frames + proposed frames} x {inversion vs. relative position approaches}, resulting in a large number of additional experiments. Given our current time and computational constraints, we believe these investigations would be best suited as a separate study or as an extended work for a journal submission.\n\n> Previous relevant frame-based method ComFormer also provides equivariant version.\n\nWe would like to clarify that the work of ComFormer (Yan et al., 2024) focuses only on invariant property prediction tasks, as our work does. Although eComFormer leverages equivariant features internally within \u201cequivariant updating layers\u201d, the outputs of these layers, as well as the final output, are invariant. In fact, its extension for equivariant tensor prediction has recently appeared as a separate study (https://openreview.net/forum?id=0k7pbSxNOG). This example suggests that tackling both invariant and equivariant tasks with crystal structures is challenging for a single study, especially given the recent demand for extensive evaluations and the complexity of equivariant tasks and crystal-structure modeling.\n\nWe thank Reviewer bzKy once again for the insightful and constructive comments, which highlight the potential applications of dynamic frames and point to valuable directions for future research.\n\nSincerely,  \nThe Authors"
+            }
+        },
+        {
+            "title": {
+                "value": "Point-by-point responses to Reviewer dkNi (2/2)"
+            },
+            "comment": {
+                "value": "## Technical clarification\n\n### Intuitive understanding\n> \u2026 I find it hard to get an intuitive understanding of what the angles between the learned frames and direction vectors could learn or why they could represent useful features. \n\nThank you for raising this concern. A dynamic frame is a local coordinate system centered on each atom and aligned with its surrounding dynamic environment. Intuitively, the first and second axes (i.e., e1 and e2) of this dynamic frame point toward the primary and secondary directions of interatomic influence around the central atom, while the third axis is automatically determined as e3 = e1 x e2. **The angles between these frame axes and the direction vectors show how the interacting atom j(n) deviates in angle from these influential directions.**\n\nIn Section 6, we provide a visual analysis illustrating how angle information can serve as useful features. Specifically, we hypothesize that these frame angles capture distortions in distinctive local structures, such as octahedra and tetrahedra, which frequently appear in crystal structures.\n\nWe will revise our paper to improve the intuitive understanding of this method.\n\n---\n### Relationship to stochastic FA\n> Line 234: \"This perturbation scheme is considered to implement the stochastic FA\" I am not sure what this sentence means\n\nThank you for pointing this out. Stochastic frame averaging (stochastic FA) is a technique detailed in lines 155\u2013158 of Section 2.3. The original frame averaging (FA) method calculates the average of the values of a target function across all possible frames, as shown in Eq. 4. However, this approach increases computational complexity linearly with the number of frames. Stochastic FA addresses this issue by randomly selecting one frame from the possible set, thereby reducing computational load. This random selection during training lets the network learn invariance to variations in frame selection and approximately achieves SE(3) invariance.\n\nIn our specific case, when multiple atoms have the same weight, the max frame can select either atom to define a frame axis. This results in multiple possible frame constructions. **Adding small noise to weights forces the choice of a specific frame among these possibilities, making this approach equivalent to stochastic FA.**\n\nWe will clarify in an upcoming revision that stochastic FA refers to this technique, as outlined in Section 2.3.\n\n---\n## Questions\n> In the runtime comparison, Table 4: How can PotNet take only 43s/epoch to train but 313ms for inference, while CrystalFramer takes almost double the time to train with 74s but is nearly ten times faster during inference? Can you explain this large discrepancy?\n\nThank you for your question. As noted in Table 4, the per-material test time includes data preprocessing, such as graph construction, whereas this preprocessing time is excluded from the per-epoch training time. In the case of PotNet, edge features based on interatomic potentials are calculated as part of the graph construction stage, which slows down inference speed. In contrast, CrystalFramer requires less computationally intensive preprocessing, allowing for faster inference.\n\n---\n> In line 298: The model uses the cosine of the angles. This would map pi/2 and -pi/2 to the same value 0. Have you considered using a concatenation of both sine and cosine of the angles as features? It might make the model more expressive.\n\nThank you for this suggestion. We currently use a cosine-based angle representation, following prior work like iComFormer. This approach is intended to capture the absolute deviation from the frame axes, which represent influential directions of interactions. However, we agree that concatenating sine and cosine could potentially enhance the model's expressive power, and we consider this an interesting idea to explore in future work.\n\n---\n---\nFinally, we would like to thank Reviewer dkNi once again for these valuable comments. We will reflect these comments in the revised manuscript. We believe that our responses above address all of Reviewer dkNi's concerns and contribute to further strengthening our work.\n\nSincerely,  \nThe Authors"
+            }
+        },
+        {
+            "title": {
+                "value": "Point-by-point responses to Reviewer dkNi (1/2)"
+            },
+            "comment": {
+                "value": "Dear Reviewer dkNi,\n\nThank you very much for providing us with valuable feedback. We appreciate the detailed comments, and we understand that Reviewer dkNi\u2019s primary concerns are related to the clarity and writing of our paper. Below, we have provided point-by-point responses to each of your comments.\n\n---\n## Regarding paper writing\n> The biggest weakness of this paper is, in my opinion, the writing. Many sentences are grammatically incorrect or use strangely constructed, overly long sentences. This makes it much harder to read the paper than it should be. A non-exhaustive list of examples:\n> - Line 121: \"... are linear projects of current state x, \u03c3i is a tail-length variable of Gaussian distance-decay attention adaptively derived from xi, \u03c8ij(n) is geometric position embedding that encodes interatomic\". This misses several articles, and I assume the authors mean \"projections\" not \"projects\"\n> - Line 198: \"... and local view of entire crystal ...\" misses the article \"the\"\n\n### Omission of articles\nThank you for your comments regarding article usage (i.e., \"a,\" \"an,\" and \"the\"). We intentionally omit articles for mathematical objects (e.g., $x$) and nouns directly preceding mathematical objects (e.g., entire crystal structure $\\hat{P}$). In previous feedback from a professional paper editing service, we were advised to follow these specific article usage styles:\n- Function $f$ is continuous.\n- The function, $f$, is continuous.\n- $f$ is continuous.\n\nFollowing these styles, we believe that when \"function $f$\" acts like a proper noun, omitting an article (a or the) is acceptable. This style is also supported in public discussions, such as this reference: https://english.stackexchange.com/questions/244182/definite-article-in-maths-the-function-f\n\nThus, we consider the omission of articles here to be a stylistic choice, reflecting the authors' writing style. However, if Reviewer dkNi (or other reviewers) still find this approach problematic, we are willing to revise the manuscript accordingly.\n\n---\n### Overall presentation\n\n> I strongly recommend that the authors use a grammar tool like Grammarly or an LLM to help streamline their writing.\n\nThank you for this suggestion. We note that **the other three reviewers rated the presentation as  \"excellent\" (4) and \"good\" (3) with positive comments, such as \u201cpresented with commendable clarity\u201d (Reviewer AkN2) and \u201cThe paper is well written\u201d (Reviewer SjyW). Based on this feedback, we believe our writing is generally clear and unlikely to be a reason for rejection.** \n\nHowever, we fully agree that clarity is essential for reaching a broad audience. We will continue to improve our manuscript by carefully reviewing each sentence, fixing typos (including \"projects\"\u2192\"projections\"), simplifying complex constructions where possible, and using AI tools to enhance readability and precision.\n\n----\nCONTINUE"
+            }
+        },
+        {
+            "title": {
+                "value": "The authors are preparing point-by-point responses to each reviewer"
+            },
+            "comment": {
+                "value": "Dear Reviewers and Meta-Reviewers, \n\nWe sincerely appreciate the time and effort you have put into reviewing our work. We are pleased to receive the positive feedback, including \"excellent\" ratings for both presentation and contribution. We are confident that the remaining concerns raised by Reviewers AkN2 and dkNi will be addressed in our forthcoming responses, which we are currently preparing. \n\nWe will provide point-by-point responses to each Reviewer within a few days.\nThank you again for your valuable feedback and commitment.\n\nSincerely,  \nThe Authors"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors change the fixed, static frames for SE(3)-invariant modeling in crystal structures into dynamic frames that adapt to each atom's local environment through the network's attention mechanism, then integrate into a new architecture **CrystalFramer**. Experimental results on large-scale datasets (JARVIS, MP, OQMD) demonstrate that **CrystalFramer** with dynamic frames outperforms models using static frames in several material property prediction tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed method is straightforward and presented with commendable clarity.\n2. The shift from static to dynamic frames enables atom-specific adjustments, significantly enhancing SE(3) invariance handling in highly symmetric crystal structures. Furthermore, the extensive evaluations on multiple datasets (JARVIS, MP, OQMD) highlight the effectiveness of dynamic frames, with the \"max frames\" variation demonstrating particular superiority."
+            },
+            "weaknesses": {
+                "value": "### Major\nHow do the \"max frame\" construction and its usage within the networks differ from those proposed in [1], [2], [3], and [4]? In particular, [1] and [4] use similar atomic local frames to address equivariance in molecular structures. A comparative discussion of these methods would be valuable to clarify whether the proposed approach is a direct adaptation from molecular modeling to materials or if there are novel insights beyond those methods.\n\n### Minor\nUsing frame-based techniques will hinder the model's continuity, potentially affecting its generalization capabilities, as noted in [5]. Does the proposed model address this limitation? It will be valuable to discuss the continuity of the proposed dynamic frame approach and empirically analyze if this affects generalization in the experiments.\n\n\n\n[1] \"SE (3) equivariant graph neural networks with complete local frames.\" Du, et al.\n\n[2] \"Smooth, exact rotational symmetrization for deep learning on point clouds.\" Pozdnyakov, Sergey, and Michele Ceriotti. \n\n[3] \"Equivariance via Minimal Frame Averaging for More Symmetries and Efficiency.\" Lin, et al. \n\n[4] \"A new perspective on building efficient and expressive 3D equivariant graph neural networks.\" Du, et al. \n\n[5] \"Equivariant frames and the impossibility of continuous canonicalization.\" Dym, Nadav, Hannah Lawrence, and Jonathan W. Siegel."
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes CrystalFramer and dynamic frames to capture SE(3)-invariant geometric features for crystal property prediction. Unlike using static frame in previous work, this work use dynamics frames to give each atom its own dynamics view of the structure, focusing only on those atoms actively interacting with it, meanwhile also accommodating the infinite and symmetric nature of crystal structures. The experiment shows superior performance of the proposed method in several prediction tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This work proposes dynamic frames for crystal features modeling, which can dynamically accounting for the atoms actively engaged in learned interactions in each interatomic message-passing layer.\n- The proposed method achieves superior performance on several commonly used benchmarks in crystal property prediction."
+            },
+            "weaknesses": {
+                "value": "- Previous relevant frame-based method ComFormer also provides equivariant version. I am wondering if this method can also be easily extended to SE(3)-equivariant? There\u2019re are many other equivariant properties for the materials such as force or high-order tensors. I would like to see the performance of equivariant version of this method if the extension is straightforward. Even for the invariant properties, it\u2019s interesting to know whether equivariant network can help invariant properties prediction."
+            },
+            "questions": {
+                "value": "- Please refer to the weakness part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a new method for modeling crystal based on dynamic frames that are based on the local neighborhood of each atom in the crystal structure. The crystal frames are then processed by a transformer based architecture called CrystalFramer. The paper starts by motivating the utility of geometric deep learning methods that can capture relevant physical inductive biases, such as invariance. Previous work captured such geometric information using frame averaging, which is based on taking canonical frames of the entire structure. By contrast, the paper proposes dynamic frames which are based on the local coordinate system of a given atom. Section 2 then outlines relevant preliminary details with relevant mathematical definitions, including the description of a crystal structure, how transformers have been applied to crystal structure modeling and prior work on frame averaging for molecular and materials modeling.  \n\nSection 3 introduces and defines the concept of dynamic frames, which is the main part of the proposed new method. This includes the frame definitions in Section 3.1 and the CrystalFramer architecture in Section 3.2 that is based on Gaussian basis functions. This is followed by a description of related work on invariant features, frames and equivariant features in Section 4. \n\nSection 5 outlines the main experiments in the paper, including materials property prediction and an efficiency analysis . The results generally show that the proposed dynamic frames improve Crystalformer modeling performance across all datasets while achieving best performance in most cases. The efficiency analysis shows that CrystalFramer incurs an extra compute cost. Section 6 provides a visual analysis of the dynamic frames, as well as discussion on limitations along with suggestions for using dynamic frames for equivariant prediction and molecular modeling."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "* The idea of dynamic frames proposed in the paper is a novel and effective way to include relevant inductive biases for crystal structure modeling.\n* The paper is well written with relevant details described and convincing experiments followed by detailed analysis.\n* The paper candidly discusses advantages and limitations of the proposed method."
+            },
+            "weaknesses": {
+                "value": "* The paper could be further with additional discussion of related work for machine learning potentials [1 egraff]. The current focus of the study is mainly on properly modeling, so this would probably fit as potential future work. There be advantages and disadvantages of using CrystalFramer in such a context. Similarly, the paper can also discuss potential application to modeling of crystals with surfaces, such as catalyst [2 - OCP].\n* The dynamic frames provide a new dimension for analysis for how local neighborhoods interact in geometric deep learning. The paper could be strengthened by discussing the frames across different materials and/or different stages of the training process."
+            },
+            "questions": {
+                "value": "* Could you talk more about scalability of your method? This would be especially relevant when modeling larger supercell that have more atoms.\n* Did you notice an evolution of the dynamic frames as training progressed? Are there consistencies across some types of materials?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work explores an alternative, more powerful version of frame averaging networks and applies it to crystal property prediction tasks. Instead of using a fixed lattice frame or one calculated from the PCA of the moment tensor of the atoms, the authors propose to learn \"dynamic frames\" for each individual atom. They propose two methods to do this: Either by calculating the PCA from weighted atoms or constructing the frames by greedily choosing the highest weighted atoms, where the weights in both cases are equal to the attention weights in their transformer architecture. They show that this results in significant performance gains and that the model exhibits intuitive, sensible behaviour, where the earlier layers attend to closer atoms, and later layers attend to further away atoms."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Crystal property prediction is an important topic, and (stochastic) frame averaging is a promising direction for the task. Using the novel idea of dynamic frames, the proposed method improves stochastic frame averaging for crystal property prediction by a large margin. Therefore, the contribution seems significant and novel. It is believable that the proposed \"dynamic frames\" make the model more expressive, although I find it hard to get an intuitive understanding of what the angles between the learned frames and direction vectors could learn or why they could represent useful features. The experimental results show strong improvements on two datasets and against the base model (Crystalformer) and other state-of-the-art models."
+            },
+            "weaknesses": {
+                "value": "The biggest weakness of this paper is, in my opinion, the writing. Many sentences are grammatically incorrect or use strangely constructed, overly long sentences. This makes it much harder to read the paper than it should be. A non-exhaustive list of examples:\n\nLine 121: \"... are linear projects of current state x, \u03c3i is a tail-length variable\nof Gaussian distance-decay attention adaptively derived from xi, \u03c8ij(n) is geometric position\nembedding that encodes interatomic\". This misses several articles, and I assume the authors mean \"projections\" not \"projects\"\n\nLine 198: \"... and local view of entire crystal ...\" misses the article \"the\"\n\nLine 234: \"This perturbation scheme is considered to implement the stochastic FA\" I am not sure what this sentence means\n\nI strongly recommend that the authors use a grammar tool like Grammarly or an LLM to help streamline their writing."
+            },
+            "questions": {
+                "value": "In the runtime comparison, Table 4: How can PotNet take only 43s/epoch to train but 313ms for inference, while CrystalFramer takes almost double the time to train with 74s but is nearly ten times faster during inference? Can you explain this large discrepancy?\n\nIn line 298: The model uses the cosine of the angles. This would map pi/2 and -pi/2 to the same value 0. Have you considered using a concatenation of both sine and cosine of the angles as features? It might make the model more expressive."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

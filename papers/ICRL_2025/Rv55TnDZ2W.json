@@ -1,0 +1,207 @@
+{
+    "id": "Rv55TnDZ2W",
+    "title": "Editable Concept Bottleneck Models",
+    "abstract": "Concept Bottleneck Models (CBMs) have garnered much attention for their ability to elucidate the prediction process through a human-understandable concept layer. However, most previous studies focused on cases where the data, including concepts, are clean. In many scenarios, we always need to remove/insert some training data or new concepts from trained CBMs due to different reasons, such as privacy concerns, data mislabelling, spurious concepts, and concept annotation errors. Thus, the challenge of deriving efficient editable CBMs without retraining from scratch persists, particularly in large-scale applications. To address these challenges, we propose Editable Concept Bottleneck Models (ECBMs). Specifically, ECBMs support three different levels of data removal: concept-label-level, concept-level, and data-level. ECBMs enjoy mathematically rigorous closed-form approximations derived from influence functions that obviate the need for re-training. Experimental results demonstrate the efficiency and effectiveness of our ECBMs, affirming their adaptability within the realm of CBMs.",
+    "keywords": [
+        "interpretability",
+        "explainability",
+        "Concept Bottleneck Models"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Rv55TnDZ2W",
+    "pdf_link": "https://openreview.net/pdf?id=Rv55TnDZ2W",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes editable concept bottleneck models (ECBMs), that allow a CBM model to be updated efficiently without a full retraining. They consider three different types of editing: concept-level, data-level, and concept-label level, which cover practical scenarios such as data mis-labeling, spurious concepts, and concept annotation errors. \n\nUsing the idea of influence functions, they propose closed-form approximations to update the CBM parameters (both concept predictor and label predictor) under the three types of editing scenarios. They utilize the EK-FAC method to accelerate the computation of Hessian inverse and non-convex loss functions."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Being able to edit or adapt a CBM model under the scenarios described in the paper is an important practical problem, with applications in domains such as medical imaging. I like how the paper formally addresses the three scenarios of concept-level, data-level, and concept label-level editing in a theoretical way. \n\nAddressing data removal issues in a CBM, due to mis-labeling, poisoning, or privacy issues and the adoption of influence functions for this is a novel contribution. Using ECBMs to effectively edit the model\u2019s knowledge about specific samples, and the connection to membership inference attacks is interesting."
+            },
+            "weaknesses": {
+                "value": "1. Lots of issues with inconsistent and non-intuitive notation which makes it hard to follow the theory. I think it needs to be proof-read carefully and if possible use simpler notations. The loss functions should be defined so that the method can be understood better (are the loss functions convex?). In multiple places, it is not clear how the gradient and Hessian are defined with respect to a function, e.g., is $H_{\\hat{g}}$ (last line of page 4) the Hessian of the function w.r.t the parameters of $\\hat{g}$ ?\n\n1. The theorems need some explanations to convey the implications. The paper is currently like theorem after theorem and it may be hard for readers to see the connection. In general, the presentation of ideas could be improved. \n\n1. In the experiments, it is not clear what is the CBM architecture and the number of model parameters? How well does the proposed method scale to a large number of parameters, given that Hessian matrices or their approximations are involved?\n\n1. Limitations of the proposed work are not addressed."
+            },
+            "questions": {
+                "value": "1. How frequently are such editing updates expected to be made in a practical setting? After training the CBM, one may find some concept labeling errors and/or the need to remove some training samples or concepts. So applying the ECBM method once after training makes sense, but are there scenarios where the editing is done periodically? In situations where the distribution of the test data can change over time, it makes sense to adapt the CBM efficiently, instead of retraining. \n\n1. Referring to Figure 2, the F1 score decreases as more edits are made to the CBM. This could be because the experiments consider a contrived scenario where a random subset of concepts or data points are removed. In reality, if there are concept/data labeling errors or some spurious concepts, then I think the performance of the (edited) CBM is expected to improve?\n\n1. In Table 1, all the values corresponding to the ECBM method are bold-faced. It is more useful to highlight the best (and perhaps second-best) performing methods.\n\n1. Lines 455\u2013456: note the errors or typos in the values. On line 517, it says the top 1010 most influential concepts. I think it should be top 10."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a method to edit a trained concept bottleneck model without retraining. They use the influence function to estimate the parameters of the edited model in three scenarios: (1) removing concept labels for some samples; (2) removing some concepts for all samples; and (3) removing some data points."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper addresses an interesting problem by proposing a post-hoc approach to edit concept bottleneck models, providing a effective solution. Additionally, the authors extensively examine three different editing scenarios concerning different kinds of noises in training data."
+            },
+            "weaknesses": {
+                "value": "- The related work section could be expanded. Other existing methods for model editing without retraining (if available) should be discussed.\n- The experiments do not fully support the claims made in earlier sections. They claimed that the motivation for editing a model is to remove the impacts of erroneous labels, spurious concepts, and incorrect concept annotations. However, the experiment design demonstrates none of these situations, but only randomly removing concepts, concept labels, or data points. The authors might consider intentionally introducing some noise (at different levels) to their training data, and then use their model editing strategy to remove their impacts and see if the model\u2019s performance/interpretability benefits from their methods.\n- The presentation needs further improvement. There are several inconsistent notations in the paper. Some terms are used before they are defined.  Some equations are numbered but some are not. See more details in the Questions section. Some important proof/deviations are in the appendix, but not referenced appropriately in the main text (e.g., Appendix A)."
+            },
+            "questions": {
+                "value": "- I am curious if the edited model should have similar model parameters to the retrained model, as in principle both remove the impact of certain concepts/labels/samples in different ways.  \n- Why does ECBM outperform CBM-IF in terms of F1 scores? Although the authors explained that Hessian matrices might be ill-defined, ill-conditioned, or singular, how is the inversion conducted exactly in these cases?\n- In Figure 5, it looks like neither the ECBM nor the Retrain model generates reasonable explanations. For example, I can not see orange upperparts or legs in either figure. Moreover,  the explanations are exactly the same for the two very different figures. Is it a bug or feature?\n- As shown in equations (1) and (2), the authors seem to focus on CBM models where the concept predictor and the label predator are trained separately. What about CBM models where these two predictors are trained jointly?\n- In equation (1) and (2), what is L_{C_j} and L_{Y_i}?\n- In Lines 65-67, what is the difference between l and capital L?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The submission proposes to apply ideas of influence functions to edit concept bottleneck models (CBMs) at three different levels: concept label level (i.e., changing the ground-truth annotation of a concept), concept level (i.e., removing a concept completely), and data level (i.e., removing a sample from the training set). The proposed edits can be computed efficiently and they can account for the non-convexity of the optimization problem by means of the  Eigenvalue-corrected Kronecker-Factored Approximate Curvature (EK-FAC) method.\n\nExperiments are performed on three datasets to showcase the flexibility and effectiveness of the proposed editing methods. Results show that Editable Concept Bottleneck Models (ECBMs) can retain classification performance while being significantly cheaper than retraining the full CBM from scratch."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Efficient and fast editing of CBMs is an interesting problem that is valuable to the research community.\n\nAlthough influence functions are well-studied, the submission proposes novel methods to apply these ideas within the context of CBMs, which is a substantial contribution.\n\nExperimental evidence in support of the proposed methods is convincing. In particular, I found the experiment on membership attacks compelling and clear."
+            },
+            "weaknesses": {
+                "value": "The main limitation of the submission, in its current form, is presentation. I believe this limitation to be major, and a significant rewriting of the submission is needed to meet the standards of scientific writing. \n\nThere are several incomplete and unclear sentences, and hand-wavy claims throughout the main body of the submission. This makes it hard for a reader to follow the text and appreciate the contribution, which I believe to be interesting and valuable.\n\nI will expand on these points below, and I am looking forward to discussing with the authors to clarify my questions!"
+            },
+            "questions": {
+                "value": "**General questions and comments**\n\n- lines 145-146: please reword \"usually, here the map $f$ is linear\" because it is a misleading claim. For CBMs, the predictor $f$ **has** to be linear, otherwise the predictions of the model would not be interpretable by construction. Using a nonlinear $f$ on top of the concepts does not lead to interpretable results.\n\n- notation of loss functions throughout the paper: could the authors clarify why the losses change notation throughout the paper, and with what rationale? For example, in Eq. (1), $L_C$ becomes $L_{C_j}$. In Eq. (2), $L_Y$ becomes $L_{Y_i}$. In appendix D, the loss then becomes $L_{Y_l}$, and later $L_{Y_{ir}}$. Does this mean that each concept is trained with a different loss? Furthermore, it is never stated which losses are used in practice.\n\n- lines 170-172: the derivative should be of $\\hat{\\theta}_{\\epsilon,-z_m}$, not $\\hat{\\theta}$ as it does not depend on $\\epsilon$.\n\n- difference with test-time intervention. I do not think I understand the message of this paragraph. An example is provided where the trained CBM wrongly **predicts** a concept $c$. Then, a user corrects the predictor to observe what the model would have predicted had it correctly classified the concept. But the focus of the submission is to edit an existing CBM with respects to errors/changes in the **training set**. Also, the predictor $f$ is linear, so it suffices to look at the weights of the learned predictor to know how changing the predicted concept would affect the downstream prediction. I do not understand what \"secondary editing based on the test data\" means, as it seems to boil down to training the model on more samples observed at test time. I also do not understand what \"This process extends the rectification from the data level to the model level\" means.\n\n- lines 246-249: \"This is because the ...\" this sentence is very confusing. It is intuitive that gradients cannot change the number of parameters of a network.\n\n- line 254: \"by inserting a zero-row vector into the $r$-th row of the matrix in the final layer of\". This sentence makes several implicit assumptions about the structure of the encoder $g$. They are reasonable, but they should be stated clearly in order not to confuse readers.\n\n- line 264: I do not understand why \"the value of 00\" is written several times instead of simply 0. Also, what is \"MM\"?\n\n- theorem 4.3: I do not understand where the mapping phase plays a role in this statement. The gradient is taken with respects to the original predictor $\\hat{g}$. The loss is computed only on the concepts not in $M$. And we are assuming each concept is predicted independently, so why would the weights in the last matrix of $g$ that correspond to the deleted concepts change? Wouldn't the gradients be 0 by definition? Then, the final predictor $\\hat{g}^*_{-p_M}$ is obtained by simply removing those weights. How is this different from removing the weights to begin with from $\\hat{g}$, and the editing the remaining network?\n\n- lemma 4.4: the sentence \"if the label ... . For $r \\in M$ ...\" is not grammatical. It is unclear whether the statement of the Lemma applies **to one concept $r \\in M$** or **for all concepts in $M$**. Also, I could not find the proof of this Lemma in the Appendix. Does the statement of the Lemma hold for any loss $L_Y$? Or are there any assumptions being made here. The way I interpret the Lemma is that padding with 0 does not change the solution of the problem in the remaining entries, and I am wondering whether there might be losses where this would not be true.\n\n- general question about two-phase approach. If I understand correctly, the need to use a two-step editing approach is due to the fact that $f$ depends on the output of $g$, and that the optimization process is over two losses: $L_C$ that only involves $g$, and $L_Y$ that involves both. I agree that in the general setting, writing out the full influence function might be hard. But $f$ will always be a linear function of the output of $g$, so wouldn't it be possible to write out the influence function for the end-to-end task, at least in the data level setting? Could the authors expand on what limitations they encountered that informed the use of a two-step approach?\n\n- evaluation metric: could the authors expand on what f1 score they are computing? Is this the average 1-vs-all classification f1 score computed on each class in the dataset? Could the authors expand on the choice of using this metric instead of classification accuracy?\n\n- implementation details: \"at the concept-label level ...\". Am I understanding correctly that, in this experiment, ground-truth labels are randomly flipped to noisy labels? This process introduces more noise rather than \"correcting\" any existing noise, right? I was somewhat surprised to see that this process does not seem to affect the overall F1 score significantly, neither from Table 1 not Figure 2, where the drop in performance is less than 1%. Maybe a more compelling experiment could be to noise the ground-truth annotations to a level where performance degrades significantly, and see what percentage of labels need to be restored for ECBM to obtain a predictor that is close to the one trained on the full dataset without noisy labels. This would reflect the motivating example mentioned in the main text.\n\n- table 1: bolding the ECBM line by default is misleading because the \"Retrain\" method always provides a higher F1 score. The runtime for the \"Retrain\" method is in the order of seconds, which is quite small. Am I understanding correctly that the \"Retrain\" method also retrains the CNN backbone as in Koh et al. (2020)? Or is this just retraining the linear layer $f$? Could the authors expand on the data splits/optimizers/hyperparameters/number of epochs used in the experiments to guarantee reproducibility of the results?\n\n- line 451: \"We first select 1-10 most influential and 1-10 least influential\" is not grammatical, please rephrase.\n\n- Visualization: it is stated that \"ECBM can accurately recognize 9 with their correct concept labels\", but Fig. 5 does not seem to report ground-truth annotations, only predictions? Could the authors clearly state in Fig. 5 what the 1/0 column represents? I would rephrase claims that state \"correctly identify\" because there is no ground-truth notion of what should or should not be used to classify a bird. Figure 5 does support the claim that ECBM retrieves the same concepts as the Retrain method, which may or may not be correct.\n\n- Limitations: conclusions should include a discussion of the limitations of the proposed method, and future research directions.\n\n**Writing comments**\n\n- all equations should be numbered.\n- proofs should be explicitly referenced after theorems.\n- lines 35-36: \".. for placing human-understandable concepts. In the prediction process ...\". This sentence is not grammatical.\n- line 80: it is unclear what erroneous or poisoned data mean.\n- line 82: it is not clear what \"the learning models\" means.\n- line 94: the sentence \"and the concept for all data on model parameters\" is incomplete and should be rephrased.\n- lines 96-97: it is unclear what \"due to their composite structure, i.e. the intermediate representation layer\" means. All neural networks have intermediate representation layers, why is this a specific limitation about CBMs?\n- line 128: the sentence \"CBMs work on the image field also includes\" is incomplete and should be rephrased.\n- line 131-132: \"thereby deciphering the interaction of concept models and providing an adaptive solution to concept editing\" is a confusing sentence. What does it mean to decipher an interaction?\n- line 161: \"thus capturing the essence of the original CBMs\" should be rephrased. What does it mean to capture the essence of a model? Eqs. (1) and (2) are the standard definition of a CBM, what is the \"original CBM\" being referred to here?\n- line 189: \"for certain concepts, we may opt to\" is incomplete. These two sentences should be linked by a connector.\n- line 193: \"estimating the changes in the parameters of the retraining model holds significance\" is not grammatical and should be rephrased.\n- line 197-198: \"the retrained concept predictor label predictor\" is not grammatical and should be rephrased.\n- line 208-209: \"a two-stage edition approach\", typo in \"edition\" -> \"editing\".\n- line 256: typo in \"is the subset of is the subset of $T$\".\n- line 311: the sentence \"... due to different reasons, such as the training data involving poisoned or erroneous issues\" is not grammatical.\n- line 312: $G$ is overloaded, it was already used to define the Fisher information matrix.\n- line 328: I do not understand the sentence \"with the original loss before unlearning in equation 2\".\n- line 424: \"we conducted experiments ... removed.\" is unclear and should be rephrased.\n- line 455-456: typos in \"11-1010\", \"0.0250.025\".\n- line 493: There is no need to report results with 6 decimals.\n- line 517: \"1010\" is a typo.\n- line 1248: \"We can see that there is a *huge gap* between $\\hat{f}_{-z_G}$ and $\\hat{f}$\". Could the authors clarify in what sense they are characterizing the gap between the two functions as *huge*?\n\n**Minor comments**\n\n- abstract: \"elucidate the prediction process\". It is unclear what prediction process this sentence is referring to.\n- abstract: \"affirming their adaptability within the realm of CBMs\" this sentence sounds very unnatural and should be rephrased.\n- line 27: \"large multimodal models\" (include \"models\").\n- line 323: typo in \"loss function **with** respect to\"."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a framework to acquire adaptively edited concept bottleneck models (CBMs), without actually retraining the model. \nThe authors propose using influence functions to approximate the effects of three types of edits: concept-label-level, concept-level, and data-level. These edits address real-world challenges such as correcting erroneous concept annotations, adding/removing concepts, or removing problematic data due to privacy or errors.\nUnder each setting, they provide the closed-form approximation to measure the influence of each entity--a set of data sample's \u0000different concept labels, several concepts, and several samples--based on the influence function. \nThe experimental results support the effectiveness and the interpretability of their method--matching the performance of retraining-based correction while reducing the computation overhead."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The paper introduces a novel application of influence functions to CBMs, focusing on the editability of models without full retraining. This is a significant contribution in the context of real-world applications where models need frequent updates due to evolving data or concepts.\n\n* The mathematical formulation is rigorous and well-supported by experiments. The use of influence functions for efficient model editing is a novel approach, and the paper provides detailed derivations and approximations for each editing scenario (concept-label, concept, and data-level).\n\n* The presentation of a handful of real-world interpretability results of their approach is appealing and easy to understand."
+            },
+            "weaknesses": {
+                "value": "* Scailability: Although the authors include a relatively larger-scaled dataset (e.g., CelebA) to their evaluation, the experiments still focus on relatively small datasets compared to large-scale models like Vision-Language Models (VLMs). It remains unclear how well ECBMs would scale to larger datasets or more complex CBM architectures.\nParticularly, it is critical to discuss and run analysis on the scalability of the approach, in terms of the number of parameters in a model, as it could be a key limitation of applying ECBM to real-world large-scale applications; given the need for computationally expensive Hessian computations, or of heavy linear algebra operations for the EK-FAC approximation, or of the complexity of the EK-FAC variants."
+            },
+            "questions": {
+                "value": "* Could you provide more details on how runtime efficiency scales with larger datasets or models? While your experiments show improvements over retraining on smaller datasets, it would be helpful to understand how ECBM performs with larger models like Vision-Language Models.\n\n* You identify influential samples or concepts using influence scores. How do these rankings compare with simpler methods like analyzing weights in a linear label predictor? What additional insights do influence functions provide?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper delineates 3 levels of editable settings which are concept-label-level, concept-level and data-level. Based on the three settings, the author proposes a concept bottleneck model (CBM) to remove the data or concept influence without retraining based on influence function. Furthermore, the author proposes Editable Concept Bottleneck Model (ECBM) and the streamlined version EK-FAC. Moreover, the author provides the mathematical proof for the three settings and the methods. The extensive experiments shows the effectiveness of the method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The notation and problem definition is clear.\n- The paper is easy to follow.\n- The effect of influence function in Section 5.3 is insightful.\n- The result visualization is clear."
+            },
+            "weaknesses": {
+                "value": "- The baseline methods are not complete. For example, there are still some methods for EBM like, probability EBM [1], etc.\n- The influence function is only suitable for convex function. I wonder how the author applies it on the non-convex function, like deep neural network.\n- The approximate equal sign is mixed with the equal sign, which is not rigorous, like in Theorem 4.7. Please correct me if I have some mis-understanding.\n\n\n[1] Kim, Eunji, et al. \"Probabilistic concept bottleneck models.\" arXiv preprint arXiv:2306.01574 (2023)."
+            },
+            "questions": {
+                "value": "- I am doubtful with the running time in Table 1. How the running time can be less 1 minute even for retraining method."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

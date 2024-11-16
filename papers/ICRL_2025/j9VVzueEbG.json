@@ -1,0 +1,169 @@
+{
+    "id": "j9VVzueEbG",
+    "title": "ZETA: Leveraging $Z$-order Curves for Efficient Top-$k$ Attention",
+    "abstract": "Over recent years, the Transformer has become a fundamental building block for sequence modeling architectures. Yet at its core is the use of self-attention, whose memory and computational cost grow quadratically with the sequence length $N$, rendering it prohibitively expensive for long sequences. A promising approach is top-$k$ attention, which selects only the $k$ most relevant tokens and achieves performance comparable to vanilla self-attention while significantly reducing space and computational demands. However, causal masks require the current query token to only attend to past tokens, preventing existing top-$k$ attention methods from efficiently searching for the most relevant tokens in parallel, thereby limiting training efficiency. In this work, we propose ZETA, leveraging Z-Order Curves for Efficient Top-k Attention, to enable parallel querying of past tokens for entire sequences. We first theoretically show that the choice of key and query dimensions involves a trade-off between the curse of dimensionality and the preservation of relative distances after projection. In light of this insight, we propose reducing the dimensionality of keys and queries in contrast to values and further leveraging Z-order curves to map low-dimensional keys and queries into one-dimensional space, which permits parallel sorting, thereby largely improving the efficiency for top-$k$ token selection. Experimental results demonstrate that ZETA~matches the performance of standard attention on synthetic tasks Associative Recall and outperforms attention and its variants on Long-Range Arena and WikiText-103 language modeling.",
+    "keywords": [
+        "Transformer",
+        "In-context learning",
+        "Long Context",
+        "long-range Transformer",
+        "Efficient Transformer"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "A novel sparse attention architecture for efficient parallel top-k attention search in one-dimensional space",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=j9VVzueEbG",
+    "pdf_link": "https://openreview.net/pdf?id=j9VVzueEbG",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces ZETA, a model leveraging Z-order curves and Adaptive Cauchy-Softmax for efficient top-k attention, specifically aimed at handling long-sequence tasks. The authors propose a novel approach to reduce dimensionality for keys and queries, preserving locality while enabling faster token retrieval through Z-order-based projections. Their experimental results demonstrate competitive or superior performance on various benchmarks, suggesting ZETA\u2019s potential as an efficient alternative for long-range attention tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Originality : The paper introduces a novel use of Z-order curves for dimensionality reduction in attention mechanisms, adding a fresh approach to efficient top-k attention.\nQuality:  Methodologically sound with theoretical insights like the Johnson\u2013Lindenstrauss Lemma for dimensionality reduction. Experimental results across benchmarks support the model\u2019s performance, though more tests could strengthen findings.\nClarity : The paper is well-organized and accessible, with clear explanations of techniques like Adaptive Cauchy-Softmax and Z-order projection, aiding reader comprehension.\nSignificance : ZETA shows potential in handling long sequences more efficiently, which could benefit applications in NLP and large-scale modeling. Further testing on diverse tasks would solidify its impact."
+            },
+            "weaknesses": {
+                "value": "bout the experiment about  d_k\u200b in Experiments:\nThe authors test a narrow range of dkd_kdk\u200b values (1, 2, 3, 8, and 32), which may not reflect real-world applications where larger dimensions are common. Why weren\u2019t higher dkd_kdk\u200b values explored? Expanding this range, particularly with larger model dimensions, could yield more generalizable insights.\n\nUnclear Transferability of \\gamma in Adaptive Cauchy-Softmax:\nThe transferability of the trainable parameter \u03b3\\gamma\u03b3 in Adaptive Cauchy-Softmax across different tasks or datasets is unclear. Could the authors offer evidence or discussion on its robustness beyond the tested contexts?\nLack of Formal Justification for Euclidean Distance Claim:\nThe claim that Euclidean distance is more effective for low-dimensional top-k methods lacks formal support. Providing a proof or theoretical justification would enhance the validity of this argument."
+            },
+            "questions": {
+                "value": "Why choose ASSOCIATIVE RECALL in section 4.2 ?\nTesting different d_k values on more Long Range Arena (LRA) tasks would provide a fuller picture of task-specific impacts on dimensionality selection. Could the authors evaluate dkd_kdk\u200b across a wider range of LRA tasks to strengthen their findings?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Paper is well written, with solid experimental work and theoretical analysis.\nAuthors introduce Efficient Parallel Top-k Attention by utilising Z-order Curves.  As this implies approximation, thorough experimental evaluation is performed to on several datasets including Long Range Arena, WikiText, MQAR to estimate computation efficiency vs model performance  tradeoffs. On top of this of paper investigate effects of Dimensionality Selection for Key and Query Pairs and Adaptive Cauchy-Softmax Mechanism which help to carefully select tradeoffs."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Paper address important area of computation cost (quadratic run time) of classical self-attention, which may be significant for long context. Novel Efficient Parallel Top-k Attention by utilising Z-order Curve was proposed, carefully analysed and evaluated.\nOn top of this paper this paper investigate dimensionality of keys and queries the trade-off between the curse of dimensionality\nand the preservation of relative distances for keys and queries and introduces Adaptive Cauchy-Softmax which allows dynamic adjusting of receptive fields to enhance attention\u2019s flexibility."
+            },
+            "weaknesses": {
+                "value": "- Evaluation is done on very small scale models (125M), so it could be that they won't translate to large size models.\n- While Top-K should take O(N log N) and potentially should be more computation efficient,  it is not clear how much was gained in practice.  Also providing some more details about experiments (what is number of chunks, etc) would be helpful."
+            },
+            "questions": {
+                "value": "'The insertion position of a query in the key sequence can then be found using a binary search (e.g. with torch.searchsorted), allowing us to retrieve the top-k attended tokens using a window centered on the insertion position'\nCould you please clarify this. As far as I understand to find nearest k neighbours,  inspecting several segments of Z-order curve should be necessary or some false positives would be included?\n\n\nCould you please share computation efficiency measurements (for example average training step time) for baseline transformer and ZETA?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors study an important and timely problem of addressing the quadratic complexity of dot-product attention in Transformers and propose leveraging sparsity by attending to only k most similar keys.\n\nThe authors aim to preserve query-key distances ||query_i - key_j|| after projecting queries and keys to a single scalar. To do so, they first reduce the dimension via a random projection per the Johnson-Lindenstrauss lemma.\n\nKNN in d-dim is further reduced to sorting in 1D via the following trick: Let q and k be d-dim vectors. Let the binary representation of the i'th element q[i] be (q_i_31,...q_i_0). Then we can represent q as a number N(q) having a large binary representation (q_0_31,...,q_d-1_31,...q_0_0,...,q_d-1_0). Then |N(q)-N(k)| is likely to preserve the ordering of ||q-k|| as distances are more influenced by more significant bits of each element. This is not always true as q_0_31,...,q_d-1_31,... imposes an ordering on the dimensions whereas ||q-k|| is symmetric. Also note that most data types are limited to 64 bits.\n\nAssuming that this does preserve the pairwise distances of queries and keys, we can sort the key scores N(k1),..,N(kL) and for each q_i use binary search to determine the most similar keys to attend to. The authors point out that for causal LM, we need to exclude future keys from being considered, and propose to use a chunking mechanism where positions are chunked and future key chunks are excluded from consideration.\n\nAs the above method is suitable for ||q-k|| and not <q,k>, the authors propose replacing dot-product attention with Cauchy attention where similarity of q and k is computed as 1 / (||q-k||^2 + gamma^2) instead of exp(<q,k> / sqrt(d)). Recent work on linear attention has shown this kernel to be performant."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The proposed method is interesting, and the trick of projecting to 1D for query-key similarity computation is intuitive.\n\n2. Significant and comprehensive theoretical justification is provided for dimensionality reduction via random projection and is well-supported via detailed proofs.\n\n3. The authors show that this method works well on the multi-query associative recall task that has been used to justify the in-context learning abilities of Transformers. On language modeling on Wikitext-103, the method also works as well as vanilla Transformer.\n\n4. The authors demonstrate that this method outperforms full dot-product attention on Long Range Arena, which is a popular benchmark for stress testing long-range abilities across various modalities.\n\n5. The authors have included a pytorch implementation of their method. I appreciate this and will take it positively into account in my evaluation."
+            },
+            "weaknesses": {
+                "value": "1. Distances are not preserved even for modest key dimensions, which might be an issue when scaling up. It is not clear if this method can be used as a drop-in replacement for existing pretrained models due to the change in attention similarity.\n\n2. The authors claim that smaller key dimensions do not affect performance. This is not a well-established fact - more comprehensive experiments are required to justify this claim.\n\n3. The chunking part of keys and queries could have been more clearly written, or pseudocode of the method in an appendix would have helped. I looked at the provided torch code in the supplementary but this part looks involved.\n\n4. Benchmarking of speedup / memory usage is not provided.\n\n5. SOTA performance on LRA benchmark is much higher. The performance on the Path-X task is not included, and the authors do not mention this exclusion."
+            },
+            "questions": {
+                "value": "1. Can you include more details on the chunking part. Also explain where efficiency is coming from.\n2. Can you provide resource usage results especially for long-sequences. Also include it for flash attention and other methods such as SSMs which perform better on the tasks that you include the paper.\n3. Can you discuss the limitations of your method.\n4. Can you provide results on Path-X task in LRA?\n\nI am willing to change my score if the authors can address these concerns.\n\n\nTypos:\n- Equation 6: \"(q-Ki)\" should be \"||q-Ki||\"\n- Line 232: Period missing after Lemma 3.1"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduced ZETA, a model to enhance the top-k attention using Z-order curves, reducing the complexity from N^2 to N log N. ZETA's query & key dimensions are much smaller than the value dimension. This is to ensure the speed and locality preservation of the Z-order curves. The authors also replaced the Softmax operation with the Cauchy-Softmax to enhance the performance of ZETA. Experiments showed that ZETA matched the performance of the attention models on Associative Recall while outperforming the attention models on Long-Range Arena and WikiText-103 language modeling."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* The paper is well-written and the method is believable.\n* Compared with the attention models, the ZETA model matches the performance on Associative Recall while outperforming on Long-Range Arena and WikiText-103 language modeling."
+            },
+            "weaknesses": {
+                "value": "* The effect of $d_K$ needs clarification.\n  - In section 3.2.1, line 202, the authors mentioned: \"a lower $d_K$ loses locality between tokens, which is crucial for efficient query\".\n  - However, in section 4.4, line 454, the authors mentioned that \"Lower $d_K$ values exhibit a higher level of locality preservation across all sample sizes.\"\n  - There seems to be a contradiction between these two statements, so the effect of $d_K$ needs clarification. \n* Can the authors clarify the binary expansion? What is the precision of the original d-dimensional vector?\n  - Eq. (4) introduced Z-order curves, which rearrange a d-dimensional vector into a one-dimensional binary representation.\n  - Suppose d=3. Suppose the precision of the numbers in the d-dimensional vector is 32 bits (e.g., the float32). Then the resulting Z-order curves will have 3*32=96 bits. \n  - Will this result in an overflow? If not, how did you set the precision of the original d-dimensional vector?\n* Can the authors provide a comparison of the time and space usages for ZETA model and the attention-based models?\n  - The authors claimed that ZETA reduces the time and space complexity to N log N. So I assume that ZETA runs faster and uses less memory. However, there is no actual number on this. So, the run-time metrics on time and space are needed."
+            },
+            "questions": {
+                "value": "* The recent state-of-the-art LLMs have at least 100k context length. Gemini 1.5 Pro even supports 2M context length. How does this impact the selection of your $d_K$ and other hyperparameters? Will $d_K$ go to 2 or even 1?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

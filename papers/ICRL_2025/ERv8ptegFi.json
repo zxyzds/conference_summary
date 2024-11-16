@@ -1,0 +1,209 @@
+{
+    "id": "ERv8ptegFi",
+    "title": "GPUDrive: Data-driven, multi-agent driving simulation at 1 million FPS",
+    "abstract": "Multi-agent learning algorithms have been successful at generating superhuman planning in various games but have had limited impact on the design of deployed multi-agent planners. A key bottleneck in applying these techniques to multi-agent planning is that they require billions of steps of experience. To enable the study of multi-agent planning at scale, we present GPUDrive, a GPU-accelerated, multi-agent simulator built on top of the Madrona Game Engine that can generate over a million simulation steps per second. Observation, reward, and dynamics functions are written directly in C++, allowing users to define complex, heterogeneous agent behaviors that are lowered to high-performance CUDA. We show that using GPUDrive we can effectively train reinforcement learning agents over many scenes in the Waymo Open Motion Dataset, yielding highly effective goal-reaching agents in minutes for individual scenes and enabling agents to navigate thousands of scenarios within hours. The code base with pre-trained agents is available at \\url{redacted-url} and demonstration videos at \\url{https://sites.google.com/view/gpudrive/}.",
+    "keywords": [
+        "Simulation",
+        "benchmark",
+        "multi-agent reinforcement learning",
+        "autonomous vehicles",
+        "planning"
+    ],
+    "primary_area": "datasets and benchmarks",
+    "TLDR": "We propose a new GPU-accelerated simulator intended for applying multi-agent reinforcement learning to multi-agent planning in autonomous driving.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-15",
+    "forum_link": "https://openreview.net/forum?id=ERv8ptegFi",
+    "pdf_link": "https://openreview.net/pdf?id=ERv8ptegFi",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to reviewer dLhs"
+            },
+            "comment": {
+                "value": "Thank you for recognizing the _significant speedup_ provided by our simulator and its potential to enable research in complex real-world scenarios. Below are our clarifications:\n\n### Sim functionality and mixing agent behaviors\n\n> _The paper claims compatibility with existing datasets but only demonstrates map loading, leaving other functionalities unclear. For example, the imitation learning experiment or mixing agent behaviors\u2014some from datasets and others from RL agents during training._\n\nWe highlight that **GPUDrive fully supports mixing agent behaviors**; you can combine replay agents, scripted agents, pre-trained agents, and RL agents in a single rollout without sacrificing parallelism. $\\color{green}{\\text{We have added this and plans for future work in this regard to Section 5 of the paper.}}$\n\n### Domain randomization\n\n> _I believe one major advantage of parallel environments is that it allows you to do randomization across different environments (worlds). However, the paper lacks detail on whether GPUDrive supports this capability._\n\nDomain randomization is certainly a valuable feature for any simulator. While it is already possible to implement some types of domain randomization, such as randomizing goals or initial positions, we believe the primary challenge of driving all agents to the observed goals remains unsolved for now. We plan to explore domain randomization in future work and appreciate the reviewer\u2019s suggestion.\n\n### Customization\n\n> _While GPUDrive offers a Python interface, I am curious how easy it is to customize those key elements in the environment given that the observation, reward, and dynamic functions are written in C++._\n\nThank you for pointing this out. We believe GPUDrive is easy to extend despite being in C++ for two key reasons:\n\n1. We offer **extensive Python bindings that cover most expected observations, reward functions, and dynamics**, allowing users to customize many components without having to touch the C++ code.\n2. **C++ remains a popular language**, particularly in the robotics and autonomous vehicle communities, and many of our users have the necessary familiarity to extend the framework. Additionally, the framework handles parallelism, so even a basic understanding of C++ is sufficient for implementing new rewards or dynamics.\n\n### Algorithms\n\n> _Experiments only evaluate IPPO, despite the paper claims that it targets a mixed-motive setting._\n\nThe primary goal of the paper is to propose a fast multi-agent simulator, with the RL experiments and code included to help users get started. We note that **IPPO is a valid solver for mixed games and performs well empirically**. In many multi-agent problems, it has been observed that PPO is an effective solver (See e.g., MAPPO [1]).\n\nIf the reviewer is asking whether the \"independent\" aspect of IPPO is compatible with a general-sum game, the answer is yes\u2014independence refers solely to decentralized training.\n\n### Questions\n\n> _In Figure 3, the speedup appears nearly linear. However, it would be helpful to examine scaling performance by adding more environments to identify saturation points and gain insights into system limitations._\n\nWe apologize for the confusion, please note that **this is a log-log plot**. The plot shows that as we increase the number of worlds (x) the throughput increases at the same rate (y). \n\n> _In Figure 5, do you use the CPU-parallel version of Nocturne?_\n\nYes! For a fair comparison, we plot both the single-CPU (striped blue) and the parallelized Nocturne using PufferLib (dotted blue, 16 CPUs). Note that the PufferLib version has been carefully designed to outperform naive Python multiprocessing.\n\n### Conclusion\n\nThank you for your valuable feedback! We hope we have addressed the reviewer's comments and are happy to further discuss any of these points. We kindly ask that if we have addressed the reviewer's concerns, they consider increasing their support for our paper.\n\n### References\n\n**[1]** Yu, C., Velu, A., Vinitsky, E., Gao, J., Wang, Y., Bayen, A., & Wu, Y. (2022). The surprising effectiveness of ppo in cooperative multi-agent games. Advances in Neural Information Processing Systems, 35, 24611-24624."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to reviewer geDV"
+            },
+            "comment": {
+                "value": "Dear reviewer\n\nThank you for your thoughtful comments and for noticing GPUDrive is built on top of a real-world driving dataset (WOMD), which enhances sim realism. Please find our responses below:\n\n### Complex behaviors\n\n> _While the focus of this paper is on providing a novel simulator, it would be very interesting to see some more complex behavior over longer time-horizons to fully capture the capabilities unlocked by the simulator (e.g., training a single agent policy with higher velocity limit to weave through a simulated traffic scene, etc.)_\n\nWe think this is a great suggestion and an interesting direction for future work. As mentioned, the key contribution of the paper is the simulator itself; we look forward to users or future papers showing these behaviors!\n\n> _... showcasing such behavior would likely require addressing the \u201cAbsence of a map\u201d limitation raised in the paper, in order to formulate a more sophisticated reward function. An important question would then be how easily this could be integrated, and how much the absence of such a feature could hurt adaptation of the simulator._\n\nThe reviewer correctly points out that some features are challenging to implement without a map. While the current simulator task of reaching goals without collisions can be achieved without an explicit map, more complex scenarios would benefit from one.\n\nThat said, **we do incorporate map-like features, such as lane lines**, which assist with imitation learning and allow for reward functions like staying lane-centered. Full map connectivity is available in the dataset, and we are actively working to $\\color{orange}{\\text{integrate full map connectivity into the simulator}}$.\n\n### References\n\n> _The discussion of batched simulators could be extended to include references [1-3], where [1] has driven many results in single-agent robot learning, while [3] considers heterogeneous multi-agent settings_\n\nThank you for pointing this out! $\\color{green}{\\text{We integrated these references in the discussion of batched simulators.}}$\n\n### Typos\n\nThank you for catching these!\n> _Figure 3 mentions performance on an RTX 4080, while line 711 states RTX 8000_\n\n$\\color{green}{\\text{We fixed that typo, it should be RTX 4080}}$.\n\n> _Line 308: \u201cnumber valid number\u201d_\n\n$\\color{green}{\\text{Noted and fixed.}}$\n\n### Questions\n\n> _How easily can the simulator be updated to efficiently provide map-like utilities that allow for lane-keeping rewards (re mentioned limitations)?_\n\nSome required features are already present in the data structure; they can be implemented by adding a reward for staying near lane lines. However, for a more robust implementation of this reward, it would likely be necessary to support maps.\n\n> _Do you support loading multiple different policies for individual agents? Could they have different sampling rates? How would these aspects affect efficiency?_\n\nWe do support loading multiple policies per agent, and they could have different sampling rates as long as they are integer multiples of the simulator time-step. Since agents not taking action at a step would simply be stepped, this would only increase the speed of the simulator step. \n\n> _How do traffic jams affect throughput (re BVH)? This could be an interesting experiment to add._\n\nThank you for the suggestion! We currently do not have an answer, but we agree that studying the impact of traffic jams on throughput (in relation to BVH) would be an interesting avenue for future research.\n\n> _In video scene_53.mp4, agent 4 displays rather jerky behavior when moving towards its goal - could you elaborate on the underlying reasons?_\n\nGreat observation and thank you for checking out the videos! These agents are trained solely with a goal-reaching reward; they have no incentive _not_ to drive jerkily. If we added jerk penalties (which can easily be done), this would probably disappear. \n\n> In video scene_43.mp4, agents 1 and 10 seemingly disappear without reaching their goals - could you elaborate on this behavior?\n\nYes, we configured the simulator to remove vehicles from the scene when they collide with a road edge or another agent, although this behavior can be easily adjusted in the config file. The video shows that the pre-trained policy, which achieved 95% performance over 1000 scenes (colliding 5% of the time), still leaves room for improvement. We are actively working on $\\color{orange}{\\text{improving both the effectiveness and diversity of the simulation agents}}$.\n\n### Conclusion\n\nThank you for taking the time to provide such a thorough review! We believe we have addressed all of your questions and welcome further discussion. If all your concerns have been resolved, we would be thankful if you could consider increasing your support for our paper."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to reviewer Y9u7"
+            },
+            "comment": {
+                "value": "Dear Reviewer,\n\nFirst of all, thank you for your kind words about the _clarity_ and _structure_ of the paper and code. We are excited about the potential of GPUDrive to **enable RL at scale** on a single GPU and make the algorithmic design process _interactive_. Please find our responses to your comments below:\n\n### Figure 2\n> _Figure 2 needs a better caption and an explanation_\n\nWe agree that the caption and explanation could be more detailed. We have $\\color{green}{\\text{updated the place and caption and added a more comprehensive explanation}}$ in the current version (see Figure 1).\n\n### Integrating Multiple Datasets\n> Designed to fit one exact dataset. A section explaining the effort required to integrate other datasets is desirable.\n\nWe appreciate the suggestion to explain the effort required to integrate other datasets. We are actively working on this and have $\\color{green}{\\text{added a new paragraph in the current version (see Section 5)}}$ to address this and will point to our data processing code after the rebuttal period.\n\n### Questions\n- Benchmarks and Dataset Limitations: Yes, we are actively $\\color{orange}{\\text{integrating additional datasets}}$, such as the Nuscenes (https://www.nuscenes.org/); this simply requires putting the files into our JSON format. Note that most large, diverse datasets have similar limitations as they are collected from the sensors of a single vehicle. While no dataset is perfect, we believe that working with human data, even with its limitations, provides significant value.\n- Stable Baselines and PPO Speed: We acknowledge the limitations of the Stable Baselines 3 (SB3) IPPO implementation. In response, we have implemented an $\\color{green}{\\text{improved version of IPPO, achieving an end-to-end training throughput of 500K, a 10X speedup}}$ compared to the previous SB3 version.\n- Multi-GPU Support: We do not currently have multi-GPU support as this is a property of the training code and not the simulator. It is straightforward to add multi-GPU support by wrapping the model in torch DDP but we do not mention this in the work. We can include it if it feels important to the reviewer.\n\n### Conclusion\n\nThank you for helping us make this work better! We hope we have addressed your comments properly and welcome further discussion."
+            }
+        },
+        {
+            "title": {
+                "value": "Main response"
+            },
+            "comment": {
+                "value": "We would like to thank all the reviewers for their time and constructive feedback. We address each comment below and highlight the $\\color{green}{\\text{feedback that is directly incorporated in green}}$ and items we are $\\color{orange}{\\text{actively working on in orange}}$. \n\nWe hope that the reviewers feel we have addressed their questions and welcome further discussion."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to reviewer AUkE"
+            },
+            "comment": {
+                "value": "Dear Reviewer,\n\nThank you for your valuable feedback! We appreciate your recognition of GPUDrive's scaling benefits and mentioning that we present the wide range of simulator features in a _\u201ccomprehensible way\u201d_. Please find our response to your comments below:\n\n### Reactive Sim Agents\n> _The paper does not provide simple IDM (intelligent driving models) agents that can be sometimes practical to have basic reactivity to the ego agent._\n\nWe agree that reactivity of simulation agents is crucial. While we do not include simple IDM agents, we **provide pre-trained reactive simulation agents** trained through self-play in the simulator that offer this basic reactivity. The behavior of these agents can be seen in the videos at https://sites.google.com/view/gpudrive/. We are actively working on expanding the $\\color{orange}{\\text{diversity and effectiveness of available sim agents}}$.\n\n### End-to-End Training Throughput\n> _The authors mention that the current work is limited in properly utilizing the generated samples for optimal training._\n\nWe assume the reviewer is referring to the end-to-end training performance in Section 4.2. We acknowledge the concern regarding sample utilization. We have since addressed this issue and $\\color{green}{\\text{added an improved IPPO implementation, improving the training speed 10X: from 50K to 500K AFPS. Please see the updated Figure 5 in the paper.}}$\n\n### Implementation in C++\n> _Just a thought: The implementation is in C++ and it provides a binding interface with Python environments. It would have been nice to have a mono-language (primarily Python based) tool as the model training and other related pipelines are mostly in Python._\n\nWe chose to build the simulator in **C++ for the speed**. The Madrona framework, which is implemented in C++ enables us to achieve over one Million FPS. While a Python-based tool might have been convenient, it would not have provided the same level of throughput. Note that we have extensive Python bindings and interfaces available, so **a user conveniently does not need to touch the C++ code**.\n\n### Questions\n- Pedestrian and Cyclist Behavior: **Both pedestrians and cyclists are controlled** within the simulator. We use the same dynamic models as for vehicles, with smaller bounding boxes for pedestrians to reflect realistic behavior.\n- Ethical Statement: $\\color{green}{\\text{The ethical statement has been added as Section 7 in the current version}}$.\n- Log Scale for Fig. 5: We have the log plot. $\\color{green}{\\text{Please see the updated Figure 5 in the paper}}$.\n\n### Conclusion\nThank you again for your thoughtful comments! We hope we have addressed all of your questions and welcome any further discussion. If all concerns are resolved, we kindly ask that you consider increasing your support for our paper."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a GPU accelerated simulator that can generate millions of simulation steps samples per second that can be used to train multi-agent reinforcement learning (RL) algorithms. The simulator is claimed to simulate hundreds to thousands of scenarios/scenes in parallel with each scene containing thousands of agents.\n\nThe simulator is built on top of the Madrona Game Engine and is written in C++. The C++ simulator engine can also be interfaced with learning environments written in JAX and Torch.\nThe authors have released implementations of RL algorithms capable of processing millions of agent steps per second and some baseline agents trained on these algorithms that achieve 95% of their goals. The simulator claims to provide both recorded logs and RL agents for the environment.\n\nThe authors introduced certain metrics to evaluate the simulation speed of GPUDrive in terms of agent steps per second (ASPS), controllable agent steps per second (CASPS) and scene completion time. Compared against other sim engines like Nocturne GPUDrive achieved 25-40x training speedup solving 10 scenarios in less than 15 minutes."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The proposed simulator has the flexibility to handle multiple modalities of sensor data. \n\n- The authors have implemented ways to reduce the memory footprint due to the large number of agents and observation space using algorithms like Bounding Volume Hierarchy (to exclude certain agent pairs for collision checking) and polyline decimation to approximate the straight polylines.\n\n- The trained agents are claimed to be useful for out-of-distribution tests for the driving agents.\n\n- The authors presented the different simulator features in a comprehensive way.\n\n- The paper shows that the simulator gets the scaling benefits in terms of increased amortized sample efficiency with increasing dataset size. This can be beneficial when dealing with large scale datasets with limited compute."
+            },
+            "weaknesses": {
+                "value": "- The paper does not provide simple IDM (intelligent driving models) agents that can be sometimes practical to have basic reactivity to the ego-agent.\n- The authors mention that the current work is limited in properly utilizing the generated samples for optimal training.\n\n- Just a thought: The implementation is in C++ and it provides a binding interface with Python environments. It would have been nice to have a mono-language (primarily Python based) tool as the model training and other related pipelines are mostly in Python."
+            },
+            "questions": {
+                "value": "- Were other agents in the scenes like pedestrians and cyclists also controlled? If so, what were the dynamics used to model their behavior if they were not logged?\n- Nit: Ethical statement was missing?\n- Nit: Can the x-axis in the center plot in Fig 5 be made to a log scale?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "GPU drive introduces a fast multi agent simulator build using C++ that helps you run complex scenarios especially related to self driving cars at scale built on top of the Waymo Open Motion dataset. This allows iterating on these scenarios quicker reaching greater than a million FPS thus allowing more experimentation runs and iterating/trying out different scenarios even on desktop grade GPU's."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. A multi agent simulator accelerated on the GPU iteration of over a million steps per second.\n2. Very well written and structured code to run any experiment easily with a lot of easy experimentation code readily available. \n3. Extensive results analyzing the sampling frequency of the simulation."
+            },
+            "weaknesses": {
+                "value": "1. Figure 2 needs a better caption and an explanation\n2. Designed to fit one exact dataset. A section explaining the effort required to integrate other datasets is desirable."
+            },
+            "questions": {
+                "value": "1. Benchmarks consist of limitations because of the dataset. Can it be addressed by using another dataset ?\n2. Stable baselines is not known that well for speed. Could other implementations of PPO have been used ?\n3. Is there support for multi GPUs ? And if they do exist, an ablation or benchmark would be great for that"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes GPUDrive, a GPU-accelerated multi-agent driving simulator designed to increase efficiency of learning-based systems. The simulator allows for loading expert trajectories from real-world driving datasets, can support multiple observation spaces (including e.g. LiDAR), and displays favorable throughput compared to other openly accessible simulators. The simulator, together with pre-trained goal-conditioned policies, is made openly available with accessible pythonic interfaces."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The proposed simulator improves over alternatives in terms of sample efficiency. All of the design choices appear reasonable, while the underlying source code with pre-trained driving baselines will be released.\n- The ability to load real-world driving datasets is extremely useful, while providing a variety of observation spaces is a great feature.\n- Transparency about current limitation of the benchmark are very helpful for user adaptation."
+            },
+            "weaknesses": {
+                "value": "- While the focus of this paper is on providing a novel simulator, it would be very interesting to see some more complex behavior over longer time-horizons to fully capture the capabilities unlocked by the simulator (e.g. training a single agent policy with higher velocity limit to weave through a simulated traffic scene, etc.)\n- Showcasing such behavior would likely require addressing the \u201cAbsence of a map\u201d limitation raised in the paper, in order to formulate more sophisticated reward function. An important question would then be how easily this could be integrated, and how much the absence of such a feature could hurt adaptation of the simulator.\n- The discussion of batched simulators could be extended to include references [1-3], where [1] has driven many results in single-agent robot learning, while [3] considers heterogenous multi-agent settings\n- Figure 3 mentions performance on an RTX 4080, while line 711 states RTX 8000\n- Line 308: \u201cnumber valid number\u201d\n\n**References**\n\n[1] V. Makoviychuk, L. Wawrzyniak, Y, Guo, M. Lu, K. Storey, M. Macklin, D. Hoeller, N. Rudin, A. Allshire, A. Handa, and G. State. \u201cIsaac gym: High performance gpu-based physics simulation for robot learning.\u201d NeurIPS, 2021.\n\n[2] J. Panerati, H. Zheng, S. Zhou, J. Xu, A. Prorok, and A. P. Schoellig. \"Learning to fly\u2014a gym environment with pybullet physics for reinforcement learning of multi-agent quadcopter control.\u201d IROS, 2021.\n\n[3] M. Lechner, L. Yin, T. Seyde, T.-H. Johnson Wang, W. Xiao, R. Hasani, J. Rountree, and D. Rus. \u201cGigastep - one billion steps per second multi-agent reinforcement learning.\"\u00a0NeurIPS, 2024."
+            },
+            "questions": {
+                "value": "- How easily can the simulator be updated to efficiently provide map-like utilities that allow for lane-keeping rewards (re mentioned limitations)?\n- Do you support loading multiple different polices for individual agents? Could they have different sampling rates? How would these aspects affect efficiency?\n- How do traffic jams affect throughput (re BVH)? This could be an interesting experiment to add.\n- In video scene_53.mp4, agent 4 displays rather jerky behavior when moving towards its goal - could you elaborate on the underlying reasons?\n- In video scene_43.mp4, agents 1 and 10 seemingly disappear without reaching their goals - could you elaborate on this behavior?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents GPUDrive, a GPU-based simulator for autonomous driving. The simulator is compatible with existing datasets and allows parallel simulations. The experiments show that it can train a policy with 25-40x training speedup against the baseline."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The GPU-based simulation is important in facilitating the training for complex real-world applications, highlighted by recent advances in robotics.\n2. The experiment result shows significant wall-clock time speedup again baselines."
+            },
+            "weaknesses": {
+                "value": "1. The paper claims compatibility with existing datasets but only demonstrates map loading, leaving other functionalities unclear. For example, the imitation learning experiment or mixing agent behaviors\u2014some from datasets and others from RL agents during training.\n2. I believe one major advantage of parallel environments is that it allows you to do randomization across different environments (worlds). However, the paper lacks detail on whether GPUDrive supports this capability.\n3. While GPUDrive offers a Python interface, I am curious how easy to customize those key elements in the environment given that the observation, reward, dynamic functions are written in C++. \n4. Experiments only evaluate IPPO, despite the paper claims that it targets at mixed motive setting."
+            },
+            "questions": {
+                "value": "1. In Figure 3, the speedup appears nearly linear. However, it would be helpful to examine scaling performance by adding more environments to identify saturation points and gain insights into system limitations.. \n2. What is the scaling of speedup with respect to the number of agents in the environment? e.g., fix the number of environments and scales the number of agents?\n3. In Figure 5, do you use the CPU-parallel version of Nocturne?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

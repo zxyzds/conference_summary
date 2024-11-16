@@ -1,0 +1,205 @@
+{
+    "id": "Da3j02cHe0",
+    "title": "Efficient Physics-Constrained Diffusion Models for Solving Inverse Problems",
+    "abstract": "Solving inverse problems in scientific and engineering domains often involves complex, nonlinear forward physics and ill-posed conditions. \nRecent advancements in diffusion model have shown promise for general inverse problems, yet their application to scientific domains remains less explored and is hindered by the complexity and high non-linearity of physics constraints. We present a novel framework called physics-constrained diffusion model (PCDM) that integrates pre-trained diffusion models and physics-constrained objectives, providing plausible solutions to physics-constrained inverse problems within a feasible time. \nWe leverage accelerated diffusion sampling to enable a practical generation process while strictly adhering to physics constraints by solving optimization problems at each timestep. By decoupling the likelihood optimization from the reverse diffusion steps, we ensure that the solutions remain physically consistent, even when employing fewer sampling steps.\nThis approach provides physically plausible solutions without requiring excessive inference time. \nWe validate our method on a wide range of challenging physics-constrained inverse problems, including data assimilation, topology optimization, and full-waveform inversion. Experimental results show that our approach significantly outperforms existing methods in both efficiency and precision, making it practical for real-world applications.",
+    "keywords": [
+        "physics-constraints inverse problem",
+        "diffusion model",
+        "PDE",
+        "generative modeling"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "We propose a novel framework for solving physics-constrained inverse problems by integrating physics constraints and diffusion models.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Da3j02cHe0",
+    "pdf_link": "https://openreview.net/pdf?id=Da3j02cHe0",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors address inverse problems by leveraging diffusion models as priors.\nThey formulate the problem as minimizing a composite objective function comprising a likelihood term, which enforces physics constraints, and a regularization term defined by a diffusion model.\nAs the resulting problem is difficult to solve directly, the authors utilizes a variable splitting scheme that alternates between minimization over the regularizer and the likelihood.\nThe regularization step is handled through a backward diffusion step, while the likelihood step is performed by minimizing and L2-regularized inverse problem.\nThe authors validate their approach on a set of three problems."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Solve inverse problems that arise in physics-constrained setups using a variable splitting scheme."
+            },
+            "weaknesses": {
+                "value": "**Insufficient coverage of the related work**\n\nThe authors provide a high-level overview of two lines of research: end-to-end supervised approaches and unsupervised approaches.\nWhile, there is a wealth of methods in inverse problems with diffusion models priors, few are mentioned.\nNotably, related works that leverage variable splitting schemes, also known as Split Gibbs sampling, are not discussed; for reference, see [1, 2, 3] and the corresponding Related Work sections.\n\n**Methodological ambiguities**\n\nSection 3.3 introduces the regularization step without a clear justification for its formulation. Specifically, _why it has this form?_.\nFurthermore, the method employs two regularization hyperparameters, $\\lambda$ and $\\mu$, yet only $\\mu$ appears in the update equations.\nBesides, the regularization step is independent of these hyperparameters.\n\n**Lack of implementation details**\n\n- The paper does not address the sensitivity of the method to its hyperparameters, namely the early stopping criterion and the timing of triggering the optimization (the parameter $t_s$ in line 256).\n- The experimental section lacks specific implementation details, such as the hyperparameters for DPS and SDA; details regarding the used pre-trained diffusion models.\n- The reported results raises some concerns In Table 1, DPS performance appears almost identical to the method that omits the prior (Opt w/o diff), which warrants further clarification as inverse problems are severely ill-posed hence pure optimization often yields an inconsistent solutions\n\n---\n.. [1] Zhu, Yuanzhi, et al. \"Denoising diffusion models for plug-and-play image restoration.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2023.\n\n.. [2] Wu, Zihui, et al. \"Principled Probabilistic Imaging using Diffusion Models as Plug-and-Play Priors.\" arXiv preprint arXiv:2405.18782 (2024).\n\n.. [3] Xu, Xingyu, and Yuejie Chi. \"Provably robust score-based diffusion posterior sampling for plug-and-play image reconstruction.\" arXiv preprint arXiv:2403.17042 (2024).\n \n.. [4] Rozet, Fran\u00e7ois, and Gilles Louppe. \"Score-based data assimilation.\" Advances in Neural Information Processing Systems 36 (2023): 40521-40541."
+            },
+            "questions": {
+                "value": "**Specific questions**\n\nIn the experiments, the formulation of the inverse problem in Experiments 4.1 and 4.3 is unclear, namely\n \n- Experiment 4.1: is the operator $A$ a discretization of the d\u2019Alembert operator? Additionally, is $s(r,t)$ provided within the dataset?\n - Experiment 4.3: Given that the problem is defined as a constrained optimization, how does the operator $A$ transform $x$ to yield the observation $y$?\n\nWhy was SDA excluded from Experiments 4.1 and 4.3? Although originally developed for data assimilation, it remains applicable as an inverse problem method.\nSimilarly, why was DPS omitted from Experiment 4.3?\n\n\n**Broader questions**\n\n- Could this method be applied to inverse problems in image restoration, and how would it compare to existing algorithms in the literature?\n- The paper addresses problems of moderate dimensionality, approximately $5000$; have the authors considered Sequential Monte Carlo methods [1, 2, 3], which offer stronger theoretical guarantees?\nGiven this dimensionality, propagating multiple particles in parallel is feasible and would overcome mode-collapse.\n\n---\n.. [1] Dou, Zehao, and Yang Song. \"Diffusion posterior sampling for linear inverse problem solving: A filtering perspective.\" The Twelfth International Conference on Learning Representations. 2024.\n\n.. [2] Cardoso, Gabriel, Janati Yazid,, Sylvain Le Corff, and Eric Moulines. \"Monte Carlo guided Denoising Diffusion models for Bayesian linear inverse problems.\" The Twelfth International Conference on Learning Representations. 2023.\n\n.. [3] Wu, Luhuan, et al. \"Practical and asymptotically exact conditional sampling in diffusion models.\" Advances in Neural Information Processing Systems 36 (2024)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a variable splitting method for solving physics-constrained inverse problems with diffusion model priors. Throughout the reverse diffusion process, the method alternates between two optimization problems: one to update the noisy estimated image with the diffusion model as a regularizer, and one to enforce data/physics constraints. The authors present experiments on full-waveform inversion, data assimilation, and topology optimization, showing quantitative and qualitative improvement upon baselines in all three applications."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The proposed method is simple and intuitive. Although the methodology lacks technical novelty (see weaknesses), it\u2019s helpful to see that such a simple extension of DPS and other plug-and-play diffusion-based inverse solvers may already go a long way in handling physics inverse problems.\n* Validation is done on three very different tasks, and task-specific baselines and the DPS baseline are compared against for each task."
+            },
+            "weaknesses": {
+                "value": "* The technical contribution is marginal. The idea of variable splitting for diffusion-based inverse solving is not new (Equation 16 is similar to the proximal optimization step in Equation 8 of Song and Shen et al. 2022). The main difference in this work is that there may not be a closed-form solution to Equation 16, so iterative gradient-based optimization is used at each likelihood step.\n* In Tables 1 and 2, the smaller number of reverse steps used by PCDM is touted. This is a little misleading, as the Table 1 caption says that PCDM involves 1000 likelihood iterations in addition to 200 reverse steps. For expensive forward models, it may be the case that these 1000 likelihood iterations are very costly. Also, a clarifying question: does one likelihood iteration mean an entire optimization round of Equation 16, or do the 1000 likelihood iterations account for all the gradient steps needed to solve Equation 16 throughout the algorithm?\n* I have concerns about how fair the comparison to DPS is. In Figure 3(b), the DPS reconstruction clearly doesn\u2019t match the visual statistics of Kolmogorov flow. I would expect DPS to at least produce something that appears visually plausible even if it doesn\u2019t agree with the physical model. For example, in Figure 4 of SDA (Rozet and Louppe 2023) and Figure 5 of Feng et al. 2024, the DPS reconstructions at least look qualitatively reasonable. I would also be curious how hyperparameters for DPS were chosen.\n\n---\nReferences:\n\nSong and Shen et al. \u201cSolving Inverse Problems in Medical Imaging with Score-Based Generative Models.\u201d ICLR 2022.\n\nRozet and Loupe. \u201cScore-based Data Assimilation.\u201d NeurIPS 2023.\n\nFeng et al. \u201cNeural Approximate Mirror Maps for Constrained Diffusion Models.\u201d arXiv 2024."
+            },
+            "questions": {
+                "value": "* Please comment on how hyperparameters for baselines, including DPS, were chosen. I recommend making an appendix to include such details.\n* Often it makes more sense to think of physics constraints as priors (i.e., checking whether a solution satisfies a physical model doesn\u2019t involve the observed measurements). Does it make sense in that case to move the physics-consistency term into Equation 12 as an additional regularizer?\n* It\u2019s surprising that \u201cOpt w/o diff\u201d in Table 1 has the worst data residual, given that it only optimizes the likelihood term. The authors suggest that this is because it struggles with local minima, but I was under the impression that adding a diffusion regularizer would only complicate the optimization landscape. I would appreciate comments from the authors on why they believe \u201copt w/o diff\u201d struggles to fit the data and whether they observed the same trend with the other tasks (why wasn\u2019t opt w/o diff included as a baseline for the other tasks?)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes doing MAP estimation using a diffusion plug and play prior (PnP). Namely, the paper aims at solving\n$$argmin \\|y - \\mathcal{A}(x)\\| + \\lambda \\mathcal{R}(x).$$\n\nTo do so, it follows the traditional PnP route by using ADMM to split this into solving two proximal problems:\n\n$$ z_{i+1} = argmin_{z} \\mathcal{L}_\\mu(z, x_i) $$\n\n$$ x_{i+1} = argmin_{x} \\mathcal{L}_\\mu(z_{i+1}, x) $$\n\nFinally, it replaces the prior proximal problem by a forward backward (with one step) sampling, namely equation (15).\nIt then evaluates the approach in non-linear problems coming from physics."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The paper proposes an adapted method to solving several physics problems where adapting to a physical constraint is cast as having high likelihood. The numerical applications are relevant."
+            },
+            "weaknesses": {
+                "value": "My main concern is the novelty aspect of the paper. Indeed, several papers have investigated the applications of pretrained diffusion generative models as PnP priors. In particular, Algorithm 1 of [1] is essentially the same as the one proposed in this paper. Unless I'm mistaken, this makes the only novelty in this paper w.r.t. [1] to be the physical applications, which are indeed interesting. But I do not reckon it is worth being accepted to ICLR.\n\nFurthermore, even if the proposed algorithm is conceptually different, it is still part of the broad Plug and Play family and I would expect at least a comparison with [1] or any other Plug and Play with diffusion paper.\n\n\n[1]  Denoising Diffusion Models for Plug-and-Play Image Restoration\nYuanzhi Zhu, Kai Zhang, Jingyun Liang, Jiezhang Cao, Bihan Wen, Radu Timofte, Luc Van Gool; Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops, 2023, pp. 1219-1229 \n\n[2] Provably robust score-based diffusion posterior sampling for plug-and-play image reconstruction.\n Xu, Xingyu, and Yuejie Chi. arXiv preprint arXiv:2403.17042 (2024).\n\n[3]Graikos, Alexandros, et al. \"Diffusion models as plug-and-play priors.\" Advances in Neural Information Processing Systems 35 (2022): 14715-14728.\n\n[4] F. Coeurdoux, N. Dobigeon and P. Chainais, \"Plug-and-Play Split Gibbs Sampler: Embedding Deep Generative Priors in Bayesian Inference,\" in IEEE Transactions on Image Processing, vol. 33, pp. 3496-3507, 2024, doi: 10.1109/TIP.2024.3404338.\n\n[5] Wu, Zihui, et al. \"Principled Probabilistic Imaging using Diffusion Models as Plug-and-Play Priors.\" arXiv preprint arXiv:2405.18782 (2024).\n\n[6] Wang, Hengkang, et al. \"DMPlug: A Plug-in Method for Solving Inverse Problems with Diffusion Models.\" arXiv preprint arXiv:2405.16749 (2024)."
+            },
+            "questions": {
+                "value": "For the major point, see weaknesses.\n\nMinor questions and remarks.\n\n* Is the left term in eq(6) $x_{t-1}$ ? Otherwise it is not a sampling process, as it does not evolve through time.\n* What is $ \\hat{\\epsilon}_{t}$ in equation (15) ? \nIs it equation (7) with $x_{t_k}$?\n* Equation (15) mixes indexes between $t_k$ and $t$."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes PCDM (physics-constrained diffusion model), an inverse problem solver that leverages diffusion model as plug-and-play prior. PCDM uses the idea of variable splitting and proposes to solve the underlying optimization problem with implicit diffusion model regularization. The authors demonstrate its application in full-waveform inversion, data assimilation, and topology optimization."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Applying plug-and-play diffusion model methods to physics-constrained inverse problems is relatively new to the diffusion model community. \n2. The paper is generally easy to follow."
+            },
+            "weaknesses": {
+                "value": "1. The proposed PCDM appears to be mathematically equivalent to a special case of the algorithm in Li et al. [1] (specifically, the case using Tweedie's formula). The claim of algorithmic novelty is questionable (line 100). \n2. The \"physics-constrained\" aspect really comes from the inverse problem itself instead of the novel algorithmic design. Most existing gradient-based plug-and-play diffusion model methods can incorporate that physics loss such as DiffPIR [2], DPS,DAPS [3], RED-diff [4], [5]. These methods are not compared or  discussed in the paper. \n3. The experimental comparison excludes many recent and relevant algorithms. For example DiffPIR [2] and DAPS [3], RED-diff [4].  \n4. Reproducibility concerns: important experimental and implementation details are insufficiently documented. See more concrete questions in the next section.\n5. There is a lack of ablation studies on important algorithm design parameters, such as the number of likelihood steps per iteration, the optimization threshold $t_s$, and sensitivity to the optimizer configurations. \n\n\n[1] : Li, Xiang, et al. \"Decoupled data consistency with diffusion purification for image restoration.\"\u00a0_arXiv preprint arXiv:2403.06054_\u00a0(2024).\n[2] : Zhu, Yuanzhi, et al. \"Denoising Diffusion Models for Plug-and-Play Image Restoration.\"\u00a0_arXiv preprint arXiv:2305.08995_\u00a0(2023).\n[3] : Zhang, Bingliang, et al. \"Improving diffusion inverse problem solving with decoupled noise annealing.\"\u00a0_arXiv preprint arXiv:2407.01521_\u00a0(2024).\n[4] : Mardani, Morteza, et al. \"A Variational Perspective on Solving Inverse Problems with Diffusion Models.\"\u00a0_The Twelfth International Conference on Learning Representations_.\n[5] : Peng, Xinyu, et al. \"Improving Diffusion Models for Inverse Problems Using Optimal Posterior Covariance.\"\u00a0_Forty-first International Conference on Machine Learning_. 2024."
+            },
+            "questions": {
+                "value": "1. I'm a bit surprised at how well the Opt w/o diff baseline can recover the large structure of the ground truth, as shown in Figure 2 and Table 1. This contrasts with traditional FWI literature findings [1] and my own experimental validation on OpenFWI dataset. I'm curious how the authors implement the FWI problem and the corresponding baselines. More specifically, \n\t1. What is exactly the Opt w/o diff baseline in Table 1? Is that the Adam optimizer? What initialization strategy was employed? What are the specific hyperparameters used to report the results? \n\t3. Why are the residuals of InversionNet and VelocityGAN omitted from Table 1?  \n\t4. Given that OpenFWI paper does not provide the gradient implementation of the forward model, how did the authors implement the gradient? \n2. What are the hyperparameter selection criteria across compared methods? \n3. Is there any supplementary material or code to facilitate the reproducibility?\n\n[1] : Virieux, Jean, and St\u00e9phane Operto. \"An overview of full-waveform inversion in exploration geophysics.\"\u00a0_Geophysics_\u00a074.6 (2009): WCC1-WCC26."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper propose a method for the solution of an inverse problem where the forward problem is a solution of some physical simulating. \nThe claim is that the result of the algorithm produces solutions that do not only honour the prior but also obey the physics."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The results look interesting. The paper may be improved so the results will make sense."
+            },
+            "weaknesses": {
+                "value": "To be honest I could not understand the paper, even though I have been working in this field for many years.  The authors invented new jargon, \"physics constrained\" which means, what exactly? What is the constraint they are fulfilling? On which variables? How do you deal with the constraints? Lagrange multipliers? elimination? penalty?\nThere is a huge branch of inverse problems that treat them as PDE constrained optimization. Clearly, this escaped from the authors. There is a large number of papers that introduce constraints into inverse problems (e.g 0 \\le x) but clearly this is not one of these examples. The authors should try to rewrite the paper and be a bit more precise about what they do,\n\nSimilarly, in section 3, the equations flow smoothly and I can easily understand how to get from (7) and the way to (10). \nThen you switch to section 3.2 and I cannot see how (11) and on is related to the previous section. \n\nFinally in ADMM (eq 12) there is another term for Lagrange multiplier that you are missing. The solution of your problem is different than the original problem."
+            },
+            "questions": {
+                "value": "1. What is physics constrained, please define mathematically\n\n2. How to get from the Langevin dynamics of (8-9) to your optimization problem (11-12)\n\n3. Why and how are the two related\n\n4. Why don't you use Lagrange multipliers for (12), add a term p^T(z-x)\n\n5. Can you clarify the overall algorithm?\n\n6. How do you ensure that you fit the data to some given tolerance?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

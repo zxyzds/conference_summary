@@ -1,0 +1,167 @@
+{
+    "id": "kwY3eL3QVh",
+    "title": "Feature-guided score diffusion for sampling conditional densities",
+    "abstract": "Score diffusion methods can learn probability densities from samples. The score of the noise-corrupted density is estimated using a deep neural network, which is then used to  iteratively transport a Gaussian white noise density to a target density. Variants for conditional densities have been developed, but correct estimation of the corresponding scores is difficult.\nWe avoid these difficulties by introducing an algorithm that operate by projecting the score onto the target class mean in a learned feature space.\nThe features and the projected score are computed using the same network, which is trained by optimizing a single denoising loss. \nLearned feature vectors of same-class images are tightly clustered relative to those of different classes. \nWe show that feature class centroids provide a low-dimensional Euclidean embedding of the class conditional densities. \nWe demonstrate that, when trained on a dataset of mixed image classes,\nthis projected score can generate high quality and diverse samples from the conditioning class.\nConditional generation can be performed using feature vectors interpolated between those of the training set, demonstrating out-of-distribution generalization.",
+    "keywords": [
+        "Conditional sampling",
+        "Representation learning",
+        "Score diffusion"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=kwY3eL3QVh",
+    "pdf_link": "https://openreview.net/pdf?id=kwY3eL3QVh",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces a novel guided score-based diffusion model that does not require any additional structural modifications. Instead, it extracts features from key layers of its own score estimation model (i.e. Unet) and applies spatial averaging, enabling guidance control in the feature space. Unlike methods such as classifier-free guidance, this feature-guided diffusion does not rely on likelihood estimation, allowing for a more accurate estimation of conditional density."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is well-structured, easy to read, and highly innovative, introducing a projected score embedded in feature space. This embedding is not only straightforward to obtain (directly extracted from the score estimation model) but also adheres to Euclidean interpolation properties.\n\n2. The model successfully achieves conditional generation in a mixture of Gaussian distributions, demonstrating that the feature-guided score diffusion model can accurately capture conditional density\u2014an ability lacking in many other approaches.\n\n3. Compared to mixture models, the feature-guided score diffusion model shows stronger concentration and separation across different classes within the embedding space."
+            },
+            "weaknesses": {
+                "value": "The dataset used in experiments is overly simple. The training dataset is derived by cropping 1700 images into 234k patches. Although the patches are non-overlapping, the data distribution for each class lacks sufficient diversity. Experiments on a more complex dataset, like ImageNet, would strengthen the paper\u2019s validity."
+            },
+            "questions": {
+                "value": "1. What is the difference between feature space and latent space in stable diffusion? While the latter requires an additional encoder, how does the former feed $x$ and $x'$ into the U-Net?\n\n2. In Fig. 3 (left), the feature-guided model shows strong performance across all noise levels. Does this suggest that fewer NFE (Number of Function Evaluations) could be used during conditional generation? Designing experiments to verify this could strengthen the paper.\n\n3. In Fig. 4 (middle), were the two metrics normalized? Otherwise, this comparison might not be on the same scale. Additionally, the variance in image feature vectors appears large\u2014is this due to insufficient training? Please clarify further."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a guided score diffusion method that samples from class conditional distributions by calculating a projected score based on feature vectors, avoiding the need to directly estimate the scores of those densities. The method employs a neural network trained to minimize a single denoising loss, with the feature vector defined as spatial averages from selected layers, leading to a Euclidean embedding of class conditional probabilities. It effectively clusters learned features around their centroids, allowing for accurate sampling from target conditional distributions and facilitating smooth transitions between classes through linear combinations of mean feature vectors."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This is a well-written paper. Both score and feature vectors are represented with the same network. The learned feature vectors cluster around their centroids, which enhances the accuracy of sampling rom the conditional probability density. The method enables gradual transitions of the images between classes through linear interpolation of mean feature vectors. The experimental results show that a diffusion algoriothm based on the projected score provides an accurate sampling of conditional probabilities."
+            },
+            "weaknesses": {
+                "value": "The authors provided a way to build the feature vectors that share the same network weights as the score function. It is not clear how to determine the feature vector dimension."
+            },
+            "questions": {
+                "value": "How does the feature dimension affects the learning and generation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The most common approach to guide diffusion models is by using score guidance, whether in the form of classifier guidance or in the form of classifier free guidance. The paper claims that this approach relies on an approximation and is thus inaccurate. As an alternative, it proposes a simple method for training a conditional diffusion model. The approach is motivated intuitively and tested empirically."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Classifier free guidance (CFG) is the most dominant approach for guiding diffusion models today, even though it is known to lead to biased densities. Several recent papers analyzed the drawbacks of the approach from a theoretical standpoint. However the topic of designing good practical alternatives to CFG is still under-explored. This paper attempts to fill this gap, which is undoubtedly an important goal.\n- The paper presents clear intuition and empirically validates that the assumptions underlying the proposed construction hold."
+            },
+            "weaknesses": {
+                "value": "- The whole motivation of the paper is to propose an alternative to existing guidance methods. However, it does not provide theoretical guarantees that the approach samples from the conditional distribution. And it also does not provide any empirical evidence that the proposed approach outperforms the standard way of conditioning diffusion models. Specifically, it does not compare the sampling quality to that obtained with a conditional denoiser (with the common conditioning mechanism for U-Nets), neither without nor with CFG. It also does not present any quantitative measure of sample quality (e.g. FID) on natural images, and does not present results on popular datasets like CIFAR or ImageNet, which prevents from evaluating whether the proposed method leads to SOTA results. As such, it is impossible to evaluate the effectiveness of the proposed method.\n- I believe that the motivation presented in the paper is inaccurate and somewhat misleading. Using score guidance (as in Eq. (4)) should theoretically lead to accurate results. What is inaccurate in CFG is that when taking the guidance parameter w to be greater than 1, it does not sample from the titled distribution p(x)p(y|x)^(1+w) from which it attempts to sample, but rather from a different distribution. See for instance the closed form expressions for the Gaussian setting in [1] (Eqs. (11),(12)), where the distributions of samples obtained with CFG-DDPM and CFG-DDIM are incorrect only when the CFG parameter (gamma) is greater than 1, but are correct when it equals 1. In particular, the statement in L147-148 that Chidambaram et al. (2024) proved the inaccuracy of guidance on Gaussian mixtures is incorrect. They proved the inaccuracy of CFG only when the guidance parameter w is sufficiently large. When w=1 the process is theoretically accurate.\n\n\n[1] Bradley and Nakkiran, \"Classifier-Free Guidance is a Predictor-Corrector\", arxiv 2408.09000."
+            },
+            "questions": {
+                "value": "- Can the authors comment on how the method compares to regular guidance on common datasets, like CIFAR-10, in terms of FID?\n- Can the authors comment on the motivation for suggesting an alternative to regular guidance (second weakness stated above)?\n- L216: Why are the activation layer averages close to the first principal components of the network channels? Can the authors provide a proof or a reference to a paper showing this?\n\nTypos:\n- L216: principle -> principal\n- L360: \"some some\"\n- L429: missing parentheses around (m2-m1)\n- L517: remove \"And most\"\n- L518: mixeed -> mixed"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper focuses on the problem of conditional generation with diffusion models, and specifically class-conditional generation. The authors claim that commonly used class-conditional sampling methods are inexact, and thus propose a new method for class-conditional sampling with diffusion models. Their method, taking inspiration from a GMM distribution, attempts to train a diffusion model that is biased to a certain class based on the features of some given conditioning image. The authors demonstrate several examples of their method."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- Conditional sampling is a key problem, where improvements may have a high impact.\n- The proposed solution is novel, to the best of my knowledge."
+            },
+            "weaknesses": {
+                "value": "- The paper's motivation is not sufficiently clear. While adding noise and conditioning may not commute in the general case, I believe the operation do commute in the case where each sample image has only one corresponding class, which is the common case in class-conditional sampling.\n- Many conditional diffusion models in the literature are trained with the condition as an input to the network, alleviating the concern regarding the inexactness of using Eq. (4) for sampling. While such method require training a conditional model, but so does the method proposed in the paper, making the advantage here unclear.\n- The experiment section is missing a meaningful comparison with alternative conditional generation methods, despite those methods being well established and mentioned in the text. Could the authors to compare their method to existing conditional diffusion models, and highlighting specific advantages or differences?\n- The proposed method relies on access to an example image from a given class for sampling, making generation more cumbersome. this concern is not addressed in the paper. Perhaps this could be meaningfully discussed in a limitations section.\n- Please address several typos in the discussion section."
+            },
+            "questions": {
+                "value": "Please see concerns under Weaknesses.\n- Why have the authors chosen not to use an established class conditional dataset, such as CIFAR10 or ImageNet for the experiments in the paper?\n- Can the authors elaborate why adding noise and conditioning do not commute? I believe such a claim requires proof."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

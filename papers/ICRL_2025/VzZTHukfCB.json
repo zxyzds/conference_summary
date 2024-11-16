@@ -1,0 +1,240 @@
+{
+    "id": "VzZTHukfCB",
+    "title": "SeaS: Few-shot Industrial Anomaly Image Generation with Separation and Sharing Fine-tuning",
+    "abstract": "Current segmentation methods typically require many training images and precise masks, while insufficient anomaly images hinder their application in industrial scenarios. To address such an issue, we explore producing diverse anomalies and accurate pixel-wise annotations. By observing the real production lines, we find that anomalies vary randomly in shape and appearance, whereas products hold globally consistent patterns with slight local variations. Such a characteristic inspires us to develop a Separation and Sharing Fine-tuning (SeaS) approach using only a few abnormal and some normal images.\nFirstly, we propose the Unbalanced Abnormal (UA) Text Prompt tailored to industrial anomaly generation, consisting of one product token and several anomaly tokens. Then, for anomaly images, we propose a Decoupled Anomaly Alignment (DA) loss to bind the attributes of the anomalies to different anomaly tokens. Re-blending such attributes may produce never-seen anomalies, achieving a high diversity of anomalies. For normal images, we propose a Normal-image Alignment (NA) loss to learn the products' key features that are used to synthesize products with both global consistency and local variations. The two training processes are separated but conducted on a shared U-Net. Finally, SeaS produces high-fidelity annotations for the generated anomalies by  fusing discriminative features of U-Net and high-resolution VAE features. The extensive evaluations on the challenging MVTec AD and MVTec 3D AD dataset (RGB images) demonstrate the effectiveness of our approach. For anomaly image generation, on MVTec AD dataset, we achieve 1.88 on IS and 0.34 on IC-LPIPS, while on the MVTec 3D AD dataset, we obtain 1.95 on IS and 0.30 on IC-LPIPS.  For the downstream task, by using our generated anomaly image-mask pairs, three common segmentation methods achieve an average 11.17\\% improvement on IoU on MVTec AD dataset, and a 15.49\\% enhancement in IoU on the MVTec 3D AD dataset. The source code will be released publicly available.",
+    "keywords": [
+        "Industrial Anomaly Image Generation",
+        "Industrial Anomaly Segmentation"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=VzZTHukfCB",
+    "pdf_link": "https://openreview.net/pdf?id=VzZTHukfCB",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes a new method named Seas to solve the few-shot anomaly image generation problem. It leverages the stable diffusion model and VAE to generate anomaly images with accurate annotations. The experiment results show the effectiveness of their method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tLeveraging text prompts to guide the model in decoupling the generation of abnormal regions and objects.\n2.\tUsing VAE to generate high-resolution annotations is a good direction."
+            },
+            "weaknesses": {
+                "value": "1.\tThe relationship between anomaly tokens and training different types of anomalies is not clear.\n2.\tThe paper has not discussed how to control the type of exceptions generated during inference.\n3.\tThe paper does not explain why the U-net used to predict noise in the Refined Mask Prediction branch has a highly discriminative feature."
+            },
+            "questions": {
+                "value": "1. I want to clarify the relationship between exception marking and training different types of exceptions.\n2. I want to know how to control the types of exceptions generated during inference.\n3. I wonder why U-net, which is used to predict noise, has highly discriminative features in the fine mask prediction branch."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a separation and sharing fine-tuning (SeaS) approach with a few abnormal and some normal images to produce anomalies and pixel-wise annotations. An unbalanced abnormal (UA) text prompt is introduced for anomaly generation, which consists of one product token and several anomaly tokens. For anomaly images, a decoupled anomaly alignment (DA) loss is used to bind the attributes of the anomalies to different anomaly tokens. For normal images, a normal-image alignment (NA) loss is used to learn the products\u2019 key features that are used to synthesize products with both global consistency and local variations. Experiments on MVTec AD and MVTec 3D AD datasets (RGB images) show the effectiveness of the proposed method for anomaly image generation and detection."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "+ The motivation is good. A shared generation model for multiple anomaly types is proposed to solve the problem of insufficient anomaly images.\n\n+ The generated anomaly images seem more real than other GAN-based methods.\n\n+ Some ablation studies are provided to facilitate the understanding of how the performance benefits from different components, including the DA loss, the NA loss, and the refined mask prediction branch."
+            },
+            "weaknesses": {
+                "value": "- The experimental results are insufficient. Because the ultimate goal of generating abnormal images is to improve the performance of anomaly detection tasks, some SOTA anomaly detection methods should also be compared on image AUROC, pixel AUROC and PRO besides generative model-based anomaly detection methods, e.g., DiAD [1]. Although RealNet [2] is compared in appendix A.5, the proposed method does not significantly outperform RealNet, particularly AUROC, and RealNet does not use any anomaly samples during training.\n\n- Since the proposed method is not specific to the multi-class anomaly detection setting, I would also wonder about the comparison with SOTA methods in the single-class anomaly detection setting, especially supervised/semi-supervised methods, e.g., PRN [3] or BGAD [4], because anomaly samples are used during training of the proposed method.\n\n- More datasets are required to evaluate the proposed anomaly generation method on image AUROC, pixel AUROC and PRO, such as VisA dataset containing more diverse and tiny anomalies. It is more challenging to generate these anomalies.\n\n- What does the \u201cunbalanced\u201d mean in Sec. 3.2? The paper does not clearly explain its meaning. The authors should clearly define or explain this term when it is first introduced, and discuss its significance to the overall approach.\n\n- In Fig.5, for Wood color, the results generated by the proposed method do not seem better than the results of AnomalyDiffusion.\n\n[1] H. He, et al., A diffusion based framework for multi-class anomaly detection, AAAI 2024\n[2] X. Zhang, et al., Realnet: feature selection network with realistic synthetic anomaly for anomaly detection, CVPR 2024.\n[3] H. Zhang, et al., Prototypical residual networks for anomaly detection and localization, CVPR 2023\n[4] X. Yao, et al., Explicit boundary guided semi-push-pull contrastive learning for supervised anomaly detection, CVPR 2023."
+            },
+            "questions": {
+                "value": "1. Because the ultimate goal of generating abnormal images is to improve the performance of anomaly detection tasks, some SOTA anomaly detection methods should also be compared on image AUROC, pixel AUROC and PRO besides generative model-based anomaly detection methods, e.g., DiAD [1]. Although RealNet [2] is compared in appendix A.5, the proposed method does not significantly outperform RealNet, particularly on AUROC, and RealNet does not use any anomaly samples during training.\n\n2. Since the proposed method is not specific to the multi-class anomaly detection setting, I would also wonder about the comparison with SOTA methods in the single-class anomaly detection setting, especially supervised/semi-supervised methods, e.g., PRN [3] or BGAD [4], because anomaly samples are used during training of the proposed method.\n\n3. More datasets are required to evaluate the proposed anomaly generation method on image AUROC, pixel AUROC and PRO, such as VisA dataset containing more diverse and tiny anomalies. It is more challenging to generate these tiny anomalies.\n\n4. What does the \u201cunbalanced\u201d mean in Sec. 3.2? The authors should clearly define or explain this term when it is first introduced, and discuss its significance to the overall method.\n\n5. In Fig.5, for Wood color, the results generated by the proposed method do not seem better than the results of AnomalyDiffusion.  Are there particular challenges with the Wood color anomaly type for the proposed method?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a Separation and Sharing Fine-tuning (SeaS) approach for few-shot industrial anomaly image generation. The proposed Decoupled Anomaly Alignment (DA) loss and Normal-image Alignment (NA) loss achieve the generation of highly-diverse anomalies and globally-consistent products. Moreover, the author designs the Refined Mask Prediction (RMP) module to produce pixel-wise anomaly annotations. Extensive experiments show the effectiveness of the method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "In general, the proposed method is reasonable and the results are fine.\n\n+ Both anomaly image generation and anomaly segmentation are considered.\n+ This paper is clearly presented.\n+ The proposed method achieves realistic and diverse generation of abnormal samples."
+            },
+            "weaknesses": {
+                "value": "- The word \u201cUnbalanced\u201d in Unbalanced Abnormal Text Prompt is inappropriate. The author believes fixed generic semantic words may fail to align with a few training images that contain specific defect types. Therefore, the text prompt should be expressed as dynamic or learnable, etc. \n- The author should add the results of Baseline in Table 4, such as generation of typical text prompt with fixed generic semantic words. Moreover, the result with different layers in UNet in RMP branch should be discussed.\n- The authors should replace the abnormal synthesis strategy in the existing unsupervised methods with the proposed generation strategy to prove the effectiveness of the proposed method, such as DRAEM, because the methods in the table 2 are not specifically designed for anomaly detection.\n- Implementation details of inference should be described, such as inference step and guidance scale, which is critical to the quality of the generation.\n- The latest generation method [1] should be compared.\n- More datasets, such as VisA or RealIAD, are suggested to used for further evaluation of the proposed method.\n\n\n[1] Few-Shot Anomaly-Driven Generation for Anomaly Detection. 2024."
+            },
+            "questions": {
+                "value": "- The word \u201cUnbalanced\u201d in Unbalanced Abnormal Text Prompt is inappropriate. The author believes fixed generic semantic words may fail to align with a few training images that contain specific defect types. Therefore, the text prompt should be expressed as dynamic or learnable, etc. \n- The author should add the results of Baseline in Table 4, such as generation of typical text prompt with fixed generic semantic words. Moreover, the result with different layers in UNet in RMP branch should be discussed.\n- The authors should replace the abnormal synthesis strategy in the existing unsupervised methods with the proposed generation strategy to prove the effectiveness of the proposed method, such as DRAEM, because the methods in the table 2 are not specifically designed for anomaly detection.\n- Implementation details of inference should be described, such as inference step and guidance scale, which is critical to the quality of the generation.\n- The latest generation method [1] should be compared.\n- More datasets, such as VisA or RealIAD, are suggested to used for further evaluation of the proposed method.\n\n\n[1] Few-Shot Anomaly-Driven Generation for Anomaly Detection. 2024."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a network structure for simultaneously generating anomaly images and their corresponding mask annotations. This is achieved through the following elements within a shared U-Net architecture: 1. Specialized text tokens; 2. Distinct loss functions tailored for anomaly and normal images; and 3. A mask prediction module designed for precise anomaly mask generation. Together, these components ensure the randomness of anomalies, the global consistency of products, and high-quality mask refinement."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Originality: The paper presents an innovative approach to industrial anomaly image generation by designing specialized object and anomaly tokens. This allows a shared model to train across multiple objects and anomalies, which is a unique solution in the field.\nQuality: The network structure is carefully designed, combining tailored loss functions for anomaly and normal images along with a mask prediction module.\nClarity: The paper is clearly written and easy to follow, with well-organized sections and explanations that make the complex methodology accessible to readers.\nSignificance: Extensive experiments substantiate the method\u2019s effectiveness, showcasing significant improvements over prior approaches."
+            },
+            "weaknesses": {
+                "value": "Clarity in Methodology: The current fixed anomaly token setup (N=4) does not allow explicit control over specific types of anomalies, particularly in mixed anomaly cases (e.g., mixed anomalies in cable). This limitation reduces the flexibility of the model in generating targeted anomaly types.\nEffectiveness of the Method: Unlike AnomalyDiffusion [1], which leverages the text inversion technique [2] without needing to fine-tune the U-Net, this method requires U-Net fine-tuning. This approach might reduce the domain gap for anomaly data, potentially contributing to the improved quality of generated images. However, it would be helpful to clarify the effect of freezing versus fine-tuning the U-Net on image quality.\nAmbiguity in the Inference Process: The inference process in this paper lacks clarity, making it difficult to understand how to specify a particular anomaly type.\n[1] AnomalyDiffusion: Few-Shot Anomaly Image Generation with Diffusion Model  \n[2] An Image is Worth One Word: Personalizing Text-to-Image Generation using Textual Inversion"
+            },
+            "questions": {
+                "value": "1. The paper currently sets a fixed number of anomaly tokens (N=4). This appears to limit control over generating specific anomaly types, especially for mixed anomaly cases like those in the \"cable\" category. Is this interpretation correct, or is there a way to dynamically adjust or control anomaly types within this setup? Further clarification on this point would be very helpful.\n2. Since this method requires fine-tuning the U-Net while AnomalyDiffusion [1] uses text inversion [2] without U-Net adjustments, could the authors clarify whether the observed quality improvement in anomaly generation stems from this fine-tuning? A comparison between freezing and fine-tuning the U-Net would be insightful\n3. Could the authors provide additional details on the inference process, specifically on how one could specify or target a particular anomaly type during generation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents an innovative approach called SeaS (Separation and Sharing Fine-tuning). SeaS is specifically designed to generate high-quality and diverse industrial anomaly images while using a minimal number of training examples. This is particularly important in industrial contexts, where anomaly images are often scarce.\n\nAt the heart of the SeaS methodology is a unique strategy that leverages both normal and abnormal images. This is accomplished through an Unbalanced Abnormal Text Prompt, which distinguishes between product tokens and anomaly tokens. This differentiation enables the generation of anomalies with a variety of attributes, enhancing the practical use of these images in real-world situations.\n\nAdditionally, the SeaS method incorporates two key loss functions that are essential to its framework. The first, Decoupled Anomaly Alignment loss, aims to increase the diversity of the generated anomalies. The second, Normal-image Alignment loss, ensures that the product images remain consistent and high-fidelity. Together, these elements strengthen the SeaS methodology, making it effective for producing high-quality industrial anomaly images."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The SeaS method presents an approach to few-shot learning specifically tailored for the generation of industrial anomaly images, a task that poses significant challenges due to the limited availability of such images. This method addresses the pressing need for effective anomaly generation in industrial settings, where data scarcity can hinder performance and innovation.\n2. Central to the SeaS methodology is the introduction of the Unbalanced Abnormal (UA) Text Prompt, along with a systematic separation of anomaly tokens from product tokens. This strategy not only enhances the diversity of the generated anomalies but also improves their fidelity, thereby ensuring that the resulting images are both varied and accurate representations of real-world anomalies.\n3. The paper offers an in-depth examination of two key loss functions: Decoupled Anomaly Alignment (DA) loss and Normal-image Alignment (NA) loss. The DA loss is designed to promote greater diversity among the generated anomalies, while the NA loss ensures that the product images maintain their consistency and high quality."
+            },
+            "weaknesses": {
+                "value": "1. The examples provided in the article primarily focus on straightforward instances of image generation. They do not explore more complex scenarios, such as the cable swap and cable missing categories found in the MVTec dataset. These intricate examples necessitate a more advanced approach to image generation that can effectively address complicated anomalies and their effects on overall product appearance.\n2. The SeaS framework, while innovative in its application of few-shot learning for industrial anomaly image generation, does not fundamentally differ from the AnomalyDiffusion framework. Both aim to tackle the challenge of generating diverse and realistic anomaly images from limited data. However, SeaS introduces distinctive mechanisms, such as the Unbalanced Abnormal Text Prompt and the Separation and Sharing Fine-tuning strategy. These innovations give SeaS an edge in generating anomalies with greater fidelity and diversity. Nonetheless, both frameworks share a common goal of enhancing anomaly generation capabilities, indicating a gradual evolution in the field of generative models for industrial applications rather than a revolutionary shift.\n3. While the paper demonstrates the effectiveness of SeaS with simpler anomalies, it would be valuable for the authors to discuss its performance with more complex anomalies, such as the cable swap and cable missing examples from the MVTec dataset. Are there specific challenges or limitations when generating these complex anomalies? If the method has been tested with these examples, presenting those results could significantly strengthen the paper. If not, outlining potential strategies for addressing these complexities would be advantageous.\n4. The paper positions SeaS as a superior approach compared to AnomalyDiffusion. What are the key factors that make SeaS more effective in certain aspects of industrial anomaly image generation? Are there scenarios in which AnomalyDiffusion may still offer advantages? A detailed comparative analysis or a side-by-side case study featuring both frameworks could clarify their respective strengths and weaknesses."
+            },
+            "questions": {
+                "value": "1. How does SeaS handle generalization to new, unseen anomaly types in industrial images? Does the framework require retraining, or can it adapt to new anomalies using the same training strategy?\n2. What are the computational resources needed for training the SeaS model, and how does this compare to existing methods in terms of training and inference times? Are there any optimizations implemented to accommodate large-scale datasets?\n3.  How robust is the SeaS framework to variations in image quality, such as changes in lighting conditions, backgrounds, or resolutions? Does the model maintain consistent performance across these variations?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a few-shot industrial anomaly generation method named SeaS.  The authors use a technique similar to textual inversion to update the learnable prompt, and then use the prompt and latent diffusion to generate defects. Moreover, this work proposes an alignment (DA) loss to assign different attributes of the anomalies to different anomaly tokens, achieving a high diversity for anomalies generation."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. This paper is well organized, and easy to follow.\n\n2. Extensive experiments on MVTec AD and MVTec 3D demonstrate the effectiveness of proposed seaS.\n\n3. The decoupled anomaly alignment loss makes sense, which improves the effect of texual inversion."
+            },
+            "weaknesses": {
+                "value": "1. The design of \"Unbalanced Abnormal Text Prompt\" is similar with previous works [1, 2], which compromises the novelty. \n\n2. While the paper demonstrates strong performance on MVTec datasets, it is unclear how well the SeaS method generalizes to other datasets or different types of unseen anomalies during training.\n\n3. The paper should provide more details on the computational complexity, as the two training processes.\n\n4. The scalability of the SeaS approach to handle a large number of anomaly types or a higher resolution of images is not discussed. It is an important consideration for industrial applications with diverse and high-resolution imagery.\n\n5. As for the part of defect generation, the key lies in whether the generated defect samples can improve the model detection ability, rather than paying attentions on whether the samples are similar to real defects. However, the metrics used  in Table 1 are all about measures on the generated image.  Author should focus more on generating samples to enhance model detection performance. \n\n6. The author should conduct experiments on more datasets. At present, some high-quality datasets are existing, such as VisA [4] and Real-IAD [3].\n\n[1] Gal, Rinon, et al. \"An image is worth one word: Personalizing text-to-image generation using textual inversion.\"\u00a0arXiv preprint arXiv:2208.01618\u00a0(2022).\n\n[2] Li, Xiaofan, et al. \"Promptad: Learning prompts with only normal samples for few-shot anomaly detection.\"\u00a0In CVPR,2024.\n\n[3] Chengjie Wang, Wenbing Zhu, Bin-Bin Gao, Zhenye Gan, Jiangning Zhang, Zhihao Gu, Shuguang Qian, MingangChen, and Lizhuang Ma. Real-iad: A real-world multi-view dataset for benchmarking versatile industrial anomaly detection. In CVPR, 2024. 5 \n\n[4] Yang Zou, Jongheon Jeong, Latha Pemula, Dongqing Zhang, and Onkar Dabeer. Spot-the-difference self-supervised pretraining for anomaly detection and segmentation. In ECCV, 2022. 2, 5, 6"
+            },
+            "questions": {
+                "value": "Please report the time cost of the proposed method. To my knowledge, diffusion-based work takes long time. But in real industry applications, we need lower time cost."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

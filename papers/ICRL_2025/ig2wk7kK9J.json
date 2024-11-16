@@ -1,0 +1,167 @@
+{
+    "id": "ig2wk7kK9J",
+    "title": "SafeDiffuser: Safe Planning with Diffusion Probabilistic Models",
+    "abstract": "Diffusion models have shown promise in data-driven planning. While these planners are commonly employed in applications where decisions are critical, they still lack established safety guarantees. In this paper, we address this limitation by introducing SafeDiffuser, a method to equip diffusion models with safety guarantees via control barrier functions. The key idea of our approach is to embed finite-time diffusion invariance, i.e., a form of specification consisting of safety constraints, into the denoising diffusion procedure. This way we enable data generation under safety constraints. We show that SafeDiffusers maintain the generative performance of diffusion models while also providing robustness in safe data generation. We evaluate our method on a series of tasks, including maze path generation, legged robot locomotion, and 3D space manipulation, and demonstrate the advantages of robustness over vanilla diffusion models.",
+    "keywords": [
+        "Diffusion model",
+        "Safety guarantees",
+        "Planning and control"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We propose a new method to ensure diffusion probabilistic models satisfy specifications by using a control theoretic method",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ig2wk7kK9J",
+    "pdf_link": "https://openreview.net/pdf?id=ig2wk7kK9J",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors propose a method to use control barrier functions (CBFs) with diffusion planning, enabling safety guarantees. The results are demonstrated on a 2D maze problem, Walker2D and a manipulation problem from related work."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Safety guarantees are important for some applications and of interest to the safe planning community\n- This may be the first (only?) safety method for diffusion planning."
+            },
+            "weaknesses": {
+                "value": "- Some parts are a bit difficult to read and have unusual terminology (e.g., \"local traps\"?) and the paper contains some minor grammar and cosmetic issues which make the quite complex approach harder to understand.\n- The method is actually three methods, and the user is to pick the one most suitable for their problem. This seems a bit complicated, why not go for the most general?\n\nExample presentation issues (I recommend you do another polish pass):\n- General: excessive underlining\n- 470: typo: physical simulator\n- 474: typo: can work in general safety guarantees"
+            },
+            "questions": {
+                "value": "1) Are \"local traps\" = local minima?\n2) Isn't it a big problem that the method gets stuck in \"local traps\" between 39% and 100% of the time for some of the benchmarks? What does this mean in practice?\n3) What is trap rate 1 vs. trap rate 2 in the table?\n4) Could you comment on why you chose to use CBF here instead of e.g. lagrangian objectives common in safe RL?\n5) Why three methods instead of the most general, or one that picks the best solution approach?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors present SafeDiffuser, a modified version of the Diffuser model proposed by Janner et al. (2022), adapted to ensure the satisfaction of safety constraints. They introduces \"Finite-Time Diffusion Invariance,\" leveraging Control Barrier Functions (CBFs) within the denoising diffusion process to enforce specified safety constraints. The authors propose three approaches for implementing their methodology\u2014ROS, RES, and TVS\u2014that demonstrate competitive performance compared to baseline methods, achieving significantly fewer constraint violations. Experiments were conducted across Maze2D-large, locomotion, and manipulation tasks, validating the effectiveness of the proposed approaches in diverse settings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The proposed method introduces a novel formulation of Control Barrier Functions (CBFs) within diffuser-family models, ensuring that safety constraints are satisfied throughout the diffusion denoising process.\n2. The authors provide a systematic approach for selecting the appropriate variant based on the safety constraints.\n3. Results demonstrate improvements in safety-related metrics while maintaining comparable performance in the downstream task.\n4. The method can be trained using data that violates safety constraints, yet during testing, it reliably generates safe trajectories."
+            },
+            "weaknesses": {
+                "value": "1. The proposed methods require solving Quadratic Programs (QPs) at each diffusion step, which is computationally inefficient.\n2. [Minor Weakness] The approach requires predefined safety constraints. However, I think that this limitation is relatively minor, such a setup is not a major weakness.\n3. It would strengthen the paper if the authors included comparisons with other methods, such as CDT [1], which also employ sequential modeling techniques to address offline RL problems with safety constraints.\n\n[1] Liu, Zuxin, et al. \"Constrained decision transformer for offline safe reinforcement learning.\"\u00a0*International Conference on Machine Learning*. PMLR, 2023.\n\nDespite the weaknesses, I find the formulation and results are enough to have the paper above the acceptance threshold."
+            },
+            "questions": {
+                "value": "1. In terms of data and experimental results, could you clarify the rationale for selecting D4RL over [2], which is specifically designed for Safe Offline RL?\n2. Can you clarify the motivation of applying CBFs in the diffusion denoising process steps instead of trajectory planning steps? It was not very clear.\n3. Why were the experiments conducted solely in Maze2D-large? Could you clarify the choice of tasks for the locomotion experiments? Specifically, why was only the Medium-Expert variant used for the locomotion environment? What about Cheetah?\n4. Could you elaborate on the generalization capabilities of the model when encountering new safety constraints beyond those specified during training? It would be valuable to understand how well the approach adapts to previously unseen constraints.\n\n\n[2] Liu, Zuxin, et al. \"Datasets and benchmarks for offline safe reinforcement learning.\" arXiv preprint arXiv:2306.09303 (2023)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents control barrier function-based methods to enforce safety constraints on diffusion models. The main idea is to modify the diffusion denoizing step to satisfy safety constraints within a finite number of steps (finite-time diffusion invariance). This is done by formulating a quadratic program to compute a perturbation that steers the generated trajectory towards the safe set in every denoizing step. Evaluations in simulated maze and robotics domains show that the proposed method is superior to baselines in satisfying safety constraints at the cost of longer planning time."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- Diffusion models are an important and effective class of conditional generative models. However, existing methods for guidance do no provide safety guarantees. Hence, the propose algorithm is an important contribution.\n    \n- Applying CBF-based technique to diffusion models is novel to my knowledge. In particular, modifying the denoizing steps seem to be more effective than generating safe trajectories through classifier-free guidance.\n    \n- Proposed extension to handle local traps are effective.\n    \n- Experimental results in simulation demonstrate the effectiveness and robustness of the algorithm."
+            },
+            "weaknesses": {
+                "value": "- Safety specifications have to be differentiable.\n    \n- SafeDiffuser is significantly slower (by an order of magnitude) than vanilla diffusion."
+            },
+            "questions": {
+                "value": "- The forward invariance in control theory (equation 2) assumes that the control system is governed by Lipschitz functions. Is any such requirement not required for extending the definition to diffusion neural networks?\n    \n- Diffusion dynamics is estimated online. How does error in this estimation affect the guarantees and performance in practice?\n    \n- In theorem 3.2 what is the intuitive meaning of the robust term?\n    \n- If would be interesting to continually retrain the diffusion models on the generated safe data. Can this improve performance or speed up safediffuser?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces SafeDiffuser, a method to add safety guarantees to diffusion models when used for planning tasks. The key innovation is incorporating control barrier functions (CBFs) into the diffusion process to ensure generated trajectories satisfy safety constraints."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The approach maintains the model performance while adding safety guarantees."
+            },
+            "weaknesses": {
+                "value": "1. The definition of diffusion invariance seems too strict. Essentially we only care about the safety at t=0, and trajectories satisfying t=0 safety don\u2019t necessarily need to satisfy t=1 safety. However the method actively encourages the intermediate trajectories to be safe. This doesn\u2019t mean the method is wrong, but I\u2019m hoping to see a softer way to guarantee the safety. See Q2.\n2. Along with the above weakness, the design choice seems too complex. There\u2019re $\\epsilon$, $w$, $r$, $\\gamma$, $\\sigma$, all of them seem hyper-parameters that need careful tuning.\n3. CBF itself is meant to design for dynamics that are (1) time-invariant; and (2) deterministic. The diffusion process doesn\u2019t belong to any of these two parts. For (1), the alpha bar changes over time steps. For (2), most of the diffusion sampler constantly adds noise to the dynamics (unless the approach is specifically using DDIM). Applying CBF-based technique to the diffusion seems counter-intuitive. \n4. Scaling up seems challenging. I\u2019m hoping to see a highly nonlinear dynamics like drone/quadcopter to see whether the method could scale up. Another challenge for scaling up is from the selection criteria. Page 6 discusses the principle to select different safediffusers. As mentioned, it requires the unsafe set to be known to determine the convexity. This seems challenging for high-dimensional control tasks."
+            },
+            "questions": {
+                "value": "1. Regarding to the design choice, the TVS diffuser seems to be the most general safediffuser. Is it possible to further simplify the forward invariance equation (theorem 3.4) by fully discarding the reliance on b, and directly using sigma? For example, imagine sigma at t=0 converges to exactly b. This sigma can be used in analogy to the time-varying CBF and should impose a more relaxed restriction to the intermediate samples. I guess it would need clever design of sigma (or even learning-based), but do you think it is worth the effort?\n2. Another question is the motivation of using CBF. From first principle, all we care about here is the safety at the final timestep, ie, t=0. It sounds more similar to a goal-reaching/liveness problem, where you don\u2019t need to enforce every intermediate sample satisfy the safety. Compared to control Lyapunov function or reachability-based method, why is CBF used for the problem? Applying the other two concepts seem more natural to me.\n3. In control, CBF can usually be compared to potential-field based method to show their effective in terms of avoiding obstacle in a longer time horizon rather than reactively avoiding. Similarly, is it possible to include [1] as a baseline to show the approach\u2019s effectiveness? \n\n[1] Luo, Y., Sun, C., Tenenbaum, J. B., & Du, Y. (2024). Potential based diffusion motion planning. arXiv preprint arXiv:2407.06169."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

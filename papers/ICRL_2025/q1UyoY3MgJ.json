@@ -1,0 +1,166 @@
+{
+    "id": "q1UyoY3MgJ",
+    "title": "Rethinking Invariance in In-context Learning",
+    "abstract": "In-Context Learning (ICL) has emerged as a pivotal capability of auto-regressive large language models, yet it is hindered by a notable sensitivity to the ordering of context examples regardless of their mutual independence. To address this issue, recent studies have introduced several variant algorithms of ICL that achieve permutation invariance. However, many of these do not exhibit comparable performance with the standard auto-regressive ICL algorithm. In this work, we identify two crucial elements in the design of an invariant ICL algorithm: information non-leakage and context interdependence, which are not simultaneously achieved by any of the existing methods. These investigations lead us to the proposed \\emph{Invariant ICL (InvICL)}, a methodology designed to achieve invariance in ICL while ensuring the two properties. Theoretically, we prove that InvICL approximates standard gradient descent, which possess the best convergence properties among all the gradient descent variants of existing ICL algorithms. Empirically, our findings reveal that InvICL surpasses previous models, both invariant and non-invariant, in most benchmark datasets, showcasing superior generalization capabilities across varying input lengths.",
+    "keywords": [
+        "In-context Learning",
+        "Permuation Invariance"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=q1UyoY3MgJ",
+    "pdf_link": "https://openreview.net/pdf?id=q1UyoY3MgJ",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a new permutation-invariant attention mechanism InvICL, which is adapted from Bag-of-Example (BoE) but admits full context-interdependnce. The authors enable the context interdependence by duplicating the context examples and allowing leave-one-out (LOO) attention from the duplicated tokens to original tokens. By doing so, IncICL enjoys the properties of (i) permutation-invariant, (ii) information non-leakage, (iii) context interdependence. Evaluations show that InvICL outperform baselines (Prefix, AR, BoE, NoPE) on tasks that adimit a permutation-invariant nature."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The idea is novel and interesting. The motivation is clear as InvICL is proposed by the desired three properties."
+            },
+            "weaknesses": {
+                "value": "1. Experiment results need more analysis and interpretations. The authors find InvICL shows better length-generalization capabilities, whose mechanism is unclear to me. \n\n2. More experiment results needed. Most results do not have a  reported std. Besides, it would be benificial if there is a figure of squared error curves where the x-axis is the training epochs. Currently there are only results from 50k and 200k epochs.\n\n3. The results of Prefix ICL for linear regression are a bit weird to me. The reported squared error seems to fairly high (around 0.5) even when the number of examples is 40. In another paper [1], the reported squared errors are much lower than 0.1 for 5-layer transformers with number of context examples 10 and data dimension 10. \n\n[1] Johannes von Oswald, Eyvind Niklasson, Ettore Randazzo, Jo\u00e3o Sacramento, Alexander Mordvintsev, Andrey Zhmoginov, Max Vladymyrov. Transformers Learn In-Context by Gradient Descent. ICML 2023."
+            },
+            "questions": {
+                "value": "1. Is the loss taken over only the test token or all tokens (autoregressive loss) in the input for Prefix ICL in the training stage? If it is the latter, then it does not make too much sense since for Prefix ICL the context example can attend to its label directly.\n\n2. Can the test token attend to itself in authors' implementation in Prefix ICL for linear regressions? From figure 2 it seems to be attending to itself, but I am not sure if that is the case in the experiments. Other papers [1, 2] using Prefix attention avoid such attention since it could provide incorrect signals to multilayer transformers (the corresponding $\\hat y$ is inaccurate within the forward passes).\n\n3. Does the positive encoding in the footnote of page 1 refer to positional encoding?\n\n\n[1] Johannes von Oswald, Eyvind Niklasson, Ettore Randazzo, Jo\u00e3o Sacramento, Alexander Mordvintsev, Andrey Zhmoginov, Max Vladymyrov. Transformers Learn In-Context by Gradient Descent. ICML 2023.\n\n[2] Kwangjun Ahn, Xiang Cheng, Hadi Daneshmand, Suvrit Sra. Transformers learn to implement preconditioned gradient descent for in-context learning. NeurIPS 2023."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents InvICL, a new approach to in-context learning that achieves three key properties: permutation invariance, information non-leakage, and context interdependence. The authors propose a parallel implementation using a duplicated input sequence and modified attention patterns. They provide a theoretical analysis showing that InvICL approximates standard gradient descent and demonstrates improved performance over baseline methods (GPT-2 Large 762M, GPT-Neo 2.7B, Pythia-2.8B). The work tries to understand and improve in-context learning, though there are some practical concerns."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper identifies and formalizes three important properties for ICL that weren't previously unified. The authors demonstrate why these properties matter. \n- The theoretical analysis is simple but straightforward. The authors prove that InvICL approximates standard gradient descent (Theorem 4.1) and show how this leads to better convergence properties compared to other ICL variants.\n- The experimental results look interesting. The method shows strong performance across multiple settings - synthetic tasks (Figure 3), out-of-distribution scenarios (Figure 7), and real-world datasets (Table 2)."
+            },
+            "weaknesses": {
+                "value": "- The practical applicability of the method raises some concerns. The paper relies on MetaICL finetuning, which is computationally expensive for modern large language models. I wonder if there are any training-free methods. \n- The efficiency implications are concerning. Doubling the input sequence length (as shown in Figure 2d) increases memory usage. In Section 5.2, \u201cWe find that when the inputs size of the GPT-2 Large model increases from 512 to 1024, the GPU memory overhead increases by 14% (from 4.2 GB to 4.8GB)\u201d. However, when the context is long, e.g., 64k, the overhead will be super large. Moreover, the attention pattern used likely makes it incompatible with FlashAttention optimizations, which could further impact practical deployment.\n- The experimental setup feels somewhat dated by using GPT-2 Large as the primary model. While the authors include some results with GPT-Neo 2.7B and Pythia-2.8B in the appendix, evaluating more recent models like Phi-3.5 or Llama 3.2 would better demonstrate the method's relevance to current architectures.\n- There are some inconsistencies in the presentation. Figure 1 shows results for PCW while Table 1 uses different terminology (Inv ICL), making it difficult to track the method comparisons. It confuses me to understand the relative performance of different approaches."
+            },
+            "questions": {
+                "value": "How would InvICL perform in few-shot settings without MetaICL finetuning? This would be particularly relevant for scenarios where finetuning isn't practical."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a new method to achieve higher performance out of In-Context Learning with no additional model training. It presents conditions under which a well defined notion of invariant In-context learning should perform well highlighting the gap in prior works that this paper fills with its proposed method. The paper gives theoretical and empirical justification for the superiority of its method."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper presents a clear step up in terms of theoretical ideas as well as empirical evidence of improvement compared to prior works attempting to optimize ICL.\n- Paper is very well written, clearly presents and distinguishes its contribution.\n- Although the method requires more computation in theory, the authors achieve parallelism and same order of computation as standard ICL with a smart trick. The authors also talk about the additional memory requirements. [Point being that the paper addresses a plethora of relevant points surrounding its method]."
+            },
+            "weaknesses": {
+                "value": "**The significance of section 4 and section 5.1 are unclear.** Please see this [ICML 2024 paper](https://arxiv.org/abs/2310.08540) that talks about how training transformers with ICL objective may be incompatible with real ICL in LLMs that do not train explicitly for ICL with fixed ICL prompt format.\n- Theorem 4.1 shows that if we put weight matrices in a particular format, we can simulate InvICL with transformers. But, is there reason to believe that trained transformers end up with similar weights?\n- Similarly, results from section 5.1 assume that transformers are trained with ICL objective, which is not true for LLMs. \n\nI believe these points merit a discussion in the paper."
+            },
+            "questions": {
+                "value": "- **Definition 3.3**: if j > i, and this condition still holds, then isn\u2019t it sort of contradicting information non-leakage (not technically with your definition as it only requires non-leakage to the corresponding label; but in my opinion, if an x_i can influence another x_i or y_i later in the sequence, it should count as information leakage)? Should the condition be j < i instead of j \\neq i? This is intuitively the case for AR LLMs because they only depend on previous context and you have mentioned it in point 3 (\u201cThese examples provide the context for better encoding of x_i, which in turn improves the prediction of future examples when x_i serves as their context.\u201d) Why is context interdependence important, or why should I believe that context interdependence should be useful/necessary for AR LLMs, when they can not attend to future demonstrations?\n- External modification of attention masks (through aggregation via BoE) is a deviation from how these models are trained to read those activations. How do you think this impacts the model\u2019s internal representations? What could be the effects on predictions apart from pure performance numbers (like does it increase hallucination)? Would like to see some discussion or simple experiment along this line.\n\nPS: I hope to increase my rating if the authors make an effort to discuss my concerns."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes InvICL, a new invariant ICL algorithm that satisfies not only invariance, but also information non-leakage and context interdependence. Then the authors provide both theoretical and empirical evidence to prove the effectiveness of the proposed algorithm on ICL."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is overall well written and well presented. \n- The paper present reasonable desiderata for ICL algorithms, and the proposed method complements prior works on those criteria.\n- The paper present some theoretical intuition on why the proposed method should work better than its counter parts.\n- Authors conduct various experiments to prove the effectiveness of the proposed algorithm."
+            },
+            "weaknesses": {
+                "value": "- One might view the proposed method as concatenation of the prior works (PrefixICL and (variant of) PCW)\n- As with the previous works, it lacks connection with *actual* ICL performed by LLMs.\n- Although the inference time of InvICL does not differ much from AR ICL, is it also true for training? To my understanding, in InvICL (and other invariant ICL algorithms), $\\hat{g}(x_i)$ and $\\hat{g}(x_{i+1})$ cannot be computed on one forward pass. \n- For real-world dataset experiments, is AR ICL also fine-tuned on ICL tasks? If not, comparing ICL specific fine-tuned model and general LLM on ICL tasks seems unfair."
+            },
+            "questions": {
+                "value": "- Even with InvICL, is there a *learning plateau* during training?\n- If we actually train with InvICL, does the weight matrices aligns with Theorem 4.1?\n- Why is adding only symmetric positional embedding not beneficial?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

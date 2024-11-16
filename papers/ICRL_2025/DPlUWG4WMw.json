@@ -1,0 +1,137 @@
+{
+    "id": "DPlUWG4WMw",
+    "title": "Operator Deep Smoothing for Implied Volatility",
+    "abstract": "We devise a novel method for nowcasting implied volatility based on neural operators.\nBetter known as implied volatility smoothing in the financial industry, nowcasting of implied volatility means constructing a smooth surface that is consistent with the prices presently observed on a given option market.\nOption price data arises highly dynamically in ever-changing spatial configurations, which poses a major limitation to foundational machine learning approaches using classical neural networks.\nWhile large models in language and image processing deliver breakthrough results on vast corpora of raw data, in financial engineering the generalization from big historical datasets has been hindered by the need for considerable data pre-processing.\nIn particular, implied volatility smoothing has remained an instance-by-instance, hands-on process both for neural network-based and traditional parametric strategies.\nOur general *operator deep smoothing* approach, instead, directly maps observed data to smoothed surfaces.\nWe adapt the graph neural operator architecture to do so with high accuracy on ten years of raw intraday S&P 500 options data, using a single model instance.\nThe trained operator adheres to critical no-arbitrage constraints and is robust with respect to subsampling of inputs (occurring in practice in the context of outlier removal).\nWe provide extensive historical benchmarks and showcase the generalization capability of our approach in a comparison with classical neural networks and SVI, an industry standard parametrization for implied volatility. \nThe operator deep smoothing approach thus opens up the use of neural networks on large historical datasets in financial engineering.",
+    "keywords": [
+        "Financial Engineering",
+        "Neural Operators",
+        "Option Pricing",
+        "Function Interpolation",
+        "Nowcasting"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=DPlUWG4WMw",
+    "pdf_link": "https://openreview.net/pdf?id=DPlUWG4WMw",
+    "comments": [
+        {
+            "comment": {
+                "value": "Dear Reviewer o4xg,\n\nthank you very much for your review.\nIt is encouraging that you find our paper well-written and easy to follow, and that you agree with the strengths of our method with respect to input subsampling, no-arbitrage conditions, and elimination of data pre-processing.\n\nAs for mentioned weaknesses, however, we believe there might have been an oversight.\nYou mention:\n> 1. The contribution is limited. It is focused on applying the Graph Neural Operator (GNO) architecture to the specific task of nowcasting implied volatility, without modifications to the operator itself.\n> 2. It's important to discuss various neural operators and clarify why the Graph Neural Operator (GNO) was chosen for this task.\n\nHowever, our employed graph neural operator is, in fact, modified compared to the conventional version, and we devote the paragraph \"Interpolating Graph Neural Operator\" in Section 3.2 to this (as well as Appendix B).\nMore precisely, our modification consists of dropping the local linear transformation in the first layer and careful construction of the graph structure to enable data interpolation.\nWe state:\n\n> We therefore propose a new architecture for operator deep smoothing leveraging GNOs\u2019 unique ability to handle irregular mesh geometries. We use a purely non-local first layer (dropping the pointwise linear transformation), and use it to produce hidden state at all required output locations, enabling subsequent layers to retain their local transformations. (Page 7 of the paper.)\n\nWhile our tweak to the classical GNO architecture is subtle, it is crucially important to enable its use for interpolation tasks.\nWe explain --and argue that this moreover addresses your second mentioned weakness--:\n> Various neural operator architectures exist, mostly arising from the kernel integral transform framework of Kovachki et al. (2023). Most prominently, these include Fourier neural operators (FNO), delivering state-of-the-art results on fixed grid data, as well as graph neural operators (GNO), able to handle arbitrary mesh geometries (both reviewed in Appendix A.1). While highly effective with documented universality, these neural operators are not directly applicable for interpolation tasks as their layers include a pointwise-applied linear transformation, which limits the output to the set of the input data locations. (Page 7 of the paper.)\n\nFinally, we want to reiterate on your claim that our contribution \"is focused on applying the GNO architecture to the specific task of nowcasting implied volatility\".\nHowever, the entire Section 3.2 is kept general and not specific to implied volatility.\nInstead, we introduce the concept of *operator deep smoothing* as the generally applicable idea of using discretization-invariant neural operators approximating the identity operator to solve irregular interpolation tasks and explain the required modifications necessary to current neural operator architectures.\nOur practical experiments and much of the rest of the paper then indeed remain limited to implied volatility smoothing, which however is a massively important task in the financial industry, and which we believe benefits dramatically from our foundational, data-focused operator approach and is highly suited to showcase its unique advantages.\n\nWe hope the above explanations helped to dispel your doubts regarding our contribution.\nPlease do let us know if any unclarities or suggestions for improvement remain.\nFor example, we could expand our review of existing neural operator architectures in Appendix A, to support our argumentation in Section 3.2.\n\nThank you very much!"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel approach to smoothing implied volatility using neural operators, focusing on Graph Neural Operator (GNO) architectures. Unlike traditional parametric models or classical neural networks, the proposed operator deep smoothing method directly maps observed implied volatilities to smooth, arbitrage-free surfaces, eliminating the need for instance-by-instance recalibration. By harnessing the unique capability of neural operators to handle data of varying sizes and spatial arrangements, the model effectively addresses the challenges posed by the dynamic and irregular nature of real-world financial data. Validated on a decade of intraday S&P 500 options data, the method outperforms the SVI benchmark and other machine learning techniques while generalizing effectively to unseen datasets, including end-of-day options for other indices, without retraining."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- **Novelty:** This paper proposes a novel application of GNO architectures to implied volatility smoothing, a task traditionally reliant on parametric models like SVI. By leveraging the discretization-invariance of neural operators, the method effectively addresses the challenges of dynamic and irregular financial data, marking a significant step forward in financial engineering.\n\n- **Practical Significance:** The operator deep smoothing approach eliminates the need for instance-by-instance recalibration, streamlining the online calibration process. This drastically reduces computational overhead, making the method highly practical for real-time applications in trading, risk management, and other financial operations.\n\n- **Robust Validation:** The method is extensively validated on a decade of intraday S&P 500 options data, demonstrating superior accuracy compared to the SVI benchmark and other machine learning techniques. Its strong generalization performance on unseen datasets, including end-of-day options for other indices, further highlights its robustness and adaptability.\n\n - **Reproducibility:** The authors provide open-source code, model weights, and detailed implementation details, including architecture, loss functions, and training setups. These resources ensure the experiments are easy to replicate and extend."
+            },
+            "weaknesses": {
+                "value": "- **Limited Benchmark Comparisons:** The paper benchmarks its approach against SVI [1] and Ackerer et al. [2] but does not include comparisons with other key methods, such as SSVI [3] and VAE-based approaches [4]. Incorporating these would provide a more comprehensive evaluation. Additionally, using synthetic data, as in [2], could further strengthen the experimental validation.\n\n - **Insufficient Analysis of Computational Efficiency:** While the paper highlights the elimination of instance-by-instance recalibration, it lacks a detailed discussion on computational complexity, including runtime and memory requirements. These metrics are crucial for assessing the method\u2019s practicality in high-frequency financial contexts.\n\n - **Abstract Treatment of Discretization-Invariance:** The explanation of discretization-invariance is largely theoretical. Providing concrete financial scenarios, such as handling abrupt market shifts, would better illustrate its practical significance and strengthen the narrative.\n\n- **Clarity of Experimental Figures**: Figures 3 and 4 have unclear legends and insufficient annotations, which reduce their interpretability. Improving their clarity and labeling would make the results more accessible and impactful.\n\n[1] A parsimonious arbitrage-free implied volatility parameterization with application to the valuation of volatility derivatives.\n\n[2] Deep Smoothing of the Implied Volatility Surface.\n\n[3] Arbitrage-free SVI volatility surfaces.\n\n[4] Variational Autoencoders: A Hands-Off Approach to Volatility."
+            },
+            "questions": {
+                "value": "See Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel approach to nowcast implied volatility using neural operators, advancing the technique of implied volatility smoothing by constructing consistent, smooth surfaces that reflect current option market prices. Unlike traditional machine learning models, which struggle with dynamically changing spatial configurations in option price data, this work leverages a graph neural operator architecture to achieve robust and accurate predictions. Extensive benchmarks showcase that this work achieves superior generalization and accuracy over conventional neural networks and the SVI parametrization."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper is well-written and easy to follow.\n\n2. This proposed method is resilient to input subsampling, aligns with no-arbitrage conditions, and eliminates the need for extensive data pre-processing."
+            },
+            "weaknesses": {
+                "value": "1. The contribution is limited. It is focused on applying the Graph Neural Operator (GNO) architecture to the specific task of nowcasting implied volatility, without modifications to the operator itself.\n\n2. It's important to discuss various neural operators and clarify why the Graph Neural Operator (GNO) was chosen for this task."
+            },
+            "questions": {
+                "value": "please refer to the weaknesses part"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "**Disclaimer**: I have no background on financial engineering so I cannot comment on the originality/significance aspect of this work. I might have missed essential points and only base my review on technical soundness and empirical validation\n\nThis paper introduces a method to nowcast implied volatility based on neural operators. This is achieved by a graph neural operator with MLPs as the lifting/projection layers and the kernel functions. The model uses a composite loss function that includes the fitting loss, no-arbitrage constraints, enforcing monotonicity and regularization terms to ensure smoothness. The method improves over the baseline SVI model."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The proposed method appears to be an interesting approach to model implied volatility surfaces for option pricing. The method through composite loss functions that include constraints such as no-arbitrage allows for direct training of a neural network architecture that directly provides smooth surfaces that directly satisfy these constraints. While I cannot comment directly how difficult/hands-on other alternative approaches are in this domain, the proposed model appears to have the flexibility to introduce other loss terms or vary the graph structure to incorporate other structural properties directly into the model. The model leads to lower errors compared to the SVI method."
+            },
+            "weaknesses": {
+                "value": "The paper gives a good detail on the exact instantiation and implementation of the proposed method. I understand that there might be little prior work to base this paper on. However, it is unclear how the exact choices have been made and what would be their impact if changed. Note that the choices here might be purely made by domain knowledge, which I cannot judge and therefore might miss the specific considerations made here. However, I think the reader would benefit from more detail on the following: \n\n**In-Neighborhood sets**: The choice of in-heighborhood sets is arguably key model choice in this work. However, this work lacks detail on how the choice has been made and the subsampling heuristic has been devised. The authors argue that the choice is made because volatility smoothing requires limited global information exchange. I would then expect that the error of this method would go up if larger neighborhood sets are used. This paper would benefit from an additional analysis on changing the $\\bar{p}$ and $K$ parameters. \n\n**Other model choices**: Again, there is little information about all the other model choices and/or instantiations. In particular, the choice of the kernel functions as MLP (as opposed to other choices) would be interesting for the reader. I'm also wondering whether the MLP can output negative values? I understand that there is a softplus operation in the architecture and ensures positive values but again the choice of a MLP would benefit from further explanation/ablation. \n\n**Loss function weighting coefficients:** I would kindly ask the authors to include more detail how the weighting of the loss function has been performed. As it is stated right now, there is no information on how to select/adjust the weightings on a new pr.oblem. It would help the dissemination the method if the authors would share their methodology.\n\n**Ablations**: The claims in the paper could be strengthened by providing ablations In particular, different (wider) choices of the graph neighborhood would justify the choice of the authors. Additionally, omitting the no-arbitrage term and any of the other auxiliary terms would give more insight on the effect of the individual chosen components. \n\nI would reconsider my score if additional justification on the specific choices are included in the paper and the additional ablations on in-neighborhood and loss function weighting are performed."
+            },
+            "questions": {
+                "value": "See Weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

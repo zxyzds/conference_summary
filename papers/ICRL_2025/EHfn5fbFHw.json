@@ -1,0 +1,200 @@
+{
+    "id": "EHfn5fbFHw",
+    "title": "Context-Augmented Code Generation Using Programming Knowledge Graphs",
+    "abstract": "Large Language Models (LLMs) and Code-LLMs (CLLMs) have significantly improved code generation, but, they frequently face difficulties when dealing with challenging and complex problems. Retrieval-Augmented Generation (RAG) addresses this issue by retrieving and integrating external knowledge at the inference time. However, retrieval models often fail to find most relevant context, and generation models, with limited context capacity, can hallucinate when given irrelevant data. We present a novel framework that leverages a Programming Knowledge Graph (PKG) to semantically represent and retrieve code. This approach enables fine-grained code retrieval by focusing on the most relevant segments while reducing irrelevant context through a tree-pruning technique. PKG is coupled with a re-ranking mechanism to  reduce even more hallucinations by selectively integrating non-RAG solutions. We propose two retrieval approaches\u2014block-wise and function- wise\u2014based on the PKG, optimizing context granularity. Evaluations on the HumanEval and MBPP benchmarks show our method improves pass@1 accuracy by up to 20\\%, and outperforms state-of-the-art models by up to 34\\% on MBPP. Our contributions include PKG-based retrieval, tree pruning to enhance retrieval precision, a re-ranking method for robust solution selection and a Fill-in-the- Middle (FIM) enhancer module for automatic code augmentation with relevant comments and docstrings.",
+    "keywords": [
+        "Code Generation",
+        "RAG",
+        "Knowledge Graphs",
+        "Large Language Models"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We propose a knowledge programming graph to enhace the performance of RAG for code generation.",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=EHfn5fbFHw",
+    "pdf_link": "https://openreview.net/pdf?id=EHfn5fbFHw",
+    "comments": [
+        {
+            "title": {
+                "value": "Assessing the Computational Trade-offs and Limitations of PKG in Code Generation: Efficiency, Scalability, and Task-Specific Challenges"
+            },
+            "comment": {
+                "value": "# Reviewer Concerns:\n\n## 1. The PKG generation and retrieval involve multiple modules, adding complexity and cost. However, the paper lacks discussion on scalability and computational trade-offs, limiting its feasibility assessment.\n\nThank you for your insightful observation. We will add the cost trade-off when we use PKG compared to current RAG approaches. We will explain these details in the paper by the Nov 27th in a new section in appendix (cost trade-off section): \n\nWe can consider two versions of PKGs for discussion: \n\n### **PKG with enhancer module, which aims to enhance the graph with doc-string data**: \n \nStep1: downloading dataset (143,000 QA, 280MB): negligible, a few seconds. \n\nStep2: extract python code using function analyzer: 3 minutes. \n\nStep3: Code block extraction: 25 minutes. \n\nStep4: enhanced PKG with doc_strings using LLM on one A100: 82 hours. \n\nStep5: encode PKG using voyage embeddings using API calls: 4 hours. \n\nStep6: generating neo4j graph: 33 minutes. \n\nIn general for 143,000 Q&A (~500,000 nodes will be added in graph) \n\nit took around: ***87 Hours***. \n\nTotal storage: ***12,530 MB*** (voyage embeddings of code blocks on Neo4j)\n\n### **PKG without enhancer module** (Step4 is excluded, and Func-block results would be excluded in the result tables): \n\nStep1: downloading dataset (143,000 QA, 280MB): negligible, a few seconds. \n\nStep2: extract python code using function analyzer: 3 minutes. \n\nStep3: Code block extraction: 25 minutes. \n\nStep5: encode PKG using voyage embeddings using API calls: 4 hours. \n\nStep6: generating neo4j graph: 33 minutes. \n\nIn general for 143,000 Q&A (~500,000 nodes will be added in graph):\n\nit took around: ***5 Hours***. \n\nTotal storage: ***12,530 MB*** (voyage embeddings of code blocks on Neo4j)\n\n### **Voyage Embedding RAG:**\n\nStep1: downloading dataset (143,000 QA, 280MB): negligible, a few seconds. \n\nStep2: encode dataset using voyage embeddings using API calls: 4 hours. \n\nIn general for 143,000 Q&A:\n\nit took around: ***4 Hours.*** \n\nTotal storage: ***8440 MB*** (voyage embeddings of Q&A samples)\n\n### **BM25**: \n\nStep1: downloading dataset (143,000 QA, 280MB): negligible, a few seconds. \n\nStep2: index dataset: 44 minutes. \n\nIn general for 143,000 Q&A:\n\nit took around: ***44 minutes.*** \n\nTotal storage:***315mb*** (index and text data)\n\nThe results in Tables 1 and 2 show that removing the func-block has minimal impact on performance. While our approach takes an additional hour to process the dataset compared to embedding-based RAG methods like Voyage Embeddings, it leads to a significant performance improvement.\n\n**graph updates**: \n\nNeo4j's semantic vector indexing ensures efficient additions, with time complexities of O(logN) for nodes and O(logM) for relationships, where \ud835\udc41 and \ud835\udc40 are the total nodes and relationships. \n\n**maintenance**: \nThe graph remains useful as long as its content are not deprecated in the target programming language.\n\n## 2. The re-ranking mechanism in the paper is used to enhance retrieval accuracy, but the decision-making process is not detailed enough. The author should provide a more comprehensive description and explanation of the method. \n\nThank you for your consideration. Our re-ranking mechanism involves three steps:\n\nAST Validation: Ensuring syntactic correctness via Abstract Syntax Tree (AST) checks.\n\nExecution Testing: Running valid answers and excluding those with runtime errors.\n\nEmbedding Similarity: Selecting the answer most similar to the query based on embeddings.\n\nDetails are in Section 2.3. Let us know which parts require further clarification.\n\n## 3. While PKG performs well overall, the paper lacks analysis of categories like string manipulation and data structures where PKG retrieval falls short. Examining these cases could uncover limitations of graph-based retrieval and identify conditions where PKG is less effective.\n\nThank you for your comment. We agree that exploring cases where PKG retrieval does not improve results, especially in string manipulation and data structure tasks, could provide valuable insights into the limitations of graph-based retrieval and how LLMs interpret input data.\n\nIn string manipulation tasks, the challenge lies in the model's focus on semantic meaning rather than string structure. \n\nExample Problem:\nWrite a python code to convert lowercase to uppercase and vice versa: \"Hello\" to \"hELLO\" and \"pYthon\" to \"PyTHON.\"\n\nChallenges:\nEmbedding Model\u2019s Focus on Semantics: In RAG, the embedder retrieves content based on meaning, not formatting. It may focus on \"hello\" as a greeting rather than the case transformation.\nLLM\u2019s Tokenization and Semantic Bias: LLMs tokenize based on meaning, not formatting, making case transformation difficult as \"Hello\" and \"hello\" are treated the same.\nIn summary, both RAG retrieval and LLM tokenization prioritize semantics over formatting, complicating string manipulation tasks and limiting PKG\u2019s effectiveness in these cases."
+            }
+        },
+        {
+            "title": {
+                "value": "Evaluating the Resource Trade-offs, Language Generalizability, and Performance Enhancements of PKG"
+            },
+            "comment": {
+                "value": "# Reviewer Concerns:\n## 1.Thank you for your insightful observation. We will add the cost trade-off when we use PKG compared to current RAG approaches. We will explain these details in the paper by the Nov 27th in a new section in appendix (cost trade-off section): \n\nWe can consider two versions of PKGs for discussion: \n\n### **PKG with enhancer module, which aims to enhance the graph with doc-string data**: \n \nStep1: downloading dataset (143,000 QA, 280MB): negligible, a few seconds. \n\nStep2: extract python code using function analyzer: 3 minutes. \n\nStep3: Code block extraction: 25 minutes. \n\nStep4: enhanced PKG with doc_strings using LLM on one A100: 82 hours. \n\nStep5: encode PKG using voyage embeddings using API calls: 4 hours. \n\nStep6: generating neo4j graph: 33 minutes. \n\nIn general for 143,000 Q&A (~500,000 nodes will be added in graph) \n\nit took around: ***87 Hours***. \n\nTotal storage: ***12,530 MB*** (voyage embeddings of code blocks on Neo4j)\n\n\n### **PKG without enhancer module** (Step4 is excluded, and Func-block results would be excluded in the result tables): \n\nStep1: downloading dataset (143,000 QA, 280MB): negligible, a few seconds. \n\nStep2: extract python code using function analyzer: 3 minutes. \n\nStep3: Code block extraction: 25 minutes. \n\nStep5: encode PKG using voyage embeddings using API calls: 4 hours. \n\nStep6: generating neo4j graph: 33 minutes. \n\nIn general for 143,000 Q&A (~500,000 nodes will be added in graph):\n\nit took around: ***5 Hours***. \n\nTotal storage: ***12,530 MB*** (voyage embeddings of code blocks on Neo4j)\n\n \n\n### **Voyage Embedding RAG:**\n\nStep1: downloading dataset (143,000 QA, 280MB): negligible, a few seconds. \n\nStep2: encode dataset using voyage embeddings using API calls: 4 hours. \n\nIn general for 143,000 Q&A:\n\nit took around: ***4 Hours.*** \n\nTotal storage: ***8440 MB*** (voyage embeddings of Q&A samples)\n\n### **BM25**: \n\nStep1: downloading dataset (143,000 QA, 280MB): negligible, a few seconds. \n\nStep2: index dataset: 44 minutes. \n\nIn general for 143,000 Q&A:\n\nit took around: ***44 minutes.*** \n\nTotal storage:***315mb*** (index and text data)\n\n\n Based on the comparisons and the results presented in Tables 1 and 2, we can conclude that removing the func-block does not significantly impact performance. In comparison to existing retrieval-augmented generation (RAG) methods, which primarily rely on embedding approaches (such as Voyage Embeddings), our approach takes an additional hour to process the selected dataset. However, this extra time results in a significant performance improvement over the standard embedding-based RAG methods.\n\n## 2. The framework\u2019s effectiveness may be constrained to specific programming languages (e.g. Python) of code tasks \n\nThank you for your insightful comment. Our approach works with any programming language that supports AST extraction. For languages without a native AST library, third-party tools like tree-sitter, which supports over 25 languages, can be used. PKG can be built on any language with structural code blocks, treating each block as the smallest semantic node and retrieving the most similar nodes during inference.\n\n## 3. The paper could benefit from a deeper exploration where PKG and retrieval mechanisms fail to improve or potentially hinder code generation quality. \n\nThank you for the feedback. If the model requires domain expertise, the PKG should reflect that domain. For example, if the model targets a specific framework, the dataset must include it, or for project-specific code, the PKG should contain project data. Failures occur when querying a graph lacking domain knowledge. We will elaborate on this in the paper by Nov 27th.\n\n## 4. What is the computational cost of building and updating the PKG, and how frequently does it need maintenance to remain effective? \n\nWe have provided the computational costs regarding the building PKG in the **first concern**. \n\n**Regarding the graph updates:** \n\nWith Neo4j's semantic vector indexing and uniqueness checks, the time complexity for adding new nodes and relationships is O(logN) and O(logM), respectively, where \ud835\udc41 is the total number of nodes, and  \ud835\udc40 is the total number of relationships in the graph. This means that as the graph grows, adding new elements remains efficient due to the logarithmic complexity. \n\n**Regarding the maintenance:**\nAs long as the existing content in the graph is not deprecated in the target programming language, we could benefit from that knowledge graph. \n\n## 5. How does the additional complexity introduced by tree pruning and re-ranking affect code generation performance, and is this overhead manageable? \n\nThanks for pointing this out! We conducted tree pruning and re-ranking in a Neo4j environment using Cypher queries and the Graph Data Science plugin. With a graph of around 500,000 nodes, each query took under 5 seconds on an M1 chip. Despite the added complexity, the performance improvement was significant and manageable."
+            }
+        },
+        {
+            "title": {
+                "value": "Addressing Retrieval Limitations, Dataset Structure, and Open-Domain Contexts in RAG Settings"
+            },
+            "comment": {
+                "value": "# Reviewer Concerns:\n## 1. The setting is kind of weird to me: in real-world applications, code generation is usually augmented by code documents, natural language thoughts, or similar question-solution pairs, which is to say, natural language could be used to retrieve helpful information. Instead, only focusing on code representations may be limited:\nThank you for your thoughtful observation. In our initial experiments, we tried augmenting the model with a knowledge graph that included Python documents and natural language explanations. However, this approach led to worse results than the No-RAG baseline. \n\nThis is because, when the goal is to generate accurate code, providing code-based context is more effective than natural language context. Natural language inputs often lead the model to focus on generating explanations or descriptions rather than precise code outputs. This observation aligns with findings from the Code-RAG benchmark paper [1], where the authors noted that Stack Overflow content, which is code-centric, yields better results than tutorial or documentation content when used as context in RAG settings. \n\nOur approach provides a technique to enable retrieving relevant  code, which is suitable for real-world applications. For example, PKG can be applied on the code-base of a project or proprietary repositories, helping with the retrieval of similar code that is tailored towards a specific context. \n\n[1] Zora Zhiruo Wang, Akari Asai, Xinyan Velocity Yu, Frank F Xu, Yiqing Xie, Graham Neubig, \nand Daniel Fried. Coderag-bench: Can retrieval augment code generation? \n\n## 2. Accordingly, in a not realistic setting, the experiments are not convincing enough to me. For example, on both HumanEval and MBPP, using BM25 for RAG consistently gets lower performance than no RAG. Also, with PKG the performance improves, it seems to be not a fair comparison:\n\nThank you for your attention to this detail. The reason BM25 and Voyage perform lower than No-RAG on both HumanEval and MBPP is due to how the data is structured. In these experiments, the dataset is composed of question-answer pairs. When we apply BM25 or VoyageEmb without any post-processing, the retrieved content includes question-answer pairs. Including these in the model\u2019s context introduces additional questions and answers, which can confuse the model and lead to hallucinated outputs. \nHowever, when we clean the dataset to contain only functions instead of full question-answer pairs (referred to as Func-BM25 in the tables 1 and 2), the performance improves. Func-BM25 outperforms No-RAG in HumanEval, indicating that retrieving only relevant function information is beneficial. \n\n## 3. What's the advantage of PKG to normal RAG in an open retrieval setting? \n\nThanks for your comment. We consider your concern as about retrieving from a dynamic data source such as google search. \nThe advantage of PKG over normal RAG in an open retrieval setting is that it allows for more precise and relevant retrieval of information. \nIn standard RAG, if we retrieve 100 answers from an open-domain source, we typically use a re-ranker to rank these answers and then select the top-n answers to add as an additional context for the model. In normal RAG we chunk data paragraph-wise or page-wise. Even though retriever tries to retrieve most similar chunks, but they might contain irrelevant data (e.g. irrelevant sentences). \n\nIn contrast, PKG organizes these 100 answers into a structured Programming Knowledge Graph, where only the most relevant nodes (i.e., the specific, necessary information) are retrieved. This approach minimizes irrelevant data and focuses on retrieving content in a fine-grained manner, even if it's within larger irrelevant sections. For example, consider a small code block that closely resembles the query but is contained within a function unrelated to the query. In standard RAG, this code block would not be retrieved because the retrieval process compares the embeddings of the query against the embeddings of the entire function, rather than focusing on the individual code block. As a result, the function\u2019s broader context may obscure the relevance of the specific code block to the query. This way, PKG provides a more targeted, context-rich augmentation that helps the model perform better. \n\n ## 4. Is max_token=512 in the experiments enough? \nYes, as the benchmarks contains general python programming and as the canonical solutions are less than 512 tokens, max_new_tokens=512 is enough for experiments. The authors of CodeT5+[1] also evaluated their model with the same max length. \n\n[1] Yue Wang, Hung Le, Akhilesh Deepak Gotmare, Nghi DQ Bui, Junnan Li, and Steven CH Hoi. \nCodet5+: Open code large language models for code understanding and generation."
+            }
+        },
+        {
+            "title": {
+                "value": "Exploring the Reliability, Errors, and Comparative Effectiveness of PKG-Based Contextual Retrieval in Code Generation."
+            },
+            "comment": {
+                "value": "# Reviewer concerns:\n## 1. There still exists a gap between ideal ranker & re-ranker, what was the reason for it. \nThank you for your thoughtful observation. The gap between the ideal ranker and the re-ranker arises because the ideal ranker has access to information that the re-ranker does not. \nThe ideal ranker can always pick the correct solution from the candidate pool if one exists because it assumes that we know beforehand whether each solution is correct or incorrect. It acts as an upper bound for the re-ranker in our work. \nIn contrast, the re-ranker operates under real-world conditions, where it does not have access to ground-truth labels. Instead, it must evaluate each solution based on available signals like Abstract Syntax Trees (ASTs), execution results, and embedding comparisons to select the best candidate. Without direct labels, the re-ranker\u2019s choice is based on these approximations, which can lead to some incorrect selections and thus a performance gap compared to the ideal ranker. \n\n## 2. How reliable is the result? Based on multiple generations with low temperatures?\nTo ensure result reliability, all experiments were conducted with a temperature of 0, allowing for deterministic outputs. Additionally, all prompts used in these experiments are provided in the appendix (sections 7.1-7.4), enabling full reproducibility of the results. \n\n## 3. Samples in MBPP & HumanEval present with misaligned or incorrect NL, under which error is that catered to?\nThanks for your attention, can you clarify which examples are misaligned? We used the version of HumanEval samples available in the original Huggingface dataset. For MBPP, we use a filtered version curated by the CodeRAG-Bench authors[1], who removed samples with fewer test cases, as these were deemed less reliable. We are not sure which examples do you mean. If you provide more details, we will answer more specifically. \n[1] Zora Zhiruo Wang, Akari Asai, Xinyan Velocity Yu, Frank F Xu, Yiqing Xie, Graham Neubig, and Daniel Fried. Coderag-bench: Can retrieval augment code generation?  \n\n## 4. When block-PKG performs better than func-PKG then why is ranking done for considering func-PKG?\nThank you for your insightful question. The re-ranking is applied to four approaches: NoRAG, BM25, Func-PKG, and Block-PKG. We include Func-PKG in the evaluation because, in certain cases, it outperforms Block-PKG. By incorporating Func-PKG, we aim to leverage the strengths of this approach where it shows an advantage. \n\n## 5. Need to show cases of extraction with PKG providing better function than current RAG. \nTo better illustrate how PKG outperforms current RAG approaches, we have already included results from standard RAG methods like BM25 and Voyage Embedding in our comparison. In the appendix (section 7.4), we provided examples showing the distinctions between PKG and NoRAG. We will further strengthen this section by adding more examples that compare PKG to BM25 and Voyage RAG, making PKG's advantages even clearer. \n\n## Styling format suggestions:\nThank you for your detailed feedback. We will address your comments and incorporate the necessary revisions in the updated version of the paper by November 27th."
+            }
+        },
+        {
+            "summary": {
+                "value": "Problem statement: \n- Models fail on complex code generation tasks \n- RAG improves with external knowledge, but fails on relevant context \n- Irrelevant information causes hallucinations \n\nSolution: \n- PKG: semantically represent and retrieve code \n- Provides fine-grained code retrieval by focusing on the most relevant segments while reducing irrelevant context through a tree-pruning technique. \n- PKG is coupled with a re-ranking mechanism to reduce even more hallucinations by selectively integrating non-RAG solutions.  \n- 2 retrieval approaches\u2014block-wise and function-wise\u2014based on the PKG, optimizing context granularity."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- PKG: semantically represent and retrieve code and provides fine-grained code retrieval by focusing on the most relevant segments while reducing irrelevant context through a tree-pruning technique.\n- The results indicate the benefits of using PKG.\n- The experiments are thorough, and the paper is well written."
+            },
+            "weaknesses": {
+                "value": "- There still exists a gap between ideal ranker & re-ranker, what was the reason for it.\n- How reliable is the result? Based on multiple generations with low temperatures \n- Samples in MBPP & HumanEval present with misaligned or incorrect NL, under which error is that catered to? \n- When block-PKG performs better than func-PKG then why is ranking done for considering func-PKG? \n- Need to show cases of extraction with PKG providing better function than current RAG."
+            },
+            "questions": {
+                "value": "- Line 097 paragraph can be converted to bullets for better visual capture \n- Line 146 is while added to list of blocks \n- Correct invert commas in line 218, 221 ... \n- Section 2.2 RETRIEVAL FROM PKG (steps) should be formatted same as section 2.1 \n- Fig 3 step 2: shouldnt the similarity be between encoded query and function nodes, rather than function nodes as shown in diagram \n- Appendix experiment that can be added: [optional]\n    - Compare performance when an empty node is taken as a substitute for non-RAG option of input augmentation \n- Table 2 formatting needs to be corrected for column value alignment \n- Also format the table borders for Table 1 and 2 \n- For all figures, increase font size, not readable \n- Table 3 visual impact can be improved by color incorporation to display increase or decrease of error with PKG incorporation \n- When block-PKG performs better than func-PKG then why is ranking done for considering func-PKG? \n\nWhich are cases where func gives better results than block-PKG and why? \n\nLine 1029 mention using block PKG \n\nLine 1012 also provide example for with RAG what result came"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes to learn a programming knowledge graph from a predefined code QA dataset to augment code generation. The paper aims to retrieve proper code segments semantically and thus improve the performance."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "+ The idea and the presentation are clear.\n+ The method is demonstrated to be useful in the given setting, i.e., retrieve code segments from a given code QA dataset. It's a somewhat novel idea to learn code representation in a knowledge graph."
+            },
+            "weaknesses": {
+                "value": "+ The setting is kind of weird to me: in real-world applications, code generation is usually augmented by code documents, natural language thoughts, or similar question-solution pairs, which is to say, natural language could be used to retrieve helpful information. Instead, only focusing on code representations may be limited.\n+ Accordingly, in a not realistic setting, the experiments are not convincing enough to me. For example, on both HumanEval and MBPP, using BM25 for RAG consistently gets lower performance than no RAG. Also, with PKG the performance improves, it seems to be not a fair comparison."
+            },
+            "questions": {
+                "value": "+ What's the advantage of PKG to normal RAG in an open retrieval setting?\n+ Is `max_token=512` in the experiments enough?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a novel code generation framework that leverages a Programming Knowledge Graph for improved context retrieval, reducing irrelevant data with tree pruning and re-ranking techniques.\nBy implementing function- and block-level retrieval that provides fine-grained, contextually relevant code, the framework enables more precise and relevant context for code generation tasks, achieving significant performance gains on benchmarks like HumanEval and MBPP."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The PKG approach adds a structured layer to context retrieval, improving relevance in code generation.\n2. Tree pruning and re-ranking help eliminate irrelevant information, enhancing the quality of generated code.\n3. Through function- and block-level code, the framework could provide highly relevant and precise context.\n4. The approach demonstrates considerable improvements on established benchmarks like HumanEval and MBPP."
+            },
+            "weaknesses": {
+                "value": "1. Building and maintaining the Programming Knowledge Graph may be resource-intensive and require domain expertise.\n2.The framework\u2019s effectiveness may be constrained to specific programming languages (e.g. Python) of code tasks.\n3.The paper could benefit from a deeper exploration where PKG and retrieval mechanisms fail to improve or potentially hinder code generation quality."
+            },
+            "questions": {
+                "value": "1. What is the computational cost of building and updating the PKG, and how frequently does it need maintenance to remain effective?\n2. How does the additional complexity introduced by tree pruning and re-ranking affect code generation performance, and is this overhead manageable?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a novel framework for enhancing code generation by integrating a Programming Knowledge Graph (PKG) with existing language models. By structuring code as a graph that captures hierarchical and semantic relationships, the framework supports granular retrieval, improving contextual relevance and reducing the inclusion of irrelevant information. The approach employs block-level and function-level retrieval strategies, coupled with a re-ranking mechanism, to increase generation accuracy and mitigate hallucinations induced by irrelevant context. Extensive evaluations on widely recognized benchmarks (HumanEval and MBPP) show that this PKG-based approach achieves notable improvements in pass@1 accuracy and reduces assertion errors, outperforming standard Retrieval-Augmented Generation (RAG) methods, especially when using tree pruning to eliminate extraneous context."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This work introduces an innovative use of knowledge graphs to represent programming knowledge, advancing the precision of semantic retrieval in code generation. By integrating hierarchical relationships within the PKG, this approach opens new avenues for enhancing retrieval-augmented models in the code generation domain.\n\nThrough evaluations on HumanEval and MBPP benchmarks, the method demonstrates improvements over existing RAG approaches, including NoRAG and other RAG methods. The error analysis and topic-based performance breakdown add credibility, highlighting specific problem types that benefit from the PKG-based approach."
+            },
+            "weaknesses": {
+                "value": "The PKG generation and retrieval processes involve multiple modules and steps  that contribute to system complexity and potentially high computational cost. However, the paper does not delve into the scalability or efficiency implications of these processes. A discussion on computational trade-offs would provide a more complete assessment of its feasibility.\n\nThe re-ranking mechanism in the paper is used to enhance retrieval accuracy, but the decision-making process is not detailed enough. The author should provide a more comprehensive description and explanation of the method. \n\nAlthough PKG generally performs well, the paper lacks an in-depth analysis of specific categories (e.g., string manipulation and data structure tasks) where PKG retrieval does not yield improvements. A focused examination of these cases could reveal limitations inherent to graph-based retrieval for these types, thereby helping to identify conditions under which PKG may be less effective."
+            },
+            "questions": {
+                "value": "See the weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

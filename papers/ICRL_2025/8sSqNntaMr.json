@@ -1,0 +1,129 @@
+{
+    "id": "8sSqNntaMr",
+    "title": "RouteLLM: Learning to Route LLMs from Preference Data",
+    "abstract": "Large language models (LLMs) excel at a wide range of tasks, but choosing the right model often involves balancing performance and cost. Powerful models offer better results but are expensive, while smaller models are more cost-effective but less capable. To address this trade-off, we introduce a training framework for learning efficient router models that dynamically select between a stronger and weaker LLM during inference. Our framework leverages human preference data and employs data augmentation techniques to enhance performance. Evaluations on public benchmarks show that our approach can reduce costs by over 2 times without sacrificing response quality. Moreover, our routers exhibit strong generalization capabilities, maintaining performance even when routing between LLMs not included in training. This highlights the potential of our framework to deliver cost-effective, high-performance LLM solutions.",
+    "keywords": [
+        "Large language models",
+        "query routing"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=8sSqNntaMr",
+    "pdf_link": "https://openreview.net/pdf?id=8sSqNntaMr",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces RouteLLM, a framework for training router models that direct queries between stronger and weaker LLMs to optimise cost-performance tradeoffs. It employs preference data from Chatbot Arena. Empirical results show that data augmentation is important to letting the routers outperform a random baseline on MMLU and GSM8K. It also demonstrates that the routers generalise across domains, and do not need to be retrained."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper presents a novel framework of directly using human preference data, as opposed to reward models, to route between a pair of LLMs.\n2. The empirical evaluation is comprehensive, touching multiple architectures, LLMs and common benchmarks.\n3. Both metrics of \"average performance gap recovered\" and \"call-performance threshold\" are clear reflections of real world considerations: the general ability for the router to close the performance gap between the better and worse model, as well as the cost to doing so for a minimum quality bar.\n4. The increasing variation in LLM quality and cost makes it more important to be able to efficiently tradeoff between cost and performance. On MT Bench, RouteLLM is able to achieve comparable performance to GPT-4 with a cost saving of ~3.7x."
+            },
+            "weaknesses": {
+                "value": "1. The paper focuses on a binary routing of \"strong\" versus \"weak\" model, but doesn't consider other binary differences between models.\n2. The paper does not discuss in depth why certain architectures perform better or worse, especially with respect to the improvement in the causal LLM's performance when faced with data augmentation."
+            },
+            "questions": {
+                "value": "1. How well do the routers do at separating models which are much closer in ability e.g. two different 7B models?\n2. How well do the routers do if the two models are not strictly \"stronger\" or \"weaker\", but rather have been finetuned to do different tasks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Large language models (LLMs) excel at a wide range of tasks, but choosing the right model often involves balancing performance and cost. This paper proposes a routing approach, RouteLLM, to dynamically select between a stronger and weaker LLM during inference. Experiments on three real-world benchmarks demonstrate the effectiveness of RouteLLM."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "S1. The proposed approach, RouteLLM, is able to achieve over 2x cost savings on popular benchmarks with\nminimal impact on response quality.\n\nS2. Authors demonstrate that RouteLLM enables routers to generalize to unseen data while maintaining strong performance across multiple LLMs."
+            },
+            "weaknesses": {
+                "value": "W1. Unclear novelty and limited technical contribution. Training a router to harness the respective strengths of different LLMs has been widely studied [1,2,3,4]. Specifically, how to generalize LLM routing to OOD data has been studied in [5], how to use LLMs to generate more training data to help improve routing performance has been explored in [6], which authors did not compare to. Moreover, some technology (SW ranking) proposed in this paper shares unignorable similarity to prior work [7]. \n\nW2. Weak baselines. Provided the rich literature on this topic as aforementioned, considering a random router as the only baseline is insufficient in this work. The effectiveness of RouteLLM could be further demonstrated if authors could compare it to more advanced baselines (e.g., a subset from [1-6]).\n\nW3. In Sec 5.5, authors provided the overhead analysis. Notably, SW ranking is both expensive ($37 / 1M requests) and slow (2.9 requests / second), which makes it hard to use in practice.\n\n\nReferences:  \n[1] Routing to the Expert: Efficient Reward-guided Ensemble of Large Language Models, https://arxiv.org/pdf/2311.08692  \n[2] Hybrid LLM: Cost-Efficient and Quality-Aware Query Routing, https://arxiv.org/abs/2404.14618  \n[3] Fly-Swat or Cannon? Cost-Effective Language Model Choice via Meta-Modeling, https://arxiv.org/pdf/2308.06077  \n[4] ROUTERBENCH: A Benchmark for Multi-LLM Routing System, https://arxiv.org/pdf/2403.12031  \n[5] Large Language Model Routing with Benchmark Datasets, https://arxiv.org/pdf/2309.15789  \n[6] Routoo: Learning to Route to Large Language Models Effectively, https://arxiv.org/abs/2401.13979  \n[7] Chatbot Arena: An Open Platform for Evaluating LLMs by Human Preference, https://arxiv.org/abs/2403.04132"
+            },
+            "questions": {
+                "value": "Q1. In Sec 3.1, authors introduced the cost threshold \\lambda. It is unclear that how to choose the right cost threshold when user have specific cost budgets.\n\nQ2. Some details in overhead analysis are unclear. Both SW ranking and matrix factorization rely on embeddings generated by text-embedding-3-small. Are the costs incurred by embedding extraction included in the overhead analysis? Also, given that the model size ratio between BERT-base (110M) and causal LLM (8B) is 110M / 8B ~= 1%, it is surprising to see the cost overhead of BERT-base is ~60% of the causal LLM, and the achieved throughput is only 60% higher, according to Table 7. More details on how the overheads are estimated could be very helpful."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a framework for training router models using human preference data and data augmentation, achieving over 2x cost savings on popular benchmarks with minimal impact on response quality. The authors employ a binary routing approach to direct simple queries to a cost-effective model (e.g., Mixtral-8x7B) and complex queries to a stronger model (e.g., GPT-4). They demonstrate generalization across unseen data and new LLMs without retraining, providing a single trained router adaptable to multiple use cases."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Demonstrates significant cost savings (over 2x) without compromising response quality, verified on MMLU, MT Bench, and GSM8K.\n- Introduces APGR to quantify performance relative to cost, effectively balancing quality and cost constraints (Eq. 7).\n- Implements diverse methods for defining the win prediction model.\n- Demonstrates robustness and adaptability, as the router generalizes effectively to unseen LLM pairs and domains without retraining."
+            },
+            "weaknesses": {
+                "value": "- Lacks detailed analysis of routing patterns under different $\\alpha$ values, such as which query types tend to be routed to strong vs. weak models, making it unclear how to set optimal $\\alpha$ values for specific use cases (Sec. 5.1).\n- Insufficient exploration of the router's decision-making robustness, especially regarding handling ambiguous queries where strong and weak models may perform similarly.\n- Performance still heavily depends on data augmentation with high-cost LLM-judged labels."
+            },
+            "questions": {
+                "value": "- Does the paper provide guidance on selecting the most suitable win prediction method across various scenarios?\n- Could insights be provided on optimal $\\alpha$ values for different query types, including a breakdown of routing decisions under varying $\\alpha$ thresholds?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

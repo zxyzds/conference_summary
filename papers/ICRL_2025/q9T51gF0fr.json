@@ -1,0 +1,165 @@
+{
+    "id": "q9T51gF0fr",
+    "title": "Understanding Adversarially Robust Generalization via Weight-Curvature Index",
+    "abstract": "Despite extensive research on adversarial examples, the underlying mechanisms of adversarially robust generalization, a critical yet challenging task for deep learning, remain largely unknown. In this work, we propose a novel perspective to decipher adversarially robust generalization through the lens of the Weight-Curvature Index (WCI). The proposed WCI quantifies the vulnerability of models to adversarial perturbations using the Frobenius norm of weight matrices and the trace of Hessian matrices. We prove generalization bounds based on PAC-Bayesian theory and second-order loss function approximations to elucidate the interplay between robust generalization gap, model parameters, and loss landscape curvature. Our theory and experiments show that WCI effectively captures the robust generalization performance of adversarially trained models. By offering a nuanced understanding of adversarial robustness based on the scale of model parameters and the curvature of the loss landscape, our work provides crucial insights for designing more resilient deep learning models, enhancing their reliability and security.",
+    "keywords": [
+        "Adversarially Robust Generalization; Weight-Curvature Index; Robust overfitting; PAC-Bayesian framework"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "We introduce the Weight-Curvature Index (WCI), a novel metric that captures the interplay between model parameters and loss landscape curvature to better understand and improve adversarially robust generalization in deep learning.",
+    "creation_date": "2024-09-14",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=q9T51gF0fr",
+    "pdf_link": "https://openreview.net/pdf?id=q9T51gF0fr",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces the Weight Curvature Index (WCI) as a measure for evaluating the adversarial generalization error of neural network classifiers under norm-bounded adversarial perturbations. Section 2 reviews the PAC-Bayesian framework for generalization analysis. Then, using a second-order loss approximation in Lemma 2.4, the paper derives an upper bound on generalization error in Theorem 2.5. This upper bound, referred to as the WCI score in equation (5), is subsequently assessed through numerical results presented in Section 3."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1- The paper employs PAC-Bayesian generalization bounds, which could potentially be useful for evaluating the generalization of adversarially-trained neural networks."
+            },
+            "weaknesses": {
+                "value": "1- I have several questions about Definition 2.1 where the authors define the adversarial risk. In the definition, the perturbation $\\delta$ appears a constant that is not maximized as required in standard adversarial training. The authors try to address this by defining $\\ell(\\theta , x+\\delta ,y)$ as the adversarial loss where it is said \"$\\delta$ stands for the worst-case perturbation that maximizes the perturbation\". This notation ignores the fact that the worst-case perturbation $\\delta(x,y,\\theta)$ should be a function of input $x,y$ and neural net parameter $\\theta$, because the perturbation is supposed to maximize the loss at data point $(x,y)$ and for neural net $h_{\\delta}$ and so varies between different samples and neural net parameters.\n\nI think the notation $\\delta$ (without specifying the input $x,y,\\theta$ for the perturbation) is not only confusing in the writing, but may have caused errors in the theoretical and numerical analysis of the paper. To ensure my concern is valid, I would like to ask the following question: The authors consider the Hessian of the loss function $\\ell(\\theta , x+\\delta ,y)$ in Lines 204-205. Can the authors clarify how they compute the Hessian of the adversarial loss function $\\ell(\\theta , x+\\delta ,y)$ which, using the standard notation, is supposed to be $\\max_{\\Vert\\delta\\Vert\\le \\epsilon} \\ell_{clean}(x+\\delta ,y,\\theta)$? Do the authors fix the perturbation $\\delta$ to be the worst-case perturbation $\\delta^* $ and then they take the Hessian of $\\ell(\\theta , x+\\delta^* ,y)$ with respect to $\\theta$?\n\n2- Lemma 2.4 is based on an unspecified assumption that \"the empirical loss $L_S(\\theta ,x+\\delta ,y)$ can be approximated using second-order Taylor expansion\". Can the authors clarify the precise mathematical statement of the assumption? It seems the assumption can be questioned. First, standard ReLU activation functions are not twice-differentiable and so the Hessian analysis does not apply to them. Also, $L_S$ is supposed to be the adversarial loss, which means the authors assume that the worst-case loss $\\max_{\\Vert\\delta\\Vert\\le \\epsilon } \\ell(\\theta, x+\\delta , y)$ has a bounded Hessian. Therefore, the flatness of the adversarial loss seems a very strong assumption which very likely would not work even using twice-differentiable activation functions.  Also, when I checked the proof of this lemma, I could not understand Lines 804-807. How does the \"second-order Taylor series expansion around $\\theta$\" yield Equation (8)?\n\n3- In the definition of WCI in Equation (5), I wonder how the authors compute $\\text{Tr}(H_k)$. Do they solve the optimization problem for the adversarial perturbation $\\delta(x,y,\\theta)$ for the training samples and then take the Hessian of $\\sum_i \\ell(\\theta, x+\\delta^*_{x,y,\\theta} , y) $? \n\n4- Theorem 2.5 is based on a seemingly unspecified assumption in Lemma 2.4 that \"the empirical loss $L_S(\\theta , x+\\delta ,y)$ can be approximated using second-order Taylor expansion\". It is unclear how the assumption is reflected in Equation (4) because Equation (4) is a definite inequality which is not an approximate result, while the assumption considers an approximation. The approximation error of the assumption is not reflected in Equation (4)."
+            },
+            "questions": {
+                "value": "Please see my comments on weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces the Weight Curvature Index (WCI) as a proxy for robust generalization of adversarially trained models.\nWCI is the layerwise sum of the geometric mean of the trace of the loss-hessian w.r.t to layer-weights and the Frobenius norm of the layer-weights.\nis motived with a PAC-Bayes bound on the robust generalization gap, combining results from the Sharpness Aware Optimization literature (Foret 2021) and Cantonis bound.\n\nThe paper establishes visual correlation with robust generalization gab, compare against a selection of related works and derives a learning rate scheduler from WCI to combat robust overfitting"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Originality: the paper combination of pac bayes analysis and sharpness aware minimization is a novel connection, yielding a principled motivation to combine previously known regularizers. going beyond simply establishing a proxy and experimenting with an adaptiv regularizers is a distinguishing factor from similar works\n- Quality+Clarity: overall, the paper can be called solid and well written: each section clearly motivates, presents and justifies its point and the appendix provides addtional details and studies of e.g. various regularizers interacting with WCI and robust-generalization. Exposition is clear and easy to follow.\n- Significance: finding a good proxy measure for robust generalization with theoretical grounding (e.g. to study the tightness of the gap and find speedups) is a meaningful contribution to the field"
+            },
+            "weaknesses": {
+                "value": "- there are some references missing which would help the reader place the work into context, in particular https://openreview.net/forum?id=yT7-k6Q6gda which studies the connection between the trace of the hessian during trianing w.r.t generalization (albeit standard generalization). similarly releveant to the investigation of the evolution of WCI during training might be https://arxiv.org/abs/1905.13277  studying the impact of _when_ to regularize. I also found https://proceedings.mlr.press/v162/ju22a which also uses pac bayes robust generalization bounds, albeit without the frobenius norm based on a quick read. relationship to these papers should be clarified\n- The correlation, while visually striking, is established (as presented) on a single seed and on a limited number datasets. Computational constraints beings what they are, I recommend at least testing this with muliple seeds, doing proper correlation analysis (i.e. regression and p value with correct multiple comparisons adjustment), and also comparing the difference in correlation (i.e. the relative qualiy of the measure) against individual components using suitable statistical significance tests (e.g., multiple pairwise Steigers Z https://personality-project.org/r/psych/help/r.test.html + holm-bonferronig or Benjamini-Yekutieli, hottelings). If computational cost is a concern, designing toy examples on subsets of data and with smaller models might be sufficient\n- at the very least, multiple seeds ought to be run, a confidence interval ought to be computed. Ideally, ablation studies for the sensitivity to different ranges of hyperparameters could be run, and then the correlation analysis recommended above can be used to assess the quality of the proxy"
+            },
+            "questions": {
+                "value": "No questions, beyond addressing the weaknesses raised. in particular, the seed + correlation point needs to be at least _addressed_ to give strong recommendation to accept"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "- This paper propose WCI, a new measure related with robust generalization gap. \n- Using some techniques such as hyperpriors and second-order loss approximation, the authors derive WCI from the theoretical gap. \nThe authors empirically explain that learning rate adjustment using WCI can mitigate robust overfitting using real-word datasets."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper is well-written, making it easy to read. \n- Experimental settings are described in detail, along with reasons for the choice of hyperparameters.\n- Newly designed learning rate scheduler outperforms other existing competitors."
+            },
+            "weaknesses": {
+                "value": "- The main concern is that the theoretical results are not convincing, or underdescribed at least. All theoretical results from lemma 2.2 to theorem 2.5, think the adversarial loss $l(\\theta,x+\\delta,y)$ can be applied to all results using the standard loss term, regardless of the existence of $\\delta$. Since the authors defined $\\delta$ as the worst-case perturbation, $\\delta$ is a function that depend on $l,(x,y),\\epsilon,\\theta$ which is not a constant. To properly consider $l(\\theta,x+\\delta,y)$, a supremum term on perturbations should be included. Therefore the proofs are needed to be checked whether they are correct under the supremum or considering the fact that $\\delta$ depends on $l,(x,y),\\epsilon,\\theta$ also - e.g. PAC Bayes bound, second-order differentiability and else.  Actually, this paper\u2019s proofs remain same when considering an adversarially robust scheme, and not. I think the main difficulty in the proofs are about the supremum term (which is inside the expectation, making it more difficult.), and the authors should describe about it in detail. \n\n- When to define an upper bound in theorem 2.5, $\\sigma_k^2$ should be controlled to minimize the bound. If not, the upper bound does not hold since it needs an equality condition for an arithmetic\u2013geometric mean inequality. I think the Frobenius norm of layer weights $W_k$ and the trace of Hessian $H_k$ is not controllable during training, where their control is crucial to the control of $\\sigma_k^2$. Hence, I conjecture that the fluctuation of WCI rises in learning curves since the upper bound does not holds all the time. This hinder the reason that WCI works. \n\n- In Figure 4, the authors explained that the Frobenius norm of the weight matrix is the most critical factor during the initial training stages. However, to me, it seems that the trace term dominantly influence to WCI since they share the whole shape. This implies that considering WCI is not basically different from considering the trace of the Hessian. Combined with above weaknesses, we may conclude that considering WCI is not basically different from simply using SAM with an adversarial risk. \n\n- Minor) line 811: $H^{(l)}\\to H_k$, $l$-th layer $\\to k$-th layer."
+            },
+            "questions": {
+                "value": "- The authors illustrated that the prior works have shown that reducing the classifier variability term also decreases the perturbation discrepancy term. Does it also hold when to consider an adversarial risk, not a standard risk?\n- In the proof of lemma 2.4, how can you consider $\\mathcal{Q}=N(\\theta,\\mathbf{I})$? I\u2019m quite confusing that is it possible to fix the mean as a certain point of $\\theta$?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces the Weight-Curvature Index (WCI) as a metric for assessing adversarially robust generalization in machine learning models. This metric is motivated by the derivation of a PAC-Bayesian bound on the robust generalization gap, which incorporates terms such as KL divergence, classifier variability, and perturbation discrepancy. Under certain assumptions and a second-order loss function approximation, the classifier variability is then shown to be upper bounded by the WCI."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper is well-written and thoroughly documented, providing clear insights into the Weight-Curvature Index (WCI) and its relevance to adversarially robust generalization. It effectively leverages the PAC-Bayesian framework to derive robust generalization bounds and makes connections with several recent concepts. However, the paper could be further strengthened by incorporating additional recent references, such as those discussed in [1] regarding PAC-Bayesian bounds, for instance. Overall, the clarity of the writing and the integration of foundational concepts contribute to its value as a significant contribution to the literature.\n\n[1] Patracone, J., Viallard, P., Morvant, E., Gasso, G., Habrard, A., Canu, S. A Theoretically Grounded Extension of Universal Attacks from the Attacker\u2019s Viewpoint. In ECML/PKDD 2024."
+            },
+            "weaknesses": {
+                "value": "Overall, the paper is quite dense, which may pose challenges for readers who are not familiar with the underlying concepts, making it difficult to assess the validity of the connections drawn throughout. Additionally, the proposed results rely on specific assumptions to simplify several terms and avoid an in-depth exploration of others, potentially limiting the generalizability of the findings. A discussion addressing the implications of these assumptions is essential and should ideally be introduced early in the paper. Moreover, clarifying the trade-offs associated with these assumptions would enhance the reader's understanding of the model's applicability in diverse contexts."
+            },
+            "questions": {
+                "value": "The method you use to generate adversarial examples in Section B.2 raises some concerns. Why did you choose not to resort to state-of-the-art techniques, such as AutoAttack? Please also comment on the validity of the assumptions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

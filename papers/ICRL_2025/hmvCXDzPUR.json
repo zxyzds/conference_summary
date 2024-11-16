@@ -1,0 +1,165 @@
+{
+    "id": "hmvCXDzPUR",
+    "title": "Cliqueformer: Model-Based Optimization With Structured Transformers",
+    "abstract": "Expressive large-scale neural networks enable training powerful models for prediction tasks. However, in many engineering and science domains, such models are intended to be used not just for prediction, but for design---e.g., creating new proteins that serve as effective therapeutics, or creating new materials or chemicals that maximize a downstream performance measure. Thus, researchers have been recently growing an interest in building deep learning methods that solve offline \\emph{model-based optimization} (MBO) problems, in which design candidates are optimized with respect to surrogate models learned from offline data. However, straightforward application of predictive models that are effective at predicting in-distribution properties of a design are not necessarily the best suited for use in creating new designs. Thus, the most successful algorithms that tackle MBO draw intpiration from reinforcement learning and generative modeling to meet the in-distribution constratints. Meanwhile, recent theoretical works have observed that exploiting structure of the target black-box function is an effective strategy for solving MBO from offline data. Unfortunately, discovering such structure remains an open problem. In this paper, following first principles, we develop a model that learns the structure of an MBO task and empirically leads to improved designs. To this end, we introduce \\emph{Cliqueformer}---a scalable transformer-based architecture that learns the black-box function's structure in form of its \\emph{functional graphical model} (FGM), thus bypassing the problem of distribution shift, previously tackled by conservative approaches. We evaluate Cliqueformer on various tasks, ranging from high-dimensional black-box functions from MBO literature, to real-world tasks of chemical and genetic design, consistently demonstrating its state of the art performance.",
+    "keywords": [
+        "model-based optimization; black-box optimization; transformers"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "We develop a scalable transformer-based architecture for model-based optimization.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=hmvCXDzPUR",
+    "pdf_link": "https://openreview.net/pdf?id=hmvCXDzPUR",
+    "comments": [
+        {
+            "summary": {
+                "value": "This work proposes a new architecture, Cliqueformer, for solving model-based optimization (MBO) using the functional graphical model (FGM) framework. Cliqueformer subsumes the graph discovery step within its architecture, rather than using the graph discovery heuristic from the previous work (Grudzien et al., 2024). The VIB-style objective further ensures broad coverage of each clique\u2019s distribution, enhancing stability in optimization. Experimental results demonstrate that Cliqueformer outperforms previous methods across a range of tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Cliqueformer effectively addresses the limitations of FGM by eliminating the need for explicit graph discovery steps, while still maintaining the scalability advantages of MBO with FGM.\n- The proposed method is carefully designed based on theoretical observations\n- It demonstrates significant performance improvements over COMs across a wide variety of tasks.\n- well-written with clear motivation"
+            },
+            "weaknesses": {
+                "value": "While the paper makes significant contributions, some claims might be somewhat overstated:\n\n- The authors state that \"we consistently obtained good performance by setting the clique size to $ d_{\\text{clique}} = 3 $.\" However, the experimental results suggest that the choice of $ d_{\\text{clique}} $ or $ N_{\\text{clique}} $ significantly affects performance. For instance, Figure 5(b) shows that only $ N=4 $ achieves better performance than $ N=1 $ (assuming $ N=1 $ represents the whole graph), and depending on how $ N_{\\text{clique}} $ is set, Cliqueformer sometimes fails to achieve scores higher than 1.\n- The claim that \"Cliqueformer achieves state-of-the-art performance\" may be premature. Since some recent studies are not included as baselines (e.g., BDI [1], BootGen [2], or the baselines in Design-bench [3] for TFBind and superconductor), and because the scores are normalized differently, it's challenging to assert that Cliqueformer achieves state-of-the-art results conclusively.\n\n[1] Chen, Can, et al. \"Bidirectional learning for offline infinite-width model-based optimization.\" Advances in Neural Information Processing Systems 35 (2022): 29454-29467.\n\n[2] Kim, Minsu, et al. \"Bootstrapped training of score-conditioned generator for offline design of biological sequences.\" Advances in Neural Information Processing Systems 36 (2024).\n\n[3] Trabucco, Brandon, et al. \"Design-bench: Benchmarks for data-driven offline model-based optimization.\" International Conference on Machine Learning. PMLR, 2022."
+            },
+            "questions": {
+                "value": "- Is there any performance degradation from not using the graph discovery heuristic? It would be helpful to compare the performance, at least on LRBF.\n- Do you have further intuition on how to set $N_{\\text{clique}} $ or $ d_{\\text{clique}} $?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes Cliqueformer, a new method for offline model-based optimization. The method is built on the idea of functional graph model (FGM) which decomposes the input space into cliques that contribute independently to the function. The paper proposes to learn a latent representation of the input space, imposes FGM cliques on this space, and simultaneously trains regression models on the latent cliques. To perform optimization, the model takes gradient steps of the regression model against some initial latent representations and decodes back to the original input space."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper presents a novel method for offline model-based optimization. The idea of learning a latent space and imposing FGM on it is interesting. I also like the simplicity of the model and the clear writing of the paper. The empirical performance of the proposed method is strong against different baselines."
+            },
+            "weaknesses": {
+                "value": "- Looking at Figure 5, the performance varies significantly with different values of cliques, and there is not a universal value across different datasets. How did the authors pick the value in an offline setting where you're not allowed to query the oracle?\n- The baselines seem quite outdated. Have the authors tried comparing with more recent baselines such as generative methods using transformers or diffusion models [1, 2, 3, 4]? Some of these papers should also be cited and discussed in the paper.\n- The Superconductor task uses a surrogate function and not the true oracle, which was found to not be reliable in [4].\n- Minor comment: Algorithm 1 should remove the training process of Cliqueformer for better clarity.\n\n[1] Krishnamoorthy, Siddarth, Satvik Mehul Mashkaria, and Aditya Grover. \"Generative pretraining for black-box optimization.\" arXiv preprint arXiv:2206.10786 (2022).\n\n[2] Krishnamoorthy, Siddarth, Satvik Mehul Mashkaria, and Aditya Grover. \"Diffusion models for black-box optimization.\" International Conference on Machine Learning. PMLR, 2023.\n\n[3] Chen, Can, et al. \"Bidirectional learning for offline infinite-width model-based optimization.\" Advances in Neural Information Processing Systems 35 (2022): 29454-29467.\n\n[4] Nguyen, Tung, Sudhanshu Agrawal, and Aditya Grover. \"Expt: Synthetic pretraining for few-shot experimental design.\" Advances in Neural Information Processing Systems 36 (2023): 45856-45869."
+            },
+            "questions": {
+                "value": "- Why does Cliqueformer suffer less from distribution shift problems? Can adding an additional conservative regularization benefit the model?\n- Why does the decoder have to be a transformer model? What if we use a linear or shallow MLP prediction head instead? This is equivalent to using the last layer of the transformer backbone for the latent representation which is the common practice in many domains."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper aims at proposing a model capable of learning the structure of a model-based optimization task under a functional graphical model's framework. The evaluations include a black box optimization task in the 10-s of dimensions range, and some chemical and genetic design tasks. Unlike previous work, the FGM discovery is merged into the model's learning, and the marginal distributions of the cliques were enforced to mimic a standard normal by minimizing a KL divergence."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The notations and model definitions were well-described. I had an easy time understanding the approach, and the explanations were easy on the mind.\n\n2. The intuitions in the paper are stated clearly, and the desideratums were easy to follow.\n\n3. The figures seemed effective at explaining the related concepts. Figure 4 presents a clear summary of the model, Figure 3 clearly demonstrates the problem with FGM choices, and Figures 1 and 2 are also helpful.\n\n4. A limited set of ablation studies show the effect of the number of cliques on the downstream score."
+            },
+            "weaknesses": {
+                "value": "1. As is, I fear the introduction and model description sections are quite disconnected from the experiments. The authors spend a substantial amount of time in Sections 1-4 building intution on how the proposed model should work, what features are desired, and so on. The experiments don't do much more than presenting some benchmarks. This makes it difficult for me to verify that the gained improvements are actually the result of the claims and contributions, rathen than being side effects of auxillary design choices. For instance,\n\n  * Was the transformer architecture adaptation the main source of improvement?\n\n  * Was the VIB loss effective at all? What happens if it is removed? How much of the improvements could be attributed to this structuring of the latent space? Is there data demonstrating the inherent risk by enforcing this loss too weakly or too forcefully?\n\n  * Were the FGM components of the model effective at \"exploiting the structure of the target black-box function\"? Were there any practical results, *in this paper*, answering this specific claim?\n\n  * Did the method actually result in better coverage of the cliques data, and contributed to the distribution-shift issue? Figure 1 alone seems rather insufficient to address this broad question.\n\n2. The paper is based more around \"proposing a solution\", than the proper scientific steps of (1) identifying a narrow, previously unknown, problem in the prior methods or datasets, (2) showing evidence about the existence of the problem, and then (3) proposing a solution and demonstrating its efficacy at addressing this issue. \n\n3. The experimental breadth and the considered methods are awfully inadequate. At this point, there are tens, if not hundreds, of other successful MBO methods, and reward weighted regression and grad asc, for instance, are irrelevant and not remotely representatives of the state of the literature. Since there is a strong emphasis on (1) RL strategies for MBO, and (2) the fact that many of the baselines are sequence-based, the authors should add relevant baselines such as the following:\n\n  * DynaPPO (Model-based reinforcement learning for biological sequence design, ICLR 2020)\n\n  * Ada-Lead (https://arxiv.org/pdf/2010.02141) in FLEXS (https://flexs.readthedocs.io/en/latest/index.html) has a standard implementation and is another contender. \n\n  * PEX (Proximal Exploration for Model-guided Protein Sequence Design, ICML 2022)\n\n  * FBGAN (Feedback gan (fbgan) for dna: A novel feedback-loop architecture for optimizing protein functions)\n\n  * Other rather weak and old baselines are Cbas, Dbas, CEM-PI, etc.\n\n4. Theorem 1 is a restatement of a basic result in batch reinforcement learning, and offers a rather weak upper bound. While such results are helpful in deriving RL theory, they're nowhere close to being practical; the $C_{stat}$ and $C_{cpx}$ can be arbitrarily large, and the maximum term is almost impossible to estimate. Since this bound is practically almost never tight, it makes the claims and contributions in this paper less verifiable.\n\n**Recommendation**\n\nI feel ambivalent about this paper. On one hand, I see that the authors clearly spent reasonable time and efforts developing an idea, implementing the model, and writing the paper. There is clearly some quality effort spent here. On the other hand, the scientific skeleton of the paper and the supporting evidence is significantly lacking, as I described earlier, and just giving a pass here seems like quite the negligence on my part.\n\nAfter much delibration, I kindly decided to give the work a weak rejection for now. That being said, I'm keeping an open mind, and I would be happy to raise my score if the authors deliver a strong rebuttal, i.e., a rebuttal that adds significant amounts of supporting experiments and data to the paper and fills up the glaring void. I hope the authors understand that they need much more experimental results in this paper for it to be published at a top-tier venue."
+            },
+            "questions": {
+                "value": "Please see the points raised in the weaknesses section. \n\n## Minor Comments\n\n1. Line 249: \"distrituion\" should be \"distribution\".\n\n2. Line 731: \"failute\" on should be \"failure\".\n\n3. Line 80: \"More results in Section 5\" is not a complete sentence.\n\n4. Line 745: \"We use dropout of rate 0.5\" should be replaced with \"We use a dropout rate of 0.5\"\u200b.\n\n5. The abstract does not seem fitting. The content prior to the \"In this paper\" sentence, i.e., Lines 11-25, do not strike me as abstract material, and are best suited elsewhere in the paper. For instance, I don't consider explaining \"why RL strategies generally work better on MBO problems\" a priority for the abstract. Only Lines 26-33 seem specifically relevant to the paper's contributions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper studies the problem of offline model based optimization. The author first consider outline shortcomings of naively using the perspective of recently proposed functional graphical models FGM) perspective for model based optimization. Specifically, the authors show that the FGM is not an attribute of a function to be inferrred but depends on the parameterization of the input. The paper thus considers fixing the structure of the FGM (as a hyperparameters). The paper introduces a transformer-based arhcitecture called Cliqueformer and proposes a training scheme. Unlike previous approaches that try to discover FGMs directly, Cliqueformer learns latent representations that align with a predefined FGM structure. The model combines transformer blocks with a decomposed predictive module and a novel form of variational bottleneck applied to individual cliques. The approach achieves strong performance across various tasks, including synthetic functions, chemical design, and genetic sequence optimization."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Cliqueformer is a novel approach to handling distribution shift in MBO by learning structured representations rather than using conservative regularization. \n* The training objective is quite interesting, combining useful ideas from VIB with FGMs.\n* The paper is generally well written and easy to follow. \n* The submission is accompanied by code to reproduce the results with adequate instructions to reproduce the results."
+            },
+            "weaknesses": {
+                "value": "* The authors acknowledge that optimal clique configurations vary between tasks, but use a general set of values for their experiments but is very much unclear to me how the parameters would be selected for a new problem? To be clear, this is a challenge in all offline MBO algorithms where selecting the hyperparamters is not trivial (since that requires access to online evaluations) but with the proposed approach there are a lot more hyperparameters (e.g. knowing the optimal clique configurations, the transformer parameters, etc) which makes the results less convincing.  More systematic study of hyperparameter sensitivity would be valuable (especially related to the transformer configuration. \n* Another significant flaw is the evaluation of the empirical results and discussion of related works. First the paper does a poor job of covering the offline MBO literature. Several recent works are not discussed in the related work (some cited below). The authors also choose just two baselines, which are quite inadequate considering the highly active nature of the field. To be clear, the issue is that the paper claims state-of-the-art performance but fails to compare to the state-of-the-art. More\n* Another important aspect missing from the empirical evaluation is a discussion of the computational complexity of the approach. Specifically how does the runtime of using Cliqueformer compare with the runtime of the baselines. Especially since the Cliqueformer uses a whole transformer, whereas (if I understood correctly) the COM baseline is simply a MLP. \n* Finally, there are no formal guarantees about learned representations matching desired FGM structure. \n\nMinor: \n\n* This may be considered a minor nitpick but result of Theorem doesn't seem substantial enough to be a theorem. I would suggest calling it a Proposition. \n* The approach of learning a structured representation of a function is very common in the causality and graphical models literature. Even though the paper is specifically about MBO, I encourage the authors to add some discussion about this in the related work section. \n* L118: methos -> methods\n* L120: com -> COM \n* L126-7: \u201cThis is particularly frustrating since recent work on\u201d -> why frustrating? \n* Figure 3: Axis labels and ticks are too small. \n* L316: designign -> designing \n\n\n[1] Kim, M., Berto, F., Ahn, S., & Park, J. (2023). Bootstrapped training of score-conditioned generator for offline design of biological sequences. Advances in Neural Information Processing Systems, 36.\n\n[2] Chen, C. S., Beckham, C., Liu, Z., Liu, X. S., & Pal, C. (2023). Parallel-mentoring for offline model-based optimization. Advances in Neural Information Processing Systems, 36.\n\n[3] Chen, C., Zhang, Y., Liu, X., & Coates, M. (2023, July). Bidirectional learning for offline model-based biological sequence design. In International Conference on Machine Learning (pp. 5351-5366). PMLR.\n\n[4] Yuan, Y., Chen, C. S., Liu, Z., Neiswanger, W., & Liu, X. S. (2023). Importance-aware co-teaching for offline model-based optimization. Advances in Neural Information Processing Systems, 36."
+            },
+            "questions": {
+                "value": "* How sensitive is the method to the choice of predefined FGM structure? What guidelines would you suggest for selecting appropriate clique sizes and overlaps for new problems?\n* How does the computational cost of Cliqueformer compare to baselines? \n* It is not clear to me how this approach would be applicable to problems where the design space is a bit more unstructured (e.g. graphs). Do you have any thoughts on that?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

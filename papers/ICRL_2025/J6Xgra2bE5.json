@@ -1,0 +1,186 @@
+{
+    "id": "J6Xgra2bE5",
+    "title": "Context-aware Prompt Tuning: Advancing In-Context Learning with Adversarial Methods",
+    "abstract": "Fine-tuning Large Language Models (LLMs) typically involves updating at least a few billions of parameters. A more parameter-efficient approach is Prompt Tuning (PT), which updates only a few learnable tokens, and differently, In-Context Learning (ICL) adapts the model to a new task by simply including examples in the input without any training. When applying optimization-based methods, such as fine-tuning and PT for few-shot learning, the model is specifically adapted to the small set of training examples, whereas ICL leaves the model unchanged. This distinction makes traditional learning methods more prone to overfitting; in contrast, ICL is less sensitive to the few-shot scenario. While ICL is not prone to overfitting, it does not fully extract the information that exists in the training examples. This work introduces Context-aware Prompt Tuning (CPT), a method inspired by ICL, PT, and adversarial attacks. We build on the ICL strategy of concatenating examples before the input, but we extend this by PT-like learning, refining the context embedding through iterative optimization to extract deeper insights from the training examples. We carefully modify specific context tokens, considering the unique structure of input and output formats. Inspired by adversarial attacks, we adjust the input based on the labels present in the context, focusing on minimizing, rather than maximizing, the loss. Moreover, we apply a projected gradient descent algorithm to keep token embeddings close to their original values, under the assumption that the user-provided data is inherently valuable. Our method has been shown to achieve superior accuracy across multiple classification tasks using various LLM models.",
+    "keywords": [
+        "Large Language Models",
+        "In-Context Learning",
+        "and Adversarial Attacks"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-16",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=J6Xgra2bE5",
+    "pdf_link": "https://openreview.net/pdf?id=J6Xgra2bE5",
+    "comments": [
+        {
+            "title": {
+                "value": "answer to 29Ww"
+            },
+            "comment": {
+                "value": "[2/2]\n\n\"The motivation for presenting Figure 1 and Figure 2 before the introduction is not clear.\"\nWe acknowledge that the placement of Fig. 1 and Fig. 2 could be improved. However, these figures are essential to accompany the introduction. Fig. 1 highlights the challenges present in various few-shot learning methods, setting the stage for our work\u2019s motivation. Fig. 2 visually outlines the key differences between existing methods and CPT, providing a clear contrast that helps to frame the problem and our proposed solution early in the paper. \n\n\n\"Some concepts need further clarification.\"\nThank you for pointing this out, we agree that a detailed explanation of the Projected Gradient Descent (PGD) algorithm is necessary, and we have added it to the updated version of the Appendix, for clarity. In our approach, we initialize the context tokens, denoted as x_i, using the training examples, with each token x_i associated with a vector delta_i, which is initially set to zero. During the optimization process, the tokens x_i remain fixed, while the delta_i vectors are updated iteratively. After each optimization step, each delta_i is projected to ensure its L2 norm does not exceed a predefined limit, epsilon, thereby controlling the extent of change for each context token.\n\n\nFor each token i of the context: \n\n\n\\delta_i <- 0\n\n\nx_i <- training_examples_tokens\n\nfor j in range(1, num_of_training_steps):\n\n\n   \\tab \\delta_i =  \\delta_i - \\alpha (\\nabla (Loss(f(x_i+\\delta_i), y_i)))\n\n\n   \\tab n_i = norm(\\delta_i)\n\n\n   \\tab \\delta_i = \\delta_i * (clip(n_i, \\epsilon)  / n_i) # projecting delta_i L2 norm\n\n\n\n\n\"Does the final loss have any tuning parameters, as presented in Line 252?\"\nNo, there are not additional paremeters, this is the exact expression that is used.\n\n\n\"lacks theoretical analysis.\"\nWe acknowledge that the paper lacks a formal theoretical analysis. However, as you stated, we supply \u201cExtensive experiments on various datasets using different LLMs\u201d. We have also provided an empirical analysis, such as the loss graph in Fig. 1, which supporting our motivation.\n\n\n\"Lack of novelty\"\nWhile we recognize that our approach builds upon established methods, our contributions lie in the novel integration of In-Context Learning (ICL), Prompt Tuning (PT), and adversarial strategies within a cohesive framework, Context-Aware Prompt Tuning (CPT). As you noted, we introduce a novel loss design that incorporates context labels alongside the standard loss, while weighting each token with a decay factor to leverage the \"recency bias\".\nAdditionally, our optimization process features a unique approach to controlling token embedding modifications, ensuring updates remain within a defined range. This combination enables CPT to effectively address overfitting and improve few-shot classification performance, as demonstrated through extensive empirical results. By unifying these elements, CPT offers a distinct approach to few-shot learning, achieving significant performance gains over baseline methods. We appreciate your recognition of these novel components, which are central to our contributions.\n\n\n\n\"lack experiments on more general generation tasks\"\nOur work focuses specifically on enhancing few-shot classification tasks, rather than general generation tasks, and we did not claim that our method is universally applicable across different task types. As you noted, we conducted extensive experiments on various datasets using different LLMs, all within the classification domain, to support this focus. Our evaluations included five datasets \u2014 one we created and four publicly available ones \u2014 and tested our method on three different large language models, consistently demonstrating CPT\u2019s effectiveness in few-shot classification settings."
+            }
+        },
+        {
+            "title": {
+                "value": "Answer to 29Ww"
+            },
+            "comment": {
+                "value": "[1/2]\nThank you for your thoughtful review and for recognizing the strengths of our work. We are pleased that you found our research problem compelling and appreciated our efforts to improve large language model (LLM) performance through a new method. As you noted, we presented a solid motivation in this work by identifying overfitting as a critical issue in few-shot learning, supporting this claim with empirical evidence, and demonstrating that our proposed method effectively addresses this challenge.\nOur method introduces a novel loss design and applies controlled token embedding optimization to enhance the adaptability of LLMs while mitigating overfitting. Furthermore, we conducted extensive experiments across various datasets and models to validate CPT's effectiveness. The results consistently demonstrate that CPT outperforms baseline methods. We appreciate your recognition of these strengths, as they underscore the contributions and practical impact of our approach.\nWe will now address each of your remarks individually.\n\n\"Fig. 2 and Fig. 4 are not clear.\"\nWe agree that these figures could benefit from clearer explanations, and we have revised them accordingly in the updated version. We realized that the confusion likely arose from the notation and color choices used to represent the training examples, which appear twice and with different colors in Fig. 2 \u2014 once as training examples and once as part of the context. In Fig. 2, we initially marked training tokens in red, and the same examples, when used in the context, in yellow. To avoid confusion, we have updated the figure so that all training examples in the context and in the training now appear in yellow.\n\nThis figure aims to outline the main distinctions between our method and other baselines, focusing on two primary aspects: the construction of the input and the optimization approach. To assist readers in understanding input construction, we use distinct colors to denote different token types. Additionally, we visualize optimization steps by marking tokens involved in loss calculation with red lines beneath them and tokens that are updated during training with green lines. For example:\n* In In-Context Learning (ICL), we concatenate examples (yellow tokens) without applying any optimization.\n* In Prompt Tuning (PT), we use learnable tokens (pink tokens), and during training we use random training example (red token) for loss calculation (indicated by a red line beneath) and updating the learnable tokens (indicated by a green line beneath).\n* In Instruction Prompt Tuning (IPT), both learnable and sample tokens are concatenated, and random training example is used for loss calculation, updates only to the learnable tokens.\n\nIn CPT, we initialize the learnable tokens with training examples (similar to ICL). However, unlike ICL, these tokens are optimized throughout training, and the labels of the context contribute to the loss. Therefore, all tokens, including the random training example, are used in loss calculation (indicated by a red line beneath), and all context tokens are updated (indicated by a green line beneath). To signify this dual role, CPT tokens are shown as partially pink and partially yellow, indicating their initialization with training examples and subsequent optimization.\n\n\n\n\"why are there two x_emb2 in Figure 4\"\nIn our method, the training examples serve dual roles \u2014 first to construct the context (as in ICL) and then in the optimization step (similar to PT) to update the learnable tokens. However, unlike PT, in our method the context itself consists of these training examples, which are updated during optimization.\n\n\n\n\"Although the authors show some input presentation in Sec.3.1, it is still unclear what the inputs look like.\"\nWe appreciate this feedback and have added additional clarification on input construction in the updated version. Specifically, Fig. 4 illustrates how we construct the input when working with two training examples.\nIn this process, we first use all training examples to create the context. We then reuse the same training examples to optimize the embeddings of the context tokens. Fig. 4 demonstrates a single optimization step where, in this case, the training example selected for optimization is example number 2."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes Context-aware Prompt Tuning (CPT) as a new method to address the overfitting problem of prompt tuning. The optimization of CPT consists of a novel loss design and controlled token embedding optimization. Extensive experiments on various datasets using different LLMs demonstrate that CPT achieves better performance than baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The research problem is interesting, and the authors proposed a new method for better LLM performance on several benchmark classification tasks. \n2. The authors have provided detailed literature studies and discussed the motivation of their method, \n3. The authors have done extensive experiments to demonstrate the effectiveness of CPT."
+            },
+            "weaknesses": {
+                "value": "1. The paper is not clearly written and well-organized. It is hard to understand the authors' ideas and the proposed methods. For example, the motivation for presenting Figure 1 and Figure 2 before the introduction is not clear. Although the authors show some input presentation in Sec.3.1, it is still unclear what the inputs look like. The authors should have provided detailed examples in this section. \n2. The novelty if this paper is limited, it is a simple combination of several existing works, such as prompt tuning and adversartial training. Besides the empirical results, the paper also lacks theoretical analysis. \n3. The figures, such as Figure 2 and Figure 4, are not clear and hard to understand. For example, why are there two x_emb2 in Figure 4. What do different colors mean in these figures? \n4.  Some concepts need further clarification. For example, how to do projected gradient descent as presented in Lines 272-273. \n5. The authors only work on simple classification tasks and lack experiments on more general generation tasks, such as summarization and machine translation."
+            },
+            "questions": {
+                "value": "1. Does the final loss have any tuning parameters, as presented in Line 252?\n2. See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces an approach to mitigating overfitting in few-shot learning scenarios, where traditional fine-tuning often leads to overfitting, and in-context learning (ICL) performance is highly sensitive to the choice of demonstration examples. The authors propose a context-aware prompt tuning strategy that integrates elements of ICL and prompt tuning. In this method, the demonstration examples provided to the model are treated as tunable parameters, while the associated labels remain fixed. By tuning the context of these demonstrations rather than the entire model, the approach leads to improved generalization across multiple benchmarks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Proposes a simple extension of prompt tuning by combining it with in-context learning. \n- Evaluates the model on different open-source datasets like AGNews, SST-2, DBpedia and TREC.\n- The figures (fig 2) in the paper are really helpful in understanding key differences between their method and various baselines they implemented."
+            },
+            "weaknesses": {
+                "value": "- The idea introduced is very similar to prompt tuning and the whole paper is just about applying it in-conjunction with in-context learning making it harder to find novelty in the approach. \n- The writing of the paper can be improved by quite a bit eg: abstract of this paper is hard to understand talking about different approaches rather than making it more crux on the solution/method and same applies to description provided on the set classification dataset."
+            },
+            "questions": {
+                "value": "- Was any hyperparameter tuning or prompt optimization conducted for the baseline models? The reported performance of Llama-3 seems surprisingly low on straightforward tasks like SST-2, where zero-shot models typically perform well. This raises questions about whether the baseline results fully reflect the model's potential or if they were hindered by suboptimal configurations. Clarification on any tuning efforts for the baselines would be helpful to ensure a fair comparison with the proposed method."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a few-shot method called context-aware prompt tuning. This method is inspired by in-context learning and prompt tuning, concatenating examples before the input as in ICL and learning these examples as in prompt tuning. The authors verify the effectiveness of the proposed context-aware prompt tuning method on several classification tasks using three models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The proposed method is straightforward and easy to understand.\nThe experiments in this paper are comprehensive, which use three models and test on several classification datasets.\nThe results show that the proposed method outperforms LoRA, PT, IPT and ICL in most cases."
+            },
+            "weaknesses": {
+                "value": "1. The proposed method integrates ICL and PT intuitively, thus the novelty is not very significant.\n2. Since the proposed context-aware prompt tuning is an optimization-based method, it also has the overfitting problem, just like fine-tuning and PT. Thought authors tried to mitigate overfitting by incorporating context labels into the loss function and applying projected gradient descent, the overfitting problem still exists in context-aware prompt tuning."
+            },
+            "questions": {
+                "value": "1. Why ICL cannot fully extract the information that exists in the training examples?\n2. In Table 1, CPT\u2020 (incorporating instructions) outperforms CPT on some datasets/models (for example SST-2 with BLOOM 1.7B), but underperforms CPT on other settings (for example DBpedia with BLOOM 1.7B, decreasing from 58.85 to 33.80 using 2 shots). How to explain this phenomenon?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes context-aware prompt tuning (CPT), a few-shot learning method that optimizes the in-context example using projected gradient descent (PGD). The authors conduct experiments on various models and benchmarks, finding CPT outperforms other baseline methods (prompt tuning, LoRA, instruction prompt tuning)."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The idea of optimizing the context using PGD is novel. If one needs to optimize the in-context example, it makes sense to use PGD so that the examples will not change by too much and the optimization does not overfit the few-shot examples."
+            },
+            "weaknesses": {
+                "value": "1. It is unclear what is the motivation for optimizing the in-context example. Does that make more sense than optimizing the prompt in instruction prompt tuning (IPT)? There is one possibility that the performance should be attributed to the use of PGD, which might prevent from overfitting. It will be beneficial if there is abation study on that, e.g., uses other regularized optimizers or use PGD in baselines (IPT, PT).\n\n2. Lack of analysis on the experimental results. Again, it might make the results easier to analysize if the authors disentangle these two components: (i) train on in-context samples; (ii) PGD as the optimizer. \n\n3. Some paragraphs are not clearly written. For example, in section 4.3, the authors introduce another variant $\\dagger$ which initializes trainable tokens with human engineered instructions. It is unclear what is the difference between $PT^\\dagger$ and $IPT^\\dagger$ for few-shot setting since they both have few-shot examples and trainable instruction-initialized tokens. \n\n4. The Set Classification dataset is confusing. I feel the only mechanism that works for an input sequence from that dataset is to search in the context to see if the test example appears and copy the cooresponding label (if any) as the output (please correct me if I am wrong), which is simply an induction head,  and the loss design of CPT seems to be encouraging the forming of induction head. Therefore is it a good benchmark to measure few-shot learning?\n\n5. In section 5.1 the title \"Better with Harder Tasks\" for that paragraph seems to be overclaiming."
+            },
+            "questions": {
+                "value": "Please see weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

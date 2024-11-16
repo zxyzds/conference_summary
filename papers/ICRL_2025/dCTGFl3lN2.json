@@ -1,0 +1,167 @@
+{
+    "id": "dCTGFl3lN2",
+    "title": "Improving Influence-based Instruction Tuning Data Selection for Balanced Learning of Diverse Capabilities",
+    "abstract": "Selecting appropriate training data is crucial for successful supervised instruction fine-tuning (SFT), which aims to (1) elicit strong capabilities from pretrained large language models (LLMs), and (2) achieve balanced performance across a diverse range of tasks. Algorithms based on influence estimation have shown promise in achieving (1) through estimating the contribution of each training example to model's prediction on a downstream task, but often struggle with (2). Through systematic experiments, we attribute their underperformance to an inherent bias---certain tasks intrinsically have greater influence than others. Directly comparing influence scores across different tasks would thus bias the selected data towards these tasks, hurting the LM's performance not only on other capabilities, but also, surprisingly, on the tasks for which the selected data has high influence.\n\nWe propose BIDS, a novel Data Selection algorithm that targets Influential data in a Balanced way, to address this issue. Aiming to address the biased influence, BIDS first normalizes influence scores of the training data with respect to each downstream task at an instance level. BIDS then applies an iterative optimization process to further balance the selection of influential training data. At each step, BIDS selects the training example that bears the highest influence on the most underrepresented capability by the currently selected data. Experimental results demonstrate that BIDS consistently outperforms state-of-the-art influence-based data selection algorithms under various budgets. Remarkably, training on a 15\\% subset by BIDS can even outperform full-dataset training with a much more balanced distribution of downstream performance. Our analysis further highlights the importance of both instance-level normalization and iterative optimization of selected data for balanced learning of diverse capabilities.",
+    "keywords": [
+        "Instruction Tuning",
+        "Data Selection",
+        "Influence Estimation"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We propose BIDS, an improved influence-based data selection algorithm for LLM instruction tuning, to promote balanced learning of diverse capabilities.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=dCTGFl3lN2",
+    "pdf_link": "https://openreview.net/pdf?id=dCTGFl3lN2",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces BIDS (Balanced Influence-based Data Selection), an algorithm for improving the balance and performance of LLMs across diverse tasks during supervised instruction tuning. Traditional influence-based methods often skew data selection toward tasks with inherently higher influence scores, leading to unbalanced model capabilities. BIDS addresses this by normalizing influence values at the instance level and applying an iterative selection process that prioritizes data for underrepresented tasks. Experimental results show that BIDS achieves more balanced performance across tasks like coding, logic, math, and instruction-following."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. strong results with only 15% of the dataset, keeping up with full-dataset training, demonstrating its potential for resource-efficient tuning of LLMs.\n2. Comprehensive across diverse tasks (coding, logic, math, and instruction-following), showing consistent improvements over baseline methods, which strengthens the validity of its balanced selection approach."
+            },
+            "weaknesses": {
+                "value": "The paper primarily focuses on specific tasks and one model (Llama-3-8B). Testing BIDS on a broader range of models (different families and sizes) and larger task sets would help assess its scalability and generalization."
+            },
+            "questions": {
+                "value": "How robust is BIDS to noise or inaccuracies in influence score estimation? Could variations in influence scoring across tasks impact the balance achieved, and have any measures been taken to address potential score biases?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies selecting suitable training data for supervised instruction fine-tuning (SFT) of pretrained LLMs. Specifically, this paper focuses on the strategy of iterative balanced selection based on the influence score between training and validation samples, named BIDS. BIDS first normalizes influence scores per task and iteratively selects training data that maximally enhances underrepresented capabilities. They provide several analyses and ablations to validate the effectiveness of core components and motivations of their approach."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Pointing out the necessity of balanced sampling for recent instruction tuning datasets, which usually consist of multiple distinctive tasks."
+            },
+            "weaknesses": {
+                "value": "The reviewer agrees that the balanced selection should be meaningful for the multitask instruction tuning dataset.\n\nHowever, the observations and discussions provided in the paper seem to be limited and less rigorous than the reviewer expected.\n\n1. limited contribution: I understand this work as a LESS method, but I draw each sample iteratively for balance, which sounds more like an ad-hoc engineering technique for LESS. Evaluation with a single LLM backbone and single 'meaningful' baseline doesn't give me meaningful insights throughout the paper.\n\n2. limited analysis: The most straightforward setting for balanced sampling should be to select the same number of influential samples of each training dataset (i.e., task) from the corresponding validation set (i.e., task-specific LESS selection). However, there is no comparison or discussion. Also, the impact of influence score from validation sets from a task to training samples from other tasks is not discussed, which may provide further insights on balanced sampling for underrepresented tasks.\n\n3. marginal performance improvement: performance improvement is limited. For example, in Table 2, under a 5% budget, there is a 0.4% improvement from simple *sum*. Under 15% sample budget, it also shows 0.4% improvement against *random*. Considering the randomness of selecting validation samples and stochastic training, it looks almost like random fluctuation within the variance.  In addition, in Table 1, I wonder why the gap between the random selection and LESS has a marginal performance difference, which is quite hard to understand considering the report of the original LESS paper showing significant performance gain from random selection. This paper uses LLAMA3 (LESS uses llama2-7B, llama2-13B, and mistral-7B), but not sure this is the only reason for this. \n\n4. limited experiments: this paper uses only one LLM backbone (llama3-7B) and uses only one meaningful baseline - LESS. More extensive comparison under the various LLM backbones following LESS paper and including various types of data pruning/selection papers, including a balanced or density-based selection approach, should be needed."
+            },
+            "questions": {
+                "value": "Please see the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new data selection method for instruction tuning of LLMs to achieve better performance while using less data. The method proposed is BIDS, which normalizes influence scores per task and iteratively selects the most influential data for underrepresented capabilities, ensuring a balanced selection across different tasks. Experiments on LLama3 show that BIDS achieves better performance on UltraInteract benchmark over several baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The writing is clear and easy to follow.\n2. After using the proposed data selection algorithm, the performance is better than using all data on some benchmark."
+            },
+            "weaknesses": {
+                "value": "1. The algorithm design lacks enough novelty. It simply modifies the original LESS algorithm by adding a instance-level normalization to the attribution matrix.\n2. The paper does not well explain why using a balanced data selection can leads to better performance. And why using less data can leads to better performance than using all data for training. (Why excluding less \"Influence\" data can leads to better performance.)\n3. The algorithm needs to maintain a |d| &times; |V| matrix, which is not efficiency when the dataset is large. The computation cost of the proposed algorithm needs to be discussed in the paper.\n4. Authors should compare their results with other SOTA data selection algorithms to prove their effectiveness, instead of just comparing different variant of Influence-based instruction tuning data selection."
+            },
+            "questions": {
+                "value": "What is the ratio for dividing the data into training, validation, and test sets?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes BIDS, a data-selection algorithm designed to address the inherent bias in existing influence-based data selection methods for instruction tuning of large language models. Build upon the previous work LESS, they first apply instance-level normalization on the influence scores, then utilize an iterative selection algorithm to identify influential samples while maintaining a balance between tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- Overall, the writing is clear and easy to follow, and the problem setup is well-defined.\n- The paper provides a detailed analysis of the limitations of previous work.\n- Experimental results demonstrates the propose method's effectiveness across the selected baselines (however, see weaknesses)."
+            },
+            "weaknesses": {
+                "value": "- This proposed is somewhat incremental, with limited technical contributions. It heavily relies on the previous work LESS, with the primary contributions being instance-level normalization and an \u201citerative\u201d selection algorithm. However, normalization is already well-explored in ML, and the iterative selection is very similar to \u201cmaximal marginal relevance\"[1].\n\n  [1] Carbonell, Jaime, and Jade Goldstein. \"The use of MMR, diversity-based reranking for reordering documents and producing summaries.\" *Proceedings of the 21st annual international ACM SIGIR conference on Research and development in information retrieval*. 1998.\n\n- Experiments are insufficient. There is no direct comparison between the proposed method and its previous work, LESS, or other data selection methods. The selected baselines are naive. Additionally, experiments are limited to LLaMA-3-8B, leaving the generalization capacity of the proposed method unproven.\n\n- The experimental results are not very convincing. The performance of the proposed method is worse than the random baseline on some benchmarks, and there is no clear clarification or explanation in the paper. Besides, there are some presentation issues in table 2. It is misleading to \"bold\" the results if it outperforms two baselines (even if it is specified in the caption). In addition, results for the 5% budget and 15% budget on MMLU should not be bolded."
+            },
+            "questions": {
+                "value": "- Why do you call it \"instance-level\" normalization? Can you provide some more comparisons between different normalization methods?\n- Can you provide additional results on different LLMs (e.g. Mistral-7B, LLama-2-7B/13B as used in LESS)? It might better demonstrates the generalization of the proposed method.\n- Can you provide some examples (LLM response) to show that the proposed method is better for balancing across tasks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,203 @@
+{
+    "id": "FEZOLWexPb",
+    "title": "MAESTRO: Masked Encoding Set Transformer with Self-Distillation",
+    "abstract": "The interrogation of cellular states and interactions in immunology research is an ever-evolving task, requiring adaptation to the current levels of high dimensionality. Cytometry enables high-dimensional profiling of immune cells, but its analysis is hindered by the complexity and variability of the data. We present MAESTRO, a self-supervised set representation learning model that generates vector representations of set-structured data, which we apply to learn immune profiles from cytometry data. Unlike previous studies only learn cell-level representations, whereas MAESTRO uses all of a sample's cells to learn a set representation. MAESTRO leverages specialized attention mechanisms to handle sets of variable number of cells and ensure permutation invariance, coupled with an online tokenizer by self-distillation framework. We benchmarked our model against existing cytometry approaches and other existing machine learning methods that have never been applied in cytometry. Our model outperforms existing approaches in retrieving cell-type proportions and capturing clinically relevant features for downstream tasks such as disease diagnosis and immune cell profiling.",
+    "keywords": [
+        "self-supervision",
+        "representation learning",
+        "immunology",
+        "biology",
+        "single-cell",
+        "cytometry",
+        "set",
+        "set representations"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "We developed a self-supervised set representation learning model for vector-sized representations of single-cell data",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=FEZOLWexPb",
+    "pdf_link": "https://openreview.net/pdf?id=FEZOLWexPb",
+    "comments": [
+        {
+            "comment": {
+                "value": "Dear reviewer MoSb, \n\nThank you for the kind, thorough, and constructive review of our paper. We address Weakness 1 but otherwise assume that no changes need to be made to our manuscript. We will address the other weaknesses and questions that you have in your review here: \n\n\nR4, Comment 1: Patient-batch limitations: The manuscript doesn\u2019t address the problem of patient-normalization in scenarios where the model may have to deal with a heterogeneous cohort of patients. Cytometry patients' samples may vary a lot in a heterogenous cohort, and further studies on this generalization process could extend MAESTRO applicability (e.g. https://pubmed.ncbi.nlm.nih.gov/31633883/). For example, authors could specify whether would make sense to inject patient-level information as prior knowledge during the pre-training phase.\nResponse: Great point. This was a mistake on our part in how we described our dataset. While the paper describes the dataset as one large dataset, it is a composition of many independent datasets processed at different times and location. We will address this point by changing the language of the paper, as well as in the supplementary showing that there are batch effects in the data, that is not seen in the embeddings. \n\nR4, Comment 2: Scalability concerns with self-distillation on larger datasets and different batch sizes: This approach may become less effective as datasets start spanning over large patient cohorts since MAESTRO has been pre-trained on four GPUs at a time, with corresponding batch_size=1, meaning four samples at once have been processed. Under extremely large datasets, feeding the teacher model with complete sets can lead to substantial memory requirements.\nResponse: This is a fair concern, however, because a feature of MAESTRO is that we can take variably sized inputs, there is little that can be addressed for batch sizes. We note that feeding the teacher model the complete set is not that memory intensive, and a novelty in our paper! The teacher model requires no gradient calculation as its parameters are the EMA of the student (which only receives the subset). Further, in our supplementary, we show the distribution of number of cells in our dataset, which on the upper end is over a million cells. \n\nR4, Comment 3: Dealing with noisy input: It\u2019s not explicitly addressed the robustness of MAESTRO when dealing with noisy inputs, such as debris, dead cells that may be inherited from other cytometry datasets (e.g. flow cytometry ones), and whether this could or couldn\u2019t be taken into account in the SSL strategy.\nResponse: While we did not describe this in the paper, debris, dead cells, and doublets were all removed before-hand. While we believe that the removal of these are a pre-processing step, it is a great point to consider how/if we can bypass this step which would make the model even more impactful. \n\nR4, Question 1: How does the choice of protein markers affect MAESTRO\u2019s performance and generalizability;\nResponse: This is a great question, and we are unsure of the answer! It would be a great experiment to either test with a different and/or smaller protein panel, or, it could also be interested to test the result with masking of both cells (rows) as well as markers (columns)\n\nR4, Question 2: How MAESTRO would perform on multi-modal data types like epigenomic data, e.g. ATAC-seq;\nResponse: We are excited and interested to test how MAESTRO performs on multi-modal data, but for this paper, is out of scope. \n\nR4, Question 3: How MAESTRO\u2019s embedding can support unsupervised tasks like clustering or anomaly (blast population) detection, in a potential diagnosis scenario.\nResponse: We believe that anomaly detection for populations such as blasts is better suited for models at the single-cell level, this is still a very interesting question. It might be interesting to plot the cells at an intermediate stage of the model (before pooling) to see how well these individual cells are represented. Since we demonstrated that our model embedding can do diagnosis/phenotype prediction, it\u2019s intuitive to believe that anomaly populations are represented in a meaningful way. \n\n\nThank you again for the great review of our paper! We will address Weakness 1 in our paper, otherwise will not make any other changes."
+            }
+        },
+        {
+            "comment": {
+                "value": "Dear reviewer Jhp9, \n\nThank you for reviewing our paper, our response to your comments are below: \n\nR3, Comment 1: The downstream experiments presented in sections 4.3 and 4.4 of the manuscript, which focus on sample classification, are adequately performed. However, the section 4.5 dealing with cell type distribution retrieval does not meet the same standard. The rationale behind fine-tuning the embedding for this task is unclear, given the variability and sample-dependence of cell type distributions. This approach lacks the robustness required for generalization across different datasets.\n\nResponse: Could you please clarify why section 4.5 with cell-type distribution retrieval does not meet the same standard? The purpose of this section is to show that the information of cell-type distribution (which typically requires labeled data) is stored within the embedding itself. We show this by predicting this distribution using a lower number of epochs with a neural network. A low number of epochs shows that the model does not need to be optimized due to the information already being stored. The variability and sample-dependence of cell-type distributions is true, and exactly why we show that the embeddings (which are also variable and sample dependent) are capable of retrieving this distribution information. We understand that based on our language, it seems that we are using a single dataset which would have minimal batch effects. Our dataset is composed of multiple datasets that were processed independently and indeed contain batch effects. We will clarify this language in our paper as well as provide supplementary material demonstrating those batch effects in the data. \n\nR3, Comment 2: Furthermore, the manuscript does not convincingly demonstrate the utility of the proposed embeddings in broader cytometry tasks. Downstream applications such as zero-shot cell classification, zero-shot sample characterization beyond disease/health state, and protein representation are notably absent. Incorporating these biologically meaningful experiments would significantly enhance the value and applicability of the research. More rigorous and diverse testing of the embeddings on a range of cytometry tasks is essential to establish their effectiveness and relevance in the field.\n\nResponse: We believe that zero-shot cell classification does not pertain to the intentions of this paper, we believe the closest task to this would be the above cell-type distribution retrieval. Because we are aiming to do set learning (as opposed to individual cell learning), we show that we can predict an entire distribution of cell types from an embedding vector, a task that is much more difficult than classification of a single cell. Could you please clarify what you mean by zero-shot sample characterization? Our understanding is that zero-shot classification in any context would require an embedding of a class obtained from some other method (such as an LLM embedding). If there are other methods of obtaining such embeddings for cytometry set data, than we will attempt this but believe this task is not relevant to our paper. We will however, make changes to the manuscript to show evaluations beyond diagnosis and cell-type distributions (but not at zero-shot). Lastly, could you please elaborate what you mean by protein representation? Do you mean representations of the feature space? Based on our understanding, this is also not relevant to the concepts or goals in this paper. \n\nIn the above, we have described that we will provide additional evaluations beyond diagnosis and cell-type distribution that demonstrate the effectiveness of our embeddings. Otherwise, we believe that we have addressed your other comments in this response and that no other changes need to be made to change from a rejection score to acceptance (we realize you cannot change your score until the changes have been implemented but want to check that we understand your concerns before modifying). Thank you for your review!"
+            }
+        },
+        {
+            "comment": {
+                "value": "Dear reviewer 72JE, \n\nThank you for your review of our submitted paper. We appreciate the constructive criticisms. We describe what modifications we will make to our manuscript as well as any points that can be clarified outside of the text below: \n\nR2, Comment 1: The model was evaluated only on datasets from similar experimental settings, which contain minimal batch effects. It is unclear how the method handles batch effects or how the resulting embeddings may be influenced by such variations. \n\nResponse: This was a mistake on our part in the language we used to describe the dataset. We recognize we described the dataset as a single dataset (which would therefore contain no batch effects), when in reality it is multiple datasets that use the same protein panel but were processed at different times and locations. This is only further evidenced by the fact that it is not possible to process that many samples at once. We will adjust the language of our paper to make it clear, and we will also provide figures in the supplementary to show that there are indeed batch effects in our data that are addressed in the representations. \n\nR2, Comment 2: According to the description, the detected proteins could be different between cells. Currently, the authors select and focus only on the shared detected proteins across all the samples. Could the model be extended to handle all the detected proteins?\n\nResponse: For this dataset, although many samples processed independently of one another all contain the same 30 protein markers, this is a choice made in the experimental process and we therefore did not have to filter for only overlapping proteins. It is true that in an entirely new experimental set up, that a sample could be generated with different protein markers, this is out of scope for this paper but an interesting question nonetheless. \n\nR2, Comment 3: Additionally, the model primarily generates sample-level embeddings, whereas producing cell-level (for each cell) and feature-specific (for each feature) embeddings could be valuable for downstream comparisons.\n\nResponse: Agreed that these are valuable, however, not relevant to this paper as the goal of this paper differs from the goal of a single-cell model. The goal here is not to find the best representation of each cell, but rather find the best representation of the collection of cells for a sample. We do not argue that each individual cell in our model has a better representation than they would from a different method, for example scGPT. Other cell-level representation models would require sample-level aggregation training, whereas ours does not. Lastly, evaluations in single-cell level self-supervised models are conducted by validation cell type labels, here we show that we are able to predict entire distributions of cell type labels (section 4.5) which is a much more difficult task than classifying a single cell type. \n\nR2, Comment 4: Further details on the method's runtime, robustness, and memory usage would also be beneficial.\n\nResponse: We will include runtime, robustness, and memory usage in the supplemental section. \n\nPlease let us know if the above modifications to our paper (points 1 and 4 above) inadequately address your concerns for the paper. Otherwise, we will assume that the changes above should improve the rating of our paper to an acceptance (we realize you cannot change your score until the changes have been implemented but want to check that we understand your concerns before modifying). Thank you again for your review!"
+            }
+        },
+        {
+            "title": {
+                "value": "Response (2/2)"
+            },
+            "comment": {
+                "value": "R1, Question 1: \nResponse: Great question! We believe that MAESTRO can generalize beyond immune profiles, however, have not tested this thoroughly. However, we believe that showing this data is out of scope for this paper (particularly with the page limit), and does not need to be shown to validate the impact of the model. In the conclusions section we mention that MAESTRO could be used for scRNAseq, computational histopathology, and multi-modal integration. Due to the page limitation we feel as though we have addressed this to the best we can without sacrificing more critical components of the paper. \n\nR1, Question 2:  \nResponse: The strongest argument to defend the novelty of this work is that there are no current methods that are capable of representing sets at the scale of millions of rows and of variable size as a fixed vector. There are also no existing methods that produce patient level (as opposed to single-cell level) representations. \n\nR1, Question 3: \nResponse: This figure/result suggests that there are underlying biological mechanisms that behave similarly in pairs of diseases that are off the diagonal. For example, in the case of sepsis/acute COVID, these are both acute, life-threatening conditions with a lot of immune dysregulation, such as T cell activation. \n\nR1, Question 4: \nResponse: Manual gating, while performing poorly, is considered the gold standard because there are no other methods that exist to do this. While methods of set learning such as DeepSets, Set Transformer, and OTKE have emerged, our implementation of these is the first instance in literature of applying these to cytometry. The rationale for manual gating is that it is based on biological priors as opposed to being unsupervised/data-driven. Furthermore, panel choice and sample processing conditions introduce a lot of technical variability, if you just dump the data in e.g. K-means, it may learn clusters for file-specific noise patterns. There is no universally recognized denoising method so immunologists account for this by manually adjusting gates. Manual gating is considered the gold-standard for vector representations of cytometry data (sets), however, if we change the scope to describe the gold-standard of unsupervised, data-driven methods then the standard would be calculating proportions of clusters (kmeans in our paper). We believe the former is more accurate to describe the gold-standard in the field of immunology, but if you believe this is confusing to readers we can change that scope and describe clustering as the gold-standard. \n\nR1, Question 5: \nResponse: cyMAE, and its benchmark of GBDT are conducted at the single-cell level and not as a set. Both of these methods are not comparable benchmarks in this paper. Please clarify if our interpretation of this question is incorrect. \n\nR1, Question 6:\nResponse: We also show that from our representations we can retrieve cell type proportions, which are equal to manual gating vector representations, and that these gating representations are not very predictive of diagnosis, that this demonstrates the representations are not biased towards diagnosis. However, we believe your concern is valid and will include other evaluation tasks. \n\nR1, Question 7: \nResponse: While we understand (and possibly even agree) that the comparison is unfair, that is one of the novelties of our method \u2013 there are no other methods that exist that are capable of doing this (more than 10k cells for something like Set Transformer causes memory issues), and therefore are the best thing to benchmark against. We can do the same and sample MAESTRO to 10k cells as we did with the other methods and evaluate performance, but one novelty of this method is that we don\u2019t have to do this, therefore, we believe this is unjustified.\n\nIn the above, we have highlighted what changes we will make to explicitly address in our paper, as well as what questions/clarifications we still have. Should the above changes addressing your comments not be adequate for an improvement of the rating to acceptance, please let us know any other concerns you have for our paper (we realize you cannot change your score until the changes have been implemented but want to check that we understand your concerns before modifying). Thanks again so much, your review is very helpful for us!"
+            }
+        },
+        {
+            "title": {
+                "value": "Response (1/2)"
+            },
+            "comment": {
+                "value": "Dear reviewer 4TLg, \nWe appreciate you taking the time to conduct a fair and constructive review of our work. Below is our proposed way of addressing your comments: \n\nR1, Comments 1: \nResponse: Our paper has been submitted in the Primary Area of \u201capplications to physical sciences (physics, chemistry, biology, etc.)\u201d. We believe that this is an insufficient reason for rejection due to the area submission. However, we understand that ICLR is primarily methods development and that our paper could be considered as such. In response to this, we first argue that this is not an existing task - set level representation exists sure, but set level representation at the scale of millions of rows, is an unexplored task. Second, we argue that many papers are integrations of existing concepts and approaches, that research is typically conducted by incremental successors to previous work and therefore is still an insufficient reason for rejection as there are no existing models that can complete the task of our model. \n\nR1, Comments 2: \nResponse: We recognize that the way we described the data is as though it is a single dataset. Actually, our dataset is composed of many independent datasets processed at multiple locations. We will revise the language in the paper to make this clear, we will also in supplementary material show that in the data itself (not representations) there are batch effects. \n\nR1, Comments 3: \nResponse: We will post an anonymous github page for code. Due to patient privacy, we are unable to share the data. \n\nR1, Comments 4: \nResponse: We will replace the citation of cyMAE to other (multiple) sources that demonstrate that gating is the state of the art representation of cytometry data in a vectorized format (the only current existing methods are gating and cluster proportions).  We apologize for the confusion, but cyMAE is not comparable to our model as cyMAE operates at the single-cell level. \n\nR1, Comments 5: \nResponse: Due to page limit, we will add an extended limitations section to the supplementary material. \n\nR1, Comments 6:\nResponse: There are very few works in this field. We have cited other set representation learning methods, although there are few. We will search the literature again for other methods that do this. We have cited all works that we believe exist in the application of machine learning for cytometry.  We will fix the mentioned missing citations.\n\nR1, Comments 7:\nResponse: We will fix the minor flaws. \n\n(Split due to character limit, please continue below)"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents MAESTRO, a self-supervised learning method tailored to learn representations of high-throughput cytometry data. The complexity and variability of the data makes it impossible to directly apply many of the previously developed techniques, so the authors come up with a new method using the existing teacher-student architecture to learn representations of immune profiles. The authors present evidence of effective data reconstruction, probe representations in predicting sample diagnosis and cell type proportion, and demonstrate superior performance to existing techniques. In addition, the authors report results of the ablation study to justify the design of MAESTRO."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- I appreciated the detailed and comprehensive method description. Clearly structured and explained in sufficient detail. Although many of the blocks are not novel, such a presentation helps understanding the work.\n- The contribution of the work looks solid, as demonstrated in the experiments. The design of the proposed method is justified with an ablation study. The performance appears superior to previously proposed methods.\n- Arguably, there exist few solutions capable of handling high-throughput cytometry data to this day. MAESTRO seems to make a significant contribution in the domain by tackling this challenge effectively."
+            },
+            "weaknesses": {
+                "value": "1. It seems that the work addresses an existing task and tackles it by integrating existing concepts and approaches into a new framework. Therefore, the novelty of this work appears limited and must be further clarified by the authors.\n2. Evaluation is done on a single dataset, which is generally not enough to showcase the effectiveness and robustness of the newly presented method. The cited DeepCyTOF, for example, employed five collections of FCM datasets from FlowCAP-I and three additional collections of CyTOF datasets.\n3. Data and code availability are not discussed. For a method paper, an anonymized repository must be provided for reviewers to verify the soundness and validity of the approach.\n4. The authors cite the paper of [cyMAE](https://www.biorxiv.org/content/10.1101/2024.02.13.580114v2) to claim that manual gating remains state of the art, while this very method was introduced at the NeurIPS 2023 Workshop AI4Science as the first effort to achieve (and, arguably, surpass) this state-of-the-art performance. Comparison to cyMAE is neither presented, nor discussed, which is a questionable choice of the study design.\n5. Only a few concluding remarks are dedicated to the limitations of the approach. More discussion points could follow from the additional evaluations that are currently missing.\n6. References look limited suggesting the authors might not be aware of the other important works in the field. Also, some statements are missing citations (e.g., lines 83-92), which complicates validity assessment.\n7. Minor flaws:\n- line 296: missing bracket typo\n- line 313: double-quote typo\n- line 317: \u201cAlgorithm 0\u201d typo"
+            },
+            "questions": {
+                "value": "__Contributions__\n\n1. Is MAESTRO tailored to the analysis of immune profiles? How well can it generalize beyond that? What would be the evidence of that? If there are no additional experimental results, please discuss potential applications of MAESTRO to set-structured data outside of immunology, and what modifications, if any, might be needed for such applications.\n2. What is the strongest argument to defend the novelty of this work?\n\n__Figure 3b__\n\n3. How do you explain values for Sepsis, Vasculitis, and two types of COVID?\n\n__Table 1__\n\n4. If manual gating performs so poorly, why is it called the golden standard? Please discuss reasons it remains widely used despite the emergence of more accurate computational methods and consider abstaining from calling it a gold standard.\n5. The table includes 2 methods that are supervised. However, the [cyMAE paper](https://www.biorxiv.org/content/10.1101/2024.02.13.580114v2)  suggests that it is gradient boosting decision trees (GBDT) that achieve top performance among the supervised learning algorithms. Why is there no comparison to GBDT?\n6. Is a single linear probing task enough to evaluate the discriminative power of the learned representations? Is it possible they are biased towards sample diagnosis? Please include other evaluation tasks to provide a more comprehensive assessment of the learned representations.\n\n__Evaluations__\n\n7. Some other methods have been included for comparison despite the fact that they are incapable of handling large datasets. To make it possible, the authors sampled 10k cells for each sample ranging from 11k to 1386k cells in total. How fair and informative is that comparison? Were the other methods optimized to achieve their top performance under such conditions? Is it possible to compare MAESTRO to the other methods on a subset of the large dataset under entirely identical conditions? Please provide a more detailed justification for the comparison methodology."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors developed a method called MAESTRO (Masked Encoding Set Transformer with Self-Distillation) to effectively capture and summarize the diverse characteristics of immune cells from cytometry data. MAESTRO leverages a specialized attention mechanism and a self-distillation framework within a self-supervised learning setup, enabling it to handle large datasets without information loss. The model generates sample-level representations from the data. The authors evaluated MAESTRO\u2019s embeddings to determine whether they can support downstream diagnostic classification, and enable cell-type proportion prediction."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The manuscript is well-written and easy to follow. The proposed method is effectively designed to handle large datasets without losing sample information. Additionally, the model addresses permutation invariance by using specialized attention blocks that omit positional encodings. This design enables MAESTRO to generate robust, representative embeddings for diagnostic classification and cell-type proportion prediction."
+            },
+            "weaknesses": {
+                "value": "(1) The model was evaluated only on datasets from similar experimental settings, which contain minimal batch effects. It is unclear how the method handles batch effects or how the resulting embeddings may be influenced by such variations. \n(2) According to the description, the detected proteins could be different between cells. Currently, the authors select and focus only on the shared detected proteins across all the samples. Could the model be extended to handle all the detected proteins?\n(3) Additionally, the model primarily generates sample-level embeddings, whereas producing cell-level (for each cell) and feature-specific (for each feature) embeddings could be valuable for downstream comparisons. \n(4) Further details on the method's runtime, robustness, and memory usage would also be beneficial."
+            },
+            "questions": {
+                "value": "See the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In the paper, the authors proposed MAESTRO, a set-transformer-based method that design for generate the sample embeddings and cell embedding for the cytometry data. The authors compared several baseline method, conducted ablation studies, and further checked the effectiveness of the sample/cell embeddings on sample classification/cell type proportion retrieval."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is generally well written and easy to follow.\n\nThe authors considered the specific needs for the cytometry data, such as variable set size, large data scale, and the permutation-invariant problem and designed their model, which is great and add a layer of novelty."
+            },
+            "weaknesses": {
+                "value": "The downstream experiments presented in sections 4.3 and 4.4 of the manuscript, which focus on sample classification, are adequately performed. However, the section 4.5 dealing with cell type distribution retrieval does not meet the same standard. The rationale behind fine-tuning the embedding for this task is unclear, given the variability and sample-dependence of cell type distributions. This approach lacks the robustness required for generalization across different datasets.\n\nFurthermore, the manuscript does not convincingly demonstrate the utility of the proposed embeddings in broader cytometry tasks. Downstream applications such as zero-shot cell classification, zero-shot sample characterization beyond disease/health state, and protein representation are notably absent. Incorporating these biologically meaningful experiments would significantly enhance the value and applicability of the research. More rigorous and diverse testing of the embeddings on a range of cytometry tasks is essential to establish their effectiveness and relevance in the field.\n\nI did not get the biological importance on the permutation-invariant module. Any downstream tasks to show the effectiveness of the module?"
+            },
+            "questions": {
+                "value": "See weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "MAESTRO introduces a self-supervised set transformer framework for analyzing cytometry data, which is known to be challenging due to its high dimensionality, permutation invariance, and variable sample sizes. Using masked encoding and a self-distillation approach, the model generates vector representations of immune profiles by leveraging attention mechanisms to handle set-structured data. MAESTRO performs better cell-type proportion retrieval and disease phenotype classification than state of the art techniques, improving single-cell analysis in immunology research.\nSince cytometry datasets contain millions of cells per sample, MAESTRO proposes a three -fold strategy :\n- A SSL set representation approach with a permutation-invariant attention mechanisms (using __ISAB, PMA, SAB__); \n- A masked encoder (__NRBM__) that enables to process large cytometry datasets efficiently;\n- A teacher-student model for self-distillation via __EMA__.\n\nThus, MAESTRO learns holistic representations of entire cell sets, capturing both global (sample-level) and local (cell-type) information."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- __Originality__: The paper presents a novel idea to deal with million-row size cytometry dataset, as single cells ones are, providing a model, MAESTRO, that can capture sample membership information without losing cell population-level interactions rather than uniquely focusing on individual cells. \n- __Quality__: The manuscript clearly explains how to face the challenges of large single-cell cytometry datasets exploiting and combining previous-field ideas not deeply applied by compared models yet.\n- __Clarity__: The paper is quite well written, with no major typos or incomprehension.\n- __Significance__: The manuscript, presents a novel idea to face a common problem in a large cytometry dataset, and may well-impacts research due to its:           \n     - __SSL__ module that doesn\u2019t require any label-acquisition process for training, which is particularly costly for these datasets;\n     - ISAB, PMA, and SAB (__Eqs. 5-7__) that are finely tuned to maintain permutation invariance, a critical feature for handling unordered sets like these; \n     - NRBM (__Alg.1__) rather than random masking to contain cell-populations level information."
+            },
+            "weaknesses": {
+                "value": "- **Patient-batch limitations:**  \n   - The manuscript doesn\u2019t address the problem of patient-normalization in scenarios where the model may have to deal with a heterogeneous cohort of patients. Cytometry patients' samples may vary a lot in a heterogenous cohort, and further studies on this generalization process could extend MAESTRO applicability (e.g. https://pubmed.ncbi.nlm.nih.gov/31633883/). For example, authors could specify whether would make sense to __inject__  __patient-level__ information as __prior knowledge__ during the pre-training phase.\n\n-  **Scalability concerns with self-distillation on larger datasets and different batch sizes:**  \n   - This approach may become less effective as datasets start spanning over large patient cohorts since MAESTRO  has been pre-trained on four GPUs at a time, with corresponding  __batch_size=1__, meaning four samples at once have been processed. Under extremely large datasets, feeding the teacher model with complete sets can lead to substantial memory requirements.\n\n-  **Dealing with noisy input:**\n   - It\u2019s not explicitly addressed the robustness of MAESTRO when dealing with noisy inputs, such as debris, dead cells that may be inherited from other cytometry datasets (e.g. flow cytometry ones), and whether this could or couldn\u2019t be taken into account in the SSL strategy."
+            },
+            "questions": {
+                "value": "Authors, in addition to the __above__ cited __perplexities__, may illustrate whether they have plans for exploring the following points:\n   1. How does the __choice of protein markers__ affect MAESTRO\u2019s performance and generalizability;\n   2. How MAESTRO would perform on __multi-modal__ data types like epigenomic data, e.g. __ATAC-seq__;\n   3. How MAESTRO\u2019s embedding can support unsupervised tasks like __clustering__ or anomaly (__blast__ population) __detection__, in a potential __diagnosis__ scenario."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,131 @@
+{
+    "id": "UYZRaUCLAg",
+    "title": "Solving Inverse Problems in Protein Space Using Diffusion-Based Priors",
+    "abstract": "The interaction of a protein with its environment can be understood and controlled via its 3D structure. Experimental methods for protein structure determination, such as X-ray crystallography or cryogenic electron microscopy, shed light on biological processes but introduce challenging inverse problems. Learning-based approaches have emerged as accurate and efficient methods to solve these inverse problems for 3D structure determination, but are specialized for a predefined type of measurement. Here, we introduce a versatile framework to turn raw biophysical measurements, such as cryo-EM density maps, into 3D atomic models. Our method combines a physics-based forward model of the measurement process with a pretrained generative model providing a task-agnostic, data-driven prior. Our method outperforms posterior sampling baselines on linear and non-linear inverse problems. In particular, it is the first diffusion-based method for refining atomic models from simulated cryo-EM maps.",
+    "keywords": [
+        "machine learning for structural biology",
+        "protein structure determination",
+        "diffusion models",
+        "inverse problems"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "We leverage the data-driven prior learned by a diffusion model to turn measurements (e.g. cryo-EM maps) into 3D protein structures.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=UYZRaUCLAg",
+    "pdf_link": "https://openreview.net/pdf?id=UYZRaUCLAg",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduced a framework, ADP-3D, which uses a diffusion model as a prior to solve the inverse problem in structural biology. The authors leverage the pretrained diffusion models in the atomic model space like Chroma and RFDiffusion as their prior. The downstream tasks include structure completion (as a toy problem), atomic model refinement (model completion given a simulated density map, an incomplete atomic model, and the sequence), and solving structure from given pairwise distances."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "As far as my knowledge goes, this work is one of the first to leverage a pretrained diffusion model of protein atomic structures as a Bayes prior, to solve the inverse problems which are very common in structural biology. The connection between the generative model and the experimental observation is very important in expanding the scope of the AI for science field."
+            },
+            "weaknesses": {
+                "value": "1. Since the paper uses pretrained diffusion models from Chroma and RFDiffusion, and the measurement models for the tasks are apparent, from a methodological standpoint, my understanding is that the main contribution of this paper is the MAP estimation method given a diffusion prior. As ADP-3D seems like a generic algorithm that is not heavily tailored for structural biology, there are many similar methods in the field of diffusion posterior sampling for inverse problems, e.g. DPS, $\\Pi$GDM, as surveyed in [1] and also mentioned in the related work section by the authors. The authors should compare the similarities and differences between the propose ADP-3D method and other similar algorithms. The authors should also use at least one of these methods as the baseline and compare the results to show the advantage of the proposed ADP-3D method.\n\n2. I understand that real data is not considered in the scope of this paper, but this makes the downstream tasks a bit far from the real world implementation. For example, the model refinement task uses a small, simulated density as a given condition, while ModelAngelo itself was trained on real experimental density maps. In reality, it is possible that ModelAngelo does not even output a severely incomplete model, making the whole setting of this task futile.\n\n3. The model refinement task seems to only contain one example (7pzt).\n\n\n[1] Daras, Giannis, et al. \"A survey on diffusion models for inverse problems.\" arXiv preprint arXiv:2410.00083 (2024)."
+            },
+            "questions": {
+                "value": "1. How does ADP-3D related and differ from other diffusion posterior sampling methods?\n\n2. In the model refinement task, what happens if using an experimental density map as the condition? The authors claimed that \"most cryo-EM-resolved models are incomplete\", but in my opinion the authors should at least have one more realistic case to show the setting in this task is not a castle in the air."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces ADP-3D (Atomic Denoising Prior for 3D reconstruction), an algorithm to combine a pretrained protein diffusion model with additional data. The method uses a plug-n-play approach that splits the log posterior into a prior and likelihood term, duplicates the variables and couples them via a quadratic term. This allows the authors to avoid incorporating the likelihood directly into the diffusion process. Instead only a simple quadratic term needs to be added to the likelihood, and a diffusion step is used to incorporate the prior. No retraining of the diffusion model is necessary. The authors focus on the Chroma model (Ingraham et al., 2023) for protein structures and combine the model with various likelihoods (structure completion from sub-sampled backbone positions, model refinement based on a density map, sequence information, incomplete distance matrix). Using specific examples, the authors find that the incorporation of the diffusion process improves the quality of the reconstructed structures."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* A general approach to combining pretrained diffusion models with data based on a variable-splitting framework.\n* The resulting algorithm is quite simple and allows for combining pretrained diffusion models with new data (thereby avoiding a retraining step).\n* The approach is illustrated for various protein structure modeling tasks."
+            },
+            "weaknesses": {
+                "value": "* The general approach (algorithm 1) seems to be a minor modification of existing work.\n* The method is illustrated only for simulated data.\n\n__Recommendation__\n\nI recommend to reject the article. ADP-3D is a straight forward application of the plug-n-play framework to protein diffusion models. The idea of using a variable splitting approach to combine diffusion models with additional data has already been proposed by Zhu et al. (2023) in the context of image restoration. So the major novelty is in the application of the method to protein structure modeling. However, the authors only use simulated data in their numerical experiments."
+            },
+            "questions": {
+                "value": "* The abstract states that this is \"the first diffusion-based method for refining atomic models from simulated cryo-EM maps.\" Why did you not apply the method to real cryo-EM maps? The paper would be much stronger, if you showed applications to real data. Likewise, you could use NMR distance bounds as experimental distance information rather than simulated distances. \n* How do you choose the parameter $\\rho$? Are the results sensitive to the choice of $\\rho$? \n* How do you define __completeness__? You state that completeness is the \"RMSD of the predicted structure for the X% most well-resolved alpha carbons (compared to the deposited structure).\" How do you assess if an alpha carbon is well-resolved? Please note that the resolution of your model (in my understanding something like its precision) and its accuracy are not the same thing. \n* Figures 3, 4, 5 report the resolution of the deposited structure. What is the purpose of showing this number? The resolution of the PDB structure does not tell us anything about the difficulty of the structure calculation task.\n* Figure 5, right panel: Why does the RMSD increase with increasing number of distances (#pd > 4k) when not using a diffusion model? It should go down and should also approach zero for as many distances as 8 k pairwise distances for a protein of length 127 residues.\n\n__Additional feedback__\n\n* The selection of distances is unrealistic in the sense that, for example, NMR experiments such as NOESY only probe short distances up to 6 \\AA. Since there are many more long-range distances, your way of selecting distances randomly will tend to pick distances that are not experimentally accessible, which makes the selection process unrealistic. \n* The abstract states that \"raw biophysical measurements such as cryo-EM density maps\" can be used by your method. To categorize cryo-EM maps as raw data is misleading. A density map is the result of a complex sequence of processing steps starting with motion correction, particle picking, etc. The raw measurements in cryo-EM are the micrographs. \n* Figure 1 does not add much information beyond what is already said in the text. You could remove the figure and use the space to show more details about your numerical experiments such as your tests with RFdiffusion (Watson et al., 2023). \n* Likewise, figure 2 is a specific result for the correlation matrix used by Chroma. It could be moved to the supplementary information. \n* On page 8 you state that you avoid testing on structures that were part of the Chroma training set by using only structures that were published after the release of Chroma. However, this does not guarantee that the Chroma training set and your test structure do not overlap. First, many examples of structures of one and the same protein (or a protein with a highly similar sequence) can be found in the PDB. Second, protein structures are much more persistent than sequences. So even proteins with a low sequence similarity can have similar structures. \n* In the captions of figure 3 and 5, you report the lowest RMSD obtained with 8 runs. Please also report the maximum RMSD (you could also report the mean and the standard deviation) to give an indication of how much your models vary. \n* There is a slight inconsistency in your whole approach: You claim to do MAP estimation, but then you use diffusion-based sampling."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "- The authors propose to use a plug-and-play framework for diffusion models to inverse problems for determining protein structure\n- This allows the authors to use off-the-shelf diffusion models such as Chroma to regularise these inverse problems\n- The upshot is that this line of work is task-agnostic\n- The authors showcase how their method yields promising results for three inverse problems: structure estimation from an incomplete structure, structure estimation from Cryo-EM 3D maps, and structure estimation from incomplete sparse pairwise distance data"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- It is very impressive to see the results for all three inverse problems. Some aspects that are highlights to me:\n    - In the structure completion it is great that the authors also test this for different levels of incompleteness. For these methods, it is good to showcase limitations to the reader\n    - I am very impressed by outperforming ModelAngelo, which is as the authors mention (and to the best of my knowledge) the state-of-the-art in model building. Being able to refine the predictions to the extent in the paper is very impressive"
+            },
+            "weaknesses": {
+                "value": "- The writing can be improved upon. In particular, the introduction and the related work could really benefit from restructuring and adding additional material. This would benefit the overall flow of the paper and provide the reader with a clearer overview of the problems being tackled in the paper. Detailed suggestions below:\n    - Regarding the introduction:\n        - Please allow me to paraphrase:\n            - Paragraph 1: Proteins can be inferred in different ways through solving an inverse problem\n            - Paragraph 2: Deep learning has been key take the next step, but are limited by their way of training (new problem setting, train again to the new setting)\n            - Paragraph 3: Inverse problems are dominated by learned priors\n            - Paragraph 4: Diffusion models are used in the field of biology\n            - Paragraph 5: Our contribution to overcome the hurdle from the second paragrap is to use diffusion models\n        - I would suggest a rewrite that would look as follows (high-level)\n            - The order Paragraph 1, Paragraph 3, Paragraph 2, Paragraph 5 would be more natural to me. \n            - Paragraph 4 does not really serve any purpose and for me disrupts the flow of the introduction. So I would recommend removing it from the introduction and maybe move it to the background \n    - Regarding related work: \n        - I would expect that there would be something on finding structures from partial measurements and sparse distance matrices as well. Now there is just a lot on model building methods from Cryo-EM density maps\n        - I would suggest to talk less about protein diffusion models, which seems more like something for the the background (I feel that there is not really a reason of spending a lot of time on it here)"
+            },
+            "questions": {
+                "value": "Questions for clarification \n- Is the idea of using the score as a denoiser yours or is this something that is commonly used in the inverse problems field? You don\u2019t seem to cite the works referred to in paragraph 3 of the introduction.\n- On that note, what confuses me is the sentence \u201cIn particular, it is the first diffusion-based method for refining atomic models from simulated cryo-EM maps.\u201d at the end of the abstract. Has it been used for the other two inverse problems? It would be great if the authors can be more precise here. (I assume that Cryo-EM is mentioned as it is potentially the most high-impact application, but it would be good to be clear about the other problems as well)\n\nAdditional feedback\n- p.1, l.28: I would not start this paragraph with this sentence. The second sentence starting with \u201cExperimental methods in structural biology\u2026\u201d would be a better choice to give the reader a better idea of what you are actually addressing in this paragraph. The first sentence can still be used later on in the paragraph to motivate the experiments.\n- p.1. l.37: I would be reluctant to use the sentence \u201cThese approaches can estimate the uncertainty of their answers and provide theoretical guarantees of correctness, \u2026\u201d as there is little underlying theory that even guarantees that the iterates converge (the loss might converge at best, for which there is some theory in the case of RELION)\n- In section 2, the authors mainly focus on ModelAngelo. I would recommend to discuss the broader problem so that the reader gets a better feeling for the broader picture\n- p.2 l.90: In the second bullet of the contributions the authors claim to compare to sampling methods. In the experiment only one method is discussed. Please change this to singular (method)\n- Section 4.3: It feels a bit odd that there is a whole section for the model building part from Cryo-EM maps, but that the other inverse problems are defined in the experiments. I would suggest to create a new section in between what is now section 4 and 5 and discuss all three inverse problems there. This will be useful and more straightforward for the reader who is interested in just one of the applications.\n- p.7 l.360: I understand that in equation 13 several terms that are being conditioned on can be removed (\\bar{x} in the last term), but for the reader this might be a big step. I would suggest to write out the steps explicitly to get from the left hand side to the right hand side\n- p.8 l.409. typo: evalute -> evaluate\n- p.9 l.458. What do you mean with the sentence \u201cNote that we do not chose a structure that was resolved with cryo-EM because most cryo-EM-resolved models are incomplete.\u201d\n    - Also typo: chose -> choose"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,128 @@
+{
+    "id": "rj7wUcLgfw",
+    "title": "Explaining Black-box Model Predictions via Two-level Nested Feature Attributions with Consistency Property",
+    "abstract": "Techniques that explain the predictions of black-box machine learning models are crucial to make the models transparent, thereby increasing trust in AI systems. The input features to the models often have a nested structure that consists of high- and low-level features, and each high-level feature is decomposed into multiple low-level features. For such inputs, both high-level feature attributions (HiFAs) and low-level feature attributions (LoFAs) are important for better understanding the model's decision. In this paper, we propose a model-agnostic local explanation method that effectively exploits the nested structure of the input to estimate the two-level feature attributions simultaneously. A key idea of the proposed method is to introduce the consistency property that should exist between the HiFAs and LoFAs, thereby bridging the separate optimization problems for estimating them. Thanks to this consistency property, the proposed method can produce HiFAs and LoFAs that are both faithful to the black-box models and consistent with each other, using a smaller number of queries to the models. In experiments on image classification in multiple instance learning and text classification using language models, we demonstrate that the HiFAs and LoFAs estimated by the proposed method are accurate, faithful to the behaviors of the black-box models, and provide consistent explanations.",
+    "keywords": [
+        "explainable AI; XAI; feature attribution; black-box model; local explanation; model-agnostic; nested features"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "We propose a model-agnostic local explanation method with surrogate models effective for two-level nested features.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=rj7wUcLgfw",
+    "pdf_link": "https://openreview.net/pdf?id=rj7wUcLgfw",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors propose a method to get high level and low level feature attributions for image classification in multiple instance learning and text classification with multiple sentences using language models. They use a local surrogate model in a LIME-like style, while optimizing for aggregating both high-level and low-level features for prediction. They also include a consistency constraint to enforce that all the attribution scores of low-level features that belong to a high-level feature sum up to that feature. They evaluate on Pascal VOC for image and Amazon reviews for text datasets, using faithfulness, correctness, and consistency metrics, and show that their method outperform baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper proposes to estimate HiFAs and LoFAs simultaneously, while previous works have only estimated them separately.\n- The consistency property proposed by the authors is a reasonable property for HiFAs and LoFAs.\n- The paper does experiments that ablate different important properties on both image and text datasets.\n- The proposed method performed better than all baselines in all the metrics, and can get better attributions with a smaller number of perturbations.\n- The method can be used in both text classification with multiple sentences (inputing as one input) and MIL where there are multiple input images."
+            },
+            "weaknesses": {
+                "value": "- The high-level features are constrained to predefined image/sentence and cannot be dynamically chosen by the method.\n- With the bottom-up baselines, we can actually convert any feature attribution method to the BU version of it. The paper only compare with different versions of LIME and MILLI. It would be more convincing that faithfulness and consistency cannot be achieved together with more baselines such as (BU-)SHAP, (BU-)RISE[1], IntGrad[2].\n- Insertion and deletion are only proxy metrics for faithfulness. Although there is no absolute best metric for faithfulness, it would be good to clarify that they are proxies.\n- The object segments in VOC dataset are ground truths for the objects, but not necessarily the model explanation. The model can be using the unintended features to make the prediction. For example, if the wolf always appear with snow in the dataset, the model can be wrongly using the snow for predicting the class fox, but it doesn't mean that attributing to the snow is a wrong attribution. It can be the correct attribution for a model that uses spurious correlation.\n\n[1] Vitali Petsiuk and Abir Das and Kate Saenko. RISE: Randomized Input Sampling for Explanation of Black-box Models. BMVC 2018\n\n[2] Mukund Sundararajan,\u00a0Ankur Taly,\u00a0Qiqi Yan. Axiomatic Attribution for Deep Networks. ICML 2017"
+            },
+            "questions": {
+                "value": "- line 237. Why does ADMM have the advantage of estimating $\\mathcal{\\alpha}$ and $\\mathcal{\\beta}$ independently even though there is the interdependence?\n- line 301-303. Does it mean the LoFAs for their higher level feature attribution are just randomly selected based on the corresponding HiFA? What if you take the independently computed LoFA (without the constraint), and distribute each HiFA  proportional to the independently computed LoFA?\n- How do bottom-up version of other methods like BU-SHAP, BU-RISE, BU-IntGrad do?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "- Existing studies have primarily focused on estimating either HiFAs or LoFAs, without addressing both levels simultaneously. Current naive approaches either generate a large number of queries or produce inconsistent HiFA and LoFA estimations.\n- This paper introduces a model-agnostic local explanation method that effectively leverages the nested structure of input data to estimate both levels of feature attributions simultaneously.\n- Experimental results in image and text classification demonstrate that the HiFAs and LoFAs estimated by the proposed method are accurate, faithful to the behavior of black-box models, and provide consistent explanations."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- Overall, the paper is well-written and well-organized, allowing readers to follow the narrative easily.\n- The HiFAs and LoFAs estimated by the proposed method in this paper are consistent."
+            },
+            "weaknesses": {
+                "value": "- Lines 297-305: The settings of TD-LIME and TD-MILLI are unclear. Additional explanation is needed to help readers understand their significance.\n- This paper lacks a formal introduction to the evaluation metrics NDCG (line 327) and HIML (line 339).\n- Figure 3 lacks an introduction to \"IA,\" and the font size should be enlarged.\n- The experiments in this paper are conducted solely on synthetic datasets and lack results on real datasets, such as medical imaging data.\n- In Figure 5, BU-LIME demonstrates a higher level of consistency between LoFAs and HiFAs compared to C2FA."
+            },
+            "questions": {
+                "value": "- Lines 89-91: The paper states that estimating HiFAs and LoFAs separately can lead to inconsistent explanations between them. How might this mismatch reduce users' trust in the model?\n- Section 4.1: What would the explanation be if a bag contains more than two images featuring \"cats\"?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a technique for extracting both high-level and low-level feature attributions from black-box machine learning models. The key idea is to simultaneously estimate high-level and low-level feature attributions while enforcing consistency between them through constraints, although they have not validated the assumption that high-level and low-level feature attributions show consistency for sure. The authors evaluate the method on image classification and text classification tasks, showing improvements over baselines in terms of attribution quality and query efficiency."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "**Originality:**\n- The idea of jointly estimating high-level and low-level feature attributions with consistency constraints is novel and well-motivated.\n\n**Quality:**\n- Experiments are comprehensive, evaluating on both CV and NLP tasks.\n- Quantitative metrics assess different aspects like correctness, faithfulness, and consistency of the attributions.\n\n**Clarity:**\n- The paper is generally well-written with clear visualization.\n\n**Significance:**  \n- The method enables more coherent explanations for nested input structures, which are common in many real-world ML applications.\n- The approach is model-agnostic and can be applied to various types of nested inputs and black-box models."
+            },
+            "weaknesses": {
+                "value": "- One foundamental assumption of this paper is that \u201c the input features have a nested structure that consists of high- and low-level features, and each high-level feature is decomposed into multiple low-level features. \u201d \n\n - Another important assumption is that there is consistency between low and high level features. However, what if conflicting attributions between high and low levels? For instance, when a high-level feature is deemed important, but none of its constituent low-level features appear significant. As the paper mentions that C2FA may perform worse when the consistency property is inherently not satisfied, I feel this is a more realistic consideration, that there is no consistency.\n\n - The paper lacks a formal theoretical analysis of the properties and guarantees of the proposed method. For instance, there is no discussion on convergence properties of the optimization algorithm or bounds on the estimation error, or discussion on the robustness, the robustness of C2FA to different types of perturbations or variations in the input structure.\n\n - It's unclear how the choice of hyperparameters (e.g., \u03bb_H, \u03bb_L, \u03bc) affects the trade-off between consistency and individual attribution accuracy.\n\n - The experiments are limited to relatively small-scale problems (e.g., classifying a few images or sentences). It's not clear how well C2FA would scale to larger, more complex nested structures like full documents or large image collections.\n\n - The comparison with MILLI seems unfair, as MILLI is designed only for high-level attributions. A more appropriate baseline would be to combine MILLI with a low-level attribution method.\n\n - There's no comparison with more recent explanation methods like SHAP-based approaches or gradient-based methods adapted for nested structures.\n\n - The image classification experiments use a synthetic MIL dataset. It would be more convincing to see results on standard MIL benchmarks or real-world applications.\n\n - For text classification, only sentiment analysis is considered. Evaluating on more diverse NLP tasks would strengthen the claims of generalizability."
+            },
+            "questions": {
+                "value": "- Just a brainfart thought, why 2 levels? How does the performance of C2FA change as the depth of the nested structure increases (e.g., to 3 or more levels)? Are there theoretical or practical limitations to extending beyond two levels? C3FA can make sense in an NLP context,  Word-level to sentence level to paragraph level.\n\n- The paper mentions that C2FA may perform worse when the consistency property is inherently not satisfied. I feel this can be a more realistic setup, which makes C2FA less pragmatic, any justification here? \n\n- The current formulation assumes a fixed nested structure. How might C2FA be adapted to handle variable-length or dynamic nested structures, such as those often encountered in NLP tasks?\n\n- The experiments focus on classification tasks. How well do you expect C2FA to generalize to regression problems or other types of model outputs?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

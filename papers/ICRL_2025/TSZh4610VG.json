@@ -1,0 +1,198 @@
+{
+    "id": "TSZh4610VG",
+    "title": "Controllable Continual Test-Time Adaptation",
+    "abstract": "Continual Test-Time Adaptation (CTTA) is an emerging and challenging task where a model trained in a source domain must adapt to continuously changing conditions during testing, without access to the original source data. CTTA is prone to error accumulation due to uncontrollable domain shifts, leading to blurred decision boundaries between categories. Existing CTTA methods primarily focus on suppressing domain shifts, which proves inadequate during the unsupervised test phase.\nIn contrast, we introduce a novel approach that guides rather than suppresses these shifts.\nSpecifically, we propose $\\textbf{C}$ontrollable $\\textbf{Co}$ntinual $\\textbf{T}$est-$\\textbf{T}$ime $\\textbf{A}$daptation (C-CoTTA), which explicitly prevents any single category from encroaching on others, thereby mitigating the mutual influence between categories caused by uncontrollable shifts. \nMoreover, our method reduces the sensitivity of model to domain transformations, thereby minimizing the magnitude of category shifts. \nExtensive quantitative experiments demonstrate the effectiveness of our method, while qualitative analyses, such as t-SNE plots, confirm the theoretical validity of our approach.",
+    "keywords": [
+        "Domain shift",
+        "Continual Test-Time Adaptation",
+        "Regularization"
+    ],
+    "primary_area": "learning theory",
+    "TLDR": "In this paper, we propose to control the direction of domain shift in Controllable Continual Test-Time Adaptation task.",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=TSZh4610VG",
+    "pdf_link": "https://openreview.net/pdf?id=TSZh4610VG",
+    "comments": [
+        {
+            "comment": {
+                "value": "Thank you for your valuable comments and kind words to our work. Below we address specific questions.\n\n**Q1. How are the hyperpaprameters lambda_1, lambda_2 tuned? Is any validation corruption used?**\n\nA1. $\\lambda_1$ and $\\lambda_2$ are derived from adjusting based on 4 different domains other than the 15 domains used in the experiments. For example, the CIFAR-10-C dataset actually has 19 types of corruption (different corruptions represent different domains), and our parameters were adjusted based on 4 corruptions (Speckle Noise, Gaussian Blur, Spatter, Saturate). In the formal experiments, we selected 15 completely different domains (Gaussian Noise, Shot Noise, Impulse Noise, Defocus Blur, Glass Blur, Motion Blur, Zoom Blur, Snow, Frost, Fog, Brightness, Contrast, Elastic Transformation, Pixelate, JPEG).\n\n**Q2. Can you report numbers for the two settings when i. lambda_1 = 0, and ii. lambda_2 = 0 to analyze the contribution of different losses.**\n\nA2. This is actually our ablation experiment (Table 4), where CSCL represents the case of $\\lambda_1 = 0$ and DSCL represents the case of $\\lambda_2 = 0$.\n\n**Q3.  Is the paper not just an application of CAV for continual TTA?**\n\nA3. No, CAV is just a tool we use in our method to represent class shift and domain shift; it plays a supportive role and is not the core of our method. The starting point of our method is to suppress the opposing shifts between categories in the representation space. We discovered through t-SNE feature dimensionality reduction that during the domain adaptation process, opposing shifts occur between categories, leading to blurred classification boundaries, and the situation worsens with continuous transformations of the domain. Therefore, we explicitly control the direction of category shifts to prevent them from occurring in opposition, ensuring a clear classification boundary. (This is what \"Controllable\" means in our method). In this context, CAV is used to represent the direction of class shift.\n\n**Q4. Is it non-trivial to apply CAV for settings such as TTA? Are the DSCL and CSCL losses not applicable to domain adaptation problems in general? If not, why does it make sense for TTA?**\n\nA4.  First of all, it can be confirmed that the methods in our article, including CAV, DSCL, and CSCL, can potentially be applied to TTA (Test-Time Adaptation) and even more broadly to domain adaptation. However, we did not conduct relevant tests because our initial research focus was on CTTA (Continuous Test-Time Adaptation). Considering that in CTTA, the domain continuously changes, the classification boundary blurriness caused by category shifts is likely to be more severe than in regular TTA. Therefore, our methods may be more suitable for CTTA. Of course, prompted by the reviewers, we also hope to examine the effectiveness of our methods in TTA and domain adaptation. We attempted to apply our methods in the TTA scenario (i.e., recovering the model when the domain changes), as shown in the table below, and it can be seen that our methods still perform very well.\n\n|       | Gauss | Shot | Impul | Defoc | Glass | Motion | Zoom | Snow | Frost | Fog  | Brit | Contr | Elast | Pixel | JPEG | Avg  |\n| ----- | ----- | ---- | ----- | ----- | ----- | ------ | ---- | ---- | ----- | ---- | ---- | ----- | ----- | ----- | ---- | ---- |\n| Tent  | 52.6  | 52.1 | 53.5  | 52.9  | 47.7  | 56.7   | 47.5 | 10.5 | 28.6  | 67.2 | 74.4 | 67.3  | 50.7  | 66.3  | 64.6 | 52.8 |\n| CoTTA | 40.6  | 37.8 | 41.7  | 33.7  | 29.5  | 43.8   | 35.6 | 38.1 | 43.3  | 59.2 | 70.5 | 59.3  | 40.1  | 57.9  | 59.7 | 46.1 |\n| Ours  | 37.1  | 36.1 | 41.2  | 31.7  | 28.4  | 42.5   | 35.1 | 37.2 | 41.2  | 57.2 | 77.2 | 56.4  | 39.2  | 56.8  | 56.4 | 44.9 |\n\n\n\nIf there are any parts of my response that still confuse you, please point them out, and I will reply promptly."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for the quick response. This time I understand your core concerns.\n\n1. The DSCL loss represented by Equation 7 indeed suppresses domain shifts, reducing the model's sensitivity to domain shifts. However, our focus on \"Controllable\" mainly revolves around the CSCL loss, which explicitly controls the direction of category shifts, preventing the blurring of classification boundaries caused by opposing category shifts. This loss is the biggest difference from previous work and can be considered the main loss of our paper.\n\n2. First, our hyperparameter tuning was only performed on the validation set, specifically to find the values of $\\lambda_1$ and $\\lambda_2$ that yield the best classification performance on the validation set, as shown in Appendix C. Methods like RMT and SATA also performed similar tuning. The reason for the small performance differences may be related to the single order of the domain. Most previous work on CTTA adopted a single order, which may not reasonably assess the performance of various methods. Therefore, we supplemented our study with new experiments (section 4.8). We randomly selected 10 different domain variation orders for testing, and the final results are averaged. It can be seen that in this case, our improvement is significant (1.6%, 3.1%, and 2.4% on CIFAR10-C, CIFAR100-C, and ImageNet-C, respectively). The table is shown in the figure below (which is Table 7 in the paper).\n\n | Avg. Error |  Source | TENT | CoTTA | SATA | Ours |\n | ----- | ---- | ---- | ---- | ---- | ---- |\n | CIFAR10-C   | 43.5     | 20.1   | 16.3      |  16.3     |  14.7 |\n | CIFAR100-C  | 46.4     | 61.3   | 32.6      |  32.8     |  29.5 |\n | ImageNet-C  | 83.0     | 61.8  | 57.9      |  64.5     |  55.5 |\n\nIf there are any parts of my response that still confuse you, please point them out, and I will reply promptly."
+            }
+        },
+        {},
+        {
+            "comment": {
+                "value": "Thanks for the quick response. However, I'm not convinced yet. I wish the authors answer the question a bit more directly. Here's the logic:\n\n1. Authors wrote in the abstract:\n> Existing CTTA methods primarily focus on suppressing domain shifts, which proves inadequate during the unsupervised test\nphase\n\n2. But then Equation 7 of the paper seems to be doing precisely the suppression of domain shifts that the author criticised.\n\n3. I'm left wondering what difference the proposed method has against the prior work. \n\nFor Q2, my question is rather about the fairness of comparison - I wonder how much HP tuning was done for the proposed method in comparison to the previous methods. Since the delta in performance is small, I'd expect the degree of HP tuning can easily change the results. I hope authors can defend their position based on numbers, if possible, instead of conceptual, high-level answers!"
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your valuable comments and kind words to our work. Below we address specific questions.\n\n**Q1. How does this approach differ meaningfully from existing methods in CTTA**\n\nA1. In general, our approach is not fundamentally about maximizing inter-class distance and minimizing inter-domain distance in the representation space; in other words, this is not our starting point, but it does achieve these goals. The starting point of our method is to suppress the opposing shifts between categories in the representation space. We discovered through t-SNE feature dimensionality reduction that during the domain adaptation process, opposing shifts occur between categories, leading to blurred classification boundaries, and the situation worsens with continuous transformations of the domain. Therefore, we explicitly control the direction of category shifts to prevent them from occurring in opposition, ensuring a clear classification boundary. (This is what \"Controllable\" means in our method). Next, to demonstrate that we have achieved this, we plotted t-SNE graphs while comparing the inter-class distances of different methods (because theoretically, if categories do not shift in opposition but rather move away from each other, the inter-class distance should increase; thus, inter-class distance serves as an auxiliary tool to validate our method rather than being the starting point).\n\n**Q2. While the results slightly outperform previous approaches on average, I have concerns about whether hyperparameter tuning was conducted in a way that avoids overfitting to the evaluation benchmark.**\n\nA2. We have a total of three hyperparameters, among which the entropy threshold $E_0$ is directly taken from the parameters of EATA without any adjustment process, while $\\lambda_1$ and $\\lambda_2$ are derived from adjusting based on 4 different domains other than the 15 domains used in the experiments. For example, the CIFAR-10-C dataset actually has 19 types of corruption (different corruptions represent different domains), and our parameters were adjusted based on 4 corruptions (Speckle Noise, Gaussian Blur, Spatter, Saturate). In the formal experiments, we selected 15 completely different domains (Gaussian Noise, Shot Noise, Impulse Noise, Defocus Blur, Glass Blur, Motion Blur, Zoom Blur, Snow, Frost, Fog, Brightness, Contrast, Elastic Transformation, Pixelate, JPEG)."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your valuable comments and kind words to our work. Below we address specific questions.\n\n**Q1. Could you clarify how \"random order\" is defined and implemented in the experiments mentioned in section 4.8?**\n\nA1. In the CTTA experiment, there are 15 target domains, and everyone tests them in the same order (i.e., the order in Table 123). This may lead to the method overfitting to this order, so we randomly selected 10 different domain variation orders for testing, and the final results are averaged.\n\n**Q2. Does the availability of source data impact the performance of your method? Testing with varying amounts of source data could provide insights into its practical utility when labeled source data is limited.**\n\nA2. Note that during the test time, we only used the class prototypes extracted from the source domain data and did not use all the source domain data.\n\n**Q3. The computation symbol \"cov[]\" used in formula (1) is unclear. Could you provide a definition or explanation?**\n\nA3. In our article, \"cov[]\" means covariance.\n\n**Q4. Can you elaborate on the relationship between formulas (7) and (8)? What is the underlying intuition linking these formulas?**\n\nA4. In brief, formula (8) is the objective of our loss, while formula (7) is the implementation of our loss. We hope that the model's output is insensitive to changes in the domain, meaning that the model output should not change when activations are slightly added or removed along the domain bias direction, as stated in formula (8). We can achieve this goal by suppressing the directional derivative, as shown in formula (7).\n\n**Q5. Considering practical constraints where not all classes may appear in each batch (e.g., batch sizes less than 1000), how might this affect the calculation of domain shift direction and the applicability of formula (9)?**\n\nA5. We will only perform calculations on the categories that exist within the batch.\n\n**Q6. Typo in lines 71 and 73. DSCL $\\to$ CSCL?**\n\nA6. Yes, this is a typo, and we will correct it.\n\n**Q7. Marginal Improvements**\n\nA7. The improvement in classification accuracy of the report is relatively small (Table 123), which may be related to the single order of the domain. Most of the previous work on CTTA adopted a single order, which may not reasonably assess the performance of various methods. Therefore, we supplemented with new experiments (section 4.8). We randomly selected 10 different domain variation orders for testing, and the final results are averaged. It can be seen that in this case, our improvement is significant (1.6%, 3.1%, and 2.4% on CIFAR-10C, CIFAR100-C, and ImageNet-C, respectively).\n\n**Q8. Inconsistency in Compared Methods**\n\nA8. ViDA was only included in the ImageNet-C experiments and not in the CIFAR experiments because we directly used the data provided in the ViDA paper. However, the backbone used in the ViDA paper for the cifar10-c and cifar100-c datasets is ViT, while we used ResNet, so there is no comparability. The same applies to other methods.\n\nIf there are any parts of my response that still confuse you, please point them out, and I will reply promptly."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your valuable comments and kind words to our work. At the same time, we sincerely apologize for any inconvenience caused by some grammatical and notational errors in your reading. We will strictly check for such errors throughout the entire text in the future. Below we address specific questions.\n\n**Q1. Why the symmetric cross-entropy loss is used rather than KL or reverse KL in eq. 10?**\n\nA1. SCE loss is based on previous work RMT, where they found that SCE maintains a balance in the gradient for high and low confidence predictions, which benefits the optimization problem.\n\n**Q2. What happens if a batch contains samples from multiple domains? I wonder how much performance degradation would result from that scenario.**\n\nA2. The experimental setup you described is different from the CTTA (Continual Test-Time Adaptation) that we are studying; it is another setup called WTTA (Test-time Adaptation in Dynamic Wild World), which was first proposed by SAR$^1$. Due to the differences in experimental details, the performance of the two setups cannot be directly compared.\n\n**Q3. Figure 3 is quite intuitive. Can you show similar figures for different target domains over time?**\n\nA3. Of course, we have provided the results for an additional 4 domains (noise, blur, weather, digital) in the tsne_big.pdf in the Supplementary Material, please take a look.\n\n**Q4. The performance of RMT recorded in this paper is lower than the results reported in the original RMT paper, with a noticeable difference. What is the reason for this?**\n\nA4. Because the warm-up operation in RMT uses a large amount of source domain data, we believe this violates the setup of CTTA. Therefore, the data reported in our paper is after removing this operation. (If we also included this operation, the results would improve, but clearly, this is unreasonable.)\n\n**Q5. It still inherits the weaknesses of previous works that use pseudo labels. Depending on the accuracy of the pseudo labels, there is a possibility that the class shift may be inaccurately estimated.**\n\nA5. This is indeed an important issue, which has been mentioned in the summary section of our paper (line 288). At the same time, we have made significant efforts to address it (line 145). We adopted the method from EATA by setting an entropy threshold to filter out samples with low entropy, which indicates higher uncertainty, and used the certain good samples to construct prototypes.\n\n**Q6. The idea of using a domain prototype was originally proposed in the UDA task, so it\u2019s not a new concept. However, it has not been actively utilized in TTA because it\u2019s challenging to obtain an accurate domain prototype given the nature of TTA, which receives online mini-batches as input. What is the mini-batch size used in this experiment? Mini-batch size is considered a significant issue in TTA.**\n\nA6. In terms of setting the batch size, we follow the previous methods CoTTA and RMT. Specifically, the batch sizes for cifar10-c and cifar100-c are set to 200, while for imagenet-c it is set to 64. At the same time, we also recognize that mini-batch size is considered a significant issue, especially having a considerable impact on the acquisition of class prototypes. Therefore, we conducted tests on different batch sizes for imagenet-c, and the results are as follows:\n\n|       | 64   | 32   | 16   | 8    | 4    |\n| ----- | ---- | ---- | ---- | ---- | ---- |\n| Ours  | 59.4 | 60.0 | 62.4 | 68.3 | 76.5 |\n| SATA  | 60.1 | 62.1 | 64.0 | 72.4 | 84.2 |\n| RMT   | 59.9 | 62.1 | 65.5 | 71.8 | 83.8 |\n| CoTTA | 62.7 | 63.1 | 64.7 | 70.5 | 78.4 |\n\nIf there are any parts of my response that still confuse you, please point them out, and I will reply promptly.\n\n[1] Niu, Shuaicheng, et al. \"Towards stable test-time adaptation in dynamic wild world.\" arXiv preprint arXiv:2302.12400 (2023)."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the problem of continual test-time adaptation (TTA) by guiding and controlling shifts by utilizing Concept Activation Vectors (CAV), an interpretability tool for deep learning models.\nThey control the domain shift by constructing the domain and class shift to control losses.\nExperiments show better performance in widely used continual TTA benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Utilizing CAV for the problem of continual TTA\n* Proposing domain and class shift controlling losses\n* Improving performance on the state-of-the-art benchmarks"
+            },
+            "weaknesses": {
+                "value": "* Using pseudo-labels for prototype computation can lead to more error accumulation in real-world\n* Motivation for why CAV makes sense for continual TTA and not any deep learning problem, in general, is lacking\n* Comparisons with recent approaches such as EcoTTA [1], and BeCoTTA [2] are missing"
+            },
+            "questions": {
+                "value": "* How are the hyperpaprameters lambda_1, lambda_2 tuned? Is any validation corruption used?\n* Can you report numbers for the two settings when i. lambda_1 = 0, and ii. lambda_2 = 0 to analyze the contribution of different losses.\n* Is the paper not just an application of CAV for continual TTA? Is it non-trivial to apply CAV for settings such as TTA?\n* Are the DSCL and CSCL losses not applicable to domain adaptation problems in general? If not, why does it make sense for TTA?\n\n**Minor Comments**\n* Line 82-83: Typo \"Concept Ativation Vectors\" --> \"Concept Activation Vectors\"\n* Algorithm 1 does not define p^t_i \n* Some other typos, please proofread\n\n**References**\n1. Junha Song, Jungsoo Lee, In So Kweon, and Sungha Choi. Ecotta: Memory-efficient continual test-time adaptation via self-distilled regularization. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 11920\u201311929, 2023.\n2. Lee, Daeun, Jaehong Yoon, and Sung Ju Hwang. \"BECoTTA: Input-dependent Online Blending of Experts for Continual Test-time Adaptation.\" International Conference on Machine Learning, 2024."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Continual Test-Time Adaptation (CTTA) - While most CTTA methods focus on suppressing domain shifts, this paper introduces an approach that aims to guide rather than suppress these shifts. They propose Controllable Continual Test-Time Adaptation (C-CoTTA), designed to maximise inter-class distances while minimising inter-domain distances."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The method demonstrates empirically plausible results, though with reservations that I describe in the weaknesses.\n\nSince this area is outside my expertise, I would defer to my fellow reviewers on the following:\n\n- The relevance of the benchmark tasks and datasets used in this work\n- The significance of the reported results\n- Any potential biases or issues in the experimental setup"
+            },
+            "weaknesses": {
+                "value": "The terms \"guide\" and \"control\" are vague. More precise language is needed to clearly convey the conceptual mechanism of C-CoTTA. Specifically, could the authors clarify whether the method is fundamentally maximising inter-class distances and minimising inter-domain distances in the representation space? This objective appears consistent with the aims of many test-time adaptation methods. Detailed technical explanation on how C-CoTTA differs from prior approaches would be beneficial, especially avoiding abstract terms like \"suppress,\" \"guide,\" or \"control.\"\n\nIt may not be fair to summarise all baseline methods (Tables 1, 2, and 3) as merely \"suppressing the shift.\" Is it accurate to say that these methods do not involve any \"guiding\" or \"controlling\" aspects? Further technical support for this claim would strengthen the paper. Perhaps the authors could include an analysis in \u00a74.5 and Figure 4 for all baseline methods listed in Tables 1, 2, and 3.\n\nThe terms \"guiding\" and \"controlling\" remain ambiguous, especially given that Equation 7 still seems focused on \"suppressing the shift\" as well. Clear definitions of these terms within the context of C-CoTTA are recommended.\n\nSince many methods are compared in the benchmark with rather small performance gaps, I wonder about the possibility of test-set overfitting. This is especially important given the low-resource nature of the setup (where information about the test distribution is supposed to be only partially available to the learner). It would be helpful if the authors could describe their efforts to minimise this risk (e.g., by confirming if the hyperparameters and design choices in \u00a7C were tuned without reference to the test/evaluation split). This would impact the fairness of the empirical comparisons, given the small performance gaps (15.3 vs 14.7 in Table 1, 30.2 vs 29.9 in Table 2, 59.9 vs 59.4 in Table 3).\n\nnit: please run spell/grammar checker\n- \"Ativation\" --> \"Activation\"\n- \"only suppress domain shift is insufficient\" --> \"only suppressing domain shift is insufficient\" \n- \"explicit control\" --> \"explicitly control\""
+            },
+            "questions": {
+                "value": "The conceptual contribution of this work remains unclear. As described, it appears to be a rephrasing of the inter-class distance maximisation and inter-domain distance minimisation approach commonly used in CTTA. How does this approach differ meaningfully from existing methods in CTTA?\n\nWhile the results slightly outperform previous approaches on average, I have concerns about whether hyperparameter tuning was conducted in a way that avoids overfitting to the evaluation benchmark. Please clarify this in the rebuttal.\n\nMy current assessment leans toward rejection. I encourage the authors to address these points in their response."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a novel framework for continual test-time adaptation (CTTA), aiming to control domain shifts dynamically during model inference without access to source data or labels. The approach, named C-CoTTA, introduces mechanisms to guide domain shifts to maintain clear class boundaries and minimize error accumulation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper addresses a significant challenge in CTTA by proposing a method to control domain shifts, which is crucial for applications in dynamic environments.\n2. The approach uses Concept Activation Vectors (CAVs) to represent and control shift directions, which is a well-founded technique in interpretable AI."
+            },
+            "weaknesses": {
+                "value": "1. Marginal Improvements: The reported improvements in classification accuracy are relatively marginal (0.6%, 0.4%, 0.5% on CIFAR-10C, CIFAR100-C, and ImageNet-C, respectively). This raises concerns about the practical significance and robustness of the proposed method.\n2. Inconsistency in Compared Methods: There is a lack of consistency in the methods compared across different datasets. For instance, ViDA is only included in the ImageNet-C experiments but not in CIFAR experiments. Additionally, the paper does not include comparisons with more recent and potentially more effective methods in segmentation tasks.\n3. Metric Validity and Relevance Concerns: The paper uses inter-class and inter-domain distances as metrics to assess class separability and sensitivity to domain shifts. However, the relevance and validity of these metrics are questionable. For instance, the paper does not account for the potential scaling of feature values; if feature vectors $p_i^t$ and $p_j^j$ in line 414 are simply scaled up by a factor (e.g., doubled), the computed distances would also increase, suggesting greater separability without actual improvement in class distinction. This is illustrated by the example where different domains with similar inter-class and inter-domain distances exhibit significant accuracy disparities, such as between the 'Brightness' and 'Contrast' conditions of ImageNet-C, which have a roughly 20% gap in accuracy despite similar distance metrics. \n4. The paper does not discuss several relevant works such as [1-5]. This comparison is crucial for situating the novelty of the proposed method within the existing literature. \n5. Given the use of labeled source data in the adaptation process, the experiments may not offer a fair comparison to results from methods that do not use labeled source data, rely only on statistics of source data, or do not use source data at all. Clarifying the conditions under which each method is evaluated is essential for understanding and interpreting the experimental results accurately.\n\nAddressing these concerns could significantly strengthen the manuscript, enhancing its contribution to the field and its potential for a higher rating.\n\n[1] Lee et al., \"Becotta: Input-dependent online blending of experts for continual test-time adaptation\", ICML 2024.\n\n[2] Song et al., \"Ecotta: Memory-efficient continual test-time adaptation via self-distilled regularization\", CVPR 2023.\n\n[3] Gong et al., \"SoTTA: Robust Test-Time Adaptation on Noisy Data Streams\", NeurIPS 2023.\n\n[4] Liu et al., \"Continual-MAE: Adaptive Distribution Masked Autoencoders for Continual Test-Time Adaptation\", CVPR 2024.\n\n[5] Yang et al., \"A Versatile Framework for Continual Test-Time Domain Adaptation: Balancing Discriminability and Generalizability\". CVPR 2024."
+            },
+            "questions": {
+                "value": "1. Could you clarify how \"random order\" is defined and implemented in the experiments mentioned in section 4.8?\n2. Does the availability of source data impact the performance of your method? Testing with varying amounts of source data could provide insights into its practical utility when labeled source data is limited.\n3. The computation symbol \"cov[]\" used in formula (1) is unclear. Could you provide a definition or explanation?\n4. Can you elaborate on the relationship between formulas (7) and (8)? What is the underlying intuition linking these formulas?\n5. Considering practical constraints where not all classes may appear in each batch (e.g., batch sizes less than 1000), how might this affect the calculation of domain shift direction and the applicability of formula (9)?\n6. Typo in lines 71 and 73. DSCL $\\rightarrow$ CSCL?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes Controllable Continual Test-Time Adaptation (C-CoTTA), a method that enables models to adapt to continuously changing domains during test time without access to the original source data. \n\nUnlike traditional CTTA approaches, which primarily focus on suppressing domain shifts to mitigate error accumulation, this approach controls the direction of domain shifts to prevent category confusion. By leveraging Concept Activation Vectors (CAV), the method controls the feature shift direction for each class, while domain- and class-level shift control loss functions enhance classification performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The strength of this paper lies in introducing a new loss function to actively control domain shifts within the CTTA framework. This approach not only tackles error accumulation but also provides a way to maintain clear boundaries between classes during continual adaptation."
+            },
+            "weaknesses": {
+                "value": "1. There are a lot of grammatical errors that hinder readers from concentrating on the paper. \nFor example \n\n- Line 109: focuses \u21d2 focus\n\n- Line 112: they are designed \u21d2 they designed\n\n- Line 124: Andres et al. (2022). no parenthesis in the reference.\n\n- Line 157: refer to \u21d2 refers to\n\n- Line 225: calculates \u21d2 is calculated\n\n- Line 231: weird sentence\n\n- etc.\n\nAlso, there are quite a lot of notational errors\n\n- eq 2: $\\mathcal{X}_t$ and $\\mathcal{X}_s$ are undefined\n\n- eq 3 and 4: inconsistent notation (both subscripts and superscripts are used to indicate the same objects)\n\n- Line 216: $i$ is undefined\n\nPoorly structured English and inconsistent symbols can indeed make the core concepts harder to follow, even if the underlying ideas are strong. Improved clarity in language and notation would make it easier for readers to fully appreciate the novel approach to CTTA and better understand the implementation of the new loss functions for domain control.\n\nI recommend that the authors thoroughly revise the grammar and notation before resubmitting the paper to a new venue.\n\n2.The idea of using a domain prototype was originally proposed in the UDA task, so it\u2019s not a new concept. However, it has not been actively utilized in TTA because it\u2019s challenging to obtain an accurate domain prototype given the nature of TTA, which receives online mini-batches as input. What is the mini-batch size used in this experiment? Mini-batch size is considered a significant issue in TTA.\n\n3. It still inherits the weaknesses of previous works that use pseudo labels. Depending on the accuracy of the pseudo labels, there is a possibility that the class shift may be inaccurately estimated."
+            },
+            "questions": {
+                "value": "1. Why the symmetric cross-entropy loss is used rather than KL or reverse KL in eq. 10?\n\n2. What happens if a batch contains samples from multiple domains? I wonder how much performance degradation would result from that scenario.\n\n3. Figure 3 is quite intuitive. Can you show similar figures for different target domains over time?\n\n4. The performance of RMT recorded in this paper is lower than the results reported in the original RMT paper, with a noticeable difference. What is the reason for this?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

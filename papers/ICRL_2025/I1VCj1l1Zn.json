@@ -1,0 +1,131 @@
+{
+    "id": "I1VCj1l1Zn",
+    "title": "DLP-LoRA: Efficient Task-Specific LoRA Fusion with a Dynamic, Lightweight Plugin for Large Language Models",
+    "abstract": "Recent advancements in Large Language Models (LLMs) have achieved robust performance across diverse tasks, but fine-tuning these models for specific domains remains resource-intensive. Parameter-Efficient Fine-Tuning (PEFT) methods like Low-Rank Adaptation (LoRA) address this challenge by fine-tuning a small subset of parameters. However, existing methods for fusing multiple LoRAs lack dynamic fusion based on contextual inputs and often increase inference time due to token-level operations. We propose DLP-LoRA, a Dynamic Lightweight Plugin that employs a mini-MLP module with only 5M parameters to dynamically fuse multiple LoRAs at the sentence level using top-$p$ sampling strategies. This approach reduces inference time to less than twice that of single LoRA inference by leveraging parallel computation. Evaluations across 26 tasks\u2014including multiple-choice questions and question answering\u2014demonstrate that DLP-LoRA achieves an average accuracy of 92.34\\% on multiple-choice datasets and significant improvements in BLEU and ROUGE scores on QA datasets, outperforming different LLMs backbones under composite task settings. DLP-LoRA effectively balances performance and efficiency, making it a practical solution for dynamic multi-task adaptation in LLMs.",
+    "keywords": [
+        "Multi-LoRA fusion",
+        "Parameter Efficient Tuning",
+        "LoRA",
+        "Cross-Task Generalization"
+    ],
+    "primary_area": "transfer learning, meta learning, and lifelong learning",
+    "TLDR": "We propose DLP-LoRA, a dynamic lightweight plugin using a mini-MLP to efficiently fuse multi-LoRAs at the sentence level. Evaluated on 26 tasks, DLP-LoRA matches or surpasses single-task LoRA with minimal inference overhead.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=I1VCj1l1Zn",
+    "pdf_link": "https://openreview.net/pdf?id=I1VCj1l1Zn",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a method to dynamically fuse pre-trained task-specific LoRA modules. The idea is to train a sentence-level router for different tasks, and simply use that for routing and fusing different LoRA modules. The method is evaluated on both classification and language generation tasks such as QA."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. the paper is addressing an important problem in efficiently re-using expert modules. The proposed method is more efficient since it uses sentence-level routing, and it is evaluated on various classification and language generation tasks.\n2. the paper also includes discussions on inference efficiency, which is very relevant to the practical usage of the method."
+            },
+            "weaknesses": {
+                "value": "1. the paper lacks important baselines. the routing module is trained jointly on N tasks, so the method assumes that one has access to all the task-specific training data for each LoRA module. Therefore, the authors should compare to a joint multitask training LoRA setting where the LoRA module is optimized on all task data. Note that the LoRA for joint multitask training should have a larger rank so that the number of tunable parameters is equivalent to tuning individual LoRA modules for each task. \n2. the results in table 1 shows that the proposed method is worse than baselines for classification, but it's better for generation tasks in table 2. However, there is not enough explanation or intuition on why that's the case.\n3. there are some highly relevant work on compositional LoRA with sentence-level routing that's not cited: https://aclanthology.org/2023.eacl-main.49.pdf, https://arxiv.org/abs/2402.17934"
+            },
+            "questions": {
+                "value": "1. how does your method compares to tuning a LoRA module with a higher rank on all multitask training data?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper focuses on achieving a more efficient dynamic fusion of multiple LoRA experts in multi-task adaptation for LLMs. To this end, the authors propose DLP LoRA, which operates as a sentence-level Mixture-of-Experts MoE gating mechanism. Specifically, a pre-trained task classifier is used to obtain the probability distribution of the input sentence across various tasks, and then the gating mechanism fuses selected LoRAs filtered by a fixed probability threshold. Additionally, the paper presents a parallel CUDA acceleration strategy to improve inference efficiency. Experiments are conducted on 26 tasks adaptation, achieving performance comparable to single-task LoRA."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper provides a deeper exploration into previous methods for dynamically fusing multiple LoRA experts and attempts incremental improvements.\n\n2. The topic investigated in this paper has considerable application value."
+            },
+            "weaknesses": {
+                "value": "1. The proposed DLP-LoRA is largely incremental and lacks sufficient novelty.\n\n2. The experimental evaluation is unconvincing: 1\uff09The baselines in Tables 1, 2, and 3 are weak and insufficient, and the authors should consider introducing relevant methods from this field for comparison; 2\uff09The paper emphasizes the proposed method\u02bcs efficiency advantages, yet lacks quantitative experiments on efficiency compared to single LoRA inference and previous methods.\n\n3. There are some issues in the writing that reflect a lack of rigor: 1\uff09The paper incorrectly refers to top-p sampling; to my knowledge, top-p sampling restricts the candidate set based on cumulative probability thresholds, whereas the paper independently filters LoRA experts below a fixed probability threshold, which is inconsistent; 2\uff09The introduction claims that previous methods require additional fine-tuning when tasks change, yet DLP-LoRA seems unable to solve this problem either."
+            },
+            "questions": {
+                "value": "1. The paper repeatedly emphasizes that the proposed method achieves less than twice the inference time of single LoRA inference; Is there quantitative experimental data to support this claim?\n\n2. Why does Table 5 compare the LLaMA-2 13B with a smaller, fine-tuned LLM? From an inference speed perspective, a smaller LLM outperforming a larger LLM is expected; from a performance perspective, a fine-tuned model outperforming an un-fine-tuned model is also expected. Is this a fair comparison?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "- The study proposes a dynamic lightweight plugin to fuse multiple LoRA adapters that enable the adaptation of language models to specific downstream tasks and new data domains.\n- The proposed approach involves a \u201cmini-MLP plugin\u201d that combines the weights of multiple LoRA modules based on the contextual information provided by the language model input.\n- The authors DLP method aims to improve efficiency over token-level LoRA mixture approaches by utilizing sentence-level representations. The performance benchmark indicates that their DLP-LoRA method achieves similar performance to single task-specific LoRA modules."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The evaluation across 26 diverse tasks including multiple choice questions, question answering, summarization, translation is quite extensive. They include ablation studies evaluating inference time and contrast model size and performance results.\n- The authors clearly describe the benefits of their proposed DLP-LoRA method.\n- the performance evaluation includes multiple medium-sized decoder-only language models with Llama and Qwen"
+            },
+            "weaknesses": {
+                "value": "- The differences to related methods are not clear or not specifically evaluated in regards to their performance or efficiency contribution. How does the approach differ from methodologically from i.e. PHATGOOSE [1], or LoRAMoE [2] and how does the performance differ?\n- The authors list various mixture of expert methods in their related works and introduction, but only include single LoRAs and the base model in their benchmark results.\n- Some claims remain unsupported by the empirical results presented in the study. The authors mention that additional fine-tuning for new tasks is not required in their DLP framework, yet there is no performance benchmark on unseen tasks. Furthermore, they describe the framework as lightweight but lack the parameter and space complexity comparison with related LoRA mixture approaches.\n- The description of their proposed method lacks details regarding the training of the LoRA modules that are combined to perform the downstream tasks.\n\nReferences:\n- [1] Muqeeth, M., Liu, H., Liu, Y., & Raffel, C. (2024). Learning to Route Among Specialized Experts for Zero-Shot Generalization. arXiv [Cs.LG].\n- [2] Shihan Dou, Enyu Zhou, Yan Liu, Songyang Gao, Wei Shen, Limao Xiong, Yuhao Zhou, Xiao Wang, Zhiheng Xi, Xiaoran Fan, Shiliang Pu, Jiang Zhu, Rui Zheng, Tao Gui, Qi Zhang, and Xuanjing Huang. 2024. LoRAMoE: Alleviating World Knowledge Forgetting in Large Language Models via MoE-Style Plugin. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 1932\u20131945, Bangkok, Thailand. Association for Computational Linguistics."
+            },
+            "questions": {
+                "value": "- Are the single LoRAs included in the selection of different LoRA modules DLP is combining?\n- Can you elaborate why the performance of multiple LoRA modules combined through your DLP method, which include the single task-specific LoRA module, is similar or worse than the single-LoRA module?\n- The inference time comparisons in Table 4 are not explained in the caption. Metric and reference time is missing.\n- Section 5 lists selecting adapters based on their relevance vs. fixed k as a key limitation of related work. Do you have empirical results that support this claim for your DLP method?\n- Can you elaborate on the differences between the base model performances in Table 1? Specifically, Llama 3 8b seems to perform significantly better than Llama 2, and both Qwen models."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

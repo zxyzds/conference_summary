@@ -1,0 +1,168 @@
+{
+    "id": "u6vC7KaFel",
+    "title": "Instant Transformer Adaption via HyperLoRA",
+    "abstract": "While Foundation Models provide a general tool for rapid content creation, they regularly require task-specific adaptation. Traditionally, this exercise involves careful curation of datasets and repeated fine-tuning of the underlying model. Fine-tuning techniques enable practitioners to adapt foundation models for many new applications but require expensive and lengthy training while being notably sensitive to hyper-parameter choices. To overcome these limitations, we introduce HyperLoRA, a model capable of adapting Large Language Models on the fly---solely based on a natural language description of the target task.  HyperLoRA is a hypernetwork trained to construct LoRAs in a single inexpensive forward pass. After training HyperLoRA on a suite of 9 pre-trained LoRA adapters (GSM8K, Arc, etc.), we show that the ad-hoc reconstructed LoRA instances match the performance of task-specific adapters across the corresponding test sets.\nFurthermore, HyperLoRA can compress hundreds of LoRA instances and zero-shot generalize to entirely unseen tasks. This approach provides a significant step towards democratizing the specialization of foundation models and enables language-based adaptation with minimal compute requirements. Our code and pre-trained checkpoints will be available through https://github.com/AnonymousAuthor/hyperlora and https://huggingface.co/ upon publication.",
+    "keywords": [
+        "hypernetworks",
+        "finetuning",
+        "language models",
+        "zero-shot generalization"
+    ],
+    "primary_area": "transfer learning, meta learning, and lifelong learning",
+    "TLDR": "HyperLoRA generates LoRAs for domain-specific tasks given a language task description in a single forward pass",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=u6vC7KaFel",
+    "pdf_link": "https://openreview.net/pdf?id=u6vC7KaFel",
+    "comments": [
+        {
+            "summary": {
+                "value": "## Overview\nThe paper introduces HyperLoRA, which is a method involving training LLMs to adapt to new domains and tasks on-the-fly, without having to do expensive training at test-time. This is achieved through the use of a hypernetwork of LoRA adapters. During test-time, the natural language instruction is encoded and a LoRA adapter is zero-shot generated after a single forward pass.\n\nThe main hypothesis is that different LoRA adapters share similar underlying mechanisms and hence can be optimized simultaneously.\n\n## Method + Experiments\n- Three different variants (small, medium, large) with various output heads and learnable embeddings\n- Can be trained either using LoRA reconstruction (shown to be poor at generalization) or through SFT\n- 500 tasks. 11 held out for evaluation.\n- Evaluate on 10 widely used tasks like ARC, HellaSwag, GSM8k, etc.\n- Outperforms LoRA routing baseline"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**1. Flexibility and efficiency with minimal overhead** -- The main strength of the method is that it allows for good generalization to new tasks without adding much extra in terms of training. It is also very flexible because it can adapt to unseen prompts during test time. This can help make LLMs a lot more accessible and easier to interact with.\n\n**2. Strong results with a relatively simple method** -- The method generalizes well, even to zero-shot settings as seen in Table 2. Meanwhile, in Table 1, we see that In most cases, the model performs almost as well as, if not better, than the task-specific LoRA fine-tuning.\n\n**3. Thorough ablations and analysis** -- The whole section 5 (ablations) and section 6 (analysis) go pretty in-depth into the models and what makes them work. For instance, the paper explores varying task embedding models, task descriptions, etc.  \n\n**4. Clean presentation** -- The paper uses color and space very effectively, which makes reading quite pleasant."
+            },
+            "weaknesses": {
+                "value": "**1. Possible scaling concerns** -- I find it a bit concerning that adding more training tasks doesn't improve the performance (Table 3). Usually for most algorithms, adding more data would result in a better model. Otherwise, the concern is that the performance of the method will be capped at a certain level and it will be hard to increase further. Also, in the paper, the model was evaluated on 11 different tasks (which are somewhat close to each other). I am wondering how the model would scale to even more tasks beyond the basic ones.\n\n**2. Comparison with full fine-tuning** -- The study is limited to the LoRA setting, which has been shown to perform worse than full fine-tuning, and this method likely wouldn't generalize to full fine-tuning settings. Similar to the above point, this makes me slightly concerned that the method might have its performance capped at a certain level."
+            },
+            "questions": {
+                "value": "- The paper claims to introduce HyperLoRA but one of the papers cited in the paper (Xiao et al https://aclanthology.org/2023.emnlp-main.487.pdf) also calls their method HyperLoRA? Not sure how to reconcile this naming overlap."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes HyperLoRA, which is a method to generate a new low-rank adaptor(LoRA) based on the natural language task description without training an adaptor. Through experiments, the paper shows HyperLoRA successfully generate an adaptor for new task by achieving comparable or even higher performance than trained adaptor."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Generating a new adaptor without tuning one can be utilized widely as it can minimize expensive tuning step.\n- It is impressive that generating parameters itself rather than text or other data can show promising results"
+            },
+            "weaknesses": {
+                "value": "- The presentation of the paper lacks intuitiveness.\n    - There are many typos and grammatical errors.\n    - The figures are not clear.\n        - For example, figure 1. left does not denote what the each arrow represents, and the figure looks like the HyperLoRA is optimizing both reconstruction loss and SFT loss at the same time, but it seems like the HyperLoRA optimize either one of the losses according to the paper\n        - Also I was not able to find a part that shows the number of tasks in figure 3\n    - Preliminary explanations for the many parts are not enough\n        - For example, it does not explain what the prediction offset is."
+            },
+            "questions": {
+                "value": "- What is the prediction offset?\n- Is it possible to optimize both reconstruction loss and SFT loss at the same time?\n- Does HyperLoRA work better than given task description as a prompt?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper focuses on the problem of reusing knowledge from pretrained parameter-efficient adapters to new tasks without target task specific fine-tuning.\n\nIn particular, the authors propose to leverage the hypernetwork as a means to generate such LoRA adapters by using two kinds of training signals, task-specific training loss and task-dependent LoRA weight reconstruction loss.\nSpecifically, the hypernetwork generates three variants of LoRA matrices by using information of the target task (one-hot or natural language embeddings) and target module to be adapted (depth and FFN vs MHA). Compared with the backbone LM, the hypernetwork is parameter-efficient too.\n\nThe authors then apply the proposed method on top of a pretrained language model (Mistral-7B-instruct) with several representative English natural language understanding tasks.\nCompared with LoRA baselines and recent work on combining LoRA weights for unseen tasks, the proposed method HyperLoRA shows promising improvements."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper studies a practically interesting problem, i.e., adapting LLMs on the fly based on the natural language descriptions. \n\nThe proposed HyperLora architectures are well designed.\n\nExperiments show positive results of the proposed approach."
+            },
+            "weaknesses": {
+                "value": "The experiments only use one base model (i.e., Mistral-7B-Instruct). It is unclear whether the approach can generalize to other model families (e.g., Llama, Phi) and other model sizes.\nIt would be also interesting to see if the HyperLora can benefit from learning to generate LoRA adapters for different model families. \n\nIt would be useful to add few-shot and many-shot in-context-learning results as baselines as well. And also compare the cost between such in-context-learning and the proposed HyperLoRA.\n\nThe need of using a multi-task LoRA as a prediction offset to boost the performance is a little undesired, as it requires extra cost for training a multi-task LoRA in the first place.\n\nMinor:\nLine 225: it would be useful to describe the prediction offset clearly in the main body of the paper, or at least refer to the Eq 6 & 7 in the appendix."
+            },
+            "questions": {
+                "value": "1) How stable is training process of the proposed method? e.g., different AB configs, different batch sizes are required for different configs. \n\n2) Is there any benefits of combining the SFT loss and the reconstruction loss? \n\n3) What is included in the task descripton? Just the high-level task description? What about adding a few examples of the tasks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes using hypernetworks to generate LoRA weights for unseen tasks based on natural language instructions. It does so by embedding the instructions using an existing embedding model (or activations from an LLM) and generates the LoRA weights using a newly trained neural network. The authors show that this approach to generate LoRA weights can extend to tasks not seen in the training set."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The authors provide clear evaluation of their proposed method.\n- The authors conduct informative analysis on different configurations for training the hypernetwork, showing the impact of varying the number of tasks and embedding method."
+            },
+            "weaknesses": {
+                "value": "- The authors omit key prior work [e.g. 1,2,3] in their related work. For instance, [1] similarly uses SNI and trains a hypernetwork to generate LoRAs, with both few-shot as well as instruction-only configurations. [3] Likewise also uses both SNI (formerly NIv2) and an instruction-only setting.\n- Correspondingly, the authors largely fail to compare their currently method to existing hypernetwork methods (both the ones omitted above, as well as the ones they cite in their work). The primary other method they compare to is Arrow Routing, which seems largely unrelated to the setting besides the connection of (directly rather than indirectly) relying on a set of pretrained LoRAs.\n- The results are directionally good but many of the evaluated tasks already look saturated. There are also some oddities such as LoRA on PiQA underperforming the base model, which seems to suggest an inadequate configuration for their baseline.\n- Parts of the writing are unclear, e.g. the distinction between the \"Task Description Embeddings\" setting and the unseen task descriptions used for \"Zero-Shot LoRA Generation\". (My understanding is that all task descriptions on evaluated tasks should be unseen?) There is also reference to both Train and Eval descriptions referenced in Table 5, which makes it further unclear what tasks/descriptions are actually unseen during training.\n- There is some unconvincing post-hoc justification for empirical results. For instance \"This result is in line with the general knowledge that certain inductive biases improve models' robustness and generalization\" is used to explain why the middle M configuration outperform S and L reads to me like trying to force a scientific interpretation to an unexplained (which is okay) quirk in empirical result.\n\n[1] HyperTuning: Toward Adapting Large Language Models without Back-propagation\n[2] Learning to Compress Prompts with Gist Tokens\n[3] Boosting Natural Language Generation from Instructions with Meta-Learning"
+            },
+            "questions": {
+                "value": "- See above: what is the distinction between seen and unseen task descriptions?\n- How are the one-hot embeddings generated?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

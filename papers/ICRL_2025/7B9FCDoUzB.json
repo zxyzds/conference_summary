@@ -1,0 +1,170 @@
+{
+    "id": "7B9FCDoUzB",
+    "title": "Regretful Decisions under Label Noise",
+    "abstract": "Machine learning models are routinely used to support decisions that affect individuals -- be it to screen a patient for a serious illness or to gauge their response to treatment. In these tasks, we are limited to learning models from datasets where the labels are subject to noise. In this work, we study the impact of learning under label noise at the instance level. We introduce a notion of regret for this regime, which measures the number of unforeseen mistakes when learning from noisy labels. We show that standard approaches to learn models from noisy labels can return models that perform well at a population level while subjecting individuals to a lottery of mistakes. We develop machinery to estimate the likelihood of mistakes at an instance level from a noisy dataset, by training models over plausible realizations of datasets without label noise. We present a comprehensive empirical study of label noise in clinical prediction tasks. Our results reveal how our failure to anticipate mistakes can compromise model reliance and adoption, and demonstrate how we can address these challenges by anticipating and abstaining from regretful decisions.",
+    "keywords": [
+        "Uncertainty Quantification",
+        "Fairness",
+        "Model Multiplicity",
+        "Clinical Decision Support",
+        "Classification",
+        "Label Noise"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "",
+    "creation_date": "2024-09-14",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=7B9FCDoUzB",
+    "pdf_link": "https://openreview.net/pdf?id=7B9FCDoUzB",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors introduce the notion of regret when learning from a dataset that is subject to label noise. The authors point out that standard learning approaches typically target a notion of \u201caverage\u201d loss or \u201caverage\u201d risk over the population and cannot provide instance level guarantees. One way to identify that the model may make a mistake is to have access to clean labels, but this is often infeasible in practice. As a result, the authors propose to simulate \u201cclean\u201d datasets by assuming a noise model, simulating noise from that noise model, and then backing out a clean dataset from the noisy dataset and the sampled noise. Then the authors define a notion of ambiguity based on models trained on various plausible clean datasets."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper emphasizes that standard machine learning methods target some notion of \u201caverage loss\u201d or \u201caverage risk\u201d but that does not provide guarantees on performance for an individual instance, which is an important point. In particular, I enjoyed lines 186-188 \u201cwe cannot anticipate how [mistakes] will be assigned over instances that are subject to label noise. In this case, each instance where [there is a nonzero probability of a label flip] is subjected to a lottery of mistakes.\u201d\n\nThe idea of constructing multiple plausible clean datasets from a noisy one is interesting, and seems very reminiscent of distributionally robust optimization (the idea constructing the set of plausible noise draws seems related to constructing a robustness set over distributions). It might be worthwhile to consider what connections there are between constructing the set of plausible noise draws and a robustness set."
+            },
+            "weaknesses": {
+                "value": "- It would be helpful if the authors could provide additional explanation on how the notion of regret differs from standard classification accuracy, and why it is useful.\n\n- A key limitation of the approach is that it requires the machine learning practitioner to specify a reasonable noise model. \n\n- The justification for restricting the sampled noise draws to a set of \u201cplausible\u201d noise draws is not clear to me. Why can\u2019t we just account for the fact that each noise draw has a different likelihood? \n\n- The ambiguity quantity is not well-motivated. Why is it defined as the fraction of misclassifications across the cleaned datasets? How do the authors intend this ambiguity quantity to be used? Under what conditions is ambiguity equal to zero?"
+            },
+            "questions": {
+                "value": "Why do we write $y_{i}(U_{i})$ in the definition of $U_{i}$, from what I recall, $U_{i}$ is generated given $y_{i}$, so it is a bit confusing to think of $y_{i}$ as a function of $U_{i}$."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper examines the problem of learning from noisy labels by addressing instance-level noise. The main contribution is the insight that a method performing well over the population can still lead to errors at the instance level. The paper introduces the concept of \"regret\" to characterize this phenomenon and proposes a method to mitigate the regret caused by randomness sampling multiple plausible noisy label draws. Theoretical analysis and experiments are presented to validate the proposed approach."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "+ This paper addresses an important yet challenging task: learning from instance-level label noise.\n+ Theoretical analysis and experiments are conducted to validate the proposed method."
+            },
+            "weaknesses": {
+                "value": "- **Unclear Benchmark Algorithm**: One of my main concerns is the paper's clarity, particularly regarding the introduction of the benchmark algorithm critiqued in Section 2. It appears the paper intends to use a noise-tolerant method, such as that of Natarajan et al. [37], as a benchmark. However, by Proposition 5, the algorithm under discussion seems to actually refer to a different approach (let's call it Benchmark 2). In Benchmark 2, an implicit noise draw $\\mathbf{u}^{\\mathrm{mle}}$ is generated, $y_i$ is recovered using this noise draw, and then ERM is performed to train the model. To me, this algorithm (Benchmark 2) differs from the method in [37], especially in terms of instance-level performance. Therefore, it is less convincing that the criticisms for Benchmark 2 are applicable to the noise-tolerant method in [37]\n\n- **Clarity on Notation**: I find the notation in Section 2 somewhat confusing, particularly in distinguishing which variables are random and which are deterministic. Based on the discussion in lines 130-135, it appears that $ y_i $ is deterministic, while $ U_i $ and $ \\tilde{y}_i $ are random variables generated based on $ y_i $. However, I struggle to interpret the equation in line 173, as it seems $ y_i(U_i) $ is simply a deterministic value, making it challenging to see how it could be compared in inequality to a random variable.\n\n- **Regarding Proposition 4 and its Proof**: It would be helpful if the authors provided a clearer explanation of which random variables the expectation is taken over. In the proof, it appears that the expectation is taken over $ X, \\tilde{Y} $, and $ U $ while this is not mentioned in the main text. Additionally, I find it difficult to follow the reasoning in lines 734-744; the conclusion seems to rely on $ E_{X, \\tilde{Y}, U}[\\text{Regret}] $, yet the analysis is conducted for $ E_{X, Y, U}[\\text{Regret}] $. Finally, the last lines indicate only that $ E_{X, \\tilde{Y}, U}[\\text{Regret}] > 0 $, but it is unclear how this leads to the conclusion stated in Proposition 4.\n\n- **Strong Assumption**: The proposed method in Section 3 requires knowledge of $ P(U = 1 \\vert X, Y) $. This is somewhat a strong assumption to me, as accurately estimating this value is generally challenging.\n\n- **Insufficient Experiments**: It appears that the paper does not compare the proposed method with others in the literature. At a minimum, it would be beneficial to include a comparison with the noise-tolerant method [37] under the condition that $ P(U = 1 \\vert X, Y) $ is known. Although [37] is designed for class-dependent noise, with knowledge of  $P(U = 1 \\vert X, Y)$, extending it to handle instance-level noise should not be too challenging."
+            },
+            "questions": {
+                "value": "- Could you elaborate further on the benchmark algorithm discussed in the paper and clarify its relationship with [37]?\n- Could you provide an additional explanation regarding the proof of Proposition 4, particularly addressing the concerns mentioned in the weaknesses above?\n- Could you include a performance comparison with other methods in the literature?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors tackle the situation where observations come with label noise. They introduce a criterion (regret) which measures when the prediction errors disagree when the model is computed with  noisy observation \\tile{y} and not noisy y. They develop a new method that estimate the posterior distribution of the possible noise and try to sample these observations. Hence if the distribution of the noise is well chosen, it becomes possible to construct set of plausible models and thus detect zones for which the uncertainty is above a certain level. The paper develop a new theory and provides sound mathematical proofs and simulations."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The point of view which is developed is interesting and is a valuable contribution.\nThe ideas are straightforward once the frame is set : defining the regret and then plausible sets minimizing the regret on epsilon-plausible datasets.\nExperiments are convincing.\nA whole section is devoted to the theoretical analysis of the results. Proposition 12 proposes the statistical guarantees of the methos."
+            },
+            "weaknesses": {
+                "value": "I found the paper sometimes difficult to read and some sentences are difficult to understand \nl159 : \"a practitioner may be able they expect ... \" I can not understand what the authors mean.\nl162 : the definition of the regret is fuzzy with some words that are not properly defined . \"anticipated\" mistake. What does it mean since you compare the error with labels with noise and labels without ?\nl172 the paper should be self-contained if possible, so epxlain the comparison with \\tilde{l}_{0,1}\nl182 : what is \" :-= \" ?\nl215: sometimes you use words that have a mathematical meaning : \"most likely to flip\" for instance"
+            },
+            "questions": {
+                "value": "can you define \\tile{l}_{0,1}"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes an evaluation framework for noisy label learning methods in terms of \"regret,\" as quantified by the discrepancy between model errors with respect to noisy labels vs. errors with respect to true labels. But regret is not distributed equally in the data: in their own words, \"even if we can limit the number of mistakes, we cannot anticipate how they will be assigned over instances that are subject to label noise.\" The proposed approach takes a generative model of noise to train a set of models on plausible (under the distribution induced by the generative model) clean realizations, and estimates instance-level \"regret\" accordingly. Empirical results show that a common noisy-label learning baseline and naive approaches (ignore noise) exhibit non-zero regret consistently. A case study on a genomics dataset demonstrates the practical utility of the approach by leveraging an instance-level ambiguity measure derived from regret to abstain from low-confidence predictions."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* This is a very well-written paper. The prose is clear and the technical aspects of the problem motivation are well-defined and explained concisely. \n* The proposed approach is very simple and the theoretical results are intuitive, but backed by rigorous theoretical and empirical analyses. \n* Rather than assuming completely random models of noise, the proposed approach is adaptable to arbitrary generative models of noise."
+            },
+            "weaknesses": {
+                "value": "* [W1 \u2014 knowing the true noise model]: The proposed approach requires knowledge of a full generative noise model of $(U, X, Y)$. It is not clear where this would come from in practice. This weakness is somewhat mitigated by the discussion at the end of Section 3 and empirical results showing robustness of the proposed approach to noise model misspecification, but building more formal machinery to characterize the sensitivity of the approach to noise model misspecification would strengthen the paper.  \n* [W2] Proposition 4 provides the motivation for the proposed approach \u2014 using the generative model of noise, sample plausible realizations of the clean dataset. But the variance of the posterior could be extremely high \u2014 even with the $\\varepsilon$-plausibility constraint (Def. 7), this could still yield high-variance regret/ambiguity averages. \n* [W3] I'm unsure about the usefulness of Prop. 5, which \"implies that we can only expect hedging to learn a model that does not assign\nunanticipated mistakes when $\\mathbf{u}\\_{mle} = \\mathbf{u}\\_{true}$. I read this as \"models will overfit in finite samples to the observed noise draw rather than the true noise draw,\" which is intuitive. But if regret grows very, very slowly in $|\\mathbf{u}\\_{mle} - \\mathbf{u}\\_{true}|$ (any measure of distance between the two, to abuse some notation) \u2014 then it seems like this effect is not an issue. \n* [W4 \u2014 minor] The presentation of empirical results could be improved. Table 3 is very large, and it's hard for me to parse what I'm looking for. Similarly, Figures 3 and 4 could be designed a little more informatively \u2014 specifically, the caption should include a statement about why the proposed approach is \"better\" (e.g., our approach has X property, while the standard approach ... )."
+            },
+            "questions": {
+                "value": "* Re: [W1] \u2014 I would love to hear any thoughts on the robustness of the proposed approach to noise model misspecification from a theoretical perspective.\n* Re: [W2] \u2014 I would love to hear any commentary on how high-variance in the noise posterior could negatively affect the proposed approach. \n* Re: [W3] \u2014 Are small violations of the $\\mathbf{u}\\_{mle} = \\mathbf{u}\\_{true}$ condition (Prop. 5) truly \"problematic?\" Is there an example to demonstrate this? \n\n**Other questions/suggestions**\n* Did the authors consider looking at metrics beyond expected regret/ambiguity (e.g., worst-case over $\\varepsilon$-plausible models)?\n* The noisy label evaluated in the experiments is >10 years old; while the value of the approach isn't based on which underlying noisy label learning method is under evaluation, it might be more salient to the noisy-label learning community to test a more recent suite of methods + different noise models. For example, [some](https://arxiv.org/abs/1809.03207) [methods](https://arxiv.org/abs/2406.18865) specify a full generative model and cast the clean label as a latent variable, while [other](https://arxiv.org/abs/2002.07394) [approaches](https://arxiv.org/abs/1910.01842) filter out examples flagged as noisy (according to some rule) in the learning process. Given the plethora of assumptions/noise models in the literature, I wouldn't be shocked if there is systematic variation in errors across methods. \n\n**Minor Suggestions**\n* In Table 2, $\\hat{\\mu}(x)$ is defined as the median, but in Eq. (8), it is defined as the mean \u2014\u00a0I suggest making the definition consistent. \n* The proof of Prop. 4 in Appendix A is a little unclear: there are also some typographical inconsistencies (math mode vs. regular font), and I think $f(X)$ is mistakenly written as $X$ in one of the loss terms as L725-726. I was unable to replicate the final step, but this is likely since I had a hard time following the parentheses/whether each line was a continuation of the previous. Could this be clarified? I believe the result, since it seems to be essentially a result of the form E_{noise}[estimand] = estimand as is common in the noisy-label learning literature. \n* Is Prop. 9 (Appendix A only) not simply a restatement of Lemma 1 from [Learning with Noisy Labels, Natarajan et al., NeurIPS '13](https://proceedings.neurips.cc/paper_files/paper/2013/file/3871bd64012152bfb53fdf04b401193f-Paper.pdf)? If so, the proof can be omitted and replaced with the relevant citation. \n* Prop 10. and 11 appear to be standard applications of a weak law of large numbers + Hoeffding. If they're not referenced in the main text, consider removal."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

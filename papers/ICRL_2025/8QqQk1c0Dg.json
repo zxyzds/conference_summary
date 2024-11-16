@@ -1,0 +1,169 @@
+{
+    "id": "8QqQk1c0Dg",
+    "title": "Clipping Improves Adam and AdaGrad when the Noise Is Heavy-Tailed",
+    "abstract": "Methods with adaptive stepsizes, such as AdaGrad and Adam, are essential for training modern Deep Learning models, especially Large Language Models. Typically, the noise in the stochastic gradients is heavy-tailed for the later ones. Gradient clipping provably helps to achieve good high-probability convergence for such noises. However, despite the similarity between AdaGrad/Adam and Clip-SGD, the current understanding of the high-probability convergence of AdaGrad/Adam-type methods is limited in this case. In this work, we prove that AdaGrad/Adam (and their delayed version) can have provably bad high-probability convergence if the noise is heavy-tailed. We also show that gradient clipping fixes this issue, i.e., we derive new high-probability convergence bounds with polylogarithmic dependence on the confidence level for AdaGrad and Adam with clipping and with/without delay for smooth convex/non-convex stochastic optimization with heavy-tailed noise. Our empirical evaluations highlight the superiority of clipped versions of AdaGrad/Adam in handling the heavy-tailed noise.",
+    "keywords": [
+        "stochastic optimization",
+        "heavy-tailed noise",
+        "adaptive methods",
+        "gradient clipping",
+        "high-probability convergence bounds"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "",
+    "creation_date": "2024-09-19",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=8QqQk1c0Dg",
+    "pdf_link": "https://openreview.net/pdf?id=8QqQk1c0Dg",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors provide examples to show that the high-probability complexities of Adam/AdaGrad (with momentum) and their delayed versions don\u2019t exist poly logarithmic dependence on the confidence level generally when the gradient noise is heavy-tailed. The authors show that the high-probability complexities of Clip-Adam/AdaGrad and their delayed versions have polylogarithmic dependence on the confidence level under smooth convex and smooth nonconvex assumptions. The authors conducted numerical experiments for synthetic and real-world problems."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The authors provide high probability convergence complexity instead of the conventional in-expectation convergence complexity that most previous literature has focused on and such high probability convergence bounds can more accurately reflect the methods\u2019 behavior than in-expectation ones.\n\n2. The author emphasizes the importance of gradient clipping for adaptive algorithms (Adam \\ AdaGrad) to deal with heavy- tailed noise through strict high probability convergence complexity analysis."
+            },
+            "weaknesses": {
+                "value": "1. The author's statement on the probability convergence results corresponding to different methods is not clear enough, even though these results are similar.\n2. The main theoretical results of this paper are based on the assumption of local smoothness of the optimization objective, even in convex cases, which is too strong."
+            },
+            "questions": {
+                "value": "1. In the introduction section, you cited some viewpoints from previous literatures to illustrate that Adam and Clip-SGD have similar clipping effects for stochastic gradients. so, \"it is natural to conjecture that clipping is not needed in Adam/AdaGrad\" . Your theorem 1 emphasizes that Adam/AdaGrad without clipping do not have a high probability convergence complexity with polylogarithmic dependence on \\delta even when the variance is bounded, rather than the divergence of Adam when the noise is heavy-tailed?\n\n2. In the discussion section of Theorem 1, you stated that \u201cWe also conjecture that for \\alpha<2 one can show even worse dependence on \u03b5 and \u03b4 forAdam/AdaGrad\u2026\u201d. Have similar conjectures been mentioned in previous literatures, or can an informal analysis be provided?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper examines the high-probability convergence of adaptive optimizers like AdaGrad and Adam under heavy-tailed noise. Without gradient clipping, these methods can struggle with convergence. The authors show that gradient clipping significantly improves convergence bounds and empirical performance for AdaGrad and Adam, making them more robust to heavy-tailed noise."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The negative example for Adagrad's (actually, Adagrad-Norm) convergence is interesting. This could imply that heavy-tail noise is not handled by \"adaptive\" methods, which clarifies a misconception in the area. If this point is fully justified (given that the concerns I have below are resolved), I think it is a interesting contribution."
+            },
+            "weaknesses": {
+                "value": "1. **Not analyzing Adam, but a twin of Adagrad**:  This paper does not analyze the original Adam, but Adam with beta2 = 1-1/K. The paper wrote \"Therefore, the standard choice of beta2, in theory is, = 1 - 1/K where K is the total number of steps\", but this is not the standard choice in theory. However, there are recent results proving convergece of Adam for constant beta2 (Zhang et al.'2022, cited in the submitted work). The anallyzed algorithm with 1-1/K is essentially Adagrad. The convergence properties of Adam and Aadgrad are quite different. \n\n2. **Analyzed scalar-coefficient clipped version**, instead of regular clipping: The clipped version Algorithm 2 uses a scalar b_t, instead of a vector b_t in the typical adaptive gradient methods. This is because the update of b_t uses the norm of the clipped gradient instead of the gradient vector. This makes the algorithm quite different from the original adaptive gradient methods. \n       The authors renamed the algortithm from '\"Adagrad-Norm\" to \"Adagrad\", and uses Adagrad-CW to describe the orginal version, as mentioned in a footnote. But this naming is quite misleading. If the paper analyzed Adagrad-norm, then the title and abstract should reflect it. \n        Another example that renaming Adagrad-norm by Adam is misleading: for the experiments, I cannot tell for sure whether the authors use the original Adam or Adgrad-norm. My guess is the authors used Adagrad-norm for experiments, since the term \"Adam\" is already renamed. \n\n3. **Contribution.**  Given the above modifications, the paper actually shows that Adagrad-norm-with-clipping works well while Adagrad-norm-without-clipping works not so well, for the heavy-tail-noise case. Thus the result is not about the orginal Adam. Nevertheless, there is still some chance that such an analysis could shed some light on the relation of clipping and Adam, if the experiments on Adam exhibit similar behavior to Adagrad-norm. However, the experiments are on \"Adam\", which, I guess, actually means Adagrad-norm in the context of this paper, thus the experiments may not be relevant to practitioners."
+            },
+            "questions": {
+                "value": "In the experiments, does \"Adam\" mean the version of this paper, or the common version in the literature (i.e. the original version by Kingma and Ba)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the convergence behavior of AdaGrad/Adam, considering heavy-tailed noise which is both significant in theoretical and empirical aspects. The authors prove AdaGrad/Adam failed in this case. To handle this issue, the authors study AdaGrad/Adam with clipping and derive a high probability convergence bound which owns a polylogarithmic dependence on the confidence level. Finally, they provide some experimental results."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper studies the convergence behavior of AdaGrad/Adam when the noise is heavy-tailed, both of which are quite important in the deep learning field. They find the convergence issue of both two algorithms, specifically the polynomial dependence of the confidence level inside the convergence bound. To solve this issue, they consider AdaGrad/Adam with clipping and show a convergence bound with polylogarithm dependence of the confidence level. Finally, some experimental results are provided, showing the superiority of adding clipping over the non-clipping versions."
+            },
+            "weaknesses": {
+                "value": "I have the following major concerns.\n\n**On negative results**\n\nThe main motivation in this paper comes from the potential failure of AdaGrad/Adam in the heavy-tailed noise case.  However, the main result to prove the failure, Theorem 1, is not convincing. First, the result shows a complexity of Adam/AdaGrad that has inverse-power dependence on $\\delta$. However, this bound should require $\\beta_2 = 1-1/T$ and $\\\\|x\\_0-x^*\\\\| \\ge \\gamma L$ instead of arbitrary $\\beta_2$ and $x\\_0$. It's then questionable whether another setup of $\\beta_2$ and $x\\_0$ may achieve success. Second, I think it's not convincing to say Adam/AdaGrad is a failure given the inverse-power dependence on $\\delta$ inside the convergence bound. Note that the dominated order in a convergence bound (or complexity) comes from the order of $T$ (or the accuracy $\\epsilon$). I see that the complexity still achieves $\\Omega(poly(\\epsilon^{-1/2}))$ which leads to the convergence.\n\nI suggest the author prove a negative result similar to [Remark 1,1], where they can show that for arbitrary step size and initialization, SGD has a non-convergence issue on a specific problem.\n\n**On results regarding clipping**\n\nFirst, the author claims that the main goal of incorporating the clipping is to improve the dependence of $\\delta$ to polylogarithm order. However, I do not see clearly any polylogarithm order of $\\delta$ in Theorem 2, 3, and 4, particularly in the complexity formulas. Second, I do not see the motivation for using a delayed step size. If we have the AdaGrad/Adam with clipping, why do we still need the delayed step-size version? Finally, the polylogarithm order of $\\delta$ for AdaGrad with clipping has already been obtained in [2], although with a slightly stronger assumption. I suggest the author claim more on the proof difference with their results.\n\n**Reference**\n\n[1]. Zhang J, Karimireddy S P, Veit A, et al. Why are adaptive methods good for attention models? Advances in Neural Information Processing Systems, 2020, 33: 15383-15393.\n\n[2]. Li S, Liu Y. High Probability Analysis for Non-Convex Stochastic Optimization with Clipping. ECAI 2023. IOS Press, 2023: 1406-1413."
+            },
+            "questions": {
+                "value": "Please refer to **Weaknesses**."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper theoretically analyzed the influence of heavy-tailed gradient noise on the convergence of AdaGrad/Adam (and their delayed version) and their clipping version. The authors found that clipping improves the convergence of AdaGrad/Adam under the heavy-tailed noise, which is validated by some experiments."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.The authors proved that AdaGrad/Adam (and their delayed version) can have provably bad high-probability convergence if the noise is heavy-tailed.\n\n2.They also derived new high-probability convergence bounds with polylogarithmic dependence on the confidence level for AdaGrad and Adam with clipping and with/without delay for smooth convex/non-convex stochastic optimization with heavy-tailed noise.\n\n3.Some empirical evaluations validated their theoretical analysis."
+            },
+            "weaknesses": {
+                "value": "1.The authors stated \u201cAdam can be seen as Clip-SGD with momentum and iteration-dependent clipping level)\u201d. And, the results of Adam/AdaGrad show that  their high-probability complexities don\u2019t have polylogarithmic dependence on the confidence level in the worst case when the noise is heavy-tailed. However, they didn\u2019t explain why the latent clipping brings the negative result (Theorem 1), which is not consistent with their rest results (Theorems 2-4).\n\n2.Some comparisons of results are provided behind Theorems 1 and 4. These comparisons are not clear enough to emphasize the advantages of the results of this paper. Making a table to present all results of this paper and previous work may benefit readers' understanding."
+            },
+            "questions": {
+                "value": "1.Line 13: What is the meaning of \u201cfor the later ones\u201d? Does \u201cthe later one\u201d denote Large Language Models, and why? Do other models not have heavy-tailed gradients\uff1f\n\n2.Line 17: Which case do the authors want to state for the phrase \u201cin this case\u201d? \n\n3.Lines 47-49: What is the meaning of the statement \u201cAdam can be seen as Clip-SGD with momentum and iteration-dependent clipping level)\u201d?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

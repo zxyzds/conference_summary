@@ -1,0 +1,128 @@
+{
+    "id": "cuFzE8Jlvb",
+    "title": "Continuous Autoregressive Modeling with Stochastic Monotonic Alignment for Speech Synthesis",
+    "abstract": "We propose a novel autoregressive modeling approach for speech synthesis, combining a variational autoencoder (VAE) with a multi-modal latent space and an autoregressive model that uses Gaussian Mixture Models (GMM) as the conditional probability distribution. Unlike previous methods that rely on residual vector quantization, our model leverages continuous speech representations from the VAE's latent space, greatly simplifying the training and inference pipelines. We also introduce a stochastic monotonic alignment mechanism to enforce strict monotonic alignments. Our approach significantly outperforms the state-of-the-art autoregressive model VALL-E in both subjective and objective evaluations, achieving these results with only 10.3\\% of VALL-E's parameters. This demonstrates the potential of continuous speech language models as a more efficient alternative to existing quantization-based speech language models. Sample audio can be found at \\url{https://tinyurl.com/gmm-lm-tts}.",
+    "keywords": [
+        "Speech Synthesis;text-to-speech;"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "an autoregressive speech language model without vector quantization",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=cuFzE8Jlvb",
+    "pdf_link": "https://openreview.net/pdf?id=cuFzE8Jlvb",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents a novel approach to autoregressive speech modeling using continuous speech features, contrast to recent trends that rely on discrete units. The method consists of two key components: (1) A feature extraction model based on VAE, which replaces quantized codebooks (as in RVQ) with a learned mixture of Gaussian priors (GMM-VAE), and (2) A text-to-speech model that employs a Gaussian Mixture Model Language Model (GMM-LM) to model these continuous features in autoregressive manner, which also incorporating a new monotonic alignment constraint. Experimental results demonstrate that this continuous speech modeling consistently outperforms previous methods using discrete codec representations like Residual Vector Quantization (RVQ) in TTS tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Clear comparison to previous approaches and introduces novel continuous variants for both VAE training and TTS stages\n- The introduction of GMM-LM is novel, and the formulation is clear and simple. It also enables probabilistic sampling which is a plus for TTS applications\n- Nice results with much less model parameters"
+            },
+            "weaknesses": {
+                "value": "- Limited discussion of prior Gaussian mixture VAE work, e.g., \"Deep Unsupervised Clustering with Gaussian Mixture Variational Autoencoders\". (Minor: The notation, either GMM-VAE or VAE-GMM, should be consistent.)\n- The counterintuitive result where increasing Gaussian mixtures in GMM-VAE leads to worse reconstruction, where a 6-mixture GMM should subsume the modeling capacity of a 3-mixture GMM\n- Some modeling details are missing, e.g., GMM-VAE frame rate, which is crucial as it could affect the type of information captured"
+            },
+            "questions": {
+                "value": "- Does the frame rate of GMM-VAE features align with the mel spectrogram hop length (240ms) described in 5.2?\n- Why does the model require relatively few Gaussian mixtures compared to VQ codes in RVQ, and any insights on what the mixture components capture?\n- Could you clarify how the monotonic alignment mechanism in Figure 2 (right) works? It seems to align the encoded text and speech prompts prior to decoding. Additionally, a more comprehensive description of the GMM-LM would be nice, including how speech and text features are fed into each decoder step, and the formulation of $e_{i,j}$\u200b."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Authors propose a novel means of auto-regressive TTS modeling that eschews quantization units in favor of Gaussian mixtures. Model performance consistently outperforms other standard TTS models, demonstrating high quality TTS is able without traditional VQ-VAE setup."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Authors present provide a thorough discussion of related work and their motivation for their approach. Description of architecture is clear and easy to follow, along with pointers for reproducibility. High performance of model is significant enough for comparison with other approaches."
+            },
+            "weaknesses": {
+                "value": "There is a minor question of motivation in the author's approach: they take the stance that the community views vector quantization approaches as a necessity, but there are a fair amount of approaches in the speech modeling community that have used straight reconstruction approaches. While their gaussian mixture approach is still suitably novel, this position seems to ignore other considerations that go into VQ approach. Notably that the use of discrete tokens is relatively easy to implement in parallel with text encoding, all while minimizing storage an I/O limitations from audio/image processing."
+            },
+            "questions": {
+                "value": "Given the reliance of the model architecture on monte-carlo estimation, how sensitive are results to random seeding during expeirmentation?\n\nWhat is the performance on more noisy datasets than LibriSpeech? Is the Gaussian approach suitably robust across evaluation sets?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper applies a VAE with GMM before extracting latent representations, and then trains an autoregressive model on the extracted continuous latent. The approach models the autoregressive conditional distribution also by GMM."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The idea of using GMM-VAE to regularize the latent distribution, serving a similar role as discretization is novel and interesting. The method is also easy to understand and straightforward. The paper can also inspire research on the use of continuous variational approaches in the speech synthesis domain, which has been recently dominated by discrete-based approaches."
+            },
+            "weaknesses": {
+                "value": "To me, the main issue of the paper is that the contribution of monotonic alignment and GMM-VAE are not separated. Specifically, the paper claims that \"Despite its smaller size, our model achieves lower WER and higher MOS than VALL-E, thanks to the continuous autoregressive modeling approach.\" in lines 82-83. However, in experiments of Section 5, you are comparing your method with monotonic alignment v.s. existing methods that do not enforce monotonic alignment. Some studies [1] have shown that enforcing monotonic attention patterns can lead to much lower WER and even better naturalness (it is probably also the reason that it is proposed). This makes me question if the lower WER and higher MOS come primarily from the use of monotonic alignment, which is not the main novelty of the paper, rather than from the use of GMM-VAE and GMM-LM. Furthermore, while the authors do provide a comparison of alignment methods in Appendix A.1, the one without monotonic alignment (Cross Att.) does result in higher WER than all the baselines. This further substantiates that the performance increase may not come from GMM-VAE and GMM-LM. I would suggest the author do an ablation study on the monotonic alignment and add it to Table 2 to interleave the contributions of the two components.\n\n[1] L. Chen, A. Rudnicky, S. Watanabe, \u201dA Vector Quantized Approach for Text to Speech Synthesis on Real-World Spontaneous Speech\u201d, in Proceedings of AAAI 2023, 2023"
+            },
+            "questions": {
+                "value": "- Section 3.3 is a little bit unclear. For instance, how was this energy function $e_{ij}$ calculated? Does it have something to do with the cross-attention weights acquired by the transformer?\n- What are the specs for the baseline methods: StyleTTS-2 and HierSpeech++? Are they of similar parameter size?\n- I am wondering the validity of modeling the autoregressive distribution as a GMM. In your case, even if the KL regularization loss of GMM-VAE makes $q(h|x)$ a mixture of Gaussians, does it in any sense implies that the autoregressive conditional distribution $p(h_t|h_{t-1}, \\cdots)$ is also close to a Gaussian mixture?\n\nThe paper is well-written and interesting, but I think the experiment issue mentioned in Weaknesses should be addressed before the paper is ready to be published."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

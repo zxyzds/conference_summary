@@ -1,0 +1,168 @@
+{
+    "id": "i7yL7VJx4H",
+    "title": "Gradient dynamics of low-rank fine-tuning beyond kernels",
+    "abstract": "LoRA has emerged as one of the \\emph{de facto} methods for fine-tuning foundation models with low computational cost and memory footprint. The idea is to only train a low-rank perturbation to the weights of a pre-trained model, given supervised data for a downstream task. Despite its empirical sucess, from a mathematical perspective it remains poorly understood what learning mechanisms ensure that gradient descent converges to useful low-rank perturbations.\n    In this work we initiate the study of low-rank fine-tuning in a student-teacher setting. We are given the weights of a two-layer \\emph{base model} $f$, as well as i.i.d. samples $(x,f^*(x))$ where $x$ is Gaussian and $f^*$ is the \\emph{teacher model} given by perturbing the weights of $f$ by a rank-1 matrix. This generalizes the setting of \\emph{generalized linear model (GLM) regression} where the weights of $f$ are zero.\n    When the rank-1 perturbation is comparable in norm to the weight matrix of $f$, the training dynamics are nonlinear. Nevertheless, in this regime we prove under mild assumptions that a student model which is initialized at the base model and trained with online gradient descent will converge to the teacher in $dk^{O(1)}$ iterations, where $k$ is the number of neurons in $f$. Importantly, unlike in the GLM setting, the complexity does not depend on fine-grained properties of the activation's Hermite expansion. We also prove that in our setting, learning the teacher model ``from scratch'' can require significantly more iterations.",
+    "keywords": [
+        "learning theory",
+        "fine tuning",
+        "online sgd dynamics",
+        "neural networks"
+    ],
+    "primary_area": "learning theory",
+    "TLDR": "We analyze the SGD dynamics of learning rank-1 perturbations beyond the NTK setting, and prove linear sample complexity in the dimension for strong recovery.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=i7yL7VJx4H",
+    "pdf_link": "https://openreview.net/pdf?id=i7yL7VJx4H",
+    "comments": [
+        {
+            "summary": {
+                "value": "This work analyzes the training dynamics of Low-Rank Adaptation (LoRA) fine-tuning for 2-layer neural networks. Specifically, the work considers a student-teacher setup where a pre-trained model (student) learns to approach a target function (teacher) with a rank-1 modification. The analysis relies on some very strong assumptions, including knowledge of the $\\xi$ parameter. The analysis utilizes the machinery for analyzing 2-layer neural networks."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Personally, I have a hard time evaluating the merits of this work. The results are quite restrictive in that they only consider a rank-1 update and require certain very strong assumptions such as the orthogonality of the features. On the other hand, it is the first result of its kind, so there is certainly value to the result.\n\nThe analysis utilizes much of the built-up machinery for analyzing 2-layer neural networks and single-index models. I am not an expert in this particular area, so I am not able to properly judge how novel the proof techniques are, given the existing machinery. In the end, however, I feel that the results are not that strong compared to other results people have shown with single index models in non-fine-tuning setups. I am also not quite sure what the main takeaway of the results should be.\n\nI feel that an appropriate criterion for a paper like this would be to judge the novelty of the proof technique, looking at how much this paper advances the toolset in this area. If this result is obtained through a straightforward application of the existing tools, then it is not that interesting, since the conclusions are not that strong. If these results required the authors to build up substantially new tools and use novel arguments, then that would constitute progress. However, I am not intimately familiar with the 2-layer NN analysis techniques used in this paper, so this is difficult for me to judge."
+            },
+            "weaknesses": {
+                "value": "."
+            },
+            "questions": {
+                "value": "."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This submission examines the sample complexity of an idealized version of low-rank fine-tuning, where the base model is a two-layer neural network with $k$ near-orthogonal neurons, and the fine-tuning target function is a rank-1 perturbation of the first-layer parameters of the base model. The authors analyze the optimization dynamics of the online spherical gradient algorithm to find this rank-1 perturbation, based on the Hermite decomposition of the landscape. It is shown that, unlike the learning of single-index models, the fine-tuning sample complexity does not scale with $d^{s-1}$, where $s$ is the information exponent defined in (Ben Arous et al., 2021)."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The complexity of learning single- and multi-index models using SGD has been extensively studied in recent years. This submission considers a distinct setting from most prior works, focusing on learning a rank-1 perturbation on top of a rank-$k$ base model. Notably, the authors show that the quantity governing the statistical efficiency of online SGD in the standard single-index setting no longer plays a role in the fine-tuning setting. This result is a valuable contribution relevant to the ICLR community, as it suggests that once a base model is obtained, learning additional low-rank structure may not face the same computational challenges as learning a low-dimensional function from scratch."
+            },
+            "weaknesses": {
+                "value": "I have the following questions and concerns:\n\n1. There is a sizable gap between the studied problem setting and LoRA due to the absence of joint training (and the quantized vector $c$). Moreover, the near-orthogonal weights of the base model and the assumed orthogonality between the base weights and the rank-1 perturbation are nontrivial assumptions. However, I do not view this as a significant drawback for the authors, as the dynamics under this simplified setting already reveal interesting phenomena.  \n\n2. The authors claim that the information exponent dictates the complexity of noisy gradient descent and provides a CSQ lower bound. However, it is known that SGD can achieve a sample complexity that does not depend on the information exponent (Lee et al., 2024; Arnaboldi et al., 2024). In these analyses, the complexity of SGD is instead governed by the generative exponent (Damian et al., 2024) associated with the SQ lower bound.   \nFrom the authors' assumption on the activation $\\sigma$, it appears that higher generative exponent functions are not excluded, which would create a gap between the statistical efficiency of fine-tuning and SQ learners. If this is the case, a discussion of this stronger separation should be included.\n\n3. Could the authors comment on the tightness of the sample complexity analysis? For sufficiently large $k$, it appears that the fine-tuning complexity could be worse than learning a single-index model from scratch (if the information/generative exponent is small). A lower bound statement for online SGD analogous to Theorem 1.4 in (Ben Arous et al., 2021) would be informative.\n\n4. If the first-layer parameters are not optimized, but instead adaptation to the target function occurs by training the top layer $\\lambda$, is there a lower bound on the required sample size? Intuitively, since the perturbation is assumed orthogonal to $W$, the kernel model defined by the first layer cannot learn this perturbed teacher model.\n\n5. On Line 291, the authors wrote: *\"As we discuss at the end of Section 2, even if the base model or teacher model satisfies this in the setting we consider, it does not appear to pose a barrier for low-rank fine-tuning in the same way that it does for learning from scratch.*.   \nThe $n = d^{\\Omega(k)}$ lower bounds cited here are constructed with specific weight configurations. Notably, such computational barriers are absent when the neurons are nearly orthogonal (Oko et al., 2024). It is unclear to me whether such worst-case scenario can be attained by orthogonal + rank-1 weight matrix. Could the authors clarify?\n\n6. The perturbed teacher model resembles a two-layer neural network where the first-layer parameters are optimized with a single gradient step. Specifically, the scaling of $\\xi$ (which matches the Frobenius norm) aligns with the large learning rate regime in (Ba et al., 2022; Cui et al., 2024), and it is known that such a large learning rate is beneficial for learning single-index tasks. Could the authors comment on potential settings where the studied perturbed model might exhibit greater expressivity than the base model?\n\n\n---\n\nReferences:\n\n* Lee et al. (2024), *Neural network learns low-dimensional polynomials with SGD near the information-theoretic limit.*\n* Arnaboldi et al. (2024), *Repetita iuvant: Data repetition allows SGD to learn high-dimensional multi-index functions.*\n* Damian et al. (2024), *Computational-statistical gaps in Gaussian single-index models.*\n* Oko et al. (2024), *Learning sum of diverse features: computational hardness and efficient gradient-based training for ridge combinations.*\n* Ba et al. (2022), *High-dimensional asymptotics of feature learning: how one gradient step improves the representation.*\n* Cui et al. (2024), *Asymptotics of feature learning in two-layer networks after one gradient-step.*"
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the dynamics of low rank fine-tuning (LoRa) of 2-layer feed-forward networks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This work studies the training dynamics of LoRa, which is the first of such works."
+            },
+            "weaknesses": {
+                "value": "1. The major drawback of this paper is the setting of a teacher-student model. This indicates that the model can already learn the data in terms of approximation. However, this is not necessarily true, and the approximation capability seems to be a key obstacle that may affect the outcome of LoRa. It may make more sense if the author could make some assumptions on the data and modify the setting of teacher-student model.\n2. This paper lacks discussion about the LoRa with rank more than 1. Although the authors leave this topic as future work, the reviewer believes that this part is important (due to the Question 2),\n3. The main theorems only discuss the cosine similarity of $u$ and $u_T$, and the author is expected to connect the cosine similarity to the generalization error.\n4. The division of sections is a bit weird. Section 1 is the most important part and should be divided into several sections. Sections 2-4, however, seem to be parts of the proof, and it may make more sense to merge them as a single section."
+            },
+            "questions": {
+                "value": "1. According to Figure 1, whether $c$ is frozen seems to have a significant effect, but the authors claim the opposite. It seems that by freezing $c$, the initial dynamics is faster than that in joint training. I was curious to see the explanations of this phenomenon as well as why the authors conclude that whether $c$ is frozen or not makes little difference.\n2. (Related to Weaknesses 1 and 2) What happens if the teacher model and the student model has different ranks in the low-rank approximation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the dynamics of two-layer network training in a student-teacher setting, focusing on the convergence of gradient descent under low-rank perturbations. The authors proposed assumptions applicable to a wide range of activation functions and designed a new algorithm that simplifies the learning problem to the optimization of the perturbation direction. On this basis, the authors prove that under mild assumptions, the student model can converge to the teacher model through multiple iterations, and can still converge effectively even when the kernel approximation fails."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper provides an analysis method that goes beyond traditional kernel approximation and lays a theoretical foundation for understanding the training dynamics of two-layer networks.\n\n2. this paper's results apply to a wide range of commonly used activation functions with strong generalisability."
+            },
+            "weaknesses": {
+                "value": "1. The problem setting of this paper is quite different from the LoRA application in practice and is closer to the theoretical work of matrix decomposition or two-layer networks in the student-teacher setting. This work only analyzes a weight matrix and its corresponding rank-1 fine-tuning matrix, without considering the mutual influence between the fine-tuning of weights in different layers, and lacks analysis of the weight LoRA within the attention layer.\n\n2. The paper lacks a comparison between its setting and the convergence results with other related studies on the convergence of two-layer networks under the student-teacher setting [1, 2, 3].\n\n3. This paper makes several simplifications (such as on $c$, $\\lambda$, and $\\xi$) in its analysis of dynamics for a single neuron, which limits its technical contribution and significance.\n\n4. The method in this paper cannot be simply and directly extended to the case of rank>1."
+            },
+            "questions": {
+                "value": "1. What are the similarities, differences, and advantages of this paper compared with existing two-layer network studies in the student-teacher setting [1, 2, 3]?\n\n2. For fine-tuning matrices with higher ranks, what modifications do it need to make our method applicable? And, can this method still guarantee convergence?\n\n[1]. Kazusato, O., Song, Y., Suzuki, T., & Wu, D. (2024). Learning sum of diverse features: computational hardness and efficient gradient-based training for ridge combinations. In Conference on Learning Theory (COLT 2024).\n\n[2]. Zhou, M., & Ge, R. (2024). How Does Gradient Descent Learn Features\u2014A Local Analysis for Regularized Two-Layer Neural Networks. arXiv:2406.01766.\n\n[3]. Xu, W., & Du, S. S. (2023). Over-parameterization Exponentially Slows Down Gradient Descent for Learning a Single Neuron. In Conference on Learning Theory (COLT 2023)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

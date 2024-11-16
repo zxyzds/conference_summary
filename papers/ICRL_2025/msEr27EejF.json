@@ -1,0 +1,209 @@
+{
+    "id": "msEr27EejF",
+    "title": "Correlated Proxies: A New Definition and Improved Mitigation for Reward Hacking",
+    "abstract": "Because it is difficult to precisely specify complex objectives, reinforcement learning policies are often optimized using flawed proxy rewards that seem to capture the true objective. However, optimizing proxy rewards frequently leads to reward hacking: the optimized reward function ceases to be a good proxy and the resulting policy performs poorly with respect to the unspecified true reward. Principled solutions to reward hacking have been impeded by the lack of a good definition for the problem. We introduce a definition of reward hacking based on correlation between proxy and true rewards for states and actions seen by a \"base policy\" that breaks down under optimization. We show that this definition captures reward hacking behavior across several realistic settings, including in reinforcement learning from human feedback (RLHF). We then show theoretically that regularization to the base policy can effectively prevent reward hacking. Our theory suggests regularizing $\\chi^2$ divergence between the policies' occupancy measures, rather than the current practice in RLHF of using a KL penalty between action distributions. We intuitively show why this type of regularization is superior, and demonstrate that it better mitigates reward hacking in practice across four realistic settings, including RLHF.",
+    "keywords": [
+        "reward hacking",
+        "reward gaming",
+        "overoptimization",
+        "occupancy measures"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "We introduce a new definition of reward hacking, which leads to better regularization strategies for preventing it.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=msEr27EejF",
+    "pdf_link": "https://openreview.net/pdf?id=msEr27EejF",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors propose a new definition for reward hacking, based on the idea that we should only care about hacking of proxy reward functions which are correlated (in terms of state-action occupancy) with the true reward function under some \"reasonable\" base policy.\n\nThey then show theoretically and empirically that regularizing reward using an occupancy measure term as opposed to the standard KL divergence leads to less reward hacking across several simple environments."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is extremely well-written.\n\nThe paper builds on past literature in a coherent and helpful way.\n\nThe paper shows experiments on interesting environments."
+            },
+            "weaknesses": {
+                "value": "While the new definition can be defended as an improvement over past definitions, it still leaves some things to be desired. Specifically:\n\n* it requires a \"natural base policy\", which might not exist in some real-world relevant settings\n* even if a natural base policy does exist, it's not obvious that the state-occupancy distribution induced by it is the one we actually care about: the optimal policy wrt the true reward might be quite different from what we think of as the \"natural\" base policy.\n* the definition only considers hacking to have occurred when looking at the *optimal* policy with respect to the proxy; in practice, we never find the optimal policy, yet hacking occurs nonetheless with intermediate sub-optimal (or locally optimal) policies\n* the paper doesn't say how to know whether, and what to do if, the (eg, learned) proxy reward function is not r-correlated with the true one."
+            },
+            "questions": {
+                "value": "## Typos\nthere is an issue with the text in Definition 4.2: I think your $\\tilde{\\mathcal{R}}$ ate something after \"policy\" and another thing before \"lower\".\n\n## Suggestions\n* line 24: \"superior\" feels a bit strong\n* line 164: the SEIR and glucose environments diagrams are too small to read/understand. just a comic of the environment would be better. the gridworld is on the edge of too small but ok\n* line 217: I would avoid using the word \"misaligned\", since that has all kinds of connotations. Consider just \"different\", \"not identical to\", etc. This is a nit: if you feel strongly about \"misaligned\", I think it's probably ok.\n* line 312: the SEIR model has been around for a long time (a quick search found stuff from 2013 but I think it's been around for significantly longer); please try to find an original reference OR change the sentence to talk specifically about that one from 2020 which you're using.\n* 369: RHS = right hand side? some readers might not know this; please define on first use\n* 402: \"widely used to prevent reward hacking in RLHF\" well, I don't think this is quite true. KL divergence, to my understanding, is primarily used to avoid instabilities in the training procedure (important in when using PPO in general, not just RLHF!). Now, it seems likely that there is a side-effect of this regularization which helps prevent hacking, but that's not the main reason (in particular: if you remove KL divergence, you don't get hacking, you just get a failure to train). Please update this sentence! (or please explain if I'm missing something).\n\n## Questions\n* copying from above, my biggest concern is this one: even if a natural base policy does exist, it's not obvious that the state-occupancy distribution induced by it is the one we actually care about: the optimal policy wrt the true reward might be quite different from what we think of as the \"natural\" base policy. The issue I see here is that if the \"actually really good\" (much better than \"reasonable base\") policies have a way different state-occupancy distribution than the base policy, then the \"check\" that the proxy reward is \"similar enough\" to the true reward over the \"reasonable\" distribution just doesn't matter: what matters is what happens near optimality. Am I missing something here?\n* why do you only consider the *optimal* policy wrt the proxy in Definition 4.2? This seems too restrictive (and you apply the regularization at all points during training, so unless I'm missing something you don't rely on this optimality?)\n* how do you expect your technique to scale?\n\n## Closing note\nI gave the paper a 5 because I think it's important that some things be changed before it's ready for publication. But I will be happy to increase the score to a 6 if my minor points are met, and possibly more if my greater fears about the utility of the technique in capturing reward hacking in different but relevant parts of state-action occupancy space are allayed. Indeed, it's possible that just acknowledging and writing about this issue would be enough: so long as it is clearly framed what this paper is and is not doing and to what extent it \"covers all the bases\" wrt reward hacking, I think it's worth publishing. It's really nicely presented and a nice idea with experiments to back it."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper addresses the issue of reward hacking in RL, where policies optimized with proxy rewards. To address this, the authors propose a novel, formal definition of reward hacking, which is based on the correlation between proxy and true rewards observed by a base policy. The paper also propose a regularization method based on $\\chi^{2}$ divergence between the policies' occupancy measures."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The concept presented, while not very complex, demonstrates impressive effectiveness.The authors support their claims with a solid mix of theoretical proofs and comprehensive experiments across various domains. Specific comparison between $\\chi^{2}$ vs. KL divergence has been provided. Intuitive examples are also provided. Additionally, intuition about \"optimizing the occupancy measure (OM) divergence between policies\" might be helpful to the whole community. Overall, this is an excellent paper with good results and insightful contributions."
+            },
+            "weaknesses": {
+                "value": "However, my primary concern lies in the assumptions underpinning their framework and the choice of metrics. Please see the specific questions below for further details."
+            },
+            "questions": {
+                "value": "## Questions about underlying assumptions\n1. Does the paper assume that both the base policy $\\pi_{base}$ and the optimized policy $\\pi$ are able to acess the same observation states?\n2. **Handling of Unobserved Variables**: In the traffic domain, several potentially impactful variables may be unobserved, as noted in [1][2]. For example, factors like the driver\u2019s expertise level [1] or weather conditions [1] are often missing in driving datasets. How does your framework address scenarios where such unobserved variables exist?\n3. During the training phase, does the agent have access to the ground truth reward value?\n4. What are major assumptions behind your framework?\n\n## Questions about metrics\n1. **Unknown True Reward**: In many practical applications, such as driving, it is challenging to properly define a true reward function [1][2]. In RLHF, the system often relies on preference pairs rather than a true reward. When the true reward is unavailable, what alternative metrics would you recommend for evaluation?\n2. **Alternative Metrics for RLHF**: For RLHF, additional metrics might be helpful, such as the winning rate (preferred vs. rejected) or a safety score. How could these be considered in your framework?\n\n## Other concerns\n1. **Similarity to Prior Work**: This paper is similar to [3], particularly in the theoretical sections and some experiments. It would be beneficial for the authors to clarify the distinctions between their proposed approach and that of [3].\n2. **$\\chi^{2}$ vs. KL Divergence**: Does $\\chi^{2}$ divergence consistently outperform KL divergence in all scenarios? Are there cases where KL divergence yields better results? If so, what trade-offs are involved? If not, could the authors outline situations where KL divergence might be more suitable?\n\n----------\n[1] Ruan, Kangrui, and Xuan Di. \"Learning human driving behaviors with sequential causal imitation learning.\" Proceedings of the AAAI Conference on Artificial Intelligence. Vol. 36. No. 4. 2022.\n\n[2] De Haan, Pim, Dinesh Jayaraman, and Sergey Levine. \"Causal confusion in imitation learning.\" Advances in neural information processing systems 32 (2019).\n\n[3] Laidlaw, Cassidy, Shivam Singhal, and Anca Dragan. \"Preventing Reward Hacking with Occupancy Measure Regularization.\" ICML Workshop on New Frontiers in Learning, Control, and Dynamical Systems."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Discrimination / bias / fairness concerns",
+                    "Yes, Privacy, security and safety"
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "details_of_ethics_concerns": {
+                "value": "Given that this paper focuses on AI alignment, fairness, safety, and privacy (the chosen primary area), with experiments involving RLHF, an ethics review is recommended. Additionally, it would be helpful if the authors could clarify how their proposed method enhances the AI system's safety and fairness."
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors provide a new definition of reward hacking based on a new definition of correlated policies. Reward hacking is a phenomenon that occurs when optimizing a proxy reward for a true reward function yields worse performance over the true reward. The definition of correlated captures proxy reward functions that match the true reward function in visited state action pairs by a base policy. In addition, the authors propose occupancy measure regularization with respect to a base policy as a method to overcome reward hacking. They show theoretically and empirically that the proposed method mitigates reward hacking."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- The paper is very well written with an astounding flow of information. \n- The authors provide a lot of great intuitive examples for the arguments they make.\n- The authors provide a wide range of experiments that show both the soundness and robustness of the claims."
+            },
+            "weaknesses": {
+                "value": "- In Theorem 5.1, there is the assumption that the state-occupancy measure of the policy is absolutely continuous with respect to the base policy. However, during training, this is not something that can be guaranteed. I suggest adding an extra discussion on how regularization also pushes toward the learned policy satisfying this assumption."
+            },
+            "questions": {
+                "value": "- The definition of correlated rewards allows for the correlated reward to deviate arbitrarily in states with zero occupancy by the base policy.  Doesn't this allow for policies that can be dangerous to still be correlated with the true reward? For example, if the base policy avoids a state with a large negative true reward but the proxy reward function assigns a very high positive reward for that state. Wouldn't this reward incentivize policies that try to visit this state and get a large negative true reward? In addition, wouldn't these kinds of proxy create policies that break the assumption in Theorem 5.1?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper critically formalizes a notion of exploitability in RL-based\nfine-tuning when the reward function is difficult or impossible to\nspecify exactly, and is instead replaced by a \"proxy\" reward. It argues\nthat reward hacking is characterized by the proxy reward admitting\noptimal policies that are in fact *not* aligned with our desired\nbehavior, and their characterization is validated with several intuitive\ncase studies. Moreover, under this characterization, the authors propose\na RL fine-tuning algorithm that prevents reward hacking by regularizing\nthe *occupancy measure* of the fine-tuned policy towards a base policy\nwith respect to $\\chi^2$ divergence, under weaker assumptions on the\nproxy reward than existing results. Moreover, the paper introduces a\npractical implementation using techniques from inverse RL (particularly\nGAIL), and demonstrate that their method performs better than baselines\nacross several fine-tuning tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This paper studies a very hot topic in the field, and in my opinion,\nprovides some very interesting insight. Most notably, I really enjoyed\nthe following entangled results in the paper:\n\n1.  Even with a proxy reward that is highly correlated with the ground\n    truth reward, reward hacking is possible;\n2.  But under such correlated rewards, it is (probably) possible to\n    prevent reward hacking by regularizing the fine-tuned policie's\n    occupancy measure (wrt $\\chi^2$).\n\nIt is also nice that their proposed framework fits nicely with that of\nIRL, allowing the authors to leverage performant IRL algorithms for RL\nfine-tuning."
+            },
+            "weaknesses": {
+                "value": "My main concerns with the paper regard lack of clarity in several\nrespects. I will outline these below, and further examples are given in\n\"Minor Issues\" and \"Questions\".\n\n1.  I find the narrative of the paper to be a little misguided. The\n    paper goes on to try to essentially axiomatize reward hacking,\n    leading to many fairly philosophical or imprecise heuristic\n    discussions (e.g. \"it's not reward hacking if the proxy is just\n    bad!\"). I think this is, in a sense, actually overcomplicating\n    things. Under the hood, I think there is a very clear and\n    uncontroversial message here:\n    1.  When fine-tuning, we want to learn a policy that is better than\n        some base policy at maximizing some ground truth reward (this is\n        hard to argue with);\n    2.  Proxy rewards that are highly correlated to the ground truth\n        reward are still \"hackable\", in the sense that policy\n        optimization with such proxies prohibits improvement over the\n        base policy (the authors show this);\n    3.  But hackable correlated proxies are not useless\u2014it is possible\n        to successfully fine-tune a base policy with such a proxy using\n        $\\chi^2$ regularization (the authors basically show this, see\n        Questions).\n2.  While interesting, I think some of the theoretical results are\n    actually fairly weak (see Questions). For instance, while the\n    theoretical results suggest regularization of the fine-tuned\n    policy's occupancy measure, they do not actually suggest that this\n    should be an improvement over action-distribution regularization.\n    Moreover, it is not actually clear that the lower bound of Theorem\n    5.1, which is the main theorem of the paper, can actually be\n    positive (in other words, Theorem 5.1 does not explicitly show that\n    fine-tuning with occupancy measure regularization can actually lead\n    to improved alignment). I suspect it is possible for the authors to\n    correct these, and that would strengthen the paper.\n3.  Overall, there are several issues with writing, such as discussion\n    of related work, redundancy in intro/background sections, and some\n    terminology, which I outlined below.\n\nMy score is mostly a reflection of weakness 2 here. I trust that the authors can fix weaknesses 1 and 3 fairly easily. Should the authors address weakness 2 (as well as the questions below), I would be happy to increase my score.\n\n## Minor Issues\n\nStiennon et al. (2020) is definitely not the first example of using KL\nregularization to an \"offline policy\". This is very commonly done in all\nof maximum entropy / entropy-regularized reinforcement learning, dating\nback at least fifteen years before this reference.\n\nWith regard to prior work in offline RL that enforce that the learned\npolicy does not veer too far away from the data distribution, the work\nof \\[2\\] is the most appropriate reference (see list of references in\nQuestions section below).\n\nThe paper starts off much too slow. The first four pages are fairly\nredundant, the isssue of formalizing the notion of reward hacking is\naddressed several times, and only very heuristic high-level ideas are\nsuggested for addressing the issue. I believe this pages can be\ncondensed a lot, which would make the paper easier to read.\n\nThe section about the desiderata for a definition of reward hacking can\nbe clarified a lot. In particular, it is not clear to me exactly what\nthe desiderata are, they should be stated very explicitly (especially\nsince the paper later refers to them in some order, e.g. \"the second\ndesideratum\").\n\nAt the bottom of page 5, $\\sigma_{\\tilde{R}}$ and $\\sigma_R$ are really\nvariances, not standard deviations (so they should probably be written\nas $\\sigma_{\\bullet}^2$).\n\nIn definition 4.2, there is a missing word \u2014 \"*reward hacking* occurs\nwhen an optimal policy $\\tilde{R}$ **lower** true reward\u2026\".\n\nIn equation (8), you use $\\phi$ on both sides of the equation (you\nshould use e.g. $\\phi'$ as the variable being minimized).\n\nWhile definition 4.2 is interesting, I don't think \"reward hacking\" is\nthe right name for the phenomenon being described in this definition.\nParticularly, this definition presents a property on a proxy reward, but\nnot on the process of fine-tuning a policy with this proxy. Indeed, one\nof the contributions presented later in the work is an algorithm that\nprevents reward hacking under proxies satisfying definition 4.2! Rather,\nthis definition presents conditions under which reward hacking *may*\noccur. As such, I believe \"reward exploitability\" is an example of a\nmore appropriate name: standard policy optimizations *can* exploit/hack\nthe reward function if you're not careful.\n\nOn line 313, \"polulation\" should be \"population\"."
+            },
+            "questions": {
+                "value": "In the introduction, you claim that the formalization of a \"good proxy\"\nhas been elusive. Hasn't this issue been addressed by the EPIC distance\n\\[1\\]? What does EPIC leave to be desired?\n\nIs there a mistake in the Table 1 cell for traffic control with state\noccupancy KL? Particularly, the standard deviation of $22.6$ is\nalarming.\n\nTheorem 5.1 is nice in the sense that it tells us that occupancy measure\nregularization (particularly w.r.t $\\chi^2$) can prevent reward hacking\neven when the proxy is correlated with the true reward. However, there\nis no claim about whether or not reward hacking can (at least in\nprinciple) be prevented with action distribution regularization. So,\nnaturally, I'm curious whether or not a similar result can be achieved\nwith action distribution regularization. The empirical results suggest\nnot, but perhaps we just haven't found the right way to do it yet. Do\nyou think it's impossible?\n\nIn the experiments, RLHF is treated as a contextual bandit problem, in\nwhich case there is no difference between occupancy measure\nregularization and action distribution regularization (because state\noccupancy is independent of actions). However, especially given the\nautoregressive nature of many existing LLMs, RLHF can also be viewed as\na sequential problem where the policy sequentially chooses individual\ntokens, and a reward is presented after the last token is chosen. How\nwould OM under this formulation of RLHF compare to AD in the \"atomic\"\ncontextual bandit case?\n\nTheorem 5.1 looks nice because intuitovely, it tells us that by\ncontrolling the $\\chi^2$ between the learned policy and the base policy,\nwe can prevent reward hacking. But(!), it is actually not entirely clear\nto me if this lower bound admits the possibility that we can actually\n*improve* upon the base policy using this regularization. Clearly, as\nthe $\\chi^2$ divergence tends to $0$, the lower bound tends to $0$. But\ncan the lower bound ever be greater than $0$?\n\n## References\n\n1.  Gleave, Dennis & Legg et al. (2021) Quantifying Differences in\n    Reward Functions, arXiv.\n2.  Fujimoto, Meger & Precup (2019) Off-Policy Deep Reinforcement\n    Learning Without Exploration, ICML."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper studies reward hacking, including in the context of reinforcement learning from human feedback. It proposes a new definition of what constitutes reward hacking and shows that a specific form of regularization can help with preventing reward hacking. In the context of RLHF, the results suggest a different regularization scheme than a standard KL penalty. The authors further argue that this type of regularization better mitigates reward hacking in practice."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper is well-written, enjoyable to read, and relatively easy to follow. It provides an interesting perspective on reward hacking through the lens of regularized RL objectives. The approach is based on a new definition of reward hacking, which assumes access to a base policy-a reference used to determine whether a proxy reward is hackable by a learning agent. This definition is intuitive, although I have some questions and comments about its expressiveness.\n\nI find the connection to the KL-regularized RLHF objective, and the corresponding result (Theorem 3.1), particularly interesting. To the best of my knowledge, this result is novel. The experimental results are extensive and, in my opinion, demonstrate the effectiveness of the proposed approach."
+            },
+            "weaknesses": {
+                "value": "Regularization to a base policy in RLHF for language models is somewhat natural, as we aim to preserve the language generation capabilities of our policy. However, as shown in Table 1, it can also lead to considerable performance loss in some environments (e.g., Pandemic Mitigation), where the base policy does not perform well. I wonder how preference-based RL (without regularization) would fare in such environments. It seems that the proposed approach is somewhat constrained, as it requires humans to provide a reliable reference point (base policy), which may be challenging in complex environments.\n \nWhile I am generally positive about this work, I think I didn\u2019t fully understand how it compares to some other well-known approaches to mitigating similar problems (e.g., techniques based on inverse reward design or risk-averse RL). I understand that these approaches do not necessarily address the same problem, but the experimental setup does not seem to include baselines that would illustrate the importance of Definition 4.2. For example, since $\\pi_{base}$ is given, why isn\u2019t IRL an adequate baseline?\n \nThe related work section covers most of the important references, but a more comprehensive literature review on RLHF could be beneficial. For example, the paper mentions:\n\n> Our regularized objective in (5) differs in two main ways from the KL regularization used in RLHF. First, our results suggest optimizing the occupancy measure (OM) divergence between policies, whereas RLHF uses the action distribution (AD) divergence. \n\nhowever, it does not explain how this connects to recent results that propose OM-based regularizers. For example, it would be useful if the authors could comment on the MDP formulation of RLHF from\n\n> Nika et al., Reward Model Learning vs. Direct Policy Optimization: A Comparative Analysis of Learning from Human Preferences, ICML 2024.  \n\nwhich in Section 7.2 introduces the KL-regularized RHF objective based on occupancy measures. \n\nOne potential drawback of the proposed approach is that it is based on estimating occupancy measures, which may be challenging to estimate for high-dimensional state spaces. It would be helpful if the authors could comment on the level of difficulty of the current environments for an RL agent. Furthermore, how accurate are the occupancy measures obtained in the experiments? It seems that it should be possible to estimate this for some of the environments.\n\nSome minor details in the experimental setup were not clear to me. The appendix states:\n\n> We primarily tuned the hyperparameters listed below in order to ensure that the proxy reward would be properly optimized and reward hacking would occur without regularization.\n\nDoes this mean that we typically don't observe reward hacking in these environments?"
+            },
+            "questions": {
+                "value": "Please see my comments and questions *Weaknesses*. I'd appreciate if the authors could respond to these comments and questions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

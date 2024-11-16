@@ -1,0 +1,229 @@
+{
+    "id": "4y4t7yOvJO",
+    "title": "POMONAG: Pareto-Optimal Many-Objective Neural Architecture Generator",
+    "abstract": "Neural Architecture Search (NAS) automates the design of neural network architectures, minimising dependence on human expertise and iterative experimentation. While NAS methods are often computationally intensive and dataset-specific, employing auxiliary predictors to estimate architecture properties has proven extremely beneficial. These predictors substantially reduce the number of models requiring training, thereby decreasing overall search time. This strategy is frequently utilised to generate architectures satisfying multiple computational constraints.\nRecently, Transferable Neural Architecture Search (Transferable NAS) has emerged, generalising the search process from being dataset-dependent to task-dependent. In this domain, DiffusionNAG stands as a state-of-the-art method. This diffusion-based method streamlines computation, generating architectures optimised for accuracy on unseen datasets without the need for further adaptation. However, by concentrating exclusively on accuracy, DiffusionNAG neglects other crucial objectives like model complexity, computational efficiency, and inference latency -- factors essential for deploying models in resource-constrained, real-world environments.\nThis paper introduces the Pareto-Optimal Many-Objective Neural Architecture Generator (POMONAG), extending DiffusionNAG through a many-objective diffusion process. POMONAG simultaneously considers accuracy, the number of parameters, multiply-accumulate operations (MACs), and inference latency. It integrates Performance Predictor models to estimate these secondary metrics and guide the diffusion gradients. POMONAG's optimisation is enhanced by expanding its training Meta-Dataset, applying Pareto Front Filtering to generated architectures, and refining embeddings for conditional generation. These enhancements enable POMONAG to generate Pareto-optimal architectures that outperform the previous state-of-the-art in both performance and efficiency.\nResults were validated on two distinct search spaces -- NASBench201 and MobileNetV3 -- and evaluated across 15 image classification datasets.",
+    "keywords": [
+        "Neural Architecture Search",
+        "Many-Objective",
+        "Pareto-Optimal",
+        "Meta-Dataset",
+        "Transferable Neural Architecture Search"
+    ],
+    "primary_area": "transfer learning, meta learning, and lifelong learning",
+    "TLDR": "POMONAG is a dataset-aware Transferable Neural Architecture Search technique for Pareto-Optimal Many-Ojective generation of state-of-the-art efficient neural architectures.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=4y4t7yOvJO",
+    "pdf_link": "https://openreview.net/pdf?id=4y4t7yOvJO",
+    "comments": [
+        {
+            "comment": {
+                "value": "Thank you for your detailed comments. We apologise for having to split the response into two, but the issues included by the reviewer were numerous, and the answers must be comprehensive. \n\nWe address the issues raised point by point:\n- Links will be added after acceptance, as their earlier inclusion would have compromised anonymity. We thank for the valuable comments on the figure and confirm that we are already working on its improvement for camera-ready.\n- We have clarified that \u2018noisy architecture\u2019 means architecture that has not yet been cleaned of noise, i.e. the matrix representation of the architecture during the diffusion process. We have added an explanatory line for this definition.\n- The equations have been numbered as required and we have added the necessary definitions, correcting the reported typo. Given the equivalence of concepts, we have renamed everything as \u2018Reverse Diffusion Guidance Process\u2019 to avoid confusion. At Line 183 we present the process equation proposed by An et al., from which POMONAG's formulation is extended - we have added a clarifying sentence. We have also specified that s_\u03b8(A_t,t) represents the diffusion step applied to architecture A at time t.\n- The decision not to use predictors for parameters, MACS and inference time in denoised architectures is motivated by greater efficiency and accuracy in direct calculation. Estimates are only used during generation, when a concrete architecture does not yet exist. The only metric necessarily estimated post-generation is accuracy, which is essential for the Pareto front and the selection of the architecture to be trained.\n- The choice of ViT-B-16 is amply justified in the appendix (lines 972-1010), demonstrating an improvement in the Spearman correlation of predictors.\n- As explained, this work fits into a well-defined and structured strand of literature on image classification (MetaD2A, TNAS, DiffusionNAG - all ICLR). The suggested metrics, while interesting, apply to different tasks and research spaces. We appreciate the suggestion for future developments.\n- We regret reading the final considerations, especially considering that the article clearly demonstrates how POMONAG represents the state of the art in accuracy in the research strand under consideration, requiring the training of a single architecture and being faster even in the generation phase than the models cited by the reviewer. The three metrics analysed serve to investigate a crucial dimensionality of the dissemination process: they capture the percentage of valid architectures generated (validity), their heterogeneity to prevent collapses (uniqueness) and diversity with respect to the training set to assess generalisation (novelty). Sub-optimal values in these metrics would compromise the entire generation process, while the positive results obtained confirm their validity.\n\nWe are deeply grateful for the reviews and the many valuable suggestions received. We believe we have clarified many potentially ambiguous points and supplemented the required information to make the camera-ready even more meaningful. With sincere gratitude, we hope that the reviewer will positively reconsider his assessment, in light of the provided demonstrations on the scientific validity, superior performance, computational efficiency and innovativeness of POMONAG."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank the reviewer for investing his time and valuable advice.\n\nThe advantages of using POMONAG over previous state-of-the-art work in generating architectures for image clustering lies in the gfeneration of more accurate architectures with less complexity in terms of parameters, macs and inference time. Furthermore, thanks to the selection on the Pareto front, it is possible to specify the willingness to take the best performing architecture in terms of secondary metrics, the one with the best balance between estimated accuracy and these metrics, or simply the architecture with the best estimated architecture.\nThe Pareto front is generated from the 256 architectures produced at the end of the POMONAG generation phase. For these architectures, parameters, macs and inference times are calculated, while accuracy is estimated. From these values, Pareto fronts are created, on which the candidate architecture is then selected to be returned according to the user's requirements - whether they want the most efficient structure, the one with the best balance, or the one that simply performs best (lines 327-355).\nIn general, the optimisation and generation process is totally many-objective, and it is a weighted sum of loss function components, as in practically all works that aggregate different optimisation constraints. So, to reiterate, generation and training are many-objective. As for the creation of Pareto fronts, these are then generated from the same architecture generation. Parameters and macs tend to be fairly consistent with them, while they deviate from inference time in terms of architecture ordering. However, it is possible to identify clusters in the sense that the architectures with fewer parameters and operations tend to be the fastest at inference. For this reason, we preferred not to implement a non-dominated sorting process, typical in NSGA algorithm families. In any case, we thank you for the very interesting and certainly timely food for thought. In the camera-ready we will make all necessary changes to make this clear.\n\nThe methods suggested for further comparisons were carefully considered, but they operate on different search spaces that would make the comparison meaningless:\nSWAP-NAS uses NASBench-101/201/301 and TransNAS-Bench-101. On NASBench201, in common with our work, Spearman correlation coefficients are reported - with similar performance to ours, albeit in a different setup - but not test accuracy.\nZiCo was evaluated on NASBench101, NATSBench-SSS/TSS and TransNASBench-101, while MeCo on NAS-Bench-101, NATS-Bench-TSS, ATS-Bench-SSS, NAS-Bench-301 and Transbench-101.\nWe had already considered including these works in our comparative analysis, but felt that the differences in the search spaces did not allow for a methodologically correct comparison.\n\nPOMONAG belongs to the TransferNAS family which is substantially different from zero-proxy methods. TransferNAS methods leverage pre-trained model knowledge to guide architecture search, identifying promising patterns and reducing exploration of suboptimal designs. While generally faster, zero-proxy methods evaluate candidates without training using metrics like FLOPs and parameter counts, potentially missing important performance characteristics that only emerge during actual training. POMONAG is distinguished also inside the TransferNAS family by the use of a diffusion process that allows for a denser stochastic exploration of the generation space due to its energy-based nature.\n\nWith regard to time complexity, we have reported the generation times for the search spaces studied and the training times for the generated models, which vary according to the priority of efficiency or performance. A direct comparison with the suggested methods would be inaccurate due to the different search spaces and hardware used.\nHowever, analysing the available data:\n- POMONAG needs 5:45 minutes on NASBench201 and 18:15 minutes on MobileNetV3\n- MeCo takes 0.08 GPU days (115 minutes) on CIFAR10 (GPU not specified)\n- SWAP-NAS, on Tesla V100, takes 6 minutes on CIFAR10/NASBench201 (+4.35% compared to POMONAG, on higher hardware)\n- ZiCo takes 0.4 GPU days (10 hours) on NVIDIA 3090, being significantly slower despite superior hardware\nThese comparisons, although approximate and estimated to the disadvantage of POMONAG, highlight the superior efficiency of our approach. We are grateful for this opportunity for analysis, which allowed us to highlight the advantages of POMONAG even over other NAS techniques not initially included in the study.\nThe diffusion process is carried out for 10000 steps, as in the reference work, and this corresponds to the achievement of convergence in a very expansive environment characterised by the steadiness of the oslution. Reducing the number of steps too much would lead to even shorter generation times, and we will certainly investigate this further. Increasing them showed no improvement in performance."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank the reviewer for his time and valuable comments.\n\nOur contributions extend significantly beyond adapting DiffusionNAG. The Many-Objective Reverse Diffusion Guidance (lines 162-215) introduces a novel framework that harmonises competing gradients, ensuring stable convergence during both training and inference - a non-trivial achievement given the complexity of balancing multiple conflicting objectives simultaneously.\nOur two-phase scaling optimisation approach (lines 324-333) represents a key theoretical advancement, introducing Pareto Front Stretching for effectively navigating solution spaces with disparate scales. This systematic exploration framework enables discovery of truly Pareto-optimal solutions.\nThese innovations yield substantial practical impacts: Performance Predictors show marked improvement (Spearman correlation from 0.687 to 0.855), whilst POMONAG achieves superior accuracy on both NASBench201 (+4.06%) and MobileNetV3 (+2.67%) with significantly enhanced efficiency (up to -90% parameters, -93% MACs). These gains, validated across 15 datasets with single training cycles, demonstrate meaningful progress towards deployable architectures.\n\n\n\nPOMONAG builds upon established Transferable NAS research for image classification, following seminal ICLR works (MetaD2A, TNAS, DiffusionNAG) that established MobileNetV3 and NASBench201 as standard benchmarks. Our validation extends significantly across 15 diverse datasets, providing thorough comparison with previous approaches and state-of-the-art DiffusionNAG.\nExploring transformer spaces like HW-GPT-Bench presents an intriguing future direction. However, our current focus remains on advancing image classification NAS, where we demonstrate substantial improvements within this well-defined research trajectory.\nThe ablation study in Appendix C rigorously demonstrates each component's independent contribution - from enhanced Performance Predictors to Meta-Datasets - validating POMONAG's innovations beyond DiffusionNAG's structure.\nDue to space constraints, we present comprehensive performance metrics in Table 5, demonstrating POMONAG's advantages across accuracy, parameters, MACs and latency. The complete Pareto front visualisations are available in Appendix B.\n\n\nWe appreciate your feedback on the paper's structure. While positively received by reviewers w9TN, s4FH and hqyM, we acknowledge room for improvement. The structure - related work, contributions, method, experiments, results and discussion - follows a format we've found effective, though we understand preferences vary.\nOur frequent DiffusionNAG references aimed to highlight POMONAG's innovations rather than repeat established foundations. As the latest TransferNAS advancement, POMONAG naturally builds upon previous work while introducing substantial novel contributions.\nWe are particularly grateful for noting the font size error caused by an uncommented /footnotesize from page 4. This technical oversight has been promptly corrected, ensuring full ICLR compliance within the 10-page limit. The camera-ready version will reflect this correction.\n\n\nRegarding scaling factors:\nThese values balance multiple objectives during diffusion. Starting from the reference value 10000, we systematically explored and calibrated ranges for secondary metrics (lines 342-346), optimising for expected accuracy on the Pareto front (lines 327-355). The impact is significant: scaling factors critically influence the Pareto front shape by shifting the sampling centroid. Given their importance, we shall provide detailed analysis in the camera-ready version.\nRegarding sampling:\nPOMONAG generates 256 Gaussian noise tensors, guided by predictors estimating multiple metrics during diffusion. After filtering inconsistent configurations, remaining architectures are evaluated for parameters, MACs and latency, forming a Pareto front that enables selection based on efficiency, accuracy/metric ratio, or peak accuracy (lines 309-325). We use original dataset splits where available, otherwise creating stratified validation sets (seed 42). Multi-objective optimisation employs Tree-structured Parzen Estimation with Hyperband pruning via Optuna's default configuration.\n\n\n\nWe sincerely appreciate your thorough review and valuable external perspective. The points highlighted have been comprehensively incorporated into the manuscript, enhancing its depth and clarity. We are particularly grateful for noting the font size error, which was immediately rectified.\nWe trust that this technical oversight significantly influenced the initial assessment. Given our thorough clarifications and responses, alongside the extensive experimental validation conducted over years of research - which aligns with and extends the standards established in previous editions of this conference - we hope you might reconsider your evaluation.\nThank you for your detailed guidance in strengthening our submission."
+            }
+        },
+        {
+            "comment": {
+                "value": "We are most grateful for the reviewer's thorough analysis and recognition of our work's quality.\n\nRegarding the Pareto Front filtering (lines 299-304), this occurs after architecture generation. For each architecture, we compute the parameters, MACs and inference latency, whilst using the predictor to estimate accuracy. From these Pareto fronts, we identify three configurations per secondary metric: the most efficient architecture (lowest metric), the most balanced (optimal accuracy/metric trade-off), and the most accurate (highest predicted accuracy). This approach provides practitioners with clear options suited to different deployment scenarios.\n\nThe foundational works - MetaD2A (Lee et al., ICLR 2021), TNAS (Shala et al., ICLR 2023) and DiffusionNAG (An et al., ICLR 2024) - were all published at ICLR and establish MobileNetV3 and NASBench201 as standard benchmarks. Whilst POMONAG builds upon this established research trajectory, we have substantially expanded the validation across a broader range of datasets to demonstrate wider applicability.\n\nOur contribution extends well beyond enhancing DiffusionNAG. A primary innovation is the formulation of Many-Objective Reverse Diffusion Guidance, which elegantly balances four distinct gradients during generation. The optimisation of these gradients presented unique challenges: the scaling factors operate across vastly different scales, whilst maintaining convergence and architectural quality. We addressed this through a novel two-phase approach (lines 324-333) optimised via Hyperband pruning.\n\nThe Performance Predictors underwent significant redesign, yielding marked improvements in Spearman correlation (from 0.687 to 0.855). The expanded Meta-Dataset properly supports multi-objective optimisation, whilst our Pareto-optimal filtering identifies three practical configurations (Acc/Bal/Eff) suited to different deployment contexts. The empirical results validate these contributions conclusively: POMONAG surpasses DiffusionNAG in both accuracy (+4.06% on NASBench201) and efficiency metrics, with remarkable reductions in parameters (90%) and MACs (93%).\n\nWe might also note that POMONAG achieves these improvements whilst requiring only a single architecture to be trained per dataset, significantly reducing computational overhead compared to prior approaches.\n\nWe trust these clarifications address the points raised and demonstrate the substantial nature of our contributions. We are grateful for the reviewer's careful consideration and hope these explanations enable a fuller appreciation of the work's merit."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces POMONAG, an extension to DiffusionNAG that applies a many-objective diffusion model to optimize neural architecture generation for many-objective optimization. By incorporating additional performance predictors for hardware efficiency metrics such as number of parameters, multiply-accumulate operations (MACs), and inference latency, POMONAG aims to provide a more balanced approach to architecture optimization across accuracy and computational efficiency. Experiments validate POMONAG\u2019s efficacy on two major CNN search spaces (NASBench201 and MobileNetV3)."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The motivation to extend DiffusionNAG to a many-objective setting is valid and POMONAG does so by incorporating both accuracy and efficiency metrics like latency and MACs, which are critical for resource-constrained environments. The paper provides extensive experimental comparisons with DiffusionNAG, including evaluations across multiple datasets and search spaces, which helps demonstrate the general applicability of POMONAG.\nBalancing the different objectives being optimized is also very important in my opinion. The authors do so by proposing a pareto front filtering and stretching subroutine."
+            },
+            "weaknesses": {
+                "value": "I have the following main concerns related to this submission, which I believe were crucial in the final decision:\n\n- **Incremental Contributions**: Although POMONAG claims to extend DiffusionNAG\u2019s capabilities by addressing more objectives, the modifications appear incremental and lack substantial theoretical advancement. More specifically, I see the adaptation of diffusion models to accommodate multiple objectives, as described in section 3.1, more as a technical modification rather than a novel conceptual framework. I would recommend the authors to reiterate over their methodology and pinpoint the main contributions of their approach.\n\n- **Experimental Evaluation**: The benchmarks that POMONAG was evaluated contain only CNN spaces. It would be beneficial for the paper if the authors would demonstrate the efficacy of POMONAG in Transformer search spaces, such as the one from HW-GPT-Bench [1]. Most importantly, in the multi-(many-)objective experiments, the proposed method is not compared to any baseline. I would recommend the authors to add baselines in their experimental evaluation and report hypervolume indicator together with the individual objective values, as well as the search time. Ultimately, I would also be interested in visualizing the pareto front plots in the main paper. As for baselines, you can find a non-exhaustive list of simple ones in SyneTune (https://syne-tune.readthedocs.io/en/latest/getting_started.html#supported-multi-objective-optimization-methods). Finally, the experiments lack a thorough ablation study that demonstrates the impact of POMONAG\u2019s unique contributions independently of DiffusionNAG\u2019s foundational structure. \n\n- **Clarity and Presentation**: The paper seems to have a somehow fragmented structure, making it challenging for readers to follow the main contributions and crucial take-away points. Equations are not thoroughly explained, and there is a heavy reliance on citations from DiffusionNAG rather than a detailed elaboration of POMONAG itself, making the paper not self-contained. One major point here, which I have also pointed out to the AC, is that the authors have used a smaller font size starting from page 4. The guidelines clearly state that the maximum page limit is 10 and that means 10 pages with the default font size, not a smaller one. I suggest the authors that in future submissions they adhere to the submission guidelines.\n\n\n-- References --\n\n[1] Sukthanker et al. HW-GPT-Bench: Hardware-Aware Architecture Benchmark for Language Models. In NeurIPS 2024 DBT"
+            },
+            "questions": {
+                "value": "Moreover, I have the following questions:\n\n- Can the authors provide more theoretical or empirical justification for the scaling factors in the Pareto Front Stretching process? How sensitive is the model to these values?\n\n- Can the authors provide more detail on the architecture sampling process, dataset splits, and hyperparameter tuning methods used in the experiments? This is particularly important for the performance predictors."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This study improved DiffusionNAG by introducing a multi-objective approach which modifies DiffusionNAG's reverse diffusion process as a reverse diffusion guidance process.  Other than accuracy, #params, MACs and inference latency are also considered in the multi-objective metrics.  The proposed method POMONAG has been tested on NASBench201 and MobileNetV3 with 15 image classification tasks, showing better performance than DiffusionNAG and a series of other methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The motivation of this study, introducing multi-objective evaluation in NAS, is commendable as a task in reality is often not just about accuracy.  Other metrics should be considered simultaneously as well.\n\nThe writing is easy to follow. \n\nIt is nice to see equations with highlights of different colours."
+            },
+            "weaknesses": {
+                "value": "**First of all**, the work claims to be on Pareto multiobjective search for architectures.  However, that point is not obvious from the paper.  \n* What are the benefits of using the proposed POMONAG?  \n* How can a Pareto front be generated and utilized? Need to explicitly demonstrate how POMONAG generates and utilizes Pareto fronts.\n* How can users select architectures from the Pareto front according to their needs or under different circumstances?  Show examples of such selection based on different priorities, for example prioritizing small-size architectures for portable devices or focusing on latency reduction etc.  \n* It seems non-dominated sorting is absent. Explain how non-dominated sorting is incorporated or can be incorporated in POMONAG.\n* In its current form, the paper reads like a combination or integration of single-objective evaluations rather than a multi-objective evaluation.  The equation of POMONAG at Line 209/210 is a linear combination of four objectives.  Please clarify if the linear combination of objectives is intended as a scalarization approach.  If so, discuss its limitations.\n--- \n**Secondly**, the performance of POMONAG appears better than DiffusionNAG and other methods shown in the paper.  However many SOTA methods, especially zero proxy methods are missing.  Their reported performance is similar or even better, for example, SWAP-NAS by Peng et al, ICLR'24, ZiCo by Li et al, ICLR'23, MeCo by Jiang et al, NeurIPS'23.\n* Include a comparison with these SOTA methods. If a direct comparison is not possible, explain why and discuss the limitations of the current evaluation.\n* Discuss how POMONAG's approach differs from or improves upon zero-proxy methods. \n\n--- \n**Thirdly**, the computational cost aspect of POMONAG is weak.  The section \"Generation and Training Time\" should be better presented.  The method requires a diffusion generation phase which takes extra time.  That itself is a disadvantage.  Also timewise, POMONAG cannot claim superiority as recent methods mentioned earlier are faster.\n* Present a detailed table comparing computational costs (including generation and training time) of POMONAG with other methods, including these zero proxy methods mentioned above.  Seemingly these methods are faster. If POMONAG is indeed slower, discuss potential optimization strategies.\n* Discuss the trade-offs between the additional diffusion generation phase and the method's performance gains.  Justify why the additional computational cost might be worthwhile.\n---   \n**Other points:**\n \nThe link at Line 091 is showing.  Also, including the code and dataset would be helpful for the assessment.\n\n--- \n\nFig 1 is not quite readable.  The figure further makes POMONAG look like three single-objective tasks combined rather than a four-objective task.\n* Improve readability, especially on the right-hand side.\n* Better illustrate the integration of all four objectives in a unified multi-objective framework if these objectives are not just simply added together (*see the first part of my comments*).\n * Provide a clearer visual representation of how POMONAG handles the trade-offs between objectives (*see the first part of my comments*).\n--- \nLine 186, the term noisy architecture is not explained.  \n* Provide a brief explanation of what \"noisy architecture\" means in this context and how it relates to the diffusion process in DiffusionNAG.\n--- \nEquations and their connection to the processes/algorithms are not numbered and not clearly explained.   \n* Number all equations for easy reference\n* Clearly label the equation at Line 183. Is this equation for the Reverse Diffusion Process? Clarify that connection.\n* Provide a brief explanation of the symbols used in this equation and other key equations.\n* Explain the purpose of transformation s_\u03b8(A_t,t).\n* Explain the exact differences between the Reverse Diffusion Process and the Reverse Diffusion Guidance Process.\n--- \nLine 280, \"Four are dedicated to the respective estimation of accuracy, parameters, MACs, and inference latency of noisy architectures during the diffusion phase. \" \n* Explain why not use these four metrics for denoised architectures as well.\n* Justify the point that the denoised architecture uses accuracy as its only metric.\n--- \n\nExplain the reason why POMONAG utilises Vision Transformer ViT-B-16 instead of other models (Line 286).\n\n--- \nIt is good to see the Spearman correlation experiment.  That is very important in NAS studies.  However, for a thorough comparison of correlation, it should be done on a set of tasks like NAS-Bench-Suite-Zero (Krishnakumar et al. NeurIPS'22).\n* Perform a similar thorough comparison comparing correlations on different tasks using different search spaces.\n--- \nIn lines 400-402, the same latex problem appeared several times, ` not ' for the left quotation marks, Accuracy, Params, MACS ... \\\n* Fix these formatting issues.\n--- \nValidity, uniqueness and novelty are nice metrics for a population of solutions but not so critical for tasks that focus on accuracy and speed.  What is the point of being excellent on these points but without good accuracy and speed?\n* Explain the significance of these three additional metrics: validity, uniqueness and novelty.\n* Show example how these measures can help improve the quality of generated architectures in POMONAG."
+            },
+            "questions": {
+                "value": "See above as the questions are mostly addressing the weakness of this paper."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper is a direct extension based on DiffusionNAG, which can deal with multi-objective optimization in NAS. These objectives include accuracy, the number of parameters, multiply-accumulate operations (MACs), and inference latency. This motivation is good and natural, and the authors expressed their work clearly, from the motivation to the experiments results. Some details need to be clarified."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper introduces the ParetoOptimal Many-Objective Neural Architecture Generator (POMONAG), extending DiffusionNAG through a many-objective diffusion process. POMONAG simultaneously considers accuracy, the number of parameters, multiply-accumulate operations (MACs), and inference latency. The experiments validate the performance of the proposed model."
+            },
+            "weaknesses": {
+                "value": "1, The multi-objective optimization problem formulation in this work can be given first, which then can be solved by the proposed weighted factors in the reverse diffusion process. But maybe the authors can consider other ways to sovle this. For example, using four single reverse diffusion process each targeting one factor, as DiffusionNAG did, then using multi-objective optimization for further trade-off may also work well.\n\n2, The theoretical analysis should be strehghen. One objective to many objective is a breakthrough, but such process needs more analysis or discussion. Current work lacks such in-depth thinking. \n\n3, Several predictors are needed in this work, but the detailed information these predictors are missing."
+            },
+            "questions": {
+                "value": "I have several questions about this work.\n\n1, How to decide the scaling factors? Since the intervals are [1000,5000], [100,500], [100,500], [100,500], and the values seesm to be integer, then the whole factor space equals 4000 * 400 * 400 * 400, which is quite huge. And the authors present one setting for NASBench201 and other experiments, respectively, so I am wondering whether there is some method or strategy to choose such factors? \n\n2, This work extends the basic motivation of DiffusionNAG, which is rather good and natural. Such extension include three more factors, including number of parameters, number of MACs, and the inference latency. But I am curious that, how about the performance of POMONAG if just considering adding one factor? \n\n3, From one factor, say, accuracy, to three more factors seems strenghening the proposed POMONAG, but my question is, the working mechanism of DiffusionNAG and POMONAG the same different? Although the two diffusion processes consider different factors, which is the obvious difference, but the analysis or discussion is important to interpret this issue."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents the POMONAG method to generate neural architectures in the multi-objective manner. Specifically, the overall framework of POMONAG is designed based on that of DiffusionNAG, in order to achieve better performance in terms of number of parameters, MACs, and inference latency beyond the accuracy. There are four key parts designed to achieve this goal, i.e., the many-objective reverse diffusion guidance, the meta-dataset, the score network and performance predictors, and the pareto front filtering and stretching. The experimental results in NAS-Bench-201 and MobileNetV3 search spaces demonstrates the effectiveness of the proposed method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1) The idea the overall framework of the proposed POMONAG method is simple and easy to understand. \n2) The details of the method and experiments are clearly stated. \n3) Generating neural architectures in the multi-objective manner is an important research topic."
+            },
+            "weaknesses": {
+                "value": "1) My major concern is about the motivation of this work. Specifically, there are four objectives considered, i.e., the accuracy, the number of parameters, MACs, and the inference latency. However, the last three objectives do not demonstrate conflict relationship. For instance, the smaller number of parameters seems certain to lead to lower inference latency. In this case, the necessity for adopting multi-objective optimization is limited. \n2) The novelty of the proposed method needs further discussion. Specifically, the proposed method seems to build on DiffusionNAG with the cooperation of the multi-objective optimization. It seems that the POMONAG is just a simple combination of these methods. More discussions in terms of the seminal contribution of POMONAG is needed. \n3) How the hyperparameters $k_{\\phi}$, $k_{\\pi}$, $k_{\\mu}$, and $k_{\\lambda}$ determined? It is suggested to provided more details in terms of the hyper-parameter study for these hyperparameters. \n4) The search cost of POMONAG is not well presented. In the pipeline of POMONAG, I think the pre-training process, the training of the score network, and the training for the performance predictors will introduce much additional search cost beyond the architecture generation. However, I cannot find any details about the overall search cost and the search cost for the above components. \n5) I am curious about why only one trained architecture is enough for POMONAG? Maybe more discussions or analysis are helpful to give more insights for this point. \n6) Lack of experimental results on more challenging tasks (i.e., the classification accuracy on ImageNet-1K). More results on such datasets are helpful to enhance the experiments."
+            },
+            "questions": {
+                "value": "Please see the weaknesses. If the concerns raised are well addressed, I am glad to increase my rating."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The work presents an extension to DiffusionNAG and incorporates multi-objective search.  Model complexity, computational efficiency, and inference latency are key measures captured through number of parameters, MACs, and latency estimation. These measures are recorded in a meta dataset for NASBench201 and MobileNetV3 with 10k and 20k architectures respectively. During search, pareto front filtering segments three regions corresponding to high accuracy, high efficiency, and best balance of the two using the auxiliary metrics from earlier. The experimental results are promising across a sufficiently diverse set of benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Strong writing, ideas are explained well and thorough\nThe experiments are presented well and results are thorough\nNovelty is presented in 2 algorithmic improvements and the contribution of a multi-objective meta dataset"
+            },
+            "weaknesses": {
+                "value": "For transferable NAS, the choice of benchmarks are interesting, TransNASBench provides a NAS dataset specifically for transferability in NAS. Exploring performance on this dataset would have been nice\nMobileNetV3 and NB201 are also fairly dated search spaces, performance in more recent search space or architecture styles (vit) should be explored\nThe specific details of the algorithmic contribution are a bit vague. How is pareto front filtering done? \nImageNet results are sparse and comparison to modern NAS methods on this benchmark are sparse"
+            },
+            "questions": {
+                "value": "How did you choose the search spaces to apply POMONAG? \nThe algorithmic contribution seems like a limited extension of DiffusionNAG. What complication arose from integrating multi-objective NAS into DIffusionNAG?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

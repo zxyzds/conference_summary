@@ -1,0 +1,164 @@
+{
+    "id": "IEs29RYxfK",
+    "title": "VisionTS: Visual Masked Autoencoders Are Free-Lunch Zero-Shot Time Series Forecasters",
+    "abstract": "Foundation models have emerged as a promising approach in time series forecasting (TSF). Existing approaches either repurpose large language models (LLMs) or build large-scale time series datasets to develop TSF foundation models for universal forecasting. However, these methods face challenges due to the severe cross-domain gap or in-domain heterogeneity. This paper explores a new road to building a TSF foundation model from rich and high-quality natural images. Our key insight is that a visual masked autoencoder, pre-trained on the ImageNet dataset, can naturally be a numeric series forecaster. By reformulating TSF as an image reconstruction task, we bridge the gap between image pre-training and TSF downstream tasks. Surprisingly, without further adaptation in the time-series domain, the proposed VisionTS could achieve superior zero-shot forecasting performance compared to existing TSF foundation models. With fine-tuning for one epoch, VisionTS could further improve the forecasting and achieve state-of-the-art performance in most cases.  Extensive experiments reveal intrinsic similarities between images and real-world time series, suggesting visual models may offer a \"free lunch'' for TSF and highlight the potential for future cross-modality research. Our code is available in the Supplementary Material.",
+    "keywords": [
+        "time series forecasting",
+        "foundation models",
+        "computer vision"
+    ],
+    "primary_area": "learning on time series and dynamical systems",
+    "TLDR": "We propose VisionTS, a time series forecasting foundation model building from rich, high-quality natural images.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=IEs29RYxfK",
+    "pdf_link": "https://openreview.net/pdf?id=IEs29RYxfK",
+    "comments": [
+        {
+            "title": {
+                "value": "Official Comment by Authors (2/2)"
+            },
+            "comment": {
+                "value": "> W6: An inference cost comparison with native time series models should also be included.\n\nThank you for the suggestion. We tested the runtime of PatchTST and DeepAR, both native time series models without pretraining, as follows.\n\n| Context len  | 1000     | 2000     | 3000     | 4000     | 1000     | 1000     | 1000     | 1000     |\n| ------------ | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- |\n| **Pred len** | **1000** | **1000** | **1000** | **1000** | **1000** | **2000** | **3000** | **4000** |\n| PatchTST     | 0.01     | 0.01     | 0.01     | 0.01     | 0.01     | 0.02     | 0.03     | 0.04     |\n| DeepAR       | 0.26     | 0.32     | 0.37     | 0.43     | 0.26     | 4.06     | 6.1      | 8.17     |\n| **VisionTS** | 0.04     | 0.03     | 0.03     | 0.03     | 0.04     | 0.04     | 0.05     | 0.05     |\n\nIf the above explanations do not fully address your concerns, we welcome your further insights. **Thanks again for your constructive comment and we look forward to your feedback.**\n\n*References*\n\n[1] Multi-patch prediction: Adapting LLMs for time series representation learning, ICML 2024.\n\n[2] A time series is worth 64 words: Long-term forecasting with transformers, ICLR 2022.\n\n[3] Time-LLM: Time series forecasting by reprogramming large language models. ICLR 2024.\n\n[4] One fits all: Power general time series analysis by pretrained lm. NeurIPS 2023.\n\n[5] SparseTSF: Modeling long-term time series forecasting with 1k parameters. ICML 2024.\n\n[6] LaMa: Resolution-robust Large Mask Inpainting with Fourier Convolutions. WACV 2022.\n\n[7] GluonTS: Probabilistic and Neural Time Series Modeling in Python. JMLR 2020."
+            }
+        },
+        {
+            "title": {
+                "value": "Official Comment by Authors (1/2)"
+            },
+            "comment": {
+                "value": "Thank you for your valuable comment. However, we kindly note that **many of your concerns are already addressed in our original manuscript**. Below are our responses to your concerns:\n\n> W1: only works for univariate forecasting\n\n- We argue that **VisionTS can work well for multivariate forecasting by using the channel independence strategy.** Many related works [1,2,3,4,5] proves that this strategy is effective and even performs better than vanilla multivariate models. Importantly, our long-term TSF benchmarks are all multivariate datasets. As shown in Table 1, VisionTS achieves highly competitive zero-shot results on this multivariate dataset.\n- For future work, one can explore encoding multivariate inputs as multichannel images for fine-tuning the MAE model, as mentioned in Section 7. However, this is beyond the scope of the current paper, which focuses on zero-shot forecasting.\n\n> W2: It doesn't make sense that MAE can perform reasonable zero-shot forecasting. \n>\n> W5: I doubt whether MAE can truly perform zero-shot time series forecasting or if it merely overfits these time series datasets.\n>\n> Q1: Why does MAE work for zero-shot learning on time series data?\n\nWe agree that understanding why MAE performs well is a key question and we have tried our best to answer it. Here's what we explored:\n\n1. **Case Study**: In Figure 2, we present an ImageNet image that displays many time series-related features, which qualitatively demonstrates that vision models trained on ImageNet can understand time series. This finding was approved by `Reviewer BBkW`.\n2. **Theoretical Study**: In Section 4.2 (Modality Analysis), we analyze the similarities between ImageNet and time series representations. This provides a solid foundation for the proposed method and has been acknowledged by `Reviewer 3mCw`.\n3. **Extensive Empirical Study**: To rule out the case that VisionTS is tailored only to a few datasets, we tested VisionTS across 43 datasets from various domains, far surpassing many existing TSF papers [1,2,3,4,5] which typically focus on fewer than 8 long-term TSF benchmarks. We argue that VisionTS does not \"overfit datasets\", since we keep both the model and the proposed hyperparameters (c and r) *frozen* for every dataset. \n4. **Beyond MAE**: We also tested LaMa [6], another visual inpainting model, and found that it still achieves strong zero-shot performance (See our `global response` for details). This suggests that the success comes from the similarity between images and time series, not just the MAE model.\n\n**As the first paper to apply vision models to zero-shot TSF, we understand your doubts and concerns.** We hope the above explanations can address them and inspire future work to explore deeper causes. If you have differing views, we welcome your further supporting evidence.\n\n> W3: The explanation of how P is selected should be provided. How is P obtained from sampling frequency and Fast Fourier Transform? Why is this the right way to select P, or is P not important for the final performance?\n\n- We would like to clarify that **we have explained how P is selected in Appendix A.2** (referenced in Line 194). In brief, we first determine a range of P based on sampling frequency and select the optimal P on the validation set. This frequency-based strategy is also employed in [7].\n- To demonstrate that P affects performance, the table below compares MSE results (averaged across four prediction lengths) with P=1 versus the original VisionTS, highlighting the importance of choosing the appropriate P.\n\n|       | VisionTS | VisionTS (P=1) |\n| ----- | -------- | -------------- |\n| ETTh1 | 0.390    | 0.840          |\n| ETTh2 | 0.333    | 0.424          |\n| ETTm1 | 0.374    | 0.660          |\n| ETTm2 | 0.282    | 0.312          |\n\n> W4: The standard deviation of the input is controlled by a hyperparameter r. While an initial explanation is given, more detailed experiments and justification should be provided for the choice of this value. Why does setting c = 0.4 perform well, aside from the experimental results?\n>\n> Q2: How do these tricks work, and why are these hyperparameters chosen aside from experimental results?\n\n- **We have conducted detailed experiments to verify our choice of hyperparameters**. Figures 7 and 8 (referenced in Line 370) show that the optimal values for both r and c are around 0.4. This value (0.4) worked well and reduced the need for further tuning on hyperparameters.\n- Additionally, **we have explained our choice of relatively low hyperparameters in the main text.** The low r prevents the forecasts from exceeding the magnitude (Line 210), and the low c ensures the number of visible patches aligns with MAE pretraining (Line 230).\n\n\n\n---\n\nTo be continued."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your positive feedback and valuable comments on our paper. Below are our responses to your concerns:\n\n> W1 (1): The scaling process is influenced by both the context length and prediction length ... which is counter-intuitive.\n\n- We agree that changing the prediction length affects performance. However, we would like to clarify that **this is also a feature of many TSF papers**. Traditional TSF models [1,2,3] require separate models for each prediction length. A long-term forecasting model typically performs differently on short-term predictions compared to a model specifically trained for short-term forecasting.\n\n> W1 (2): Since the method map any-length series to a fixed resolution, I suppose it requires the model to understand patterns of different frequency. This might be hard for a pretrained vision model. \n\n- This is an interesting point. We believe pre-trained vision models can still capture patterns at different scales. MAE pre-training includes random cropping (RandomResizedCrop) as data augmentation, which helps the model recognize patterns at various scales for a fixed resolution. Therefore, even with fixed-resolution inputs, VisionTS can capture multi-scale patterns in time series data.\n\n> W2: Should try other image inpainting models. \n>\n> Q1: I would like the authors to check if MAE is suitable for TSF.\n\n- Thank you for the suggestion. We tested another inpainting model, LaMa [4], and the results are discussed in our `global response`. VisionTS with LaMa performs similarly to Moirai (Small/Large) in zero-shot settings and outperforms other few-shot baselines. However, its performance is slightly lower than MAE\u2019s. This may be due to LaMa overfitting image-specific features during training, as noted in Section 4.2 (Scaling Analysis). We believe a more balanced Visual MAE is better suited for TSF.\n\n> W3: Why tuning on LN parameters\n\nWe followed the approach from [5], which fine-tuned only the LN parameters of the LLM for the TSF task. To verify this choice, we have compared other tuning strategies, such as full tuning, tuning MLP, attention, or bias components. As shown in Table 8, tuning the LN parameters leads to the best performance gains.\n\n**We hope these clarifications address your concerns. We look forward to your feedback.**\n\n*References*\n\n[1] A time series is worth 64 words: Long-term forecasting with transformers, ICLR 2022.\n\n[2] Are transformers effective for time series forecasting? AAAI 2023.\n\n[3] Timesnet: Temporal 2d-variation modeling for general time series analysis. ICLR 2023.\n\n[4] LaMa: Resolution-robust Large Mask Inpainting with Fourier Convolutions. WACV 2022.\n\n[5] One fits all: Power general time series analysis by pretrained lm. NeurIPS 2023."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your valuable comment. We kindly note that **most of your concerns are common in many related works published in top conferences**. Please find our responses below:\n\n> W1. limited to univariate forecasting\n\n- We argue that **VisionTS can still work well for multivariate forecasting by using the channel independence strategy.** Many related works [1,2,3,4,5] prove that this strategy is effective and even performs better than vanilla multivariate models. Importantly, our long-term TSF benchmarks are all multivariate datasets. As shown in Table 1, VisionTS achieves highly competitive zero-shot results on this multivariate dataset.\n- For future work, one can explore encoding multivariate inputs as multichannel images for fine-tuning the MAE model, as mentioned in Section 7. However, this is beyond the scope of the current paper, which focuses on zero-shot forecasting.\n\n> W2 (1) A dependency on external datasets\n\n- We would like to clarify that using external datasets to pre-train TSF models (i.e., foundation models) is a promising direction in the related works [3,4,7,8] and the focus of our paper. All of the baselines in our paper require external or internal time series datasets. Compared to them, VisionTS leverages \"free-lunch\" pre-trained vision models. This allows us to not only **avoid the need for *external* time series datasets**, but also achieve strong zero-shot performance **without training on *internal* time series datasets**.\n\n> W2 (2) Did you use EVA-CLIP?\n\n- EVA-CLIP uses additional training objectives (MIM and CLIP), making it not a pure MAE and unsuitable for VisionTS. Instead, we tested another vision model, LaMa [6]. Please refer to our global response for more details.\n\n> W3: scales with larger and more complex time series datasets\n\n- We followed [7] and tested ***43*** time series datasets, which cover a wide range of domains, data scales, and temporal patterns, making them highly heterogeneous and complex. **This is far larger than many related papers [1,2,3,4,5], which typically focus on fewer than *8* long-term TSF benchmarks or single domain (e.g., energy)**. Therefore, we argue that it is unfair to criticize our scaling efforts.\n\nWe hope these clarifications address your concerns. **Thanks again for your valuable comment and we look forward to your feedback.**\n\n*References*\n\n[1] Multi-patch prediction: Adapting LLMs for time series representation learning, ICML 2024.\n\n[2] A time series is worth 64 words: Long-term forecasting with transformers, ICLR 2022.\n\n[3] Time-llm: Time series forecasting by reprogramming large language models. ICLR 2024.\n\n[4] One fits all: Power general time series analysis by pretrained lm. NeurIPS 2023.\n\n[5] SparseTSF: Modeling long-term time series forecasting with 1k parameters. ICML 2024.\n\n[6] LaMa: Resolution-robust Large Mask Inpainting with Fourier Convolutions. WACV 2022.\n\n[7] Unified training of universal time series forecasting transformers. ICML 2024.\n\n[8] A decoder-only foundation model for time-series forecasting. ICML 2024."
+            }
+        },
+        {
+            "title": {
+                "value": "Global Comments"
+            },
+            "comment": {
+                "value": "## Global comment\n\nWe thank the reviewers for their insightful comments and constructive feedback. We're pleased that they agree our paper offers a `novel and interesting perspective` (R BBkW, R Tfqf). The paper is recognized for its `strong motivation` (R BBkW), `solid theoretical foundation` (R 3mCw), and `extensive experiments` (R 3mCw, R BBkW). The reviewers also appreciate the paper\u2019s `clarity and detail` (R 3mCw, R BBkW). **We believe that our work opens a new road to building TSF foundation models and can inspire future cross-modality research.** We value their suggestions and will incorporate all feedback into the final version.\n\nOur proposed VisionTS is initially based on a visual MAE. To explore its potential with other vision models, we also tested LaMa [1], a visual inpainting model. The MSE results (averaged across four prediction lengths) are as follows.\n\n|                               | **ETTh1** | **ETTh2** | **ETTm1** | **ETTm2** | **Average** |\n| ----------------------------- | --------- | --------- | --------- | --------- | ----------- |\n| ***Traditional baselines***   |           |           |           |           |             |\n| ARIMA                         | 0.912     | 0.516     | 0.707     | 0.405     | 0.635       |\n| Seasonal Naive                | 0.600     | 0.483     | 0.489     | 0.358     | 0.482       |\n| ***Few-shot methods***        |           |           |           |           |             |\n| TimeLLM                       | 0.556     | 0.370     | 0.404     | 0.277     | 0.402       |\n| GPT4TS                        | 0.590     | 0.397     | 0.464     | 0.293     | 0.436       |\n| ***Zero-shot methods***       |           |           |           |           |             |\n| Moirai (Small)                | 0.400     | 0.341     | 0.448     | 0.300     | 0.372       |\n| Moirai (Large)                | 0.510     | 0.354     | 0.390     | **0.276** | 0.382       |\n| **VisionTS (backbone: MAE)**  | **0.390** | **0.333** | **0.374** | 0.282     | **0.345**   |\n| **VisionTS (backbone: LaMa)** | 0.425     | 0.376     | 0.400     | 0.294     | 0.374       |\n\nImportantly, **all baselines, except VisionTS, were trained on time series datasets**. The results show that VisionTS with LaMa performs similarly to Moirai (Small/Large) in the zero-shot setting, and outperforms other few-shot models and traditional baselines. This suggests that the performance is driven by the inherent similarity between images and time series, not solely by the MAE model.\n\nWe also found that LaMa's performance lags behind MAE's. A possible reason is that LaMa may have overfitted image-specific nuanced features during training, as discussed in Section 4.2 (Scaling Analysis).\n\nNext, we will address each reviewer's concerns individually.\n\n*References*\n\n[1] LaMa: Resolution-robust Large Mask Inpainting with Fourier Convolutions. WACV 2022."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper titled \"VISIONTS: VISUAL MASKED AUTOENCODERS ARE FREE-LUNCH ZERO-SHOT TIME SERIES FORECASTERS\" introduces a approach to time series forecasting (TSF) by leveraging pre-trained visual masked autoencoders (MAEs) on natural images. The key idea is that the pixel variations in images can be interpreted as temporal sequences, which share intrinsic similarities with time series data. The authors reformulate TSF as an image reconstruction task, allowing the pre-trained MAE to perform zero-shot forecasting without further adaptation. Extensive experiments demonstrate that VISIONTS achieves superior zero-shot forecasting performance compared to existing TSF foundation models and can further improve with minimal fine-tuning. The findings suggest that visual models may offer a \"free lunch\" for TSF and highlight the potential for future cross-modality research."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The authors provide extensive experimental results across 43 TSF benchmarks, demonstrating VISIONTS's effectiveness in zero-shot and few-shot settings. \n\n2. The paper offers a theoretical analysis of the similarities between images and time series, providing a solid foundation for the proposed method. This contributes to a deeper understanding of cross-modality transferability.\n\n3. The paper is well-written, with clear explanations of the methodology, experiments, and results. The figures and tables are informative and support the narrative effectively."
+            },
+            "weaknesses": {
+                "value": "1. The current approach is limited to univariate forecasting, which may restrict its applicability in real-world scenarios where multivariate time series are common. This limitation could be a barrier to broader adoption.\n\n2. While the use of pre-trained models is a strength, it also introduces a dependency on external datasets for performance, which may not always be ideal or ethically sound. Did you use EVA-CLIP?\n\n3. The paper does not fully address how VISIONTS scales with larger and more complex time series datasets, which is a critical consideration for practical applications."
+            },
+            "questions": {
+                "value": "Please refer to weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper provides a new perspective that treating time series forecasting problems as image reconstruction problems. And directly take the pretrained MAE model to conduct such tasks. Specifically, the paper just performs segmentation, normalization and alignment to transform 1D time series data into 2D data, and predict masked tokens for TSF tasks. The results shows that this algorithm has decent performance under both zero-shot and full-shot settings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. This paper provides a novel view for TSF problems, and explain with reasonable motivations in Fig.2.\n2. The method part provides sufficient details about the proposed method, making it easy to read and follow.\n3. This paper provides experiments on a wide range of tasks to validate the proposed method."
+            },
+            "weaknesses": {
+                "value": "1. In the alignment step, the scaling process is influenced by both the context length $L$ and the prediction length $H$. It seems that the forecasted result at $L+1$ may change due to whether we will predict $L+2$ or not, which is counter-intuitive. \n\nSince the method map any-length series to a fixed resolution, I suppose it requires the model to understand patterns of different frequency. This might be hard for a pretrained vision model. It is trained only with natural images, which cannot cover drastic changes such as noises.\n\n2. If the similarity between image and TSF holds true, maybe the authors should try other image inpainting models for the TSF tasks. We may assume that thoses models can have a better performance for image reconstruction.\n\n3. In full-shot experiments, the authors decide to tune all the LN parameters. It is uncommon for the validation in vision pretrain model. Usually we either finetune the full model or only the last linear layer (e.g. linear probe). I wonder the reason that the authors prefer the LN tuning."
+            },
+            "questions": {
+                "value": "My main concerns are listed in weaknesses. Regarding these comments, I would like the authors to check if MAE is suitable for TSF."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes using MAE, a masked autoencoder pretrained on 2D images with mask modeling pretraining, as a zero-shot forecasting model for time series data. The proposed method reformulates the time series forecasting task into a reconstruction task. Experimental results show that this method can perform zero-shot forecasting and achieve state-of-the-art performance in most cases after fine-tuning."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This paper provides an interesting view of using MAE pretrained on vision tasks as a zero-shot time series forecasting model. \n- Results show that this model is better than text-based time series forecasting in zero-shot settings. \n- An interesting approach is proposed to achieve this transformation from image to text."
+            },
+            "weaknesses": {
+                "value": "- Using MAE for forecasting only works for univariate forecasting, while the more challenging and important multivariate forecasting is not supported.\n- It doesn't really make sense that MAE, which is pretrained solely on images, can perform reasonable zero-shot forecasting, as no time series information is encoded in the MAE pretraining. This work only transforms the format of time series data to make it compatible with MAE.\n- The transformation between a univariate input X and the image-like 2D matrix is unclear. The explanation of how P is selected should be provided. How is P obtained from sampling frequency and Fast Fourier Transform? Why is this the right way to select P, or is P not important for the final performance?\n- There are tricks and hyperparameters involved in aligning MAE with time series forecasting, but the explanations are unclear.\n  - The standard deviation of the input is controlled by a hyperparameter r. While an initial explanation is given, more detailed experiments and justification should be provided for the choice of this value.\n  - Why does setting c = 0.4 perform well, aside from the experimental results?\n- Given the many tricks and unclear explanations, I doubt whether MAE can truly perform zero-shot time series forecasting or if it merely overfits to these time series datasets to achieve a favorable evaluation number.\n- The inference cost comparison is only provided for these LLM-time series models, while a comparison with native time series models should also be included."
+            },
+            "questions": {
+                "value": "- Why does MAE work for zero-shot learning on time series data?\n- How do these tricks work, and why are these hyperparameters chosen aside from experimental results?- \n- For more questions, please refer to the weakness sections."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

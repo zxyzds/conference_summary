@@ -1,0 +1,191 @@
+{
+    "id": "9WYMDgxDac",
+    "title": "Sample then Identify: A General Framework for Risk Control and Assessment in Multimodal Large Language Models",
+    "abstract": "Multimodal Large Language Models (MLLMs) exhibit promising advancements across various tasks, yet they still encounter significant trustworthiness issues. Prior studies apply Split Conformal Prediction (SCP) in language modeling to construct prediction sets with statistical guarantees. However, these methods typically rely on internal model logits or are restricted to multiple-choice settings, which hampers their generalizability and adaptability in dynamic, open-ended environments. In this paper, we introduce *TRON*, a **t**wo-step framework for **r**isk c**o**ntrol and assessme**n**t, applicable to any MLLM that supports sampling in both open-ended and closed-ended scenarios. *TRON* comprises two main components: (1) a novel conformal score to **sample** response sets of minimum size, and (2) a nonconformity score to **identify** high-quality responses based on self-consistency theory, controlling the error rates by two specific risk levels. Furthermore, we investigate semantic redundancy in prediction sets within open-ended contexts for the first time, leading to a promising evaluation metric for MLLMs based on average set size. Our comprehensive experiments across four Video Question-Answering (VideoQA) datasets utilizing eight MLLMs show that *TRON* achieves desired error rates bounded by two user-specified risk levels. Additionally, deduplicated prediction sets maintain adaptiveness while being more efficient and stable for risk assessment under different risk levels.",
+    "keywords": [
+        "generative models",
+        "calibration/uncertainty",
+        "inference methods"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We propose a general framework for risk control and assessment, which creates rigorous prediction sets with statistical guarantees calibrated by two user-specified risk levels, applicable to any MLLMs supporting sampling in open-ended settings.",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-15",
+    "forum_link": "https://openreview.net/forum?id=9WYMDgxDac",
+    "pdf_link": "https://openreview.net/pdf?id=9WYMDgxDac",
+    "comments": [
+        {
+            "title": {
+                "value": "Responses to Reviewer rC7h Comments on Weakness and Questions"
+            },
+            "comment": {
+                "value": "**Response to the weakness:** Thank you for your valuable insight. TRON is applicable to various generative language models and tasks as it formulates the criterion by analyzing the output distribution of the generative model. We have evaluated TRON on the **open-book conversational QA** dataset, CoQA [1], and the **closed-book reading comprehension** dataset, TriviaQA [2], utilizing the large language model, LLaMA-3-70B-Instruct. Additionally, we employ PandaGPT-13B on the Visual Question Answering (VQA) dataset [3] for **image understanding** tasks. Empirical results have been added to Appendix H (Figure 8 and 9) in the rebuttal revision. \n\n**Response to question 1:** First, since we randomly assign calibration data and test data, the sampling anomalies will be evenly distributed in both the calibration set and the test set. We use the same number of samples for the calibration data and the test data. Although there may be sampling outliers, the nonconformity score is strictly associated with the correct response. Under the condition that the test data and calibration data are exchangeable, the final correctness coverage will not be affected, but it may lead to an increase in the final average set size. \n\nAdditionally, there will be some queries for which we cannot obtain a correct response no matter how many times we sample. We identify these as a distribution shift problem and exclude these queries. In language generation tasks, distribution shift is determined by the model. Frequency-based methods rely on the model's output distribution, and for the same question, models with different performance levels can lead to completely different output distributions. Sometimes the candidate set may include responses with various semantics, sometimes the majority in the candidate set may be correct responses, and it could even be that all answers are incorrect. \n\nFurthermore, since we can derive the minimum number of samples on the calibration set at a user-accepted risk level, we can, as prior knowledge, appropriately increase the sampling frequency on the independent and identically distributed test data to improve the accuracy of the frequency-based confidence scoring.\n\n**Response to question 2:** It is feasible under the condition of exchangeability. Based on real-time uncertainty measurements, we can exclude problems that the language model is unable to solve. Then we can set the conformal score of each calibration data point to be any number of samples that ensures the inclusion of the correct answer. At this point, we can set the number of samples for the test data to the maximum number of samples in the calibration set, which ensures that we will definitely sample a correct answer under exchangeable conditions. Then, we can use reliability assessment methods to identify high-quality responses.\n\nAdditionally, we can perform real-time uncertainty estimation within the candidate set while sampling. We can define the conformal score to be $r(X_i, Y_i)= inf\\lbrace  M_i : Y_i \\in \\lbrace \\hat y_{m}^{(i)}  \\rbrace_{m=1}^{M_i}, U(\\lbrace \\hat y_{m}^{(i)}  \\rbrace_{m=1}^{M_i})=0 \\rbrace,$ where the $U$ function value is 0, when the uncertainty in the candidate set is below the user's requirement; otherwise, it is 1. However, this depends on the performance of the uncertainty assessment method.\n\nFurthermore, We can evaluate the uncertainty in the candidate set while sampling. When the uncertainty is below a certain threshold, we check whether the sampled response is correct, thus inferring the minimum confidence level or maximum uncertainty that allows for the inclusion of a correct response in the candidate set. \n\nThank you for your valuable suggestions to improve the paper. We would like to provide responses if we have misunderstood any points of your questions, or if the reviewer would like to discuss how to improve the TRON method for broader applications.\n\n\n---\n\n### References\n\n[1] Reddy S, Chen D, Manning C D. Coqa: A conversational question answering challenge[J]. Transactions of the Association for Computational Linguistics, 2019, 7: 249-266.\n\n[2] Joshi M, Choi E, Weld D S, et al. TriviaQA: A Large Scale Distantly Supervised Challenge Dataset for Reading Comprehension[C]//Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics. 2017: 1601-1611.\n\n[3] Goyal Y, Khot T, Summers-Stay D, et al. Making the v in vqa matter: Elevating the role of image understanding in visual question answering[C]//Proceedings of the IEEE conference on computer vision and pattern recognition. 2017: 6904-6913."
+            }
+        },
+        {
+            "title": {
+                "value": "Responses to Reviewer amj3 Comments on Six Questions"
+            },
+            "comment": {
+                "value": "**Response to question 1:** Theoretically, distribution shift is primarily due to the quantile of nonconformity scores obtained from the calibration set being shifted with respect to the test distribution. In our view, distribution shift in language generation tasks is attributed to the conditional nature of language models. For example, It is possible that for a powerful proprietary model, the difficulty of dataset A and dataset B is similar. In this case, we can consider that datasets A and B satisfy the exchangeability condition for that model. However, if a language model is only suitable for the types of questions in dataset A and struggles with questions in dataset B, a distribution shift phenomenon will occur. We believe that distribution shift is determined by the language model itself, and we can achieve alignment across various distributions by weighting the nonconformity scores based on the analysis of certain model metrics. We are currently working on this. \n\n**Response to question 2:** We can retrieve specific types of calibration data based on user needs, thereby determining the quantile threshold by constraining the size of the prediction set on the calibration set to handle the test data. In this dynamic environment, the criteria for selecting calibration data are particularly important, as different evaluation criteria can lead to deviations in the exchangeability between calibration data and test data. At this point, the efficiency of data filtering and the robustness of risk control need to be balanced according to actual requirements.\n\n**Response to question 3:** Since the nonconformity score is defined to reflect how the response disagrees with the question, the evaluation of response reliability will impact the final results of risk control. As we mentioned in the last paragraph in Section 3.2 (i.e., Extensibility), the function F(\u00b7) can be any measure that reflects the trustworthiness of each response. Additionally, Table 2 in Section 4.4 shows that when we utilize semantic diversity, the average set size decreases (i.e., more efficient prediction). Relying solely on black-box methods to evaluate responses is limited, and integrating auxiliary information, such as logits-based entropy, can enhance the reliability assessment and thereby improve TRON's performance.\n\nInspired by the weakness 1 you mentioned, **we have added a comparison of the conditional performance of two measures in Section 4.4**. The table below shows that after incorporating semantic similarity information, TRON's conditional performance has significantly improved (e.g., the size-stratified miscoverage rate decreases from 0.2065 to 0.1667 on the VMME dataset.).\n\n|          | Frequency          |                 |                 | Semantic  |Diversity                 |                 |\n|----------|---------------------|-----------------|-----------------|----------------------|-----------------|-----------------|\n| **Set Size** | 1  | 2  | 3 | 1  | 2   | 3 |\n| **VMME** | 0.1788 | 0.1531 | 0.2065 | 0.1203 | 0.1667 | 0.1389  |\n| **NEXT** | 0.0900 | 0.1778 | 0.2244 | 0.1472 | 0.1763 | 0.2075|\n| **MUSC** | 0.1250  | 0.2286| 0.1830 | 0.1225 | 0.1970 | 0.1923  |\n| **MSVD** | 0.0778| 0.1222 | 0.1556 | 0.1246 | 0.1592 | 0.1875  |\n\n**Response to question 4:** When the number of samples is limited, the capability of frequency to represent response confidence will decline, as we mentioned in the last paragraph of Section 3.2 (i.e., Extensibility), which will affect the average set size (i.e., efficiency). At this point, we need to incorporate other auxiliary tools, such as external models, into the function F(\u00b7) to enhance the assessment of response reliability. However, theoretically, the risk control of the method remains guaranteed because the number of samples is consistent across all calibration and test data. \n\n**Response to question 5:** Yes, while the theoretical guarantee of TRON is rigorous, there can be minor fluctuations in practice due to finite-sample variability [1][2].\n\n**Response to question 6:** As we mentioned in the conclusion, our framework can be directly applied to various generative language models and tasks. TRON inherits the model-agnostic property of conformal prediction, and we establish reliability guarantees solely by analyzing the output distribution of the model. \n\nThank you very much for your valuable questions. Throughout the rebuttal process, we gained deeper insights into improving the quality of the paper and conducting future work. We would like to provide responses if you have any further questions. \n\n---\n\n### References\n[1] Angelopoulos A N, Bates S. A gentle introduction to conformal prediction and distribution-free uncertainty quantification[J]. arXiv preprint arXiv:2107.07511, 2021.\n\n[2] Ye F, Yang M, Pang J, et al. Benchmarking llms via uncertainty quantification[J]. arXiv preprint arXiv:2401.12794, 2024."
+            }
+        },
+        {
+            "title": {
+                "value": "Responses to Reviewer amj3 Comments on Two Weaknesses"
+            },
+            "comment": {
+                "value": "**Response to weakness 1:** Thank you for pointing out the bottleneck in risk control. Conditional coverage is a stronger property than marginal coverage, and in the most general case, conditional coverage is impossible to achieve [1][2][3]. We have checked how close our method comes to approximating it utilizing the size-stratified coverage metric (i.e., the stratified coverage at each size of prediction set) [2][4][5]. We utilize the Gemini-1.5-Pro model and set $\\alpha = \\beta = 0.1$. Empirical evaluations on four datasets indicate that the set size ranges from 0 to 3 after semantically deduplication. The results of size-stratified miscoverage rate are shown in the table below. **We have added an evaluation of conditional performance in the rebuttal revision (Section 4.4 Figure 6)**. \n\n| **Dataset\\Set Size** | **1**    | **2**    | **3**    |\n|:---------------------:|:--------:|:--------:|:--------:|\n| **VMME**             | 0.1788   | 0.1531   | 0.2065   |\n| **NEXT**             | 0.0900   | 0.1778   | 0.2244   |\n| **MUSC**             | 0.1250   | 0.2286   | 0.1830   |\n| **MSVD**             | 0.0778   | 0.1222   | 0.1556   |\n\n**Response to weakness 2:** Thank you for your valuable suggestions for improvement. The key innovation of our method is the development of a conformity score that calibrates the number of samples, which approximates the candidate set as multiple-choice options in closed-ended settings at a user-specified risk level for the first time, addressing the issues of external significance level and sensitivity in prior studies [3][5]. Then, in the second step, based on self-consistency, we use frequency to replace logits and establish the prediction set. Observing the semantic redundancy in the prediction set in open-ended settings, we conduct deduplication and employ the calibrated set size for uncertainty estimation. **As we stated in the conclusion, our method is applicable to all generative language models and tasks, and we will evaluate our method on both vision-language models (VLMs) and large language models (LLMs). Due to the slow pace of open-ended language generation tasks, we will update the experimental setup and results to the rebuttal revision as soon as possible and notify you through official comment.**\n\nWe hope these kindly address the reviewer's concerns. If there are any aspects we have overlooked or misunderstood, please let us know. We would like to provide responses if the reviewer has further questions.\n\n---\n\n### References\n[1] Vladimir Vovk. 2012. Conditional Validity of Inductive Conformal Predictors. In Proceedings of the Asian Conference on Machine Learning, PMLR.\n\n[2] Anastasios N Angelopoulos and Stephen Bates. 2021. A gentle introduction to conformal prediction and distribution-free uncertainty quantification. arXiv preprint arXiv:2107.07511.\n\n[3] Victor Quach, Adam Fisch, Tal Schuster, Adam Yala, Jae Ho Sohn, Tommi S. Jaakkola, and Regina Barzilay. 2024. Conformal language modeling. In The Twelfth International Conference on Learning Representations. \n\n[4] Bhawesh Kumar, Charles Lu, Gauri Gupta, Anil Palepu, David Bellamy, Ramesh Raskar, and Andrew Beam. 2023. Conformal prediction with large language models for multi-choice question answering. arXiv preprint arXiv:2305.18404.\n\n[5] Jiayuan Su, Jing Luo, Hongwei Wang, Lu Cheng. 2024. API Is Enough: Conformal Prediction for Large Language Models Without Logit-Access. In Findings of the Association for Computational Linguistics: EMNLP 2024."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a two step risk control based framework extending split conformal prediction method for open ended and multimodal (videoQA) tasks. The method applies a conformal score to calibrate the minimum number of responses (samples) needed to ensure coverage. This score defines the prediction set\u2019s error rate at a risk level alpha. It then refines the set using frequency or semantic similarity to identify high quality responses controlled by another risk parameter beta. The overall risk is bounded by a function of alpha and beta to provide statistical consistency guarantees using calibration, sampling and refinement steps. The paper builds upon multiple conformal risk control based methods and addresses the shortcomings with this two step method (to maintain smaller average prediction set size (APSS))  with lower risk thresholds) and applying them to multimodal videoQA setting."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper's two-step risk control methodology addresses general shortcoming of the conformal prediction method and provides statistical guarantees for error rates, increasing the reliability of MLLM responses.\n- Since open ended tasks are more challenging due to large number of possible generation, this method (two step approach, use of semantic similarity) seems to dynamically adapt well to provide flexible prediction set sizes for complex and generic generative scenarios (although we need more experimental validation). Error stays within bounds even after filtering step (bounded by alpha + beta - alpha.beta)\n- As shown is Figure 3, deduplication of the semantically similar responses helps with more stable error rates and smaller prediction sets. Experiments suggest that semantic diversity can create smaller, more efficient prediction sets (lower APSS) without compromising on accuracy (EER stays within limits)."
+            },
+            "weaknesses": {
+                "value": "- Authors already mention under limitations that guarantees are not conditional to individual data points but marginal over the test set. With this limitation, it may still be a bottleneck where risk compliance guarantees are needed for critical applications requiring more stringent guarantees and/or compliance requirements.\n- more open-ended evaluations and experiments on the open-ended datasets would have shed more light on the strengths and weaknesses of the methods (like Fig 4b). This is a key innovative strength of the method to address open-ended tasks (unlike MCQ) and adoption of this method will depend heavily on understand the strengths of this method in more open-ended generation tasks."
+            },
+            "questions": {
+                "value": "- Do you foresee any major modifications needed for TRON to control risk in scenarios involving distribution shifts, where calibration and test distributions differ?\n- Would it be feasible to incorporate dynamic adjustments to prediction set sizes based on task difficulty or user preferences in real time? Are there challenges with balancing efficiency and robustness in such a dynamic setting?\n- Could access to model internals like logits help improve TRON's performance?\n- Could reliance on frequency-based nonconformity scores lead to biases in the types of responses included in the prediction set, especially in cases where the model\u2019s sampling is limited?\n- Have you observed any variance in EER across different model architectures or response generation and sampling methods (for example, cases where EER can go outside the bounds set by alpha and beta)\n- How easy is it to generalize this approach beyond VideoQA to other open-ended tasks? Are there any major limitations or requirements for generalization?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a two-step framework, TRON, for assessing and controlling risk in MLLMs, specifically targeting VideoQA tasks. The framework consists of: (1) Sampling Step: This step involves calibrating a conformal score that defines the minimum number of response samples needed to ensure the inclusion of acceptable responses within a certain risk level. (2) Identification Step: In this phase, a nonconformity score based on self-consistency theory identifies high-quality responses within the candidate set. This score accounts for model uncertainty by estimating reliability via response frequency, introducing another risk level to statistically control errors.\n\nThe authors carry sufficient experiments on four VideoQA datasets with eight MLLMs and demonstrate that TRON achieves desired error rates within the specified risk bounds. The study further highlights TRON\u2019s adaptability and stability through deduplicated prediction sets that provide more efficient and robust uncertainty estimation across various risk levels.\n\nThe authors address limitations in existing SCP methods, which either modify outputs to ensure factuality, rely on internal token sequence logits, or restrict applications to multiple-choice settings. This new approach is versatile, applicable to both open-ended and closed-ended VideoQA tasks, and operates independently of internal model outputs."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. TRON\u2019s two-step approach combines conformal scores and self-consistency theory to establish a flexible and robust risk assessment framework for MLLMs, particularly in open-ended scenarios, where traditional SCP methods fall short.\n2. The paper presents extensive experiments across four VideoQA datasets and eight MLLMs, showcasing TRON's effectiveness and consistency in different VideoQA tasks.\n3. By avoiding reliance on model logits, TRON is adaptable for API-restricted MLLMs, expanding its usability in various practical applications."
+            },
+            "weaknesses": {
+                "value": "I raise the concern that although TRON is evaluated on diverse datasets, it primarily focuses on VideoQA tasks. Could it be tested on additional multimodal tasks to enhance the generalizability of its risk management capabilities?"
+            },
+            "questions": {
+                "value": "1. How does TRON handle outliers in response sampling that may disproportionately affect the frequency-based confidence scoring?\n2. Could TRON\u2019s conformal score be further adapted to dynamically adjust the sampling size based on real-time uncertainty measurements?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper deals with risk control and assessment for MLLMs. To address the issues of existing work relying on the internal model logits and working in the multiple-choice setting, the authors propose a TRON, a two-step framework for MLLMs supporting sampling for both open-ended and close-ended scenarios. TRON allows controlling error rates by sampling response sets of minimum size and identifying high-quality responses using self-consistency theory. The experiments on VideoQA demonstrate the efficacy on eight MLLMs."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is easy to follow and understand.\n- The proposed method extends SCP to open-ended scenarios by estimating the confidence from frequency."
+            },
+            "weaknesses": {
+                "value": "- The confidence estimation in Step 2 relies on the prediction of another model(e.g. DeBERTa-large-mnli). Then it should be at least discussed on the reliability as the semantic classifier. Otherwise, it makes the identification of risk control less convincing.\n\n- It is unclear how the silence percentage is conducted on the audio, and how the conclusion \u2018introduce audio modality enhances the confidence level\u2019 (Line371-372) is made. It is shown in Fig. 4 that increasing SPs leads to higher APSS. Also, introducing audio modality seems to only improve VideoLLaMA with SP <50%.   \n\n- It seems that the proposed method is general to LLMs as well. How does the proposed method work for LLMs for both open-ended and close-ended scenarios? The paper claims this advantage but shows no experimental results. This would make the paper more impactful.\n\n- How is the proposed method compared with existing methods for LLMs on such as MCQA? Such a comparison would make the paper more comprehensive."
+            },
+            "questions": {
+                "value": "- It seems that the best practice of the ratio of the calibration and test set is model-dependent. Is there any insight on the ratio selection when applied to different MLLMs?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents **TRON**, a two-step framework designed for **risk control and assessment** in multimodal large language models (MLLMs), particularly for **Video Question Answering (VideoQA)** tasks. Addressing challenges in dynamic and open-ended environments, TRON leverages **Split Conformal Prediction (SCP)**, introducing a **conformal score** for sampling response sets and a **nonconformity score** for identifying high-quality responses. Through experiments on several VideoQA datasets, TRON demonstrates the ability to achieve desired error rates across various **user-specified risk levels**. It is also noted for exploring the concept of **semantic redundancy** in prediction sets as an evaluation metric, an area not previously investigated in open-ended contexts."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. **Innovative Framework**: The introduction of TRON, a two-step risk control and assessment framework, contributes significantly to the field of MLLM evaluation in both open-ended and closed-ended VideoQA tasks. Its flexibility in applying conformal prediction in open-ended contexts is commendable.\n\n2. **Novel Conformal and Nonconformity Scores**: The paper proposes a unique conformal score for setting the minimum sample size in open-ended tasks and a nonconformity score based on self-consistency theory. These scores provide a rigorous approach to risk control.\n\n3. **Addressing Uncertainty with Redundancy Analysis**: The evaluation of **semantic redundancy** in open-ended settings introduces a new angle to uncertainty measurement, providing a promising metric that complements traditional accuracy.\n\n4. **Comprehensive Experimental Evaluation**: The experiments span multiple datasets, risk levels, and different types of MLLMs, offering a thorough assessment of TRON\u2019s effectiveness in diverse conditions."
+            },
+            "weaknesses": {
+                "value": "1. **Limited Discussion of Practicality and Adaptability**: While TRON provides theoretical guarantees, the practical aspects, such as computational overhead and applicability in real-world scenarios, could be discussed in greater depth.\n\n2. **Insufficient Baseline Comparisons**: The paper lacks a comparison with other standard risk control methods or frameworks that may be relevant, particularly in closed-ended settings or previous SCP applications in MLLMs.\n\n3. **Complexity in Method Presentation**: Some sections of the methodology, particularly the derivation of the conformal and nonconformity scores, lack clarity, which could challenge readers unfamiliar with SCP.\n\n4. **Inconsistent Evaluation Details**: Although the experiments are extensive, details on some evaluation metrics, like APSS and their implications for different risk levels, could be better explained. The choice of models and how each metric was applied in open-ended versus closed-ended settings was also not consistently clarified."
+            },
+            "questions": {
+                "value": "1. **What is the expected computational impact** of using TRON in large-scale applications or real-time risk assessment tasks? Could you provide a more detailed explanation or metrics regarding the processing time required for each step?\n\n2. **Baseline Method Comparison**: Have you considered comparing TRON with simpler risk control baselines? For instance, would a heuristic-based risk control method suffice for certain types of tasks in closed-ended VideoQA? If not, could you clarify how TRON performs specifically better in such cases?\n\n3. **Semantic Redundancy in Open-Ended Tasks**: How does the semantic redundancy analysis handle responses that may be lexically distinct but only partially semantically equivalent? Could this approach potentially overlook responses with subtle but important semantic differences?\n\n4. **Alternative Conformal and Nonconformity Scoring Methods**: Could the proposed conformal and nonconformity scores be further enhanced by alternative methods, such as clustering-based or confidence-based approaches beyond self-consistency theory? If so, what would be the implications for TRON\u2019s current framework?\n\n5. **Additional Real-World Validation**: Have there been any attempts to validate TRON in real-world or industry-specific VideoQA tasks, possibly in collaboration with industry partners? If so, could you share any preliminary insights on its practical performance and potential adaptations? If not, do you plan to include such validation in future work?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

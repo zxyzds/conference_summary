@@ -1,0 +1,214 @@
+{
+    "id": "WG7GzGx3G9",
+    "title": "Rotated Runtime Smooth: Training-Free Activation Smoother for accurate INT4 inference",
+    "abstract": "Large language models have demonstrated promising capabilities upon scaling up parameters. However, serving large language models incurs substantial computation and memory movement costs due to their large scale. Quantization methods have been employed to reduce service costs and latency. Nevertheless, outliers in activations hinder the development of INT4 weight-activation quantization. Existing approaches separate outliers and normal values into two matrices or migrate outliers from activations to weights, suffering from high latency or accuracy degradation. Based on observing activations from large language models, outliers can be classified into channel-wise and spike outliers.\nIn this work, we propose Rotated Runtime Smooth (**RRS**), a plug-and-play activation smoother for quantization, consisting of Runtime Smooth and the Rotation operation. Runtime Smooth (**RS**) is introduced to eliminate **channel-wise outliers** by smoothing activations with channel-wise maximums during runtime. The Rotation operation can narrow the gap between **spike outliers** and normal values, alleviating the effect of victims caused by channel-wise smoothing.\nThe proposed method outperforms the state-of-the-art method in the LLaMA and Qwen families and improves WikiText-2 perplexity from 57.33 to 6.66 for INT4 inference.",
+    "keywords": [
+        "Large language model",
+        "Quantization",
+        "INT4 inference"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=WG7GzGx3G9",
+    "pdf_link": "https://openreview.net/pdf?id=WG7GzGx3G9",
+    "comments": [
+        {
+            "comment": {
+                "value": "Thanks for acknowledging our contribution! We are pleased to explain the overhead brought by Runtime Smooth.\n\nSection 4.5 has discussed the runtime overhead and Figure 6 shows that Runtime Smooth would bring negligible overhead compared with the original A4W4 per-channel setting. The 'Tops' on the y-axis represents the elements processed each second, which can reflect the runtime overhead.\n\nThe complete efficiency metrics are listed below:\n## A4W4 Per channel Quantization (QuaROT)\n| bsz  | hidden_dim |  CPU Time  |  GPU Time  |  Elem/s  |\n|------|------------|------------|------------|----------|\n|   16 |       4096 | 104.216 us |  90.830 us |   5.911T |\n|   32 |       4096 | 103.904 us |  91.001 us |  11.799T |\n|   64 |       4096 | 107.656 us |  93.930 us |  22.863T |\n|  128 |       4096 | 106.869 us |  93.981 us |  45.700T |\n|  256 |       4096 | 121.862 us | 109.621 us |  78.361T |\n|  512 |       4096 | 149.080 us | 135.876 us | 126.438T |\n| 1024 |       4096 | 188.206 us | 174.834 us | 196.528T |\n| 2048 |       4096 | 270.019 us | 255.065 us | 269.419T |\n| 4096 |       4096 | 432.151 us | 419.955 us | 327.271T |\n\n## A4W4 Per channel Quantization + Runtime Smooth (Ours)\n| bsz  | hidden_dim |  CPU Time  |  GPU Time  |  Elem/s  | \n|------|------------|------------|------------|----------|\n|   16 |       4096 | 105.165 us |  93.437 us |   5.746T |\n|   32 |       4096 | 110.476 us |  96.535 us |  11.123T |\n|   64 |       4096 | 110.984 us |  97.432 us |  22.041T |\n|  128 |       4096 | 110.927 us |  95.742 us |  44.860T |\n|  256 |       4096 | 129.905 us | 114.573 us |  74.973T |\n|  512 |       4096 | 151.253 us | 139.174 us | 123.442T |\n| 1024 |       4096 | 192.143 us | 179.820 us | 191.079T |\n| 2048 |       4096 | 270.809 us | 258.284 us | 266.061T |\n| 4096 |       4096 | 437.859 us | 424.716 us | 323.602T |\n\n\n## A4W4 Sub channel Quantization (ATOM)\n| bsz  | hidden_dim |  CPU Time  |  GPU Time  |  Elem/s  | \n|------|------------|------------|------------|----------|\n|   16 |       4096 | 104.334 us |  92.876 us |   5.781T |\n|   32 |       4096 | 106.628 us |  93.434 us |  11.492T |\n|   64 |       4096 | 108.771 us |  96.223 us |  22.318T |\n|  128 |       4096 | 109.460 us |  96.358 us |  44.573T |\n|  256 |       4096 | 127.548 us | 115.727 us |  74.226T |\n|  512 |       4096 | 157.194 us | 143.706 us | 119.549T |\n| 1024 |       4096 | 202.100 us | 188.224 us | 182.547T |\n| 2048 |       4096 | 293.830 us | 279.653 us | 245.731T |\n| 4096 |       4096 | 493.411 us | 475.318 us | 289.152T |\n\nHope the above explanations are helpful. We are pleased to have further discussion and are expecting your positive feedback."
+            }
+        },
+        {
+            "comment": {
+                "value": "We appreciate the recognition of our contributions. We are delighted to explain the questions and make corresponding adjustments in the final version.\n\n**The meaning of Figure 1**: We present Figure 1 to point out the problem not solved by the existing methods - SmoothQuant.\n(a) SmoothQuant relies on a pre-computed smoothing scale from the calibration set. It would fail when faced with out-of-distribution (OOD) samples, whose channel-wise maximum values cannot match the pre-computed ones.\n\n(b) Even when addressing the unmatched problem by computing the smoothing scale online, SmoothQuant still fails for INT4. The reason is that SmoothQuant has to migrate the outlier of activation to weights, making quantization for weight unbearable.\n\n(c) Addressing the above problems, we find that the channel-wise smoothing method is still bounded by the spike outliers. The spike outliers have relatively small elements within the same channel. Hence, applying channel-wise smoothing would make those elements zero and cause the loss of information.\n\nFor \u201cit is unclear what the value of s represents (in relation to the equations in the text) and how exactly it reduces channel-wise outliers\u201d, we have explained it in lines 151\u2013153. s denotes the smoothing scale. It migrates the channel-wise outlier from activation to weight, tending to balance the quantization difficulty between activation and weight. We will make it more clear in Figure 1 for better understanding.\n\nFor \u201ceffectively resolves the victim issue caused by spike outliers.\u201d We claim that the victim effect is natural for smoothing-based methods (lines 162\u2013164). And it motivates us to integrate rotation operations to address the spike outliers. Thanks for your suggestions. It is valuable to clarify the relationship between the victim issue and smoothing-based methods in the final version.\n\n**Description of the reorder process and the meaning of Figure 4**: The reorder process is to rearrange the channels of the weight and activation correspondingly, where the final result is equivalent. Specifically, the operation is defined as:\n\nY = X @ W^T = \\sum_{i=1}^{K} X_i @ W_i^T\n\nwhere X_i \\in R^{n \\times 1} and W_i \\in R^{m \\times 1} represent the \\( i \\)-th channel of  X  and W , respectively.  K  denotes the total number of channels. \n\nThe activations and weights are rearranged and represented as X'  and W'. Hence, given that X'_i = W'_i, the final result remains consistent. We will provide further clarification in the final version.\n\nFor the pipeline of Runtime Smooth, we have discussed it in sections 3.1 and 3.2. And we will make it more clear in the final version.\n\n**Why not lower quantization precision**: It is a good question. Quantization can be applied to weights and activations for different purposes. For weight-only quantization, it is to reduce the model size and I/O cost. To further accelerate inference, we should apply quantization to both weights and activations and utilize low-precision multiplication kernels, e.g., 8-bit for Hopper and 4-bit for Blackwell. For lower precision activation, it suffers from a heavy accuracy drop and has no gain in acceleration since it is not supported by the hardware. Moreover, the lower precision multiplication kernels are faced with numerical overflow and underflow problems. Hence, we do not apply lower precision quantization to activation. We have discussed related information in Lines 36-40.\n\nFor the mentioned low-bit quantization, e.g., one-bit LLM, they focus on weight-only quantization. Whereas our proposed method focuses on activation smoothing.\n\n\nHope the above explanations are helpful. We are pleased to have further discussion and are expecting your positive feedback."
+            }
+        },
+        {
+            "summary": {
+                "value": "A plug-and-play quantization method based on runtime smoothing and the rotation operation of activations has been proposed. Runtime smoothing is responsible for eliminating channel-wise outliers, while the rotation operation mitigate the gap between spike outliers and normal values, resulted by channel-wise smoothing. Experimenting with INT4 inference on different LLMs shows that the proposed method can reduce the perplexity compared to other approaches."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Combining two exiting ideas in the Quantization literature to overcome both channel-wise and spikes outliers\n- Comprehensive experiments with 3 different LLMs, including LLaMA, Qwen, Mixtral and Mistral models on WikiText-2 perplexity"
+            },
+            "weaknesses": {
+                "value": "Some notations need to be corrected. For example,\n- Line 168: identity matrix and number 1 should be distinguished. $|.|$ the norm needs to be determined. \n- Line 175: $absmax$ ---- > $abs(\\max)$\n- Equation (1): $\\mathrm{X_j}$ needs to be defined as the columns of matrix $\\mathrm{X}$.\n- Equation(2): $/$ is not a valid operation for matrices. You need to write the formula as a multiplication with a diagonal matrix.\n- line 214: The condition needs to be re-written: $s_j$ cannot be taken out of the sum.\n\nAnother issue is that the proposed method has been only tested for the  WikiText-2 perplexity. Can the approach is applicable for other modalities and tasks. For instance, ASR, speech translation, Image understanding, etc.\n\nThere is only a small improvement over QuaRot approach. I am wondering if your results are statistical significant?"
+            },
+            "questions": {
+                "value": "Please see my comments above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a quantization method for LLMs, utilizing a smoothing operation during runtime to mitigate the issue of spike outliers and normalize values. Experiments conducted under INT4 settings validate the effectiveness of this method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. The paper is clearly structured, making it easy to follow.\n2. The method\u2019s motivation is substantiated by experimental results, lending it credibility."
+            },
+            "weaknesses": {
+                "value": "1. **Figure 1 is confusing and hard to interpret.** The differences between panels (a) and (b) are unclear, as they are on completely different scales despite both sharing the same $ W $ and $ X $. Additionally, have you quantized $ \\hat{X} = X \\text{diag}(s)^{-1} $? The elements in $ \\hat{x} $ appear to be integers, though they should be floats.\n\n2. **Some terms and phrases are difficult to understand.** For instance, the caption for Figure 2(c) uses the phrase \"channel-wise consistency\" without providing any explanation, making it hard to grasp. Similarly, in point (1), what exactly is meant by \"unmatched scale\" in Figure 1?\n\n3. **The motivation closely resembles prior work.** For example, DuQuant [1] also begins by addressing layers with massive outliers (in this paper, it is named as \"spike\") and tackles both massive and normal layers. Similarly, the method in [2] addresses large activation outliers and provides more analysis on this topic than the present paper.\n\n4. **Some claims lack theoretical or experimental support.** For instance, the claim that \"smoothing scales depending on the calibration set are prone to being unmatched with online activations\" would benefit from experimental results demonstrating the likelihood of such a mismatch.\n\n5. **Some explanations are too brief.** For example, the term \"reorder\" is mentioned without much elaboration, described only as \"reordering the activations and weights according to the magnitude of smoothing scales.\"\n\n6. **The method lacks clarity in its description.** In Equation 3, $ \\hat{X} $ and $ \\hat{W} $ appear to be in INT4 format, while $ s_i $ is a float (assuming this is correct, as the authors do not specify). How are these terms compatible for multiplication? A DeQuantize operation may need to be included somewhere in Equation 4.\n\n7. **The ablation study feels incomplete.** The method employs several components\u2014reordering, online smoothing, etc.\u2014but the impact of each isn\u2019t fully explored.\n\n8. **The performance is underwhelming.** The proposed method does not appear to outperform SpinQuant [3] or DuQuant [1], even though it uses online quantization, whereas SpinQuant and DuQuant are offline methods.\n\nMinors: \n1. In Equation 4, $ c_{i,j} $ should be $ s_{i,j} $.\n\n[1] Lin, H., Xu, H., Wu, Y., Cui, J., Zhang, Y., Mou, L., ... & Wei, Y. (2024). DuQuant: Distributing outliers via dual transformation makes stronger quantized LLMs. *arXiv preprint arXiv:2406.01721*.  \n\n[2] Yang, J., Kim, H., & Kim, Y. (2024). Mitigating Quantization Errors Due to Activation Spikes in GLU-Based LLMs. *arXiv preprint arXiv:2405.14428*.  \n\n[3] Liu, Z., Zhao, C., Fedorov, I., Soran, B., Choudhary, D., Krishnamoorthi, R., ... & Blankevoort, T. (2024). SpinQuant\u2014LLM quantization with learned rotations. *arXiv preprint arXiv:2405.16406*."
+            },
+            "questions": {
+                "value": "See Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper extends SmoothQuant [Xiao 2023] by:\n - Performing Quip-like [Tseng 2024] rotation before activation smoothing;\n - Obtaining smoothing scale in runtime and not merging it into weights;"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper is generally well-written, with a comprehensive ablation study (RRS vs RS and RRS vs SmoothQuant) demonstrating the effectiveness, which is well motivated by the preliminary section."
+            },
+            "weaknesses": {
+                "value": "The paper lacks an evaluation on the clock-time (instead of the operation count) overhead introduced by the method. This is a concern given that the method determines activation smoothing scale during runtime."
+            },
+            "questions": {
+                "value": "See Weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors were the first to highlight that channel-wise and spike outliers cause unnecessary distributional expansion in the quantization of large language models (LLMs).\n\nThe authors proposed a concise and effective technique called Rotated Runtime Smooth, which reduces these outliers to ensure that the activation distribution for LLM quantization remains compact.\n\nThe authors functionally explained, along with the methodology, how Runtime Smooth addresses channel-wise outliers and Rotated Smooth effectively handles spike outliers.\n\nThe authors demonstrated effective performance improvements across various LLM models using this approach."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors focused on addressing channel-wise and spike outliers for the first time, which highlights a novel problem-solving approach and demonstrates significant performance improvements.\n\nThe methodology of Rotated Runtime Smooth (RRS) is simple, intuitive, and provides a clear and straightforward explanation of how it addresses each issue effectively.\n\nBy making their code publicly available, the authors have supported further research and made a valuable contribution to the ICLR community."
+            },
+            "weaknesses": {
+                "value": "The explanation of the methodology is insufficient: For example, in Figures 1 and 4, which aim to explain Runtime Smooth, it is difficult to gain a proper understanding. The main text also lacks adequate explanation of these figures.\n\nFor instance, in Figure 4, while the activation and weight reorder process for Runtime Smooth is presented, there isn\u2019t enough explanation about why this process does not alter or distort the final result. Similarly, in Figure 1, it is unclear what the value of s represents (in relation to the equations in the text) and how exactly it reduces channel-wise outliers and effectively resolves the victim issue caused by spike outliers.\n\nThese examples highlight the need for a more detailed and clear description of the methodology, possibly in the appendix. This would help ensure that readers can thoroughly understand the method. While the high-level intuition is conveyed, the reproducibility of the method should be clearly delivered to readers through the paper itself, without relying on the availability of the code.\n\nIt is essential to discuss why this study is limited to INT4. The limitations and advantages should be clearly articulated. For example, there is no comparison with recent trending quantization techniques, such as One-bit LLM. A thorough investigation of related work is necessary, and efforts should be made, at least indirectly, to demonstrate the applicability and effectiveness of the proposed method in relation to these latest quantization techniques. https://arxiv.org/abs/2310.11453\n\n======\n\nAssuming that the above points are adequately addressed, I will start with a borderline or higher score. However, if it is determined that these points are not sufficiently reflected, or based on the overall opinions of other reviewers or AC, I will consider adjusting my final score."
+            },
+            "questions": {
+                "value": "Please refer to my comment for Weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposed a quantization technique designed to address outliers during Large Language Model (LLM) quantization, particularly for aggressive scenarios like W4A4 quantization. The method employs two steps: 1) mitigating channel-wise outliers through rotation, and 2) implementing online smoothing to further handle spike outliers. The authors demonstrate promising accuracy results across several benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The authors provide a comprehensive analysis of activation distribution patterns, offering well-reasoned solutions for each identified challenge.\n- They proposed a training-free approach that outperforms existing training-based methods on some benchmarks, reducing engineering complexity and showing potential for practical applications in industry scenarios."
+            },
+            "weaknesses": {
+                "value": "- Limited novelty: The core methodology is primarily based on existing approaches like [Smooth quantization](https://arxiv.org/abs/2211.10438 ) and [QuaRot](https://arxiv.org/abs/2404.00456 ), while the reordering technique shows overlap with existing research such as [ATOM](https://arxiv.org/abs/2310.19102) and [LLM.int8()](https://arxiv.org/abs/2208.07339).\n- The experimental evaluation is limited in scope, focusing on common sense QA tasks. To better validate the method's effectiveness, the paper would benefit from:\n    - More comprehensive comparisons with training-based methods like [SpinQuant](https://arxiv.org/abs/2405.16406) on more complex tasks, like [MMLU](https://arxiv.org/abs/2009.03300)\n    - Detailed kernel performance comparisons with related research like [Qserve]( https://arxiv.org/abs/2405.04532), and [ATOM](https://arxiv.org/abs/2310.19102)\n\n- Several aspects of the paper's presentation could be improved:\n    - Figure 1: Show the challenges of existing methods, suggest adding visual explanations demonstrating how the proposed RRS technique addresses these challenges\n   - Figure 1(b): Highlight the activation grouping methodology in the diagram\n   - Figure 2(b): Provide a more detailed explanation of the probability metrics\n   - Figure 6: Add clear y-axis labels and justify the unusual batch size choices (>1000).\n   - Figure 9: Verify if the orange label represents `u > 8` instead of `u < 8`"
+            },
+            "questions": {
+                "value": "Please refer the last item of Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

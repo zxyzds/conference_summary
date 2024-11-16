@@ -1,0 +1,170 @@
+{
+    "id": "MRPCIForrE",
+    "title": "Towards Understanding Multi-Round Large Language Model Reasoning: Approximability, Learnability and Generalizability",
+    "abstract": "Recent advancements in cognitive science and multi-round reasoning techniques for Large Language Models (LLMs) suggest that iterative thinking processes improve problem-solving performance in complex tasks. Inspired by this, approaches like Chain-of-Thought, debating, and self-refinement have been applied to auto-regressive LLMs, achieving significant successes in tasks such as mathematical reasoning, commonsense reasoning, and multi-hop question answering. Despite these successes, the theoretical basis for how multi-round reasoning enhances problem-solving abilities remains underexplored.\nIn this work, we investigate the approximation, learnability, and generalization properties of multi-round auto-regressive models. We show that Transformers with finite context windows are universal approximators for steps of Turing-computable functions and can approximate any Turing-computable sequence-to-sequence function through multi-round reasoning. We extend PAC learning to sequence generation and demonstrate that multi-round generation is learnable even when the sequence length exceeds the model's context window. \nFinally, we examine how generalization error propagates across rounds, and show how the aforementioned approaches can help constrain this error, ensuring outputs stay within an expectation boundary. This work sheds light on the systemic theoretical foundations of multi-round sequence learning and reasoning, emphasizing its role in inference complexity.",
+    "keywords": [
+        "Large Language Model",
+        "Auto-regressive Language Model",
+        "Next-token Prediction"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=MRPCIForrE",
+    "pdf_link": "https://openreview.net/pdf?id=MRPCIForrE",
+    "comments": [
+        {
+            "summary": {
+                "value": "In the paper, the authors aim to show that Transformers are universal approximators and that multi-round generation is learnable."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Well written paper."
+            },
+            "weaknesses": {
+                "value": "In the current version, I do not see a significant contribution to ICLR.\n\nI see the key contributions, Lemma 4.1 and Theorem 4.3, and the following basic assumptions and Lemmas, as not significant and novel for the following reasons:\n1) The paper overall and section 4 in particular vastly ignores previous work, i.e. the contributon by Hava Siegelman in the 1990's showing (and proofing) that RNNs are super-Turing for two main arguments: continuous weight space and continuous activation functions. A transformer is an extension of an RNN (with a finite time window) with generalised access to information due to the attention mechanism. Thus, it is obvious that a Transformer exists that can simulate an arbitrary TM.\n2) The paper provides a trivial sketch for Lemma 4.1 but not a sound mathematical proof.\n3) Related to 1), the theoretical computational complexity of RNNs and Transformers is long known, as an RNN/Transformer can solve any problem in NP, but thus it is impossible to find the respective Transformer configuration. In fact, the main difficulty is to show that the available training and in-context learning or prompting mechanisms can yield such configurations. However, this is not sufficiently covered in the paper (i.e. section 5), as the focus lies on the complexity of the information/sample, but not on the currently used training algorithm."
+            },
+            "questions": {
+                "value": "none."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors present a theoretical analysis of the approximation ability, learnability, and generalizability of multi-round transformer models (e.g., transformers augmented with prompting techniques such as chain-of-thought, etc). Though the subject is interesting and the findings potentially quite consequential (deriving sample complexities for multi-round transformer training), the paper and the proofs are difficult to follow, with many missing definitions and insufficiently unexplained proof steps."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The authors present a theoretical characterization of the learnability of transformer models with multiple rounds. They specifically show that using multi-round inference helps to make learning more efficient, at least in principle.\n- The authors also characterize the generalization ability of such models."
+            },
+            "weaknesses": {
+                "value": "- A number of critical proof steps are unclear or not sufficiently well-explained (see questions below).\n- There are some missing definitions that make it difficult for readers to understand a number of key points."
+            },
+            "questions": {
+                "value": "I list more detailed comments and questions below. In addition, there are a small number of typos and grammatical errors, especially with respect to grammatical number agreement. I include such errors below for the first two sections, but the list is not comprehensive and I encourage the authors to re-read the manuscript more thoroughly and correct all such errors.\n\nLine 77: \"and then auto-regressive generating sequence\"\n  Typo/grammatical error?\n\nLine 83: Could you please specify what parameter or variable this quantity is exponential in? Is it the sequence length, model size, or something else?\n\nLine 117: \"LLM\" -> \"LLMs\"\n\nLine 120: \"context\" -> \"contexts\"\n\nLine 142: \"limitation\" -> \"limitations\"\n\nLine 161: \"long sequence generation task\" -> \"the long sequence generation task\" or \"long sequence generation tasks\"\n\nLine 216: Missing space after \"where:\"\n  What is the meaning of the notation \"q_0 x #\"?\n\nLine 219: \\Gamma^* Q \\Gamma^* is undefined.\n\nProof of 4.1: This proof is difficult to follow and understand. Many variables are undefined (e.g., What is the acceptance window k? What is h_t?). The length of the tape encoded in the hidden state must be proportional to the number of steps simulated by the model, right? How is the orthogonality of each aspect of the embedding maintained in the output layer after residual connections? Wouldn't the residual connections destroy the surjectivity of the encoding (i.e., the hidden state now encodes a mixture of two Turing machine configurations)? Why is the characterization of the transformer as a Boolean circuit necessary for the proof? In section A.5.2., Q is bounded below by 2^{\\epsilon*\\varepsilon/(L*d*k)}. Where does this expression come from? This inequality would imply that as the error thresholds go to zero, the lower bound on Q goes to 2^0 = 1, which is nonsensically trivial. Section A.5.3. provides a set of \"requirements\" or conditions on the transformer's implementation of the state transition function, but does not provide a construction of such an implementation. In general, this proof needs additional details to more clearly and precisely explain its steps, to more effectively convince the readers of its correctness.\n\nLine 797: \"Combing\" -> \"Combining\"? (line 799 too)\n\nProof of 4.3: How is the output of one round of transformer computation encoded as a single output token? This output token is then appended to the input for the next round of transformer computation. Then how is the corresponding Turing machine configuration recovered from the newly-appended token to proceed with the simulation of the Turing machine?\n\nAssumption 5.3: A comment on the Lipschitz-continuity and boundedness of the cross-entropy function would be useful here, akin to Assumptions 5.1 and 5.2.\n\nLine 895: Missing citation.\n\nSection 5.3: The definition of \"round\" here is imprecise. Does a round not correspond to a single forward pass in a transformer model? How is generating N tokens in R rounds (where each round produces N/R tokens) different from generating N tokens in a single round? Would it not require a total of N forward passes in either case? Do the rounds indicate the frequency of supervising information during the intermediate steps of sequence generation? More clarity is needed.\n\nHow the learnability analysis in Section 5 builds upon or relates to the approximation ability discussed in Section 4?\nPlease clarify how the generalization analysis in Section 6 connects to both the approximation and learnability results."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper provides a theoretical analysis of multi-round reasoning in auto-regressive language models. It first shows that, from an approximation perspective, Transformer models with a limited context window size can serve as universal approximators for Turing-computable functions. Then, it shows from a learnability standpoint, PAC learning can be extended to finite-size window next-token prediction and sequence generation. Finally, it shows from a generalization perspective, generation error can propagate between rounds of multi-round generation, but proper interventions can mitigate this effect to ensure generated sequences remain within certain bounds."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This paper provides a theoretical analysis of multi-round reasoning in large language models. The analyses are useful for understanding language models' capabilities for complex reasoning\n- The paper is well written."
+            },
+            "weaknesses": {
+                "value": "- The authors briefly discuss the practical implications of the theoretical results. It would be even more interesting if they could consider including even simple results to support their claims and demonstrate the practical usage of the theoretical foundations."
+            },
+            "questions": {
+                "value": "- The authors discuss how proper interventions can mitigate error propagation across multi-round reasoning. However, in practice, interventions may not always be positive; for example, self-refinement can sometimes be error-prone. How would the generalization dynamics change in such cases?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 1
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work analyzes the approximation, learnability, and generalization properties of multi-round auto-regressive models, including chain-of-thought, self-debate, self-refinement, and so on. This work provides a theoretical insight and analysis of the multi-round auto-regressive model."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "After reading the paper, the following are the strengths.\n* The solved problem is important. Previously, it was not clear whether a multi-round model works, or why it really works. This paper tries to build a theoretical analysis of the multi-round model.\n* The paper analyzes multi-round models in a wind-range, including approximation, learnability, and generalization properties."
+            },
+            "weaknesses": {
+                "value": "The following is the weakness:\n* Is it possible to conduct any experiments to prove the claims? Or is there any way to prove that the analysis is correct?\n* The paper only contains theoretical proof so it may not be easy for the reader to understand. Therefore, is possible, that the author could provide any other methods to support the claim, such as figures, table, or others."
+            },
+            "questions": {
+                "value": "N/A"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

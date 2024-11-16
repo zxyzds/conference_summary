@@ -1,0 +1,211 @@
+{
+    "id": "ALzTQUgW8a",
+    "title": "MagicPIG: LSH Sampling for Efficient LLM Generation",
+    "abstract": "Large language models (LLMs) with long context windows have gained significant attention. However, the KV cache, stored to avoid re-computation, now becomes a bottleneck. Leveraging the common insight that attention is sparse, various dynamic sparse or TopK-based attention approximation methods have been proposed. In this paper, we first show that TopK attention itself suffers from a quality degradation in certain downstream tasks because attention is not always as sparse as expected. Rather than selecting the keys and values with the highest attention scores, sampling with theoretical guarantees can provide a better estimation for attention output. To make the sampling-based approximation practical in LLM generation, we propose MagicPIG, a heterogeneous system based on Locality Sensitive Hashing (LSH). MagicPIG significantly reduces the workload of attention computation while preserving high accuracy for diverse tasks. MagicPIG stores the LSH hash tables and runs the attention computation on CPU, which allows to serve longer contexts and larger batch sizes with high approximation accuracy. MagicPIG can improve decoding throughput by $1.9\\sim3.9\\times$ across various GPU hardware and achieve 110ms decoding latency on a single RTX 4090 for Llama-3.1-8B-Instruct model with a context of 96k tokens.",
+    "keywords": [
+        "locality sensitive hashing",
+        "randomized algorithms",
+        "llm inference",
+        "kv cache"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We leverage Locality Sensitive Hashing (LSH) sampling to accelerate LLM decoding.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ALzTQUgW8a",
+    "pdf_link": "https://openreview.net/pdf?id=ALzTQUgW8a",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper studies the optimization of long-context LLM inference. Unlike most existing approaches that mainly adopt TopK selection for attention calculation, this paper presents a novel method based on importance sampling, where SimHash is used for estimation. Experiments on a set of benchmarks demonstrate the effectiveness of the proposed method and its superiority over a state-of-the-art TopK selection approach."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "S1. This paper studies from a new perspective of estimating attention scores, in contrast to TopK selection that has been widely targeted in existing works. The proposed approach showcases its potential in dealing with the non-sparse case of attention. \n\nS2. Experiments are highly promising, outperforming Quest in both accuracy and efficiency. \n\nS3. System design is discussed, with the jobs of CPU and GPU clearly depicted in the figure."
+            },
+            "weaknesses": {
+                "value": "W1. The context length seems to be short in the evaluation.\n\nW2. Some parameter evaluations are missing in the experiments. \n\nW3. Only Llama series models are evaluated."
+            },
+            "questions": {
+                "value": "Q1. In Figure 3, did you mean even the exact TopK selection yields a higher relative error than oracle sampling? For oracle sampling, I suppose you estimate the weight of each value vector in the attention. As such, a better result can be obtained, especially for the case when attention is not sparse, where TopK selection treats all non-TopK values as zero-weights. \n\nQ2. For LSH, why SimHash was chosen? The method proposed by Andoni et al. (Practical and optimal LSH for angular distance, NeurIPS 2015) is a better approach than SimHash and has been used in Reformer. \n\nQ3. How does the budget B relate to K and L? For each hash probe out of L, there could be multiple k_i's having a hash collision with q. I suppose the number of retrieved k_i's in L hash probes should be reflected to the budget. \n\nQ4. Following Q3, hash collision could be a problem when the context goes long. In this case, K and L can be adjusted to strike a balance, but it is unclear how they are affected by the context length (the context used in the paper seems to be short, see Q5). \n\nQ5. What is the maximum context length used in the experiments? It seems to be 96K. It is encouraged to see what if the context goes longer, e.g., 1M, which has been evaluated in some TopK-based approaches such as InfLLM.\n\nQ6. Despite evaluating the importance of centering, Figure 8(a) can be seen also as an evaluation of the impact of L. However, I didn't find the evaluation of K. I wonder how K = 8-10 was determined in the experiment. \n\nQ7. On LongBench and RULER, the performance is even higher when a smaller set of (K, L) is used, e.g. (8, 75) and (9, 120), in comparison to (10, 150). Why?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "As a study on LLM core technology, this paper has nothing flagged for ethics review."
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes MAGICPIG for efficient attention score sampling to resolve the large KV-cache for LLM inference. The observation is that exact top-k attention sampling may not perform well. The proposal is to conduct sampling using locality sensitive hashing (LSH) and use importance sampling to obtain unbiased estimations. Empirical results show that MAGICPIG achieves high accuracy with low computation cost."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tThe observation that top-k attention does not perform well is interesting.\n\n2.\tThe idea of using LSH to conduct importance sampling is novel.\n\n3.\tMAGICPIG partitions the computation reasonably between GPU and CPU, i.e., the hashing (which involves matrix operations) is conducted on the GPU while attention computation is conducted on CPU."
+            },
+            "weaknesses": {
+                "value": "1.\tLacks an intuitive explanation why LSH-based importance sampling works better than exact top-k attention. For the theorical view, I get it that importance sampling provides unbiased estimation while exact top-k attention does not. However, both importance sampling and top-k selects some attention scores to compute. Is it because (i) importance sampling select some scores that top-k will not select or (ii) once sampled, importance sampling assigns higher weights to scores with low sampling probabilities? It will be good if an ablation study can be conducted. For instance, if the case is (i), will it work if combine top-k sampling and sampling some random tokens (or some tokens at regular intervals of the sequence, for a good representation of the sequence)?\n\n2.\tThe parameter configurations for LSH can be discussed, which involves the number of hash table (H), the number of hash functions for a hash table (L), the number of collisions for a token to be considered as a candidate for attention computation (T). Currently, T is fixed at 2. I understand that to sample a fixed number of attention scores, when H is increased, L should be reduced. We can also increase both H and L, but reduce T. Please provide some insights on how these parameters should be set.     \n\n3.\tWhat are the current execution statistics of the system? When the CPU is computing the sampled attention scores, is the GPU idle? GPU or CPU has a longer running time? If we use a pipeline (e.g., by switching between two mini-batches) to overlap GPU and CPU computation, which one will be the straggler?"
+            },
+            "questions": {
+                "value": "See the weakness part"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA"
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduce a novel approach that leverages LSH sampling to approximate the oracle sampling. Empirical evaluation shows improvement over the baseline."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "S1. The problem and the solution is well-motivated in the paper.\nS2. The CPU-GPU co-design enables the storage of large LSH index table.\nS3. The empirical results outperforms baselines."
+            },
+            "weaknesses": {
+                "value": "Weak Points\n----\nW1. In the design of the proposed system, the authors claim that putting the retrieval stage in the CPU side would allow large hash tables. I wonder if moving the full system into GPU would reduce the latency when the GPU memory is sufficiently large to fit the hash table.\n\nW2. The author discussed a few KV Cache reduction methods in Section 2. However, only quest is considered as the baselilne in the experiments. I would suggest the author to add a reasonable justification or add more baselines.\n\nW3. Another direction of accelerating the inference is to quantize the model. How does the proposed method work on quantized LLM is not discussed.\n\nW3. No code is provided. It might be hard for readers to reproduce the results.\n\nPresentation\n----\nP1. In the abstract, without any notes, the author claims \"achieve 110ms decoding latency on a single RTX 4090\" while not actually running the code on RTX 4090. I believe this is a false claim without mentioning the simulation.\nP2. Although it might be obvious for readers with retrieval and word extraction background, the acronym niah, cwe, and fwe and not explained before usage. \nP3. The numbers in Figure 6 might be a bit outdated. In addition, the connection between CPU and GPU could be faster SXM."
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce MAGICPIG, a heterogeneous system leveraging LSH (Locality-Sensitive Hashing) sampling to estimate a complete attention distribution, overcoming limitations of traditional Top-K sparse attention methods, which can underperform in certain downstream tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tMAGICPIG addresses shortcomings of traditional Top-K attention methods in LLMs, which often assume sparsity and suffer in some downstream applications. Using LSH-based sampling, MAGICPIG more accurately estimates the attention distribution, mitigating the bias found in Top-K approximations. The approach is backed by theoretical guarantees and empirical evidence, underscoring its effectiveness in sparse attention acceleration.\n\n2.\tMAGICPIG overcomes GPU VRAM constraints by offloading parts of the computation, including hash table operations, to the CPU. This approach is pivotal for scaling LLMs with LSH-based sampling in resource-constrained, practical environments."
+            },
+            "weaknesses": {
+                "value": "1.\tWhile the authors discuss CPU-GPU collaboration, they provide limited data on the effects of PCIe bandwidth and CPU-GPU data transfer overhead. This omission may hinder understanding MAGICPIG\u2019s real-world performance across different hardware configurations.\n\n2.\tThe paper lacks a detailed analysis of the overhead associated with hash tables. As noted by the authors, hash tables could introduce significant memory and computational costs. Therefore, a more thorough evaluation of these overheads would better illustrate the trade-offs of the proposed method."
+            },
+            "questions": {
+                "value": "1.\tIs the size of the hash table related to model size and sequence length? How does the size of the hash table affect the performance?\n\n2.\tWhat is the time overhead of constructing hash tables, and which factors influence this overhead?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduced a novel method dubbed \"MagicPIG\" to reduce the computation cost of self-attention in long context. Specifically, MagicPIG utilizes Locality-sensitive hashing to approximate the attention score distribution and estimate the attention output. While not decreasing the overall cache size required to store Keys and Values, MagicPIG sampled only a fraction of Keys and Values to calculate the attention scores, reducing the overall computation cost."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "This paper is exceptionally well-written and clearly presented, making it tremendously helpful for understanding complex topics. Concepts, definitions, and proofs are structured logically, with clear and concise writing. The proposed approach is intuitive and relatively straightforward, with much of the intuition supported by prior explanations. Additionally, the empirical results are strong."
+            },
+            "weaknesses": {
+                "value": "I have a few questions:\n1. what is the intuition for selecting (K, L) for the hash table size? \n2. For Table 1/2/3, why is latency not included in the comparison? \n3. Does the author believe further improvement can be made by combining this approach with PEFT?"
+            },
+            "questions": {
+                "value": "See weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

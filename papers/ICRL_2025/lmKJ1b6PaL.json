@@ -1,0 +1,205 @@
+{
+    "id": "lmKJ1b6PaL",
+    "title": "Causal Concept Graph Models: Beyond Causal Opacity in Deep Learning",
+    "abstract": "Causal opacity denotes the difficulty in understanding the \"hidden\" causal structure underlying the decisions of deep neural network (DNN) models. This leads to the inability to rely on and verify state-of-the-art DNN-based systems, especially in high-stakes scenarios. For this reason, circumventing causal opacity in DNNs represents a key open challenge at the intersection of deep learning, interpretability, and causality. This work addresses this gap by introducing Causal Concept Graph Models (Causal CGMs), a class of interpretable models whose decision-making process is causally transparent by design. Our experiments show that Causal CGMs can: (i) match the generalisation performance of causally opaque models, (ii) enable human-in-the-loop corrections to mispredicted intermediate reasoning steps, boosting not just downstream accuracy after corrections but also the reliability of the explanations provided for specific instances, and (iii) support the analysis of interventional and counterfactual scenarios, thereby improving the model's causal interpretability and supporting the effective verification of its reliability and fairness.",
+    "keywords": [
+        "Concept Based Models",
+        "Concept Bottleneck Models",
+        "Explainable AI",
+        "Interpretability"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "Causal Concept Graph Models are a class of interpretable models whose decision-making process is causally transparent by design.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=lmKJ1b6PaL",
+    "pdf_link": "https://openreview.net/pdf?id=lmKJ1b6PaL",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents Causal Concept Graph Models (Causal CGMs), a concept-based architecture whose decision-making process is causally transparent by design. It avoids the unrealistic assumption that concepts must be causally independent and direct causes of the class prediction. The paper aims to design Deep Learning  models where each prediction can be traced back to a chain of\nsemantically meaningful causes."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "-  The paper is well written.\n-  The idea of introducing causal transparency in concept-based models is interesting.\n-  The experiments are sound."
+            },
+            "weaknesses": {
+                "value": "-  > *Causal opacity refers to the difficulty in understanding the mechanisms behind a model\u2019s decision-making process.* \n\n  The paper frequently references the concept of causal opacity, but it is too vaguely defined to be fully understood.\n\n- How the model performs abduction to answer counterfactual queries is unclear.\n\n- Minor: The description of Figure 3 is inconsistent with the picture. \n\n- It seems the proposed model sacrifices accuracy to improve interpretability."
+            },
+            "questions": {
+                "value": "- > Concept Graph Models duplicate the layer of interpretable variables $V$ by introducing an additional layer of identical copies $V^{\u2032}$ . Using this additional layer, Causal CGMs make predictions of each $v_{i} \\in V$ using as possible inputs all $v_{j}' \\in V^{\u2032}$ for all $j \\neq i$\n\nHow do you guarantee the causal graph will be acyclic?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In their work, the authors construct causal concept bottleneck models (CCBMs), which are interpretable models that aim to reveal the underlying decision process of deep learning models. The models are built with the assumptions that all relevant human-aligned concepts are known a priori and that these concepts are direct causes of the class prediction. The authors propose measure the predictive power of concepts towards each other other to figure out variable parents. The authors leverage the assumption, that distribution predictions between features predicted by noise, and features predicted from the prior noise-predicted values are invariant. The recovered structure is then used to extract logic rules and trace-back decision.\n\nThe approach is evaluated on smaller image datasets, including CelebA and CIFAR 10, showing performance gains over other non-causal methods.\n\n\n[Disclaimer: This is an emergency review]"
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors extend prior approaches by dropping the restriction of causally independent concepts and trying to approximate the underlying true graphical causal relation. This is an important extension, as most real-world settings, feature complex interactions between concepts and allows to inspect the consequences of interventions on the modeled process.\n\nBy observing predictive power among variables, the authors are able to (partially) recover the individual parents of the variables. If trained correctly, CCGM are therefore deep models, which are interpretable by design and possibly allow for human-in-the-loop adjustments.\n\nThe presented results improve over prior CBM and CEM, while lacking only slightly behind 'causally opaque' black-box models. The authors show good predictive performance under interventions, and are able to extract some underlying logic rules from the learned models."
+            },
+            "weaknesses": {
+                "value": "The weaknesses concern extend to which the presented method 'is actually causal'. While existing works in the field of causality are mainly concerned with providing identifiability results, the presented method mainly leverages predictive power to identify causal relations between variables, which might not coincide with learning the correct causal structure and lead the model to learn spurious associations.\n\n1) Measuring the predictive performance of features towards each other does guarantee to recovery the underlying causal structure. Generally, additional assumptions such as interventions or sufficient variability need to be assumed. In that regard, theorem 3.2 does not state any of these assumptions and is provided without proof.\n\n2) In that regard the paper lacks a comparison and detailed discussion to existing methods in the field of causal representation learning [1], such as differences to other existing deep causal approaches ([2-4]), and -with regard to the prior point- guarantees on the identifiability of (latent) concepts [5-7].\n3) Variables $v'_i$ are predicted just from their exogenous noise variables $u_i$. Assuming that, variables are indeed embedded into a causal structure, and assuming that at least for some $v_i$ the parent set is non-empty, it can not be that $p(v'_i\\mid pa_{V'}(v_i),u_i) = p(v_i \\mid u_i)$.\n4) The experimental section compares to only non-causal methods (CEM and CBM) on their predictive performance (accuracy). Given the above discussion, it is unclear whether the models have actually learned the correspond process. No analysis or discussion towards identifiability and possible avoidance of confounding is presented. As a result a rather strong drop-off in performance between CCGM+CD (recovering the graph from ground-truth labels) and CCGM is observed. In particular, when the causal graph is recovered from data, the presented causal CGM+CD approach might by very similar to Neural Causal Models (NCM) [4].\n\n\n\n**Minor**\n\n* Table 1 is hard to read. I suggest breaking \"semantic transparency\" and \"causal transparency\" into two lines to make the texts bigger.\n\n\n[1] Sch\u00f6lkopf, Bernhard, et al. \"Toward causal representation learning.\" *Proceedings of the IEEE* 109.5 (2021): 612-634.  \n[2] Kladny, Klaus-Rudolf, et al. \"Deep backtracking counterfactuals for causally compliant explanations.\" *arXiv preprint arXiv:2310.07665* (2023).  \n[3] Lippe, Phillip, et al. \"Biscuit: Causal representation learning from binary interactions.\" *Uncertainty in Artificial Intelligence*. PMLR, 2023.  \n[4] Xia, Kevin, Yushu Pan, and Elias Bareinboim. \"Neural causal models for counterfactual identification and estimation.\" *arXiv preprint arXiv:2210.00035* (2022).  \n[5] Brehmer, Johann, et al. \"Weakly supervised causal representation learning.\" *Advances in Neural Information Processing Systems* 35 (2022): 38319-38331.  \n[6] Wendong, Liang, et al. \"Causal component analysis.\" *Advances in Neural Information Processing Systems* 36 (2024).  \n[7] von K\u00fcgelgen, Julius, et al. \"Nonparametric identifiability of causal representations from unknown interventions.\" *Advances in Neural Information Processing Systems* 36 (2024)."
+            },
+            "questions": {
+                "value": "My questions mainly concern the weaknesses mentioned above. I would kindly like to ask the authors the following questions:\n\n1) How does method guarantee identifiability and non-confoundedness of concept predictions. Could the authors elaborate on the implications of theorem 3.2 towards this question and/or highlight possible limitations that might arise?\n2) Regarding point 3: Could the further explain how distributions of Theorem 3.2 can be equal, given, that $v'_j$ are inferred from exogenous variables only?\n3) How, does the presented approach compare to other causal deep-learning methods? Could the authors present further insights or explain, why other methods might not be comparable?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a new class of interpretable models whose decision-making process is causally transparent by design. The method represents relations between high-level concepts, associated with each data point, as a DAG allowing for interventional and counterfactual analysis of predictions and human improvements during the inference process.\n\nThe authors demonstrate that their approach matches the generalization performance of SoTA models. Additional experimental results showcase how explicit causal representation can be efficiently used to increase interpretability and improve performance with human interventions."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is cleanly written. \n2. The approach is well-placed in the literature. \n3. The experimental section is extensive.\n4. The method description is detailed and well-structured."
+            },
+            "weaknesses": {
+                "value": "1. One bit of experimental evaluation is unclear to me (see Questions)"
+            },
+            "questions": {
+                "value": "1. I do not understand the experiment described in the last paragraph of the experimental section (lines 463-476).  Could the authors please provide an example? How are variables i and j selected for each dataset? Are the results in Table 3. averaged over all possible pairs? How do the authors decide which variables to intervene on (i.e. what structure is used as Ground Truth)? Why is 0 a desirable outcome?  - the authors write that the aim of this procedure is debiasing, to my understanding 0 RCCE means no change.\n2. Table 3 has two columns titled \u201cCELEBA\u201d"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Over the past few years, there has been a lot of interest in designing models that are interpretable by construction. Concept Bottleneck Models are one such approach; they first predict an intermediate set of human-specified concepts and then use the concepts to predict the target. These intermediate concepts allow humans to understand the dynamics of model predictions through interventions. One key drawback of such an approach is that they assume each concept independently influences the predictions, while in practice, there is always a complex relationship between the concepts and how they influence the target variable. The paper addresses the above issue by introducing the Causal Graph Concept Graph Model, which is transparent by design and captures the complex dynamics of a model's decision processes."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "A serious shortcoming of CBMs is that they assume that each human-specified concept independently influences the model's predictions. The authors address this issue by proposing a Causal Graph Concept model that captures the intricacies of the dependencies between the concepts & the target variable and among them.\n\nAs the proposed model is causally transparent by design, it allows a human to understand the inner workings of the model by enabling them to ask questions, such as:\n- What is the relationship between feature x & label y?\n- What happens to the prediction if I set feature x to k?\n- What if feature x was k' instead of k?\nThe proposed model's performance matches or is within the ballpark of the opaque state-of-the-art models on the chosen set of benchmarks.\n\nTheoretically, it also allows humans to intervene and correct erroneous intermediate reasoning steps."
+            },
+            "weaknesses": {
+                "value": "- The paper isn't written well, and some sections are hard to follow.\n- One of the key weaknesses lies in the experiments.\n     - Why only choose simpler benchmarks, like CelebA & CIFAR10, and benchmarks with semantically richer tasks like AwA2, CUB, etc.?\n     - Understanding what the authors mean by joint training is a bit hard.\n          - Are the concept encoders also trained along with the process of learning CGMs? \n          - What formulation of CBMs do the authors build on? (independent bottleneck, joint bottleneck, or sequential bottleneck?)\n          - What is the architecture of the bottleneck layer? Does it influence the quality of CGMs learnt?\n     - One contribution is that CGMs allow human-in-the-loop corrections of erroneous intermediate reasoning steps. I don't see any experiments to support this. Did you evaluate whether the learnt causal graphs are sound and valuable? Did you do a user study to assess their utility to users? \n     - Do you have any intuition about why there is a drop in Figures 4 and 5 for a certain number of intervened concepts?\n     - Column 4 is Table 3 is CIFAR10?\n     - Line 345 says CIFAR10 is an animal classification dataset. Did you use the entire dataset or a subset for evaluation?\n- Another issue with CBMs is that they assume that human-specified concepts are readily available, which rarely happens in practice. Much work has been done in the literature to relax this assumption. I wonder why the authors build on the vanilla version of CBMs."
+            },
+            "questions": {
+                "value": "Refer to Weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce a generalization of *Concept Bottleneck Models* (CBM), called *Causal Concept Graph Models* (causal CGM). In contrast to existing CBMs, causal CGM allows for modeling causal relationships between latent variables. In contrast to causal representation learning, causal CGM aims at addressing causal opacity (interpretability) of deep learning models, rather than identifying specific variables and/or mechanisms. The claimed properties of Causal CGM are experimentally assessed on various data sets and compared with a black-box deep learning baseline, a non-causal CBM baseline and Concept Embedding Models."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1. The authors present an interesting perspective on causal representation learning, where the learned abstract variables and mechanisms are used to obtain insights into a trained model (interpretability) rather than aiming at generalizing to unseen domains. The latter is the main motivation of the related work that I am familiar with (e.g., [1, 2, 3]).\n\n2. The manuscript is particularly well-written and the plots are great, too. The authors did an excellent job at presenting their work well.\n\n3. There are plenty of experiments that (somewhat surprisingly) show that causal CGMs perform similarly to black box models that do not enforce a causal bottleneck.\n\n[1] von K\u00fcgelgen, Julius, et al. \"Nonparametric identifiability of causal representations from unknown interventions.\" Advances in Neural Information Processing Systems 36 (2024).\n\n[2] Lippe, Phillip, et al. \"Biscuit: Causal representation learning from binary interactions.\" Uncertainty in Artificial Intelligence. PMLR, 2023.\n\n[3] Mengyue Yang, Furui Liu, Zhitang Chen, Xinwei Shen, Jianye Hao, and Jun Wang. Causalvae: Structured causal disentanglement in variational autoencoder. arXiv preprint arXiv:2004.08697, 2020."
+            },
+            "weaknesses": {
+                "value": "1. In terms of the architecture and training of the proposed method, I am concerned about novelty. The method may seem novel within the CBM literature, where only independent latent variables have been considered so far. However, the proposed method seems to be (almost) identical to [1], which is branded as *causal variational autoencoder* rather than *concept bottleneck model*. Apart from the name and problem motivation, I cannot identify any differences. It would be great if the authors could highlight the differences, if they exist (I did not see them).\n\n2. While the authors start with an interesting perspective on learning latent causal variables (see strength 1), it is unfortunate that this idea is not taken very far. Specifically, I would be interested in questions such as how such a causal graph could be efficiently inferred from any black-box model post training (just an example of the kind of questions that came up to me). Instead, causal CGM seems to be an existing causal representation learning method (see weakness 1), but without identifiability guarantee. I would advise the authors to develop the paper more closely along this original idea (strength 1), as I believe there is a lot of unused potential.\n\n3. The *human-in-the-loop corrections* aspect seems contradictory to the motivation of the work: Causal CGM is introduced from the point of interpretability rather than identifiability of variables and mechanisms. Human-in-the-loop corrections indicate that specific variables (known the human) ought to be identified, which lies at odds with the causal opacity motivation. Therefore, I would suggest moving this aspect entirely to the appendix.\n\n[1] Mengyue Yang, Furui Liu, Zhitang Chen, Xinwei Shen, Jianye Hao, and Jun Wang. Causalvae: Structured causal disentanglement in variational autoencoder. arXiv preprint arXiv:2004.08697, 2020."
+            },
+            "questions": {
+                "value": "line 88: (Minor comment) The authors write the causal CGM is related to XAI. Maybe it is more about interpretability than it is about explainability? To me, XAI methods aim at explaining black-box models. However, causal CGM is rather about constructing the model such that it is interpretable by construction.\n\nline 91: As already explained in weakness 1, I am not convinced that causal CGM is a new architecture. \n\nline 105: I would challenge that structural causal models are *the* standard framework for causal modeling. Rubin causal models are also quite common. I would suggest rephrasing this. For example: *\"Structural causal models are a widely used framework for causal modeling, alongside other approaches like Rubin causal models.\"*\n\nline 111: *\"which determine the values of each endogenous variable $v_i \\in V$ by computing the conditional probability ...\"* This sentence sounds contradictory to me. According to the SCM definition that I am familiar with, all endogenous variables can be expressed as a deterministic function of all exogenous variables (reduced form expression). Thus, this conditional probability should be just a Dirac measure? I would appreciate if the authors could clarify this.\n\nline 115: I believe this should read *hard interventions*. There also exist other types of interventions where variables are not fixed to a value.\n\nline 121: I am not too familiar with the literature on *concept-based models* (CBM). However, I do not understand how the term *concept* differs from *high-level feature* and how *concept-based modeling* is distinct from *representation learning* (see weakness 2).\n\nline 199: (Minor comment) Doesn't theorem 3.2 follow from d-separation? I could imagine that the proof could be greatly simplified with such a graphical argument.\n\nline 245: How does the training differ from the method proposed by [1] (see weakness 1)? It would be great if the authors could highlight this in detail.\n\nline 257: *maximise the log-likelihood of v, v\u2032* How can the likelihood of unobserved variables be maximized? I suppose you maximize a variational lower bound of $\\text{log} \\\\; p(x)$?\n\nline 481: *Causal CGMs focus on high-level human interpretable concepts* As mentioned in weakness 3, this seems to be at odds with the original motivation of the work."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

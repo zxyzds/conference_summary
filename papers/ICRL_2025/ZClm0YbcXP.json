@@ -1,0 +1,167 @@
+{
+    "id": "ZClm0YbcXP",
+    "title": "UOE: Unlearning One Expert is Enough for Mixture-of-Experts LLMs",
+    "abstract": "Recent advancements in large language model (LLM) unlearning have shown remarkable success in removing unwanted data-model influences while preserving the model's utility for legitimate knowledge. However, despite these strides, sparse Mixture-of-Experts (MoE) LLMs--a key subset of the LLM family--have received little attention and remain largely unexplored in the context of unlearning. As MoE LLMs are celebrated for their exceptional performance and highly efficient inference processes, we ask: How can unlearning be performed effectively and efficiently on MoE LLMs? And will traditional unlearning methods be applicable to MoE architectures? Our pilot study shows that the dynamic routing nature of MoE LLMs introduces unique challenges, leading to substantial utility drops when existing unlearning methods are applied. Specifically, unlearning disrupts the router's expert selection, causing significant selection shift from the most unlearning target-related experts to irrelevant ones. As a result, more experts than necessary are affected, leading to excessive forgetting and loss of control over which knowledge is erased. To address this, we propose a novel single-expert unlearning framework, referred to as UOE, for MoE LLMs. Through expert attribution, unlearning is concentrated on the most actively engaged expert for the specified knowledge. Concurrently, an anchor loss is applied to the router to stabilize the active state of this targeted expert, ensuring focused and controlled unlearning that preserves model utility. The proposed UOE framework is also compatible with various unlearning algorithms. Extensive experiments demonstrate that UOE enhances both forget quality up to 5\\% and model utility by 35\\% on MoE LLMs across various benchmarks, LLM architectures, while only unlearning 0.06\\% of the model parameters.",
+    "keywords": [
+        "Machine Unlearning",
+        "Mixture-of-Expert",
+        "Large Language Model"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "We propose a novel machine unlearning framework for Mixture-of-Expert large language models.",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ZClm0YbcXP",
+    "pdf_link": "https://openreview.net/pdf?id=ZClm0YbcXP",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper addresses the challenge of unlearning in Mixture-of-Experts (MoE) LLMs. When naively applying traditional unlearning methods to MoE models, the authors discovered that MoE's dynamic routing mechanism leads to unintended expert selection shifts, causing excessive forgetting and reduced model utility. To solve this, they propose UOE (Unlearning on One Expert), a framework that: 1) identifies the most relevant expert for the target knowledge using affinity scores, and 2) implements a router anchor loss to maintain that expert's activation during unlearning. By concentrating unlearning on a single expert, UOE + baseline methods improve both forgetting quality and model utility significantly compared to baseline methods alone."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Novel and well-motivated solution that specifically addresses MoE architecture challenges in unlearning, filling an important gap in the literature \n2. Thorough follow-up studies that justify key design choices, particularly: the effectiveness of single-expert versus multi-expert unlearning, and the impact of single/multi-layer selection on forgetting performance. \n3. Strong empirical validation with comprehensive experiments across different: unlearning algorithms, model architectures, benchmarks 4. Resource-efficient approach, requiring modifications to only 0.06% of model parameters while achieving superior performance."
+            },
+            "weaknesses": {
+                "value": "1. **Notation Clarity**: Several key mathematical notations (particularly $g(l)$ in the router anchor loss formulation) would benefit from more explicit definitions.\nThe relationship between different mathematical terms could be better explained.\n2. **Implementation Details**: Training hyperparameters are insufficiently documented for reproducibility; the $Unlearn()$ subroutine in Algorithm 1 lacks specific implementation details; more comprehensive experimental setup information would facilitate replication."
+            },
+            "questions": {
+                "value": "1. The method relies on selecting the expert with the highest affinity score. However, how robust is this approach when there are experts with closely competing scores? \n2. The robustness to attack of the proposed method: if we keep the model frozen and use soft prompt learning, can the soft prompt uncover the knowledge from other experts? If so, this suggests that the knowledge still resides within these experts and can be accessed through carefully crafted input prompts."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "To address the issue of unlearning disrupting the router's expert selection, the authors propose a novel single-expert unlearning framework that focuses unlearning on the most actively engaged expert for the specified knowledge."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1\u3001The authors present an innovative and parameter-efficient unlearning framework that effectively identifies, targets, and unlearns the expert most relevant to the forget set.\n2\u3001The paper provides numerous experiments that convincingly illustrate the motivation behind this work.\n3\u3001Extensive experiments demonstrate that UOE improves both the quality of forgetting and model utility in MoE-based large language models across various benchmarks."
+            },
+            "weaknesses": {
+                "value": "1\u3001The novelty of this work lacks a compelling impact.\n\n2\u3001The explanation of the router anchor loss is unclear. Specifically, Equation (3) is confusing because it does not define the meaning of g(l). \n\n3\u3001I am unclear about the authors' statement: \u201cwe propose the router anchor loss, which encourages the previously identified target expert to remain consistently activated throughout unlearning.\u201d This raises the question of whether the previously identified target expert can reliably be the true target expert. If this cannot be ensured, the process may simply stabilize routing choices, inadvertently activating less relevant experts and undermining the effectiveness of the unlearning process.\n\n4\u3001In Algorithm 1, it is unclear what Ll represents.\n\n5\u3001The authors have not sufficiently emphasized the unique advantages of UOE compared to other MoE frameworks. For instance, while UOE leverages expert attribution to calculate affinity scores for expert selection, other MoE frameworks also compute affinity scores between inputs and experts. Why is UOE more advantageous in this regard? Additionally, when the authors state that \"it overlooks finer details that are important for precise comparisons,\" it would be helpful to clarify what \"precise\" entails in this context and which additional factors might be considered more significant than precision.\n\n6\u3001In the preliminaries section, the character N denotes the number of experts; however, in Equation (2), it is used to represent the size of the calibration dataset.\n\n7\u3001Sentences such as \"Model utility (UT) comparison, at the same level of forget efficacy\" in Table 5 and \u201cUT is compared at a consistent level of forget efficacy\u201din Table 7 are unclear and need clarification. The authors should explain how adjusting model hyperparameters allows one experiment's performance to be maintained while enabling changes in another. \n\n8\u3001Figure 2 illustrates that multiple experts handle a substantial number of tokens, as shown in the long-tail distribution. The decision to unlearn only the top-1 expert requires further justification."
+            },
+            "questions": {
+                "value": "Please see the weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper looks into unlearning (UL) for Mixture-of-Experts LLMs, being a pilot study in this area. It is found that existent UL algorithms suffer from expert selection shifts and thus cannot efficiently eliminate certain knowledge. This paper offers a simple solution that is to unlearn the target expert in a single layer. Experiments support the effectiveness of the method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This paper identifies the unique challenge of unlearning MoE LLMs.\n\n- The experiments are thoroughly conducted and ablate well on the design components of UoE such as the number of layers/experts to unlearn and sensitivity to expert ranking."
+            },
+            "weaknesses": {
+                "value": "- My primary concern is that both Qwen1.5 MoE [1] and DeepSeek MoE [2] have shared experts, meaning certain experts are always activated and are not subject to router choices. The paper does not mention how this issue is addressed. I believe these shared experts could retain the knowledge of the forget set. The paper lacks discussion on this point, and additional evidence is needed.\n\n- The unlearning loss objective is unclear, is it a combination of (1) and (3)? What is the hyperparameter applied to the anchor loss, and how sensitive is model performance to this hyperparameter?\n\n\n[1] https://qwenlm.github.io/blog/qwen-moe/\n\n[2] https://huggingface.co/deepseek-ai/DeepSeek-V2-Lite"
+            },
+            "questions": {
+                "value": "- What does line 4 in Algorithm 1 mean? Only router parameters in the same selected layer are activated accordingly, or all router parameters?\n\n- Related to what is pointed out in Weakness. The affinity score is only taken from router outputs and thus ignores shared experts. Is there a reason to ignore those shared experts? \n\n- For other MoE models (for example Mixtral) without such a shared expert setting, how does UoE work?\n\n\n\nI believe further clarification is needed on these points, and I am open to adjusting my scores if my concerns are addressed."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigated a critical problem when applying machine unlearning in an MoE scenario. The author gives an insightful demonstration of the current challenge (e.g., Fig 1(a) and Fig 2), making this paper easy to follow. As the authors mentioned, the short-cut behavior when the MoE system is doing expert selection leads to unstable unlearning. To address this issue, the authors proposed an Unlearning One Expert system, which prevents the frequent switching of expert selection and ensures a focused, controlled, and stable unlearning. Although most of this paper is written clearly, I still have concerns about motivation, contribution, and technical quality."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "S1. The research problem is well formalized and presented with some demonstration of current research limitation visualization. \\\nS2. The authors provided a detailed introduction to recent studies on MoE, MU, etc. \\\nS3. The methodology and most of the experiment parts are well-written."
+            },
+            "weaknesses": {
+                "value": "W1. Regarding the motivation for applying MU tech to the MoE system. There could be a wild ground for application, but the technical challenge remains unclear. One key issue is raised due to the golden label of expert selection being decided during MoE system training. It could be more reasonable to directly apply this _decision + MU tech_ when unlearning on the MoE system remains unclear. \n\nW2. Like some routing algorithms, the performance improvement result from whether to reduce the uncertainty or routing token to correct expert is unclear.  The author could provide more experimental detail to clarify the contribution of the UOE system. \n\nW3. There are many routing algorithms proposed recently. However, UOE seems only to use TopK routing as the backbone. The versatility of UOE framework is not discussed well."
+            },
+            "questions": {
+                "value": "Major Questions:\n\nQ1. Is the rising **uncertainty** among routing algorithms causing ineffective MoE unlearning? If so, why not directly optimize (or maintain) the entropy?\n\nQ2. As $\\lambda$ (hyperparameter for retaining loss, eq.1) aims to directly optimize the strength of retain quality, there is no discussion on this setting. If $\\lambda$ is set to $0$, what would happen? \n\nQ3-1. Is the affinity score unchanged (or as a golden label) during the unlearning progress? \n\nQ3-2. If the affinity score is the golden target, why not use it as a roadmap but an optimization target? Is it proper to refine the routing strategy during optimization?\n\nQ4. Some case studies on generated unlearning data could be interesting. What will happen in the MoE system?\n\nMinor Questions:\n\nMQ1. In Fig. 3 (a-b), what is the difference between the settings for Routers+Experts, Routers Only, and Experts Only? Why do those settings matter?\\\nMQ2. Also, in Fig. 3 (a-b), will the deeper layers affect the routing overlap ratio?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

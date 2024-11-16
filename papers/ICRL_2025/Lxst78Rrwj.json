@@ -1,0 +1,166 @@
+{
+    "id": "Lxst78Rrwj",
+    "title": "Causal Graph Learning via Distributional Invariance of Cause-Effect Relationship",
+    "abstract": "This paper introduces a new framework for recovering causal graphs from observational data, leveraging the fact that the distribution of an effect, conditioned on its causes, remains invariant to changes in the prior distribution of those causes. This insight enables a direct test for potential causal relationships by checking the variance of their corresponding effect-cause conditional distributions across multiple downsampled subsets of the data. These subsets are selected to reflect different prior cause distributions, while preserving the effect-cause conditional relationships. Using this invariance test and exploiting an (empirical) sparsity of most causal graphs, we develop an algorithm that efficiently uncovers causal relationships with quadratic complexity in the number of observational features/variables, reducing the processing time by up to 25x compared to state-of-the-art methods. Our empirical studies on a diverse benchmark of large-scale datasets demonstrate that the developed algorithm consistently performs better or comparable to existing works while generally achieving better scalability.",
+    "keywords": [
+        "Causal Graph Learning",
+        "Invariance"
+    ],
+    "primary_area": "causal reasoning",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Lxst78Rrwj",
+    "pdf_link": "https://openreview.net/pdf?id=Lxst78Rrwj",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper utilizes the invariance property of $P(X \\mid \\text{Pa}(X))$ despite having different $P(\\text{Pa}(X))$ to find the causal parents. For this purpose, they choose some source priors, generate corresponding datasets, and verify the invariance. Finally, they show their performance on a variety of synthetic and real-world setups."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper is well written. The figure is helpful for understanding the algorithm. The experiments are extensive."
+            },
+            "weaknesses": {
+                "value": "## Minor weaknesses:\n* The authors mentioned \u201cfinding the maximum clique in an augmented bidirectional graph\u201d multiple times but without a proper definition or example/visualization.\n* The source variables should be defined in a little more detail.\n* What does $P'$ in equation 2 refer to? It should be precise.\n* \u201cThe intuition is if we can re-sample $D_i$ from $D \\sim P(X)$ such that $D_i \\sim P_i(X)$,\u201d This is a little unclear. How are $D \\sim P(\\mathbf{X})$ and $D_i \\sim P_i(\\mathbf{X})$ different?\n* It is unclear how $D_1, D_2, \\dots, D_M$ are sampled. How are the $m$ source priors ($P_i(\\mathbf{B})$) obtained? Although these are discussed later, some hints/intuitive discussion should be provided earlier in the paper.\n* \u201cWe cannot compute $P_i(X)$, \u2026 we can re-sample $D_i$ from $D$ so that $D_i \\sim P_i(X)$\u201d \u2013 based on my understanding, the first case is computing the numerical probability table, and the second case is sampling without any such table. This difference should be made clear.\n* More details on \"downsampling without replacement\" are needed.\n* An intuitive explanation of the \u201cminimal downsampled rate\u201d is required.\n\n\n## Major weaknesses\n* Suppose $Z$ is not a parent but an ancestor. Shouldn\u2019t we also get variance = 0 (equation 1) in such cases? Does a change in $P(\\text{Ancestor})$ affect $P(\\text{descendant} \\mid \\text{ancestor})$?\n* Many important concepts are delayed until section 4.2. The authors should consider introducing them earlier in the paper.\n\nI will consider increasing the score after seeing author's response and reviewer discussion."
+            },
+            "questions": {
+                "value": "## Questions:\n* How are the authors resampling the datasets?\n* Do you have to perform this invariance test for all possible parent sets?\n* Why is $Pa[B] = \\emptyset$ in the definition of set $\\mathbf{B}$ (section 4.1)? What does that imply?\n* In practice with real-world data, is the variance always zero for all true parents (equation 1)? Why or why not? Should a threshold be used?\n* How expensive is it to compute $\\phi(X)$? Do we have to iterate over all $X$? And do it again after performing step ii in Theorem 3?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Based on the fact that the distribution of an effect, conditioned on its causes, remains invariant to changes in the prior distribution of those causes, this paper proposes a causal discovery algorithm for large-scale datasets. Specifically, it designs an invariance test, which is achieved by a downsampling scheme. It also makes the best of searching Markov blankets of all variables, to reduce the time complexity. Experiments on synthetic datasets and real-world networks show better scalability."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- This paper is written well, with clear descriptions and motivations. \n\n- The authors propose practical algorithms for causal discovery, with some interesting theoretical findings, e.g., the basis of a DAG, the minimal downsampling rate, etc. \n\n- The experiments under synthetic datasets and real-world networks are extensive, which verified the advantages in large-scale datasets."
+            },
+            "weaknesses": {
+                "value": "- Some details seem to be missing in the paper.\nFor example, \n\ni) Footnote 2 and Theorem 1 tell how to find non-parent sets, whereas how to set the threshold for the variance is not clear. Please give the details in the paper.\n\nii) How to learn the different priors $P_i(X)$, with the estimated $m$? Did the authors assume some distributions?\n\n- Theorem 2 provides a necessary condition to test whether a subset $Z$ is the parent set of X. However, it is not a sufficient condition. Although the authors stated, \u201cWhen m is infinitely large, the implication in Eq. (1) becomes bi-directional and $V[P+(X | Z)] = 0$ definitively implies $Z = Pa[X]$\u201d. It is not that clear why this implication we can get. Please elaborate on it more.\n\n- It is better to perform some real-world datasets for validation. This is because bnlearn provides real networks and it generates the data based on the networks. These datasets look like semi-synthetic. BTW, in Table 2, when dealing with small-scale datasets (or even a large-scale dataset Munin), the runtime all seem not to be satisfactory. Please explain it."
+            },
+            "questions": {
+                "value": "- Does the proposed causal discovery algorithm work for time-series data? What are the challenges?\n\nI would be very glad to increase my score if the authors could resolve my concerns."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel approach to causal learning through a new invariance test for causality, which underpins a reliable and scalable algorithm for reconstructing causal graphs from observational data. This method leverages a core insight that the conditional distribution of the effect given the cause remains invariant under changes in the prior distribution of the cause. This insight enables a parent-identification process for each variable using synthetic data augmentation. This process is integrated with an efficient search algorithm that utilizes prior knowledge of each effect variable\u2019s Markov blanket, along with the empirically observed sparsity of causal graphs, to significantly reduce computational complexity."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The proposed method is rather novel.   \n2. Overall, the paper is well-structured and clearly written.    \n3. The experiments are extensive, covering 3 types of functional causal models, 6 causal discovery baseline methods, and varying graph sizes."
+            },
+            "weaknesses": {
+                "value": "Any thoughts on how to extend your method to handle heterogeneous or time-series datasets?"
+            },
+            "questions": {
+                "value": "(See above)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new framework that leverages the invariance of effect conditioned on its causes for causal discovery from observational data. The main idea is it try to disturb the p(cause) distribution and see whether the p(effect|cause) would change after the disturbance."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- This work leverages the invariance of conditional distribution and then proposes a downsampling method, combining them to find the parent set."
+            },
+            "weaknesses": {
+                "value": "- The main issue is that since the real intervention is not applicable to the observational data, it provides a downsampled technique to approximate the p(effect|cause) after the disturbance, which, however, has no theoretical guarantee. This is, how to guarantee such a downsampled correctly corresponds to the real distribution after the disturbance?\n- Since the basis variables would include the leaf vertices, in such a case, changing the prior basis variables will not affect the distribution of their ancestors, and thus it may not have a similar effect to changing prior over source variables.\n\nTypos:\n- \"Theorem 2\" -> \"Theorem 4\" in Theorem 5"
+            },
+            "questions": {
+                "value": "See the weakness above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

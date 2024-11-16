@@ -1,0 +1,169 @@
+{
+    "id": "JqKh7FLUw1",
+    "title": "BOOST: Enhanced Jailbreak of Large Language Model via Slient eos Tokens",
+    "abstract": "Along with the remarkable successes of Language language models, recent research also started to explore the security threats of LLMs, including jailbreaking attacks. Attackers carefully craft jailbreaking prompts such that a target LLM will respond to the harmful question. Existing jailbreaking attacks require either human experts or leveraging complicated algorithms to craft jailbreaking prompts. In this paper, we introduce BOOST, a simple attack that leverages only the eos tokens. We demonstrate that rather than constructing complicated jailbreaking prompts, the attacker can simply append a few eos tokens to the end of a harmful question. It will bypass the safety alignment of LLMs and lead to successful jailbreaking attacks. We further apply BOOST to four representative jailbreak methods and show that the attack success rates of these methods can be significantly enhanced by simply adding eos tokens to the prompt. To understand this simple but novel phenomenon, we conduct both theoretical and empirical analyses. Our analysis reveals that (1) adding eos tokens makes the target LLM believe the input is much less harmful, and (2) eos tokens have low attention values and do not affect LLM's understanding of the harmful questions, leading the model to actually respond to the questions. Our findings uncover how fragile an LLM is against jailbreak attacks, motivating the development of strong safety alignment approaches.large language model, Jailbreak",
+    "keywords": [
+        "large language model",
+        "Jailbreak"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=JqKh7FLUw1",
+    "pdf_link": "https://openreview.net/pdf?id=JqKh7FLUw1",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a simple method to bypass the safety training of LLMs by appending EOS tokens to the user prompt. This can be used in combination with other attacks such as GCG. The authors show that their attack can significantly improve the attack success rate on a sample of AdvBench prompts. They further provide some justification for the success of their attack by 1. Demonstrating that a learned \u201cethical boundary\u201d exists, 2. Analyzing how EOS tokens can push representations across the ethical boundary, and 3. Showing how attention values are low for EOS tokens, avoiding the problem of \u201cempty jailbreaks\u201d [1].\n\n[1] Souly, A., Lu, Q., Bowen, D., Trinh, T., Hsieh, E., Pandey, S., Abbeel, P., Svegliato, J., Emmons, S., Watkins, O. and Toyer, S., 2024. A strongreject for empty jailbreaks. arXiv preprint arXiv:2402.10260."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The proposed jailbreaking technique is simple to understand and apply.\n2. The paper provides empirical evidence to support the idea that LLMs learn an \u201cethical boundary\u201d during alignment, and that various attacks (including the proposed EOS attack) can push representations across this boundary.\n3. The evaluation results appear rigorous. Human evaluation was performed to estimate the accuracy of their evaluation metrics, demonstrating reasonably high accuracy (92%). Where applicable, reported results were averaged over multiple trials with means and standard deviations reported."
+            },
+            "weaknesses": {
+                "value": "1. The threat model assumes the attacker is able to add EOS tokens to the user prompt. To the best of my knowledge, no popular closed-source model (e.g. ChatGPT, Claude) allows this. In practice, this jailbreak is therefore mostly just applicable in the open-source setting, as addressed in the limitations section.\n2. I\u2019m not very convinced by the proposed explanation of why adding EOS tokens can successfully jailbreak the models (lines 267-288). The explanation is that EOS tokens are considered \u201cneutral\u201d since they always appear at the end of (prompt, response) pairs during RLHF. But its still unclear why the act of adding neutral tokens would proactively induce a shifting behavior, as opposed to having no effect on the ethical classification.\n\nMinor suggested changes: Line 11: \u201cLarge language models\u201d -> \u201cLarge Language Models (LLMs)\u201d; Line 127, 136: \u201ctokes\u201d -> \u201ctokens\u201d; Line 201: \u201cas well the\u201d -> \u201cas well for the\u201d; Figure 3: add legend for harmful vs. benign colors; Lines 299-300: \u201cstill affects the response\u201d is oddly phrased, perhaps change to \u201cthe response can be disproportionately affected by the attack itself\u201d; Line 311: \u201cempty jailbreak\u201d -> \u201can empty jailbreak\u201d; Line 702: \u201cDisclose\u201d -> \u201cDisclosure\u201d"
+            },
+            "questions": {
+                "value": "1. Can you clarify the notation in lines 152-154? In the first and third conditional probabilities, the random variable x is replaced by a condition \u201cif x is (un)ethical.\u201d I find this notation to be strange and unclear. At a high level, what is trying to be communicated here? Is it that, depending on z, the responses become entirely concentrated on $\\mathcal{R}_\\text{refuse}$ or its complement?\n2. Just to clarify: for the t-SNE visualizations, are the plotted hidden representations 1. A concatenation of the representations across all tokens, 2. The representation of just the final token of x, or 3. Something else?\n3. Can you provide some explanation for why you use different visualization methods for figures 2/3 and 4 (t-SNE vs. PCA)?\n4. Figure 4 shows that both harmful and benign prompts are shifted towards the boundary. On one hand, this means that the model is being encouraged to comply with harmful prompts. But wouldn\u2019t this mean that on the other hand, the model is also being encouraged to refuse benign prompts? Have you observed such refusals of benign prompts from adding EOS tokens? Does this occur as often as jailbreak success of harmful prompts?\n5. In figures 5 and 12, what does the horizontal axis represent? Consider labeling this in the figure.\n6. Lines 446-448 explains that the sensitivity of ICA/CO+EOS attack success to the number of EOS tokens added is due to the fact that EOS tokens can push the representations over the boundary in either direction. However, you could also say the same thing might happen for GCG/GPTFuzzer. So why are ICA/CO different?\n7. In figure 8, could the reason why other tokens aren\u2019t as successful as EOS be that the attention values are much higher? Can there be some experiments added to check this?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces BOOST, a new method for improving jailbreak attacks on LLMs. Unlike previous methods that require complex prompt engineering, BOOST simply appends EOS tokens to harmful prompts, leading to the successful bypassing of LLMs' ethical filters. The authors show that EOS tokens can shift harmful prompt representations toward benign concepts, making it easier to evade ethical boundaries in LLMs. The paper demonstrates BOOST's effectiveness across multiple LLMs and jailbreak methods, significantly enhancing the attack"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tBOOST\u2019s simplicity and effectiveness jailbreak attack methods introducing EOS token manipulation as a jailbreak approach.\n2.\tThe experiments are thorough, using a range of LLMs and showing detailed quantitative results.\n3.\tThe methodology and analysis are clearly presented, with visualizations of ethical boundaries and attention shifts, aiding in understanding the impact of EOS tokens."
+            },
+            "weaknesses": {
+                "value": "1.\tBOOST\u2019s effectiveness is limited for proprietary models, which may filter EOS tokens, potentially reducing BOOST\u2019s applicability.\n2.\tThe mechanism by which EOS tokens affect model behavior may vary, necessitating further exploration of token influence across different model architectures.\n3.\tBOOST's efficiency relies on finding the optimal number of EOS tokens, which might introduce variability and inconsistency in attack performance."
+            },
+            "questions": {
+                "value": "1.\tCould other special tokens (e.g., BOS) offer similar effects as EOS in bypassing ethical boundaries?\n2.\tHow does BOOST compare in effectiveness and reliability with proprietary filtering mechanisms?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposed BOOST (Enhanced Jailbreak of Large Language Model via Silent eos Tokens), which aims to enhance jailbreak attacks on LLMs by appending eos tokens to input prompts. The study reveals that this method can significantly improve the ASR of existing jailbreak strategies by shifting the hidden representations of harmful prompts towards harmless concept spaces, thus bypassing ethical boundaries. \n\nExperiments conducted on 12 different LLMs, including Llama-2, Qwen, and Gemma, demonstrated that BOOST is a general strategy that effectively enhances attack performance. Additionally, the study finds that eos tokens can be used as an effective jailbreak strategy on their own, comparable to other jailbreak methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. This paper reveals the existence of interesting ethical boundaries between benign queries and malicious queries. And found that appending <eos> token can make both benign and malicious queries closer to the boundary. The author also gave an explanation for this phenomenon: <eos> tokens are regarded as neutral during the model fine-tuning stage. The authors proposed BOOST based on this observation: simply appending eos tokens after malicious queries can effectively improve the attack success rate.\n\n2. This paper analyzes the attention map after appending eos tokens and found that adding eos tokens wouldn't affect the original semantics of the malicious query and thus won't degrade the harmfulness of the potential model response.\n\n3. Experimental results showed that BOOST alone can be an effective jailbreak method. And by integrating BOOST, existing jailbreak attack methods would be greatly improved."
+            },
+            "weaknesses": {
+                "value": "* Although the paper presents an innovative jailbreak technique, its practical effectiveness may be limited since many LLMs have built-in mechanisms to filter specific tokens, including the <eos> token, potentially rendering the attack method less viable in real-world scenarios.\n\n* While this research explores the ethical boundaries of LLMs and demonstrates how the <eos> token can push queries closer to these boundaries, it overlooks a crucial aspect: users typically customize system prompts based on their specific needs, which inherently shifts these ethical boundaries. Therefore, a more comprehensive analysis of how the <eos> token's effectiveness varies across different system prompts would strengthen the study's findings.\n\n* The author only discussed the character-perturbation type jailbreak defenses, which is not very practical as these methods would affect the utility of the model's performance on nominal queries."
+            },
+            "questions": {
+                "value": "**Question 1** The experimental results show that the eos token pulls malicious queries toward ethical boundaries, which reminds me of how data points near decision boundaries typically exhibit higher uncertainty in classification problems. Could the author test BOOST's effectiveness against Gradient Cuff [1], which detects jailbreak prompts by analyzing the gradient norm (the gradient nom is to some extent the uncertainty based on my understanding)\n\n**Question 2** As I mentioned in weakness 2, could the author test the BOOST's performance against system-prompt-engineering defenses like Self-Reminder [2]? It could be more supportive if the author also visualized the t-sne plot of LLMs when system prompts changed. \n\n****\n**References**\n\n[1] Gradient Cuff: Detecting Jailbreak Attacks on Large Language Models by Exploring Refusal Loss Landscapes. Xiaomeng Hu, Pin-Yu Chen, Tsung-Yi Ho.\n\n[2] Defending ChatGPT against jailbreak attack via self-reminders. Yueqi Xie, Jingwei Yi, Jiawei Shao, Justin Curl, Lingjuan Lyu, Qifeng Chen, Xing Xie, Fangzhao Wu."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No ethics review is needed."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors investigated jailbreak attacks on large language models. The authors demonstrated that appending several EOS tokens to the end of a given sentence can significantly enhance the attack effectiveness. They explained that this improvement arises because EOS tokens bring the samples closer to the ethical boundary, as evidenced through empirical testing. The authors conducted some experiments to validate the effectiveness and generalizability of the proposed attack."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The idea of this paper is simple, making it easy to follow.\n\n* The proposed method is relatively easy to replicate.\n\n* The experiments are comprehensive."
+            },
+            "weaknesses": {
+                "value": "* Certain parts of the paper are redundant. Section 3.1 is overly lengthy in explaining the concept of ethical boundaries. This could be summarized in a single sentence, as the concept is essentially a classification boundary that determines whether the jailbreak is successful in the context of LLMs. I recommend that the authors revise this section, as the current content in Sections 3.1 and 3.2 may complicate the reader's understanding of the paper.\n\n* The method proposed by the authors is easily circumvented. Model deployers can manually remove the extra EOS tokens, which diminishes the practical effectiveness of the attack. Moreover, it is unclear how to determine the optimal number of tokens to add. While the authors claim that this can be enumerated, doing so would increase attack costs.\n\n* The core contribution of the paper seems limited to the idea of adding a few tokens to a sample."
+            },
+            "questions": {
+                "value": "Have the authors considered placing EOS tokens at different locations within the sentence?  Would this yield better attack results than merely appending them to the end?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

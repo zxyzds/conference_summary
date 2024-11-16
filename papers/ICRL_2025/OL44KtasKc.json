@@ -1,0 +1,166 @@
+{
+    "id": "OL44KtasKc",
+    "title": "SageAttention: Accurate 8-Bit Attention for Plug-and-play Inference Acceleration",
+    "abstract": "The transformer architecture predominates across various models. As the heart of the transformer, attention has a computational complexity of $O(N^2)$, compared to $O(N)$ for linear transformations. When handling large sequence lengths, attention becomes the primary time-consuming component. Although quantization has proven to be an effective method for accelerating model inference, existing quantization methods primarily focus on optimizing the linear layer.\nIn response, we first analyze the feasibility of quantization in attention detailedly. Following that, we propose SageAttention, a highly efficient and accurate quantization method for attention. The OPS (operations per second) of our approach outperforms FlashAttention2 and xformers by about 2.1x and 2.7x, respectively. SageAttention also achieves superior accuracy performance over FlashAttention3. Comprehensive experiments confirm that our approach incurs almost no end-to-end metrics loss across diverse models\u2014including those for large language processing, image generation, and video generation.",
+    "keywords": [
+        "Attention",
+        "Quantization"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We propose a quantization method for Attention that achieves speedups of 2.1x and 2.7x compared to FlashAttention2 and xformers, respectively, without lossing end-to-end metrics across various models.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=OL44KtasKc",
+    "pdf_link": "https://openreview.net/pdf?id=OL44KtasKc",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces a new attention quantization method for speeding up transformer inference. To accelerate attention, the authors propose using INT8 quantization instead of FP8 for faster matrix multiplication on GPUs, along with a method for smoothing the K matrix to improve accuracy. Instead of quantizing the P and V matrices, they maintain them in FP16 and use a low-precision FP16 accumulator for faster multiplication without accuracy loss.  Finally, they offer different speed-accuracy trade-offs and a layer-wise selection method for optimal performance. Extensive experiments have been done on different transformer models for text, image and video generation tasks. The results show that the proposed SageAttention speeds up the FlashAttention2 and xformers by more than 2 times without losing any performance."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1. The contributions of this work are well motivated. \n\n2. The proposed method seems to be novel although I am not an expert in this field. \n\n3. The experiments are quite extensive, covering two different GPUs (RTX4090 and RTX3090), representative models for language, image, and video generation, and a wide range of datasets. \n\n4. The results are quite impressive, showing more than two times speedup without performance degradation."
+            },
+            "weaknesses": {
+                "value": "1. Some design choices seem to be decided by the specific hardwares that are evaluated RTX4090 and 3090 (L271). Are those design choices also compatible with other GPUs like A100 and H100? \n\n2. Table 7 shows that different model/task has different speedup. How is the speedup related to the specific transformer architecture, model size, and complexity of the task?"
+            },
+            "questions": {
+                "value": "I am not an expert in this field and do not have additional questions at this stage. I might have more questions at the discussion phase."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This papers conducts in depth analysis of viability to quantize LLMs/Diffusion models into INT8 frameworks. It also proposes smoothing methods to alleviate the outlier pains in the QKV projection process, demonstrating viable tradeoffs. Comparisons to relevant work is strong."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Paper is well written.\n- Experiments are thorough.\n- Problem is challenging."
+            },
+            "weaknesses": {
+                "value": "- Full comparison to strong SOTA methods such as Flash attention 3, though slightly mentioned in the introduction and in Table 14, is not deeply explored. \n- Only targeted 4090/3000 series GPUs - it would be recommended to be tested on stronger GPUs at server level that is facing the strongest limitations.\n- It would be great to test across VLMs too."
+            },
+            "questions": {
+                "value": "As above in weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents SageAttention, an innovative quantization method designed to optimize the computational efficiency of attention mechanisms in transformer models by employing an 8-bit integer (INT8) quantization. It employs the FlashAttention-wise quantization and matrix smoothing with FP16 for Matmul. With all these proposed components,  the method demonstrates improved computational performance and maintains accuracy compared to existing solutions like FlashAttention2 and xformers."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "+ The paper is well-written, with a logical structure and organization that facilitates understanding.\n\n+ SageAttention shows competitive performance, outperforming FlashAttention2 and xformers by approximately 2.1x and 2.7x, respectively.\n\n+ The method exhibits almost no end-to-end metrics loss across a variety of models, including large language models (LLMs), text-to-image (T2I), and text-to-video (T2V).\n\n+ The discovery of channel-wise consistency, as illustrated in Figure 4, is particularly noteworthy and adds depth to the research."
+            },
+            "weaknesses": {
+                "value": "- The method relies heavily on FlashAttention, which may weaken its technical contribution and originality. What will the performance be if it does not employ the FlashAttention as the basis?\n\n- The reported superiority over FlashAttention3 appears to be quite marginal, raising questions about the significance of the improvements.\n\n- Another major weakness of this paper is that it does not compare SageAttention with other task-specific quantization methods, such as AWQ [1] for LLMs, Q-diffusion [2] for text-to-image, and ViDiT-Q [3] for text-to-video applications, which could provide a more comprehensive evaluation of its performance.\n\n[1] AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration\n\n[2] Q-Diffusion: Quantizing Diffusion Models\n\n[3] ViDiT-Q: Efficient and Accurate Quantization of Diffusion Transformers for Image and Video Generation"
+            },
+            "questions": {
+                "value": "Could the authors elaborate on the \"Llama\" column of Table 1? Specifically, why does the number remain stable even with quantization? Understanding this aspect could provide valuable insights into the robustness of the proposed method."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work explores post-training quantization of the attention mechanism. It claims that it's not well explored in the literature and the existing works focus either on quantized training or post-training quantization of non-attention layers (of course, among other attention acceleration methods, like linear attention, algorithmic accelerations, etc.). The work observed that the Keys matrix has similar values per-token, and proposed to smooth it by applying a per-token bias. It explores optimal quantization strategies and combines it with flash attention algorithmic techniques to obtain the best performance. SageAttention achieves very high reconstruction quality and does not seem to lose much performance on downstream metrics."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The performance boosts seem to be impressive compared to \n- The work carries a valuable observation that the keys matrix has huge correlation per-token. It can be valuable even outside of \n- I find the evaluation section to be very thorough, including many domains (text2image, text2video, LLMs). I especially appreciate text2video (where the sequences are the longest) and performance exploration on second-tier GPUs (e.g. 3090), which are more suitable for production use cases.\n- I am not an expert in quantization, but I checked some prior works and didn't find similar approaches. This makes me consider the paper as novel.\n- The paper provides the source code: I have not tried running it but it is valuable."
+            },
+            "weaknesses": {
+                "value": "- I think that writing should be improved. A table I would like to see the most is the end-to-end model speed improvement and metrics degradation after integrating the proposed attention mechanism. First, for many models accelerating the attention op itself does not necessarily lead to much improved overall speed when the sequence length is short and it's MLPs who carry the main burden. Second, it's not entirely clear when looking at various tables which variant is being used at the end (and why there are so many of them throughout the paper instead of being just in some restricted ablation section). Finally, there are quite many typos and grammatical errors, e.g.:\n    - L084: \"matrice\" => \"matrices\"\n    - L138 (and elsewhere): \"IO\" => \"I/O\"\n    - L144: \"it compute\" => \"it computes\"\n    - L142=144: missing line or equation\n    - L151: \"The \u03c3()\" => \"The\" should be ommited or it should be \"The function \u03c3()\".\n    - L184: \"First, We\" => \"First, we\"\n    - L264-L266: ~3 typos in 3 lines\n    - etc.\n- There are no qualitatives provided for image/video generation."
+            },
+            "questions": {
+                "value": "- Is there a final attention variant among the proposed ones which performs the best uniformly across all tasks?\n- L154: \"The expression diag(l_i^j)^{-1}\" would produce inf-s since l_i^j is initialized as 0. Or how is O_i^j initialized?\n- L151: What is \"online softmax\" (i dont see it to be defined explicitly)? How does it differ from the standard softmax?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

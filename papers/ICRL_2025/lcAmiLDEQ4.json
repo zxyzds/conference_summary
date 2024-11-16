@@ -1,0 +1,174 @@
+{
+    "id": "lcAmiLDEQ4",
+    "title": "MindFlayer: Efficient Asynchronous Parallel SGD in the Presence of Heterogeneous and Random Worker Compute Times",
+    "abstract": "We study the problem of minimizing the expectation of smooth nonconvex functions with the help of several parallel workers whose role is to compute stochastic gradients. In particular, we focus on the challenging situation where the workers' compute times are arbitrarily heterogeneous and random. In the simpler regime characterized by arbitrarily heterogeneous but deterministic compute times, Tyurin and Richt'{a}rik (NeurIPS 2023) recently designed the first theoretically optimal asynchronous SGD method, called Rennala SGD, in terms of a novel complexity notion called time complexity. The starting point of our work is the observation that Rennala SGD can have arbitrarily bad performance in the presence of random compute times -- a setting it was not designed to handle. To advance our understanding of stochastic optimization in this challenging regime, we propose a new asynchronous SGD method, for which we coin the name MindFlayer SGD. Our theory and empirical results demonstrate the superiority of MindFlayer SGD over existing baselines, including Rennala SGD, in cases when the noise is heavy tailed.",
+    "keywords": [
+        "asynchronous optimization",
+        "parallel optimization",
+        "federated learning",
+        "distributed learning",
+        "nonconvex optimization",
+        "asynchronous methods",
+        "Random Compute Heterogeneity",
+        "time complexity",
+        "heterogeneous clients",
+        "stragglers"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=lcAmiLDEQ4",
+    "pdf_link": "https://openreview.net/pdf?id=lcAmiLDEQ4",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes MindFlayer, a variant of asynchronous SGD that specifically deal with the presence of random compute times. Theoretical analysis and empirical results are provided accordingly."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper proposes MindFlayer, a variant of asynchronous SGD that specifically deal with the presence of random compute times. \n\n2. Theoretical analysis and empirical results are provided accordingly."
+            },
+            "weaknesses": {
+                "value": "Major issues:\n\n1. For the algorithm itself, the contribution of MindFlayer SGD is incremental since it's mostly based on Rennala SGD, as the authors stated in this paper by themselves: \"For MindFlayer SGD, each iteration, on average, receives only Bp gradients, making it effectively a scaled-down version of Rennala SGD.\" (Lin 241-242)\n\n2. Although it is stated that MindFlayer SGD is designed for dealing with the complexities/challenges of real-world distributed learning environments and applications, the experiment settings are far from those for real-world applications (especially in 2024). The only non-convex problem used in the experiment is an extremely simple two-layer neural network on the MNSIT dataset, which is far from convincing if the authors want to show that the proposed algorithm could be used in real-world distributed training and applications. \nRegardless of the real-world settings, most of the experiments are on convex problems, which cannot even be used to verify the theoretical results, since the theoretical analysis is based on smooth but non-convex settings. \n\n3. I cannot find the hyperparameters (basically just learning rates) used in the experiments, or in what range the hyperparameters are tuned. Actually, it is known whether the baselines are fairly tuned. For example, in Figure 5, the curve of ASGD seems to be a flat line (or it simply gets worse from the very beginning). However, if the learning rate is well tuned, a small enough learning rate should make the grad norm or loss of ASGD going down even a little bit. Thus, the overall experiment settings and the hyperparameter tuning is questionable.\n\nMinor issues:\n\n1. In several algorithm, for example Algorithm 1, does \"Method 4\" actually mean Algorithm 4 in the appendix? If so, please make the naming consistent across the entire paper.\n2. Separating the main algorithm (Algorithm 1 and Algorithm 4) in the main paper and the appendix is not friendly to the readers. Especially there is still space remaining in the main paper.\n3. Putting experiment description and the corresponding figures (Figure 4,5) separately in main paper and the appendix is also unfriendly to the readers."
+            },
+            "questions": {
+                "value": "1. How are the hyperparameters tuned in the experiments?\n\n2. For non-convex problems, smaller gradient norm doesn't always implies smaller loss value. And eventually we train models for smaller loss, not for smaller gradient norms. Could the loss curve also be added for the experiment of the neural network on MNIST?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper explores the challenges and solutions of SGD in environments where compute times of parallel workers are irregular and unpredictable. Prior work introduced Rennala SGD for situations with heterogeneous but fixed compute times, optimizing time complexity. However, this method falters when applied to scenarios where worker compute times vary randomly. The authors introduce MindFlayer SGD, a new asynchronous SGD method designed to handle random compute times and demonstrate its effectiveness through both theoretical analysis and empirical data, showing that it outperforms existing methods like Rennala SGD, especially in environments with heavy-tailed noise distributions."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. MindFlayer SGD provides a more realistic approach to asynchronous SGD in modern, heterogeneous computing environments.\n2. The paper provides a solid theoretical framework for the proposed method, including proofs of its efficiency and effectiveness over traditional methods"
+            },
+            "weaknesses": {
+                "value": "1. As described in Algortihms 1 and 2, a client needs to wait for other clients even after completing all of its trials, and each server\u2019s update (Algorithm 1 Line 12) must aggregates gradients from all clients. Given these characteristics, MindFlayer SGD seems to function more like a synchronous algorithm rather than an asynchronous one.\n2. The generalized computation model modestly extends the fixed computation model used in Rennala SGD, which may not present significant technical challenges.\n3. The impact of various hyperparameters involved in MindFlayer SGD is not deeply discussed Particularly, the parameters $t_i$ and $B_i$ are difficult to choose in practice, which plays a central role in MindFlayer SGD and could be crucial for practitioners aiming to adapt the method to specific applications.\n4. The experiments compare MindFlayer SGD solely with Rennala SGD and vanilla ASGD, and the test problems may be overly simple. Including comparisons with a wider array of contemporary asynchronous methods on more complex machine learning problems could enhance the argument for MindFlayer SGD's superiority."
+            },
+            "questions": {
+                "value": "1. In line 470, th authors use L-BFGS-B to obtain optimal $t$. How to obtain the unknown parameters, e.g., $p_j$, in the optimization problem? Is the optimality theoretically guaranteed? What is the computational cost incurred?\n2. In Algorithm 1 Line 5, Line 307, and Line 323, shoud the \u201cMethod 4\u201d or \u201cAlgorithm 4\u201d be changed to \u201dAlgorithm 2\u201c?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposed a new asynchronous SGD method for minimizing smooth and nonconvex functions, called MindFlayer SGD, which is specifically designed to operate under conditions of heterogeneous and random compute times. Through theoretical analysis and empirical evaluation, the authors show that MindFlayer SGD outperforms existing methods, including Rennala SGD, especially in scenarios with heavy-tailed noise. In addition, the paper also introduced Vecna SGD in the heterogeneous regime with applications in the distributed optimization and federated learning"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. **Well-Organized Structure**: The paper is structured clearly, allowing readers to follow the development of ideas seamlessly. It includes a comprehensive literature review that contextualizes the research within the broader field of stochastic optimization, highlighting the significance of addressing the challenges posed by heterogeneous and random compute times. The authors present the MindFlayer SGD algorithm with detailed explanations of its design and motivation. This clarity enhances the reader's understanding of how the algorithm functions and its advantages over existing methods.\n\n2. **Strong Supporting Evidence**: The claims made in the paper are robustly supported by both theoretical proofs and empirical results. The theoretical framework provides a solid foundation for the proposed algorithm, while the experimental findings demonstrate its superior performance in various scenarios, particularly in the presence of heavy-tailed noise.\n\n3. **Sufficient Implementation and Proof Details**: The paper provides adequate details regarding the implementation of MindFlayer SGD and the associated proofs. This transparency allows for reproducibility and facilitates further research, enabling other researchers to build on the authors' findings effectively."
+            },
+            "weaknesses": {
+                "value": "**Implicit Assumption of Utilizing Privileged Information $p_i$ in Algorithm Design**. In the real world, the distributions of compute time for different works are usually unknown. The proposed algorithms implicitly leverage this information to get the expected batch size $B$. I am not sure if this is required in the proof. The paper fails to discuss this limitation and provide a workaround without using information $p_i$"
+            },
+            "questions": {
+                "value": "## Major\n1. Implicit Use of Privileged Information  $p_i$: Could the authors clarify this assumption further? Why is it necessary? Is there a possibility of incorporating an online estimate of $p_i$ within the algorithm?\n2. Decentralized Setting: The paper primarily addresses a centralized setting. Are there any potential extensions to accommodate decentralized training?\n\n\n## Minor\n1. Method 4 in Algorithm 1 should be referred to as Algorithm 2\n2. Algorithms 2 and 4 could be misleading. I don't think we can realistically sample compute times in the real world."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a parallel SGD computation scheme when each local work has random compute times. The authors show that the proposed method is a generalization of Rennala SGD and is thus optimal in deterministic worker time regime. When randomness exists, the authors empirically verify that the proposed method is better than Rennala SGD and ASGD for different settings. Theory contribution involves single device justification of superiority of MindFlayer, derived convergence result and time complexity of MindFlayer."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper first time studies parallel SGD setting where workers have random reply times. This setting is practically important. Presentation is clear and easy to follow, with motivating single device example. Theorems are core (convergence and time complexity), accompanied with digestions. Experiments are illustrative and effectively demonstrate the superiority of the proposed method over baselines."
+            },
+            "weaknesses": {
+                "value": "I personally recognize the main value of current work to be the setting being considered, where worker has random reply time. The authors claim they are first to consider this type of setting, and I do think it is of practical importance. The authors may consider addressing the following limitations:\n\n1. The proposed method seems theoretically intuitive but may have practical limitations. Algorithm 1 and Algorithm 2 look more like an experiment setup instead of a true practical algorithm. For example, distribution of $\\eta_i$ and thus also $p_i$ are hard to evaluate in practice. Compared to ASGD and Rennala SGD, Algorithm 1 involves more parameters such as $B_i,p_i$ that users need to decide on. Experiments are carried out where $\\eta_i$  is of certain ideal theoretic distribution, which is rarely encountered in practice. Therefore, empirically estimation of good choices of $B_i,p_i$ and even $\\mathcal{J}_i$ remain a problem.\n\n2. The setting being considered is interesting but may rise other practical issues. For example, the proposed method chooses to initialize another query whenever the current gradient computation takes too lone (quantified by $>t$), I feel this would significantly increase number of communication rounds between server and workers compared to baseline ASGD and Rennala SGD, which may form bottleneck in certain settings.\n\n3. Figure 3 is hard to read, legends should be added to demonstrate what are dashed green line/ dotted purple line/ solid yellow line/ shaded grey region. The title includes no such information as well. \n\nMinor writing typos:\n1. line 33, shouldn't the codomain of $f$ be $\\mathbb{R}$ instead of $\\mathbb{R}^d$?\n2. line 5 in Algorithm 1 and line 308 of text, the authors seem to intend to refer Algorithm 2 while wrongly typed Algorithm 4? If Algorithm 4 is intended, it should be moved to main content.\n3. line 346, it says \"convergence of Rennala SGD\" while I feel it's for  MindFlayer instead of Rennala SGD?\n4. in Figure 3 title, \"section\" missed i\n5. line 464, \"the time complexity of Rennala SGD\" should capitalize first letter"
+            },
+            "questions": {
+                "value": "see limitations above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

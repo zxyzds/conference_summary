@@ -1,0 +1,208 @@
+{
+    "id": "F4meTCwlxZ",
+    "title": "Consistency Guaranteed Causal Graph Recovery with Large Language Models",
+    "abstract": "Causal graph recovery traditionally relies on statistical estimation of observable variables or individual knowledge, which suffer from data collection biases and knowledge limitations of individuals. Leveraging the broad knowledge in scientific corpus, we propose a novel method for causal graph recovery to deduce causal relationships with the large language models (LLMs) as a knowledge extractor. Our method extracts associational relationships among variables and further eliminates the inconsistent relationship to recover a causal graph using the constraint-based causal discovery methods. Comparing to other LLM-based methods that directly instruct LLMs to do highly complex causal reasoning, our method shows advantages on causal graph quality on benchmark datasets. More importantly, as causal graphs may evolve when new research results emerge, our method shows sensitivity to new evidence in the literature and can provide useful information to update causal graphs accordingly.",
+    "keywords": [
+        "Causal discovery",
+        "causal reasoning",
+        "large language models",
+        "knowledge extraction"
+    ],
+    "primary_area": "causal reasoning",
+    "TLDR": "This work proposes a novel LLM-based causal graph recovery method, by leveraging the SOTA scientific corpus.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=F4meTCwlxZ",
+    "pdf_link": "https://openreview.net/pdf?id=F4meTCwlxZ",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces LLM Assisted Causal Recovery (LACR), a method for constructing causal graphs using large language models (LLMs) to extract relationships from scientific literature. Building causal graphs from literature is nothing new. The key innovation is a principled constraint-based approach (e.g., using d-seperation) to assemble the DAG from the \"Conditional Associational Relationships\" extracted from literature to build a causal graph that meets causal discovery principles.\n\nThe authors evaluate on the ASIA and SACHS against pure LLM and hybrid methods."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The main strength of the paper is the use of causal constraints to evaluate putative causal relationships extracted from text. Prior work has focused mostly on acyclicity constraints, I've never seen a method take constraints to this level of rigor."
+            },
+            "weaknesses": {
+                "value": "The reliance on faithfulness seems a weakpoint, as faithfulness violations seem more likely when we're just talking about co-occurance in natural language text.\n\nThis seems extremely vulnerable to latent variables. There are constraint based approachs that could be used to deal with latents, such as Verma constraints, though good luck getting a natural langauge-based approach to enforcing those constraints. \n\nThe evaluation used GPT-4o to reconstruct the SACHS and ASIA networks (also, I believe ASIA was invented as a toy model for causal discovery, which means it is directly discussed in detail in training data). GPT-4o has memorized these DAGs. See below ChatGPT output, I think Sachs is missing a few things (I recall a node called Akt that doesn't appear in my generated text) but GPT's result is close. The ASIA generation is spot on. In my view this invalidates the evaluation:\n\nHere is verbatim from ChatGPT:\n\nUSER: * give me a causal DAG with edges from the SACHs network*\n\nChatGPT: The SACHS network is a causal graph representing protein signaling interactions in immune cells, with edges representing causal influences between proteins. Here\u2019s a simplified version of the SACHS causal DAG structure:\n\nPKC (Protein Kinase C) \u2192 RAF\nPKC \u2192 PIP3 (Phosphatidylinositol (3,4,5)-trisphosphate)\nPKC \u2192 JNK (c-Jun N-terminal Kinase)\nPKC \u2192 ERK (Extracellular signal-Regulated Kinase)\nPIP2 (Phosphatidylinositol 4,5-bisphosphate) \u2192 PIP3\nRAF \u2192 MEK (Mitogen-activated protein kinase kinase)\nMEK \u2192 ERK\nJNK \u2192 c-Jun\nERK \u2192 ELK1\nThis simplified DAG captures some key causal dependencies in the SACHS network. If you need a graphical representation, I can create it with these edges as a visual diagram.\n\nUser: *Give me the edges in the ASIA causal DAG*\n\nChatGPT: The ASIA causal DAG is a well-known example in probabilistic reasoning, often used to illustrate Bayesian networks. It represents the relationships between variables related to a fictional medical diagnosis scenario. Here are the edges in the ASIA causal DAG:\n\nVisit to Asia \u2192 Tuberculosis\nSmoking \u2192 Lung Cancer\nSmoking \u2192 Bronchitis\nTuberculosis \u2192 Tuberculosis or Cancer\nLung Cancer \u2192 Tuberculosis or Cancer\nTuberculosis or Cancer \u2192 X-ray\nBronchitis \u2192 Dyspnea\nTuberculosis or Cancer \u2192 Dyspnea\nThese edges show the dependencies among variables in the ASIA network, illustrating how visiting Asia, smoking, tuberculosis, lung cancer, and bronchitis influence symptoms like dyspnea and the likelihood of a positive X-ray result."
+            },
+            "questions": {
+                "value": "Comment: Other reviewers might call out the complexity but complexity seems on par with constraint-based discovery algorithms.\n\nIn the intro, the authors posit their approach as a solution the bias in the data of causal discovery from numerical data. These seems like an unnecessary contrast, and indeed, natural langauge documents will also have bias (e.g., biases against negative results, biases torwards well-understood systems, etc.). Why not just treat causal graph building from text data as another modality for causal discovery?\n\nLACR optimizes the CARs by removing the minimum number necessary to resolve inconsistencies. Does this induce path dependence in removing CARs?\n\nThe fact that Sachs and ASIA DAGs are memorized by GPT-4o is a big problem. Possible remedies:\n1. Sachs is a signaling pathway. You can look through biomodels.org or Kegg to find alternative pathways, prompt the model to see if it can reconstruct with high accuracy.\n2. Use a smaller opensource model, validate that it hasn't memorized the DAGs, and then use that model.\n3. Create an artificial DAG in a science domain, create synthetic corpus based on that DAG.\n\nWilling to upgrade score if this is addressed."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a method for recovering causal graphs using LLMs by handling inconsistencies in the LLM's extracted relationships, with this task being formulated as a consistency maximization problem, analyzed theoretically with graph theory tools, and applied on two experimental datasets."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "There are aspects of the paper I perceive to be strengths.\n\nFor example, the LLM prompting strategy seems efficient; the outlined theory is useful in that it helps readers quantify worst-case performance. \n\nThe authors explore various evaluation metrics. \n\nThe writing is overall clear (although there is some room for possible improvement, see below)."
+            },
+            "weaknesses": {
+                "value": "There are aspects of the paper I perceive to be possible weaknesses, or at least, areas with room for improvement. \n\nThe theoretical results seem to be (close to) relatively standard applications of results from graph/approximation theory. Perhaps moer \n\nSome of the algorithms as outlined don't seem to offer much by way of intuition. As with many papers in the DAG-recovery context, there are a number of moving pieces notationally. I would potentially define notation clearly at the head of the algorithms, along with inputs, outputs, and goal. If the associated algorithms run too long, consider moving to Appendix. \n\nOne limitation of the evaluation metrics as outlined is that they weigh all edge mispredictions in the same way. In practice, some edge mispredictions in a causal graph may be more or less deleterious in practice. I can think of a few ways this may be overcome in practice. Perhaps the paper selects one relationship in the DAG is of primary scientific interest, and performs ATE estimation with the adjustment set applied by different recovered DAGs. Bias, Variance, and RMSE of the downstream causal estimator(s) could then be examined and could provide useful context for evaluating performance. \n\nAnother challenge to contextualizing performance -- I don't seem to see much information for \"baseline LLM 1\" and \"Baseline LLM 2\". It is possible, therefore, that the performance gains in Table 1 are due to the specific way of LLM prompting, or the constraint maximization, or the way that majority voting was handled. \n\nBased on the prompting strategy, the \"we first retrieve a fixed number of the most relvant scientific papers\" seems to be doing a lot of work in the analysis. In general, the proposed method seems to rely on the presence of LLM prior-knowledge of research papers on a given subject. In that sense, the method, as far as understand it, would be difficult to apply in a generic scenario with unlabeled columns. This would imply that the method is much less broadly applicable than competing methods that just use features of statistical distributions of observed variables (I also don't seem to see a comparison with such direct methods). In practice, investigators may have access to papers and so forth; the method described here involves some extra effort to assembled a relevant paper corpus."
+            },
+            "questions": {
+                "value": "I have some questions about the LLM comparison prompting methods (see above)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "NA."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a novel way of developing a causal graph using LLMs, by doing retrieval-augmented generation with scientific documents. They also provide algorithms to resolve inconsistencies in the final causal graph. Experiments are done on two datasets to show the promise of the method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Good idea to include scientific documents in the prompt of LLM, to avoid solely relying on LLM's background knowledge\n* Definition of the two kinds of inconsistencies that appear when merging graphs from different LLM calls\n* Algorithmic abstraction of the key consistency challenges faced whenever aggregating inputs from (LLM/human) experts"
+            },
+            "weaknesses": {
+                "value": "* Experiments are done only on two small datasets\n* Some choices in the evaluation setup are not well-motivated \n* The chosen datasets are unable to show the real potential of the method. Even baselines do well on these datasets. See Table 1 where F1 is the highest for LLM1 baseline for Asia and the F1 is almost the same for LLM2 baseline in Sachs. Instead, it will be good to show experiments on non-memorized datasets (i.e., less popular datasets) where the gains may be higher."
+            },
+            "questions": {
+                "value": "The formulation of the problem and the algorithmic abstraction are key contributions. I feel that the two algorithms for consistency and orienting direction can be generally useful, even if we are not using any retrieved documents. I have the following questions: \n\n1. The main limitation is that the experiments are not convincing. The choice of datasets is not well-motivated. Both datasets are small graphs and arguably heavily memorized. Choosing another dataset (more complex and less memorized), such as the neuropathic, alzheimers, arctic sea ice, or covid-19 (see kiciman et al. for these datasets) can provide a better motivation (and hopefully stronger results) for the method. \n2. Separately, while the main contribution is pitched as the retrieval of documents, I feel that the skeleton building and orienting algorithms are useful in their own right. Often, there are multiple (LLM) experts that may suggest slightly different graphs--would it make sense to do experiments to show that algorithms LACR1 and LACR2 can help any LLM-based method? \n3. How many LLM calls are needed to process a variable pair v1, v2? It is not clear from the paper. Is there a sequential process followed. Also, how big is each document? Is a scientific document chunked into paragraphs that is then inserted in the prompt? More details on LLM call time complexity will help. Relatedly, I would be curious to see an ablation where LACR1 and LACR2 are used on top of a baseline LLM algorithm (but without the documents). For example, you can run LLM-BFS with different seeds, or combine LLM-BFS with LLM-pairwise output (assuming that such a combination has similar number of LLM calls as the proposed method). It is difficult to parse whether the gains are due to the documents, or because of LACR1 and LACR2?\n4. How are the \"best\" evaluation baselines decided in Table 1? No justification is provided and the choice seems arbitrary.\n5. Why are the \"best\" baselines not evaluated for the new graphs? This seems unfair. If you are changing the ground-truth based on the output of your own method, at least evaluate the baselines on this new ground truth.\n6. Are you assuming causal sufficiency? What if two variables can be d-separated but the separating variable is unobserved. Or if two variables have an unobserved confounder but the algorithm ends up creating an edge between them?\n\nMinor:\nThere is a typo in the prompt in E.5.1. associtional"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents LACR (LLM-Assisted Causal Recovery) for causal graph discovery that leverages LLMs to extract causal relationships from the scientific literature. By combining LLM-driven knowledge retrieval via RAG with constraint-based causal discovery techniques, LACR refines causal graphs with recent literature, addressing data biases and inconsistencies often present in purely statistical methods. Tested on 2 benchmark datasets, the method demonstrates improved causal graph accuracy, showing potential for adaptive, knowledge-rich causal inference."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- LLM knowledge might be biased or limited, adding RAG for causal discovery mitigate some weaknesses in the LLMs.\n\n- LACR addresses inconsistency issues in causal relationships using a constraint-based optimization approach, making causal graphs more reliable and less prone to noise from conflicting sources.\n\n- The paper is fairly easy to follow with prompt templates mentioned in the Appendix.\n\n- Novel setup to include RAGs to causal discovery."
+            },
+            "weaknesses": {
+                "value": "- There is a lack of comparison between statistical (such as PC, FCI, etc) and LLM methods. It would make the paper stronger to have the standard causal discovery evaluations. The paper was motivated against the use of standard methods, it seems like an obvious comparison to make in that case.\n\n- The results have been presented on 2 highly popular datasets - Asia and Sachs. While it is not easy to find datasets that are not ingested by LLM, results on more domains/DAGs would be suggestive of its generalizability."
+            },
+            "questions": {
+                "value": "- It would be good to mention Limitations and Future Works.\n\n- How would the performance be impacted when lesser capable models are used? Is it still better that standard causal discovery algorithms?\n\nL 367 space needed."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper aims to recover causal graphs when numerical data is unavailable and individual knowledge is limited.\n\nThe main claim: LACR gives better causal graphs than directly instructing LLMs.\n\nThe proposed LACR method:\n1. infer CARs from documents.\n2. recover causal graphs with constraint-based methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. An interesting pipeline to construct causal graphs from the scientific corpus.\n2. Detailed formalization, analysis, and discussion."
+            },
+            "weaknesses": {
+                "value": "- The results are not complete. In Table 1, 19 blanks are specified as N/A. I fail to see any difficulty to produce these so-called N/A metrics since F1 score can be produced. Please provide the missing parts.\n- The baseline methods used are not consistent. The two baseline methods in ASIA and SACHS are totally different. All four baselines should be fully evaluated in each dataset.\n- The evaluation for phase 2 is unclear. In phase 1, two version of ground-truth are used for each metric, like F1 and F1(new). But for phase 2 it is not reported in the same way. Please provide the missing parts.\n- The overall evaluation for the final DAG has not been reported. For example, accuracy, recall, F1, SHD, and SID metrics for the 3 variants + 4 baselines over the two used datasets."
+            },
+            "questions": {
+                "value": "1. There are many important issues in experiments. See the weakness part. These issues make me very worried about the solidness and effectiveness of this paper. \n2. Did the authors conduct their own experiment to evaluate the baselines?\n3. About motivation. Could you give me any example where scientific papers can be published without supporting numerical datasets? Please clarify the specific scenarios or fields where the method would be most applicable and valuable."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,171 @@
+{
+    "id": "e92KW6htFO",
+    "title": "MICE: Memory-driven Intrinsic Cost Estimation for Mitigating Constraint Violations",
+    "abstract": "Constrained Reinforcement Learning (CRL) aims to maximize cumulative rewards while satisfying constraints. However, most existing CRL algorithms encounter significant constraint violations during training, limiting their applicability in safety-critical scenarios. In this paper, we identify the underestimation of the cost value function as a key factor contributing to these violations. To address this issue, we propose the Memory-driven Intrinsic Cost Estimation (MICE) method, which introduces intrinsic costs to enhance the cost estimate of unsafe behaviors, thus mitigating the underestimation bias. Our method draws inspiration from human cognitive processes, specifically the concept of flashbulb memory, where vivid memories of dangerous events are retained to prevent potential risks. MICE constructs a memory module to store unsafe trajectories explored by the agent. The intrinsic cost is formulated as the similarity between the current trajectory and the unsafe trajectories stored in memory, assessed by an intrinsic generator. We propose an extrinsic-intrinsic cost value function and optimization objective based on intrinsic cost, along with the corresponding optimization method. Theoretically, we provide convergence guarantees for the new cost value function and establish the worst-case constraint violation for the MICE update, ensuring fewer constraint violations compared to baselines. Extensive experiments validate the effectiveness of our approach, demonstrating a substantial reduction in constraint violations while maintaining policy performance comparable to baselines.",
+    "keywords": [
+        "reinforcement learning",
+        "constraint optimization",
+        "underestimation",
+        "intrinsic cost"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=e92KW6htFO",
+    "pdf_link": "https://openreview.net/pdf?id=e92KW6htFO",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents MICE, a novel constrained reinforcement learning method aimed at alleviating constraint violations. Its main contributions include:\n\n1. Identifying the underestimation of cost value functions as a key factor contributing to constraint violations in constrained reinforcement learning, providing a new perspective.\n2. Proposing a memory-based intrinsic cost estimation scheme that enhances the cost estimation of unsafe behaviors by storing unsafe trajectories.\n3. Introducing new external-internal cost value functions and optimization objectives, offering theoretical guarantees for convergence and worst-case limits on constraint violations.\n4. Experimental results demonstrate that MICE significantly reduces constraint violations while maintaining comparable policy performance to baseline methods, validating its effectiveness and reliability across various environments."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. MICE introduces a novel approach that integrates memory into the CRL framework by drawing an analogy to human cognitive mechanisms. The idea of utilizing a memory module to store and leverage unsafe trajectories offers a fresh perspective for mitigating the underestimation bias of cost value functions.\n2. The paper provides a rigorous theoretical foundation for the proposed MICE algorithm, including proofs of convergence and definitions of constraint violation limits, enhancing the robustness of the method.\n3. The experimental design is comprehensive, testing across multiple scenarios and demonstrating MICE's effectiveness in reducing constraint violations while maintaining strong performance.\n4. The authors emphasize reproducibility by providing code for replicating the results."
+            },
+            "weaknesses": {
+                "value": "1. Despite experiments across several environments, the evaluation lacks assessments in a broader range of task types and robot types.\n2. The proposed method may struggle to scale to high-dimensional inputs, such as predicting costs based on visual input trajectories, as such extensions may incur excessive computational costs.\n3. Although this method shows advantages over baselines in balancing constraint satisfaction and performance, it still does not address safety issues during the learning process, merely increasing conservativeness."
+            },
+            "questions": {
+                "value": "1. The approach for addressing cost underestimation in MICE is heuristic, but Figure 5 indicates that this method can still ensure that actual costs align with thresholds rather than being excessively low. The reviewer is curious about how the authors resolve this issue\u2014specifically, how they maximize costs (implying limits on hazardous behavior) while largely avoiding constraint violations.\n2. Could the authors demonstrate the scalability of MICE across more tasks and in more complex settings, particularly with high-dimensional inputs (e.g., trajectories based on images)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No ethics concerns"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigates underestimation bias of cost value function in actor-critic based safe RL algorithms. It provides an overview on why this underestimation occurs and proposes MICE method which learns an \"intrinsic cost\" to compensate this underestimation bias. The contributions include (i) designed flashbulb memory module which outputs intrinsic cost which is subsequently used to mitigate underestimation in cost-value function, (ii) provided theoretical bound on the worst-case constraint violation for MICE update and convergence guarantee, (iii) performed a number of empirical experiments to ascertain the validity of the proposed approach."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is written in an easy-to-understand manner and addresses an important problem in safe RL: value underestimation, which impacts most (if not all) safe RL algorithms.  \n\n2. The motivation behind this paper is clear and it provided useful theoretical analyses demonstrating the convergence guarantee and bound on constraint violation.  \n\n3. The paper performed a variety of experiments showing the outperformance of its method, sensitivity analysis of hyper-parameters, ablation study and robustness validation."
+            },
+            "weaknesses": {
+                "value": "1. Baseline which addresses underestimation bias\n\nI understand that the underestimation bias was caused by the $min$ operator when safe RL algorithm is trying to fit the action-value function for cost $\\hat{Q}_c$. This is analogous to the overestimation bias for reward when RL algorithm uses $max$ operator while fitting action-value function $\\hat{Q}_r$.  \n\nFor the overestimation bias, what RL algorithm (e.g. TD3) did was that it uses the minimum of the output from two separately-learned action-value networks $\\hat{Q}_r^1, \\hat{Q}_r^2$ for policy update. Similarly, can't we use the maximum of the output from two separately-learned action-value networks for cost $\\hat{Q}_c^1, \\hat{Q}_c^2$ to combat this underestimation bias in cost? This sounds like a possible simpler baseline to me.  \n\n2. Elaboration on Eq3\n\nI think it'd be good for the paper to discuss how they design the formula for intrinsic cost. I can't fully grasp why the intrinsic cost is designed this way just by reading the main paper. For example:\n\na. What does the discount factor here signify? This \"intrinsic discount factor\" is different from the reward and cost discount factor and its exponent is $k$: iteration number of value estimation. Why is there compounding discount as the iteration increases?  \n\nb. The L2-norm distance depends on time index $t$ such that it only compares the state-action similarity (between current trajectory and historical trajectory) at time $t$. This is quite counterintuitive because RL policy function or value function are usually not time-index dependent.  \n\nc. The weight $\\omega$ seems to be another hyper-parameter. How does one decide the right weight to use? The paper does state that $\\omega$ should be between 0 and 1 but finding the right value still seems to be tricky.  \n\n3. Explanation on how MICE eliminates underestimation bias\n\nThe paper mentions that MICE injects overestimation into the cost value-function estimate. Injecting overestimation bias to an underestimated function does not mean the underestimation bias is correctly eliminated since the injected overestimation could under-compensate or over-compensate the pre-existing underestimation bias.  \n\nI think the paper could perhaps elaborate more on how the overestimation introduced by MICE correctly mitigates the underestimation bias.  \n\n4. Minor typo: \"worst-case\" in line 073"
+            },
+            "questions": {
+                "value": "Please refer to the weaknesses section as all my questions have been listed there. I'm more than happy to discuss and please let me know if I misunderstood or misses out anything."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes the MICE algorithm, designed to address constraint violations in constrained reinforcement learning by mitigating the underestimation of cost values. MICE introduces an intrinsic cost signal inspired by flashbulb memory, which stores and references unsafe trajectories to adjust cost estimates for actions likely to result in constraint violations. Empirical results on various safety-critical environments demonstrate a reduction in constraint violations with baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "MICE introduces a flashbulb memory module that stores unsafe trajectories, which is a novel approach in CRL to handle underestimation biases and improve constraint adherence.\nClear Problem Identification: The paper identifies and targets a critical issue in CRL: the underestimation of cost values leading to unsafe policy behavior, making this contribution relevant for safety-critical applications.\nTheoretical and Empirical Contributions: MICE provides a theoretical framework with guarantees on constraint violation and convergence, supported by empirical results across various environments, reinforcing the algorithm\u2019s applicability."
+            },
+            "weaknesses": {
+                "value": "- The writing of this paper requires significant improvement and polish. Many unclear notations and statements make it hard to follow. For example, in equations (3) and (4), the symbols $\\tau_i^m(t)$ and $\\tau(t)$ are never defined. The term $c_t^I$ is stated to be a function of $\\gamma_I^k$, where $k$ represents the iteration number; thus, $c_t^I$ should also depend on $k$. The symbol $W$ is described as a set, yet in equation (3), $W$ appears to be used as a weight. Furthermore, it is unclear what $n$ represents in this context. Additionally, $c^E$ is not defined in equation (4).\n\n- In the definition of $J_C^{EI}$, which depends on both extrinsic and intrinsic costs, $c^E$ seems to rely on flashbulb memory. This makes it a random variable dependent on the policy applied at each step. Fundamentally, the expectations in $J_C^{EI}$ and $J_C(\\pi)$ differ, and thus, one cannot prove lemmas such as Lemma 1 by simply subtracting one from the other.\n\n- I observed no discussion on the reward function. Typically, in safe RL, actions are chosen not solely based on the $Q$ function. Therefore, the Bellman equation presented in (6) does not appear to be correct. As mentioned in the introduction, safe RL is often solved using a primal-dual approach, which implies that the value function update should be in the SARSA form.\n\n- Based on the experimental results, it seems the paper\u2019s claimed contribution towards addressing training violations is not clearly substantiated."
+            },
+            "questions": {
+                "value": "1. Over what is the expectation in the equation (5) taken?\n\n2. Are there any justifications for calculating the difference in equation (3) in terms of individual steps? Two safe trajectories may not even contain the same state-action pairs at each step.\n\n3. LP-based approaches are missing in the related work.\n\n4. Typo in Figure 6? The word \"constant\" appears on top of each figure."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors present MICE, a method to combat the cost underestimation problem in constrained RL. CRL cost value functions often underestimate the cost of actions taken, resulting in risky actions being taken more often than they should.\n\nIn order to address this, the authors propose a few key innovations:\n1. An explicit memory storage system for bad trajectories that violate some threshold of cost.\n2.  A generator model that determines an 'intrinsic' cost value for trajectories based on the stored dangerous trajectories\n3. The intrinsic cost is added to the extrinsic cost, training the cost critic to estimate bad state-action pairs closer to their true cost."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This work is well-motivated in that it addresses an as-of-now open and broad problem in CRL, which is as much a question of study as overestimation is in value-function RL. Their idea to mitigate underestimation by explicitly storing violating trajectories seems sound as it helps counter some potential problems that could arise with constrained cost estimation in RL using function approximation such as loss of network plasticity or catastrophic forgetting. \n\nThe bound provided in Theorem 1 also lends credibility to the idea, as it shows (seemingly convincingly based on the proof provided in the appendix) that this method should guarantee an improvement in cost estimation. \n\nThe results in Figures 3 and 4 indicate robustness to the performance criteria while maintaining constraint validity across the environments tested. While MICE does not always reach the performance of competing baselines, it does so by ensuring coherence with the constraint thresholds indicated, which is the desirable outcome.\n\nThe ablations also provide interesting insight into the effects of changing the key hyperparameters such as constraint threshold and memory capacity, where the performance/constraint behaviour of the method changes as expected, which indicates that the intuition behind these mechanisms inferred by the authors is correct.\n\nThe clarity of the main text is fairly high and consistent across the paper, and the authors avoid bloviation or confusion by drawing clear conclusions and analogies (e.g. the comparison to the bio-inspired traumatic memory mechanism in humans is intuitive and sets up the main idea nicely)."
+            },
+            "weaknesses": {
+                "value": "The method requires setting hyperparameters which have non-trivial effects on the performance and constraint following of the method, resulting in a potential complication in practice. How were these hyperparameters set in the paper? How can they be appropriately determined by a practitioner hoping to use this method for a problem where, for e.g. the acceptable level of constraint violation is subjective? \n\nThe use of explicit memory places an arbitrary distinction between acceptable and unacceptable trajectories, which will affect how the intrinsic costs are determined. If adhering to an arbitrary constraint level is required, this may be appropriate. However, what if many trajectories have costs just below the threshold and are therefore not stored?\n\nResults:\n- It is not clear why the standard deviation of results was provided, when the 95% confidence interval would probably be a more appropriate measure of uncertainty across runs.\n\nPresentation:\n- The plots are not always the clearest, as axes are sometimes labelled and sometimes not\n- The plot legends do not indicate what value is changing (this has to be inferred from the plot titles and the main text)"
+            },
+            "questions": {
+                "value": "It is not entirely clear to me why a generator network is required as it would appear that an explicit memory and trajectory-distance metric are enough for the rest of the method to work. Why not simply store violating trajectories and then provide an intrinsic cost based on new trajectories' distance to the stored trajectories? What benefit does the generator provide?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

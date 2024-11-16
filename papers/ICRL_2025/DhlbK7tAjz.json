@@ -1,0 +1,130 @@
+{
+    "id": "DhlbK7tAjz",
+    "title": "MaskInversion: Localized Embeddings via Optimization of Explainability Maps",
+    "abstract": "Vision-language foundation models such as CLIP have achieved tremendous results in global vision-language alignment, but still show some limitations in creating representations for specific image regions. \nTo address this problem, we propose MaskInversion, a method that leverages the feature representations of pre-trained foundation models, such as CLIP, to generate a context-aware embedding for a query image region specified by a mask at test time.\nMaskInversion starts with initializing an embedding token and compares its explainability map, derived from the pretrained model, to the query mask.\nThe embedding token is then subsequently refined to approximate the query region by minimizing the discrepancy between its explainability map and the query mask. During this process, only the embedding vector is updated, while the underlying foundation model is kept frozen\nallowing to use MaskInversion with any pre-trained model. \nAs deriving the explainability map involves computing its gradient, which can be expensive, we propose a gradient decomposition strategy that simplifies this computation.\nThe learned region representation can be used for a broad range of tasks, including open-vocabulary class retrieval, referring expression comprehension, as well as for localized captioning and image generation. We evaluate the proposed method on all those tasks on several datasets such as PascalVOC, MSCOCO, RefCOCO, and OpenImagesV7 and show its capabilities compared to other SOTA approaches.",
+    "keywords": [
+        "localized embedding",
+        "fondation models",
+        "test-time optimization"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "MaskInversion is a method that allow to get localized embedding (embedding for a specific region of an image within the context of the whole image) out of fondation models (e.g. CLIP) without any retraining.",
+    "creation_date": "2024-09-19",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=DhlbK7tAjz",
+    "pdf_link": "https://openreview.net/pdf?id=DhlbK7tAjz",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces MaskInversion, a method that leverages pre-trained vision-language models (such as CLIP) to generate context-aware embeddings for specific image regions by optimizing explainability maps. It aims to improve localized image representation tasks, such as referring expression comprehension and captioning, while employing a gradient decomposition strategy to reduce computation.\n\nThe contributions of this paper include:\n1) a new method that is able to learn localized embeddings for given queries;\n2) an efficient gradient decomposition approach for multi-query masks;\n3) improved performance on various downstream tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The motivation is interesting. The problem of poor localization capabilities does exist in CLIP.\n2. The proposed method is intuitive.\n3. The performance is good. MaskInversion achieves superior results on a wide range of vision-language benchmarks."
+            },
+            "weaknesses": {
+                "value": "1. Very important baselines are missing. I noticed that you have discussed the paper of MaskCLIP [1] but did not compare with it in the experiments. Actually, CLIP's localization issues can be addressed in a very simple way. You just need to reform the last layer's self-attention in the fasion of MaskCLIP (removing Q and K), SCLIP [2] (Q-to-Q and K-to-K attention), or CLIPSurgery [3] (V-to-V attention with dual paths). I believe by simply modifying CLIP with these methods (they are all training-free), the performance can be improved by a very large margin.\n\n2. Given these baselines are missing, it's difficult to evaluate whether the new method is effective enough. As MaskInversion involves a much more complex process, I expect it to perform significantly better than those three baselines.\n\n3. The other contribution of the paper, gradient decomposition, is not that significant. As shown in Table 5, It makes clear speed improvements only if we have >10 masks/image. What is the general case of the number of masks involved in your tasks?\n\n4. Minor comments: there are some typos in the paper such as in Line 481, what does Table 4.5 refer to?\n\n[1] Extract free dense labels from clip, in ECCV 2022\n\n[2] SCLIP: rethinking self-attention for dense vision-language inference, in ECCV 2024\n\n[3] A closer look at the explainability of contrastive language-image pre-training."
+            },
+            "questions": {
+                "value": "See Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces MaskInversion, a method designed to generate localized embeddings for specific image regions using pre-trained vision-language foundation models like CLIP. This approach leverages the feature representations of these models to create context-aware embeddings for a query image region specified by a mask at test time."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. This paper is overall well-written.\n2. The paper provides a comprehensive set of experiments and results, including quantitative metrics and qualitative visualizations, which helps in understanding the method's effectiveness and behavior.\n3. MaskInversion operates in a zero-shot setting, which means it can handle tasks without requiring additional training data for specific tasks, leveraging the knowledge embedded in pre-trained models."
+            },
+            "weaknesses": {
+                "value": "1. This paper may be a bit short on innovation, as it actually uses the explainability map obtained from LeGrad to improve the feature extraction of the pre-trained models. Besides, some of the methods section is devoted to reviewing LeGrad, reinforcing the perception that this article is not innovative enough.\n2. The regulaization loss seems very important to avoid trivial solutions. However, I find no ablation study on the hyper-paramter $\\alpha$, which modulates the influence of the regularization loss. \n3. The performance of MaskInversion is heavily dependent on the quality of the input masks. In practical applications, obtaining high-quality masks might be challenging, which could limit the method's real-world applicability.\n4. The paper could benefit from a deeper analysis of scenarios where MaskInversion might fail or underperform, and how such cases could be addressed."
+            },
+            "questions": {
+                "value": "If the pre-trained model itself does not have strong local feature capture capability, then post-training can give limited improvement. I'm curious if this idea of mask-guided feature capture can be applied to the training phase to improve the fine-grained perception of pre-trained VL models."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a new method that uses explainability maps from pretrained models to generate localized embeddings. These embeddings can represent object properties while capturing the broader image context. The paper further demonstrates that these learned region representations are versatile and can be applied to various tasks, including retrieval, grounding, captioning, and image generation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper introduces a novel approach leveraging explainability methods to enable the model to focus on specific regions within an image. Unlike traditional techniques like clipping, blurring, or masking, this approach allows the model to retain access to global image information. The method is clearly outlined and validated through comprehensive downstream tasks, demonstrating its effectiveness."
+            },
+            "weaknesses": {
+                "value": "The paper primarily focuses on single-object scenarios, lacking analysis on multiple objects and their interactions. Including experiments and analysis on multi-object scenarios would strengthen the study and provide a more comprehensive evaluation of the method's effectiveness. For instance, datasets like MSCOCO, with complex captions involving multiple objects, could offer valuable insights; sharing examples from such datasets would further illustrate the model's performance in these scenarios."
+            },
+            "questions": {
+                "value": "1. What type of global image context does this method capture? Could the authors provide visualizations, like attention map, to illustrate how the global context influences localized embeddings across different scenarios? This would clarify the method\u2019s effectiveness in capturing and utilizing global context for downstream tasks.\n2. In referring expression retrieval tasks, MaskInversion with ViT-B/16 underperforms compared to Masked Crop in RefCOCO+. Could the authors provide a detailed analysis investigating the reasons for this discrepancy?\n3. Minor comment: In the related work section, \"maks\" should be corrected to \"masks\"."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

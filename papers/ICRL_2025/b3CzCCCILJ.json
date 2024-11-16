@@ -1,0 +1,129 @@
+{
+    "id": "b3CzCCCILJ",
+    "title": "Revamping Diffusion Guidance for Conditional and Unconditional Generation",
+    "abstract": "Classifier-free guidance (CFG) has become the standard method for enhancing the quality of conditional diffusion models. However, employing CFG requires either training an unconditional model alongside the main diffusion model or modifying the training procedure by periodically inserting a null condition.  There is also no clear extension of CFG to unconditional models. In this paper, we revisit the core principles of CFG and introduce a new method, independent condition guidance (ICG), which provides the benefits of CFG without the need for any special training procedures. Our approach streamlines the training process of conditional diffusion models and can also be applied during inference on any pre-trained conditional model. Additionally, by leveraging the time-step information encoded in all diffusion networks, we propose an extension of CFG, called time-step guidance (TSG), which can be applied to *any* diffusion model, including unconditional ones. Our guidance techniques are easy to implement and have the same sampling cost as CFG. Through extensive experiments, we demonstrate that ICG matches the performance of standard CFG across various conditional diffusion models. Moreover, we show that TSG improves generation quality in a manner similar to CFG, without relying on any conditional information.",
+    "keywords": [
+        "diffusion models",
+        "classifier-free guidance"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We propose two methods that enable the use of classifier-free guidance without training an auxiliary unconditional model or relying on any conditional information.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=b3CzCCCILJ",
+    "pdf_link": "https://openreview.net/pdf?id=b3CzCCCILJ",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes two methods, independent condition guidance (ICG) and time-step guidance (TSG), for conditional and unconditional sampling from a diffusion model, which are summarized below. \n\n**ICG**\n\nThey propose ICG in place of classifier-free guidance (CFG) such that instead of learning two separate models or having two different tasks, one conditional and one conditional, they learn a single conditional model with only a conditional task without making use of null tokens. They do based on the insight that:\n\n1. A conditional model can be turned into an unconditional model by noting that:\n    1. the marginal distribution $p(x_t)$ is equal to the expectation $E_{y \\sim p(y)}[p(x|y)]$ which can be estimated using sampling a single independent sample $y \\sim p_{data}(y)$, which implies that $s_\\theta(x_t) \\approx s_\\theta(x_t, y)$. \n\nThey propose ICG to \u201cstreamline\u201d the training of conditional model and improve efficiency (line 534) and as an alternative to CFG, which requires either separate models or a single model with a null token, representing unconditional generation. With ICG, the authors show that training a conditional model is sufficient and the CFG update can be replaced by:\n\n$D_{ICG} = D(z_t, t, \\widehat{y}) + w_{ICG}(D(z_t, t, y) - D(z_t, t, \\widehat{y}))$ \n\nwhere $\\widehat{y}$ is a Gaussian vector or a class sampled independent of $y$ at each time-step $t$.\n\n**TSG**\n\nTSG is based on the insight that score model architectures add the class-conditioning embedding into the time-step embedding. Therefore, similar to ICG, they perturb the time-step $t$ by $\\Delta t \\sim N(0, \\sigma)$ TSG then uses a linear combination of $D_\\theta(x_t, t)$ and $D_\\theta(x_t, t + \\Delta t)$ as the \u201cscore\u201d network update. The justification of TSG is based on a connection to Langevin dynamics. \n\nIn practice, they do not perturb the time, but similar to ICG they perturb the time-step embedding vector by $s t^{\\alpha} n$, where $s, t, \\alpha$ selected to match the mean and scale of the \u201creal\u201d time-step embedding vectors and $n \\sim N(0, 1)$, and they propose the following update instead of CFG:\n\n$D_{TSG} = D(z_t, \\tilde{t}, y) + w_{TSG}(D(z_t, t, y) - D(z_t, \\tilde{t}, y))$ where $\\tilde{t}$ is the perturbed embedding."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is well-written and the authors perform extensive experiments and provide algorithmic and experimental details to reproduce their experiments. \n\n**Experiments**\n\nThe experiments show that ICG and CFG perform identically and ICG \u201csimulates the behavior of CFG across several conditional models\u201d (line 249). They also run a number of ablations, for instance, they compare using an independent Gaussian vector versus sampling $y \\sim p(y)$ in ICG, providing stronger experimental evidence."
+            },
+            "weaknesses": {
+                "value": "The main question left un-answered by this work is whether a marginal model, either trained separately or with a null token, is necessary for a sampling method like CFG:\n1. An analysis of the variance of the estimate $s_\\theta(x_t \\mid y)$ is missing from the paper. \n2. An analysis of the impact of the variance on sampling is also missing from the paper\n3. Is there a trade-off between the slower convergence of training with a null token with estimation of the marginal model?\n\nSee the questions section.\n\nThe authors could improve the paper by providing a proof (or an empirical analysis) for the sampling procedure for a toy distribution where the $p_{data} = 0.5 N(-a, 1) + 0.5 N(a, 1)$. For instance, with a mixture of Gaussians as the data distribution, the marginal and conditional score functions are computable in closed form and a toy experiment, where various trade-offs can be examined, could make the paper stronger. \n\nTSG\nFor connecting TSG to Langevin dynamics, the authors show that eq 9 resembles a Langevin dynamics step. However, by using the perturbed TSG denoising model $\\widehat{D}$  to define the score $\\nabla_{z_t} \\log \\widehat{p}(z_t)$, the connection seems circular. Could the authors clarify what the connection to Langevin dynamics is and the relevance of that connection?"
+            },
+            "questions": {
+                "value": "The authors present an estimate of the marginal model $p(x_t)$, where instead of marginalizing over all possible $y$ by learning a score model with a null token, they use a Monte Carlo estimate. However, the variance of the estimate of the marginal score and it\u2019s impact on sampling has not been addressed in the paper. \n\n1. Supports of $p(x_t | y=1)$ and $p(x_t | y=0)$ are different: In case of two classes and when $p(x_t | \\widehat{y})$ is low, in such a case the ICG term is the score of $p(x_t | \\widehat{y})^{1 - w_{ICG}} p(x_t | y)^{w_{ICG}}$, if $p(x_t | \\widehat{y})$ is low then its score\u2019s magnitude is high and would dominate the ICG update, potentially pushing in the direction of $p(x_0 | \\widehat{y})$\n    1. will more steps be required for ICG sampling compared to CFG? \n    2. What will happen when the support for $x_t$ all $t \\in [0, T]$ is disjoint for the two classes, such that $p(x_t | \\widehat{y}) = 0$ when $\\widehat{y}$ is the wrong class? For instance, if $p_{data} = 0.5  N(-5, 1) + 0.5 N(5, 1)$, and the model prior is a centered Gaussian.\n2. If the classes are imbalanced then sampling from the majority class can bias the sampling process when the user wishes to sample from the minority class. For instance, if $p(y = 0 | x_0) = 0.99$ and $p(y = 1 | x_0)= 0.01$,  and ICG samples $\\widehat{y}$ with an equal probability. The authors should consider modifying the algorithm to sample from $p(y)$, when available, and not a uniform distribution. \n\nSome simple theoretical guidance with/or toy examples should suffice for an explanation. Potentially with $p(x_0)$  as a mixture of Gaussians in 2d and the authors could vary the guidance scale while sampling.\n\n1. For text to image sampling with ICG, do the authors recommend sampling random text prompts to estimate the marginal model? \n2. For the text conditional experiments in Table 3, can the authors also include CFG performance as a baseline?\n3. For the ControlNet experiment, I believe the authors describe training with an empty string for 50% of their text prompts. See section 3.3 in the ControlNet paper. Do the authors use a random text and/or image prompt for the ControlNet model to define a marginal model? \n4. In line 053, the authors claim that there is no clear extension of CFG to unconditional generation:\n    1. However, CFG requires training a marginal model, which can be sampled easily. Moreover, one could randomly sample a label y to do generation as well.  \n    2. Can the authors provide details about unconditional sampling with ICG? The update defined in algorithm 1, requires a condition $y$ as input. is it just randomly sampling a label and then running ICG?\n    \n    $D_{ICG} = D(z_t, t, \\widehat{y}) + w_{ICG}(D(z_t, t, y) - D(z_t, t, \\widehat{y}))$"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Classifier-free guidance (CFG) is a common method for improving the quality of samples generated from diffusion models. One limitation of CFG is the added training cost due to the requirement for both a conditional and an unconditional model. The authors propose Independent Condition Guidance (ICG), claiming that it provides the same advantages of CFG on image generation quality without additional training costs. They also propose Time-Step Guidance (TSG), a guidance algorithm based on a mixture of score estimates given both perturbed and unperturbed time-step values, which overcomes CFG\u2019s reliance on the availability of class labels. TSG is based on a mixture of scores pertaining to a perturbed and unperturbed time-step value. The authors empirically validate their methods against CFG and un-guided baselines, demonstrating improvements in image quality over unguided sampling that are comparable in magnitude to CFG, while avoiding its limitations."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is generally well written and easy to follow.\n2. The introduction and related works sections provided a good justification for the limitations of CFG and the benefits of solutions like ICG and TSG. There is certainly a potential for this paper to provide a meaningful contribution to the field of diffusion-guidance, if my concerns about the theoretical claims and empirical validation are adequately addressed by the authors.\n3. The experiments are for the most part appropriate and the ablation study is useful to understand the effect of some of the hyperparameter choices."
+            },
+            "weaknesses": {
+                "value": "1. A central claim is that ICG provides the same benefits of CFG without the need for additional training requirements. This hinges on the validity of the theoretical claim in Section 4, which avoids the need for a potentially expensive marginalization over classes. However, the theoretical justification appears insufficient. It seems incorrect to state that sampling a class label $\\hat{y}$ independently from $z_t$ at time-step $t$ implies the equivalence $\\nabla_{z_t} \\log p_t(\\hat{y} \\mid z_t) = \\nabla_{z_t} \\log p_t(z_t)$, since conditional independencies are a property of the diffusion model parametrized by $\\theta$, irrespective of what distribution $y$ was drawn from to compute the sum in $(6)$. Given the conditional score estimate parametrized by $\\theta$, $z_t$ should be dependent on $y$. The authors later allude to a procedure to \"bootstrap the score\", but this is not reflected in their Algorithm 1. Moreover the authors describe the correct equivalence in Appendix A, which involves marginalizing over $y$, but they don't explain how this relates to the seemingly incorrect equivalence relation (7).\n2. Empirical evidence supporting TSG is limited. There are no baseline comparisons other than an unguided model. The baseline comparisons for ICG are also limited given that other methods have been published with similar motivations as ICG.\n3. The choice of distribution from which $\\hat{y}$ is sampled seems non-trivial, and although the authors attempted to shed some light on this in their ablation study, it is unclear how such a distribution should be chosen in general, and how sensitive are their results to the choice of distribution.\n4. Several hyperparameters are introduced in the paper, but the description of the hyperparameter tuning procedure seems incomplete. Importantly, on which dataset were hyperparemeters tuned, and using what evaluation criterion?\n5. Code is not made publicly available, which diminishes the paper's impact and impairs reproducibility. The provided pseudocode does not seem to entirely capture the design choices that the authors made as part of their experiments."
+            },
+            "questions": {
+                "value": "1. Please correct or clarify the theoretical justification behind ICG.\n2. Are there not other perturbation-based guidance methods, such as the ones discussed in the Related Works section (in the same spirit as SAG), that TSG could be compared to?\n3. Why not include a comparison between ICG and CADS alone (Appendix B only includes ICG+CADS)? It seems like it shares many similarities with ICG. If this is the case, why is this comparison not included in the main paper?\n4. The connection between TSG and Langevin dynamics is interesting, but it is not clear how the hypothesized benefits of TSG relate to, or differ from, the theoretical benefits underlying the Langevin diffusion SDE that is implicit in the SDE corresponding to the forward diffusion process.\n5. Can the authors better justify the need for two hyperparameters $s$ and $\\alpha$ in TSG, and how they tuned these hyperparameters (and on which dataset)?\n6. The conditional and unconditional samples from the ICG method seem to have slightly more contrast and are more saturated than the CFG baseline. If the authors agree with my impression, can they hypothesize as to why this should the case?\n7. While the authors may be able to justify why ICG could theoretically perform as well as CFG, I don't understand why ICG would be expected to perform better than CFG, as concluded from the plots in Figure 3. Even if the authors can justify this, it would be helpful to understand how sensitive is this result is senstive to hyperparameter choices and random seeds.\n8. Figure 5: I did not understand the rationale for testing ICG against the unguided baseline as opposed to ICG against CFG on the text condition. Can the authors clarify?\n\nMinor:\n9. Can the authors revisit Section 3,4, and 5, and ensure all variables and functions are properly defined? E.g. $\\epsilon$ is undefined. This would help improve the readability.\n10. It seems misleading to say that Equation (1) is \"equivalent to\" Equation (2), and that the denoiser $D_\\theta$ \"approximates\" the score function.\n11. It would be helpful to refer to the appendix sections in relevant sections of the main text."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Reviewing the classifier-free guidance (CFG), this paper found that the unconditional score in CFG can be derived by a random label vector y_hat (termed ICG) without training the unconditional model by setting the y_null label. Furthermore, the authors stimulate the guidance by introducing a perturbated time-step embedding based on the original t embedding (termed TSG). Experiments show that ICG achieves similar results to CFG, and TSG improves the FID for conditional and unconditional tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The idea of ICG is novel and theoretically simple to implement. ICG provides a new perspective on CFG.\n\n2. The presentation is good and the paper is easy to follow.\n\n3. Extensive experiments show consistent effectiveness of the proposed two methods"
+            },
+            "weaknesses": {
+                "value": "1. My major concern lies in the proposed TSG:\n- the authors explain TSG from its connection to Langevin dynamics, but the connection is built up on Taylor approximation where $\\tilde{t} = t + \\Delta{t}$, and $\\Delta{t}$ should be sufficiently small. But in practice, the authors use $\\Delta{t}=st^\\alpha n$ where $n \\sim N(0, I), s=2, \\alpha=1$ and $t$ is the time-step, therefore I do think $\\Delta{T}$ is sufficiently small anymore.\n- I suspect the effectiveness of TSG comes from the error correction, rather than the guidance perspective, according to the results shown in Table 4.\n- Will TSG work in the diffusion models that do not embed class labels into timestep (for example, UViT)?\n\n2. please provide the NFE and samplers used to report FID throughout the paper. \n\n3. some writing issues in section 3:\n- According to eq 6 of the CFG paper [1], eq 4 in this paper looks wrong, eq 4 should be $\\hat{D} = D_\\theta (z_t, t, y) + w(D_\\theta(z_t, t, y) - D_\\theta(z_t, t, y_null))$.\n- undefined notation $\\beta_t$ in eq 2\n\n\n[1] Ho, Jonathan, and Tim Salimans. \"Classifier-free diffusion guidance.\" arXiv preprint arXiv:2207.12598 (2022)."
+            },
+            "questions": {
+                "value": "The authors mention that there are two methods to decide the random vector $\\hat{y}$: draw from Gaussian distribution or a random class label, so that $\\nabla_{z_t} log p_t (z_t | \\hat{y}) = \\nabla_{z_t} log p_t (z_t)$. I wonder how much would the conditional score $\\nabla_{z_t} log p_t (z_t | \\hat{y})$ change in practice given different samples $\\hat{y}_1, \\hat{y}_2, \\hat{y}_3 ...$ and the same $z_t$\n\nI would increase my rating if some of my doubts and concerns were resolved."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

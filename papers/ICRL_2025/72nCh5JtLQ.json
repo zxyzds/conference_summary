@@ -1,0 +1,217 @@
+{
+    "id": "72nCh5JtLQ",
+    "title": "Can We Predict Performance of Large Models across Vision-Language Tasks?",
+    "abstract": "Evaluating large vision-language models (LVLMs) is very expensive, due to the high computational costs and the wide variety of tasks. The good news is that if we already have some observed scores, we may be able to infer unknown ones. In this study, we propose a new framework for predicting unknown performance scores based on observed ones from other LVLMs or tasks. We first formulate the performance prediction as a matrix completion task. Specifically, we construct a sparse performance matrix $\\boldsymbol{R}$, where each entry $R_{mn}$ represents the performance score of the $m$-th model on the $n$-th dataset. By applying probabilistic matrix factorization (PMF) with Markov chain Monte Carlo (MCMC), we can complete the performance matrix, that is, predict unknown scores. Additionally, we estimate the uncertainty of performance prediction based on MCMC. Practitioners can evaluate their models on untested tasks with higher uncertainty first, quickly reducing errors in performance prediction. We further introduce several improvements to enhance PMF for scenarios with sparse observed performance scores. In experiments, we systematically evaluate 108 LVLMs on 176 datasets from 36 benchmarks, constructing training and testing sets for validating our framework. Our experiments demonstrate the accuracy of PMF in predicting unknown scores, the reliability of uncertainty estimates in ordering evaluations, and the effectiveness of our enhancements for handling sparse data.",
+    "keywords": [
+        "Large Vision-Language Models (LVLMs)",
+        "Benchmarking",
+        "Probabilistic Matrix Factorization (PMF)",
+        "Markov Chain Monte Carlo (MCMC)",
+        "Active Evaluation"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "A comprehensive evaluation of 108 LVLMs on 36 benchmarks and a framework for predicting LVLM performances using PMF with MCMC, showing interesting applications and observations.",
+    "creation_date": "2024-09-24",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=72nCh5JtLQ",
+    "pdf_link": "https://openreview.net/pdf?id=72nCh5JtLQ",
+    "comments": [
+        {
+            "title": {
+                "value": "Reply - Benefits and Reliability of Our Framework"
+            },
+            "comment": {
+                "value": "We greatly appreciate your time and effort in reviewing our paper. We are pleased that you acknowledged our extensive evaluation and our enhancements to address the sparse-data issue.\n\n> **We still need to directly evaluate.**\n\nWe agree with you that direct evaluation is very helpful and important. However, it is expensive to comprehensively evaluate LVLMs. Zhang et al. [3] reports that it takes hundreds of hours to evaluate one model on around 50 tasks in LMMs-Eval, and evaluation even exceeds 1,400 hours on models of 100B parameters or more. With the growth of LVLM benchmarks and models, the evaluation will be more costly.\n\nOur framework can benefit LVLM evaluation in two ways.\n\n* First, it can reduce unnecessary evaluation, given a limited computational budget in practice.\n* Second, it can prioritize the direct evaluation experiments by using our uncertainty-based active evaluation method.\n\nThus, we respectfully argue that our framework is useful and valuable in practice, which is acknowledged by Reviewers uZXr, VvNb, and Q3Aj.\n\n>  **Reliability of reducing test sets and how to trust our framework.**\n\nWe first reference related works to support our paper and then highlight the role of uncertainty estimation in our framework.\n\nRecent works select a coreset of samples from a large benchmark for evaluating LLMs [1, 2] or LVLMs [3, 4]. The performance of a specific model on the coreset is used to estimate its performance on the full benchmark. Thus, it is possible to predict model performance while maintaining reliability.\n\nMoreover, our framework provides uncertainty in performance prediction, which is correlated with the actual absolute errors in Figure 4. The estimated uncertainties can help identify wrong predictions.\n\nWe hope that our response can addresses your concern.\n\n\n\n----\n\nOur references:\n\nEfficient LLM evaluation:\n\n[1] tinyBenchmarks: evaluating LLMs with fewer examples. ICML 2024.\n\n[2] Efficient benchmarking (of language models). NAACL 2024.\n\nEfficient LVLM evaluation:\n\n[3] LMMs-Eval: Reality Check on the Evaluation of Large Multimodal Models. https://arxiv.org/abs/2407.12772.\n\n[4] LIME: Less Is More for MLLM Evaluation. https://arxiv.org/abs/2409.06851."
+            }
+        },
+        {
+            "title": {
+                "value": "Reply - Incorporating Evaluation Cost, Novelty, and VLM Specific Ideas"
+            },
+            "comment": {
+                "value": ">  **Incorporate evaluation cost into the framework.**\n\nThank you for the suggestion! It is very interesting to incorporate evaluation cost into our framework. \n\nA straightforward way is to implement a cost-aware heuristic function in active evaluation. Instead of using only uncertainty, we assign a score to each model-dataset pair, $score = f(uncertainty, cost)$. The model-dataset pairs with higher scores will be prioritized for evaluation. Some possible functions are $f(a, b)=a^\\gamma b^{1-\\gamma}, f(a, b)=a + \\gamma b$.\n\nIt is not easy to measure evaluation cost. Different models may have different acceleration techniques, some models are API-only, and evaluation samples may have various context lengths. Here, for each dataset, we simply use the number of samples / the total number of samples of all datasets to approximate the evaluation cost, and conduct a preliminary experiment. \n\nWe follow the setting recommended by Reviewer Q3Aj. In short, we use 20% performance scores for initial training, 60% as the pool set, and 20% for testing. PMF is trained on the initial 20% data. In each iteration, we use a method to order the pool set and select the top model-dataset pairs. We retrain PMF in each iteration with extra data from pool set, and evaluate the model on the test set.\n\nThe following table shows the RMSE Improvement (%) on the test set, where each column is the number of extra evaluated samples. If a method chooses more samples in each iteration, we fit the result into the closest column. As seen, our methods show significant improvement over Random. \n\n| Method             | 411k  | 823k  | 1234k | 1647k | 2058k | 2470k | 2881k (All) |\n| ------------------ | ----- | ----- | ----- | ----- | ----- | ----- | ----------- |\n| Random             | 7.2   | 11.2  | 14.7  | 17.9  | 20.98 | 23.06 | 23.00       |\n| Uncertainty - Cost | 20.85 | 23.28 | 23.04 | 22.26 | 22.53 | 23.25 | 23.00       |\n| Uncertainty / Cost | 19.44 | 23.44 | 23.84 | 22.39 | 22.34 | 22.74 | 23.00       |\n\nInterestingly, we find that, the error of performance prediction is mainly caused by small datasets, which may have large variance in performance due to limited sample size. Thus, evaluate models on these highly-uncertain but low-cost datasets may be the best for performance prediction. It is worth exploring more practical design and we note that our framework is extensible for that.\n\n\n\n> **Not a novel contribution**\n\nThank you for acknowledging we are addressing an important problem. We respectfully highlight that the main contributions of our paper are: (1) formulating the problem of LVLM performance prediction based on known performance scores; and (2) connecting well-established algorithms to the novel application and demonstrating their effectiveness. Our main focus is the new application, instead of introducing technical contributions on a previous problem.\n\n> **Incorporated VLM specific ideas or benchmark specific stuff.**\n\nThank you! We respectfully highlight that we incorporate model and dataset profiles into PMF (Section 3.5). For models, we include features such as the number of parameters in the LLM backbone, vision encoder type, and the LVLM family. Additionally, we explore three different approaches to generate these latent representations and cluster the LVLM benchmarks. These profiles may consider VLM- or benchmark-specific stuff as you expected, are extensible for extra model or dataset information, and improve the accuracy in performance prediction."
+            }
+        },
+        {
+            "title": {
+                "value": "Reply 2 - Ablation Study and Uncertainty-Based Active Evaluation"
+            },
+            "comment": {
+                "value": "> **Ablation study to better quantify the contribution of each component.**\n\nWe conduct a detailed ablation study as suggested. The table below shows each component\u2019s contribution when the training performance scores are sparse. Here, PMF methods model each metric separately. All results are the average RMSE over 10 experiments, with lower values indicating better performance.\n\n| Method                    | Overall            | Acc       | Precision | Recall    | F1        | BART      | BERT      |\n| ------------------------- | ------------------ | --------- | --------- | --------- | --------- | --------- | --------- |\n| *Test Ratio: 80%*         |                    |           |           |           |           |           |           |\n| PMF                       | 0.267 (+0.000)     | 0.115     | 0.205     | 0.237     | 0.197     | 0.707     | 0.085     |\n| PMF + Bayesian            | 0.254 (-0.013)     | 0.118     | 0.197     | 0.224     | 0.184     | 0.664     | **0.083** |\n| PMF + Profiles            | 0.254 (-0.013)     | 0.111     | 0.193     | 0.230     | 0.186     | 0.672     | 0.084     |\n| PTF                       | 0.249 (-0.018)     | 0.120     | 0.151     | **0.207** | **0.145** | 0.661     | 0.091     |\n| PTF  + Bayesian           | 0.239 (-0.028)     | 0.116     | 0.152     | 0.212     | 0.151     | 0.630     | 0.090     |\n| PTF  + Profiles           | 0.240 (-0.027)     | 0.115     | 0.151     | 0.208     | 0.147     | 0.637     | 0.088     |\n| PTF + Bayesian + Profiles | **0.236 (-0.031)** | **0.108** | **0.147** | 0.208     | 0.147     | **0.627** | 0.089     |\n| *Test Ratio: 90%*         |                    |           |           |           |           |           |           |\n| PMF                       | 0.327 (0.000)      | 0.160     | 0.238     | 0.261     | 0.227     | 0.862     | 0.096     |\n| PMF + Bayesian            | 0.296 (-0.031)     | 0.144     | 0.225     | 0.254     | 0.213     | 0.774     | **0.091** |\n| PMF + Profiles            | 0.313 (-0.014)     | 0.146     | 0.232     | 0.260     | 0.220     | 0.828     | 0.094     |\n| PTF                       | 0.294 (-0.033)     | 0.161     | 0.194     | 0.235     | 0.187     | 0.761     | 0.094     |\n| PTF + Bayesian            | **0.267 (-0.060)** | 0.142     | **0.179** | 0.232     | 0.178     | **0.690** | 0.093     |\n| PTF  + Profiles           | 0.274 (-0.053)     | 0.145     | 0.190     | 0.233     | 0.184     | 0.710     | 0.092     |\n| PTF + Bayesian + Profiles | **0.267 (-0.060)** | **0.138** | **0.179** | **0.228** | **0.176** | 0.698     | 0.093     |\n\nSome results are already presented in Table 1 and Figure 5 in the paper. We will include the detailed results in the supplementary materials.\n\n> **Gap between the uncertainty-based active evaluation and the oracle method.**\n\nWe implement a canonical active learning evaluation setup, as suggested by Reviewer Q3Aj. In short, we use 20% performance scores for initial training, 60% as the pool set, and 20% for testing. PMF is trained on the initial 20% data. In each iteration, we use Random / Active (Ours) / Oracle methods to order the pool set and select the top model-dataset pairs. We retrain PMF in each iteration with extra data from pool set, and evaluate the model on the test set.\n\nThe following table reports the improvement on the test set as we acquire more evaluations in the pool set.\n\n| Method            | 0%    | 5%    | 10%   | 20%   | 30%   | 40%   | 50%   | 60% (All) |\n| ----------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | --------- |\n| *RMSE*            |       |       |       |       |       |       |       |           |\n| Random            | 0.258 | 0.247 | 0.236 | 0.224 | 0.215 | 0.205 | 0.197 | 0.195     |\n| Active (Ours)     | 0.258 | 0.220 | 0.207 | 0.196 | 0.192 | 0.192 | 0.192 | 0.195     |\n| Oracle            | 0.258 | 0.213 | 0.202 | 0.199 | 0.196 | 0.195 | 0.194 | 0.195     |\n| *Improvement (%)* |       |       |       |       |       |       |       |           |\n| Random            | 0.0   | 4.1   | 8.1   | 13.0  | 16.5  | 20.1  | 23.3  | 24.3      |\n| Active (Ours)     | 0.0   | 14.3  | 19.6  | 24.0  | 25.2  | 25.4  | 25.4  | 24.2      |\n| Oracle            | 0.0   | 17.4  | 21.6  | 22.7  | 23.7  | 24.2  | 24.4  | 24.3      |\n\nAs shown in the table, our method demonstrates significant improvement over Random and approaches or even exceeds the performance of Oracle.\n\nAdditionally, as suggested by Reviewer uZXr, we also explore cost-aware active evaluation and demonstrate the advantages of our methods. We kindly refer you to our reply to Reviewer uZXr."
+            }
+        },
+        {
+            "title": {
+                "value": "Reply 1 - Novelty, Bayesian PMF, and LKJ prior"
+            },
+            "comment": {
+                "value": "We sincerely appreciate your time and effort in reviewing our paper. We are pleased that you acknowledged the solid foundation, effectiveness, practicality, and scalability of our paper.\n\n> **The paper tackles an important problem but the novelty is somewhat limited.**\n\nThank you for acknowledging we are addressing an important problem. We respectfully highlight the main contributions of our paper are (1) we formulate the problem of LVLM performance prediction based on known performance scores; and (2) we connect well-established algorithms to the novel application and show their effectiveness. Our main focus is the new application, instead of introducing technical contributions on a previous problem.\n\n> **How Bayesian PMF differs from standard PMF in practical terms?**\n\nIn real-world situations, we may only have limited performance data about an LVLM or benchmark for training PMF. For example, if OpenAI released GPT-5 yesterday, we might know its performance on only 5 benchmarks. In cases like this, Bayesian PMF can predict performance more accurately than the standard PMF model, which is shown in Figure 5(A).\n\nThe reason is that Bayesian PMF defines distributions over the parameters of prior distributions, known as hyperpriors. The hyperpriors work similarly to regularization terms in a loss function and improve model performance when there is limited data available. As we gather more data, the advantage of using hyperpriors over a standard model becomes less noticeable.\n\n> **How does incorporating an LKJ prior impact the predictions in practice?**\n\nUsing an LKJ prior is primarily for computational reasons, rather than improving predictions. We will clarify this in the revised paper.\n\nIn short, Wishart distribution models the distribution of covariance matrices. It has two main issues during the sampling process.\n\n* First, it requires the sampled matrices to be both positive-definite and symmetric. The probability of generating a valid sample by randomly changing elements is close to zero.\n* Second, the distribution has a very heavy tail, which poses many challenges for simple sampling methods.\n\nInstead, we use the LKJ correlation prior and an Exponential prior, which are computationally advantageous.\n\n----\nOur references:\n\nThis is suggested by PyMC Official Documentation.\n\nLKJ Cholesky Covariance Priors for Multivariate Normal Models. https://www.pymc.io/projects/examples/en/latest/howto/LKJ.html\n\nThere are also discussions on practical issues about the Wishart distribution vs LKJ on coding forums like GitHub and StackExchange.\n\nhttps://github.com/pymc-devs/pymc3/issues/538#issuecomment-94153586"
+            }
+        },
+        {
+            "title": {
+                "value": "Reply 2 - Active Learning Evaluation and Transductive Active Learning"
+            },
+            "comment": {
+                "value": "> **A more canonical active learning evaluation setup.**\n\nThank you for the suggestion! We use 20% data for initial training, 60% as the pool set, and 20% for testing. The following table reports the improvement on the test set as we acquire more evaluations in the pool set.\n\n| Method            | 0%    | 5%    | 10%   | 20%   | 30%   | 40%   | 50%   | 60% (All) |\n| ----------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | --------- |\n| *RMSE*            |       |       |       |       |       |       |       |           |\n| Random            | 0.258 | 0.247 | 0.236 | 0.224 | 0.215 | 0.205 | 0.197 | 0.195     |\n| Active (Ours)     | 0.258 | 0.220 | 0.207 | 0.196 | 0.192 | 0.192 | 0.192 | 0.195     |\n| Oracle            | 0.258 | 0.213 | 0.202 | 0.199 | 0.196 | 0.195 | 0.194 | 0.195     |\n| *Improvement (%)* |       |       |       |       |       |       |       |           |\n| Random            | 0.0   | 4.1   | 8.1   | 13.0  | 16.5  | 20.1  | 23.3  | 24.3      |\n| Active (Ours)     | 0.0   | 14.3  | 19.6  | 24.0  | 25.2  | 25.4  | 25.4  | 24.2      |\n| Oracle            | 0.0   | 17.4  | 21.6  | 22.7  | 23.7  | 24.2  | 24.4  | 24.3      |\n\nAs shown in the table, our method shows significant improvement over Random, and is close to Oracle. Interestingly, when we acquire around half of the pool set, the model shows better performance than using the entire pool set. We will use this setup and update related results in our paper.\n\n> **Extension to transductive active learning.**\n\nThank you! It is very interesting to explore transductive active learning within our framework. In practice, we might ask questions like, \"What evaluation experiments can best inform the performance of models that use CLIP as vision encoders?\" or \"Which experiments provide the most useful information for improving our own models?\" In such cases, instead of looking at uncertainties across all predictions, it could be more helpful to measure the information gain to a specific model or dataset.  \n\nAn intuitive approach would be to integrate the expected predictive information gain (EPIG) method proposed by Bickford-Smith et al. [4] into our framework. This idea diverges from our current focus and would be better suited for future work."
+            }
+        },
+        {
+            "title": {
+                "value": "Reply 1 - More Baseline Methods"
+            },
+            "comment": {
+                "value": "We greatly appreciate your time and effort in reviewing our paper. We are pleased that you acknowledged the strong motivation, elegance, effectiveness, clear writing, and comprehensive evaluation of our work.\n\n> **The limited set of baseline matrix completion methods.**\n\nAs you suggested, we evaluate Deep Matrix Factorization (DMF) [1] and Graph Convolutional Matrix Completion (GCMC) [2] for a more comprehensive comparison. \n\nFor DMF, we use MSE loss and the Adam optimizer. The learning rate is 1e-3 and the batch size is 256. The embedding dimension of each user or item is 10, which is the same for PMF. We train DMF for 200 epochs and the result of the best epoch is reported.\n\nFor GCMC, we refer to the GitHub implementation (https://github.com/riannevdberg/gc-mc). Dropout ratio is 0.7, learning rate is 0.01, hidden units are [500, 75] in 1st and 2nd layers, accumulation method is \"stack\", the number of basis functions is 2, and the model is trained for 200 epochs. We note that there are two main issues when using GCMC:\n\n- GCMC handles discrete rating levels and treats each rating level as a separate class (see Section 2.3 [2]), which is not suitable for our setting, because we use continuous ratings like the BART  scores. To address this, we only use LVLM benchmarks with accuracy as the main metric, and discretize accuracy into 101 classes, i.e., {0, ..., 100}.\n- When training data is sparse, some classes (for example, accuracy = 67) do not occur in training set, leading to running errors in the code.\n\nThe table below summarizes the average results from 10 experiments. As shown, PMF demonstrates superior performance on our dataset compared to DMF and GCMC.\n\n| Method            | Overall RMSE | Overall MAE | Acc RMSE | Acc MAE | BART RMSE | BART MAE |\n| ----------------- | ------------ | ----------- | -------- | ------- | --------- | -------- |\n| *Test ratio: 20%* |              |             |          |         |           |          |\n| DMF [1]           | 0.225        | 0.105       | 0.086    | 0.060   | 0.538     | 0.353    |\n| GCMC [2]          |              |             | 0.187    | 0.139   |           |          |\n| PMF               | 0.193        | 0.090       | 0.074    | 0.052   | 0.461     | 0.303    |\n| *Test ratio: 80%* |              |             |          |         |           |          |\n| DMF [1]           | 0.561        | 0.314       | 0.289    | 0.209   | 1.26      | 0.896    |\n| GCMC [2]          |              |             | -        | -       |           |          |\n| PMF               | 0.317        | 0.174       | 0.156    | 0.115   | 0.723     | 0.504    |\n\nWe notice that matrix completion methods are commonly applied in recommender systems, where there are usually thousands of users and items, with millions of samples, such as the Movielens dataset. But in our setting, we have 108 models, 176 datasets, and 19K samples. Thus, we build our method on a simple but strong baseline, PMF, rather than neural networks, which are possibly more data-hungry."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper provides a framework for predicting the performance of large vision-language models on held-out downstream tasks using a small set of observed task performances, i.e., evaluations for a small set of (model, dataset) tuples. They formulate this as a matrix completion problem and demonstrate that probabilistic matrix factorization (PMF) with MCMC is surprisingly effective, using a large set of 108 VLM evaluations on 176 datasets. Further, the authors demonstrate that the uncertainty estimates of PMF can be used in active evaluation to prioritize which evaluation to conduct next, outperforming random selection. Lastly, the work explores extensions of the naive Bayesian PMF model: tensor factorization to handle multiple metrics, and incorporating side information for better performance under extreme sparsity."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Strong motivation: VLM evaluation is very expensive, so being able to accurately predict downstream evaluation performance from a limited set of evaluations is very valuable.\n- The method is elegant and appears to work well, e.g., the correlation plots in Figure 3 look clean. It is also surprisingly effective in active evaluation, which is a very practical and exciting direction for this line of work.\n- The paper is exceptionally well-written and clear.\n- The evaluation uses a large set of (model, dataset) evaluations on a variety of open- and closed-source models."
+            },
+            "weaknesses": {
+                "value": "The authors only consider a limited set of naive baselines for the main experiments in Figure 3. Could the authors benchmark other more sophisticated (neural) matrix completion methods, such as deep matrix factorization [1] or Graph Convolutional Matrix Completion [2]?\n\n[1] Arora et al., 2019. Implicit Regularization in Deep Matrix Factorization. In NeurIPS. https://arxiv.org/abs/1905.13655\n\n[2] van den Berg et al., 2018. Graph Convolutional Matrix Completion. In KDD. https://www.kdd.org/kdd2018/files/deep-learning-day/DLDay18_paper_32.pdf"
+            },
+            "questions": {
+                "value": "* My main concern is the limited set of baseline matrix completion methods (mentioned above).\n* Evaluation of active evaluation: could you consider a more canonical active learning evaluation setup? i.e., randomly partition elements of the matrix into an initial training set, an \"unlabeled pool set\" (in the active learning nomenclature), and a test set, and report active learning-style curves: for each acquisition method (oracle, random, uncertainty), plot RMSE on the test set versus the number of acquisition steps, as you acquire evals in the pool set? e.g., what is done in [3].\n* Comment for possible future work: because the indices of the unobserved (model, dataset) elements are known a priori (and you also have access to side information such as which image encoder was used, etc.), this setting seems to fit naturally with some transductive active learning methods, such as [4].\n\n[3] Gal et al., 2017. Deep Bayesian Active Learning with Image Data. https://arxiv.org/abs/1703.02910\n\n[4] Bickford-Smith et al., 2023. Prediction-Oriented Bayesian Active Learning. In AISTATS. https://proceedings.mlr.press/v206/bickfordsmith23a/bickfordsmith23a.pdf"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a framework for predicting the performance of large vision-language models (LVLMs) across multiple tasks. The main idea is to employ probabilistic matrix factorization (PMF) to estimate unknown performance scores based on a sparse set of observed scores. By formulating performance prediction as a matrix completion problem and leveraging MCMC methods to estimate prediction uncertainty, the authors aim to reduce the computational cost of evaluating large models across diverse tasks. In addition, the authors propose several enhancements to handle data sparsity, including tensor factorization for multiple performance metrics and Bayesian PMF."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed method is grounded in well-established techniques of matrix factorization and probabilistic modeling. The mathematical foundation of PMF is solid, and using MCMC for uncertainty estimation is a sensible approach to prioritize evaluations. The paper demonstrates that the method can effectively predict unknown performance scores, especially when more than 10% of the data is available. \n\n2. Evaluating 108 LVLMs across 176 datasets demonstrates the practicality and scalability of the proposed method across a wide range of tasks."
+            },
+            "weaknesses": {
+                "value": "1. The paper tackles an important problem: efficiently evaluating large-scale models as they grow in size and complexity. The idea of using matrix completion and active evaluation is interesting and, if successful, could lead to significant computational savings. However, the novelty is somewhat limited since the approach mainly builds on existing techniques like PMF, Bayesian modeling, and MCMC.\n\n2.  Several parts of the paper lack clear explanations. For example, the differences between PMF, PTF, and Bayesian PMF are densely presented, and their respective impacts on performance are not sufficiently disentangled in the experiments. An explicit ablation study would help understand each enhancement's individual contributions. \n\n3. While using uncertainty to prioritize evaluations is compelling, the results show a gap between the uncertainty-based approach and the oracle method. The paper could explore why this gap exists and whether alternative heuristics could narrow it."
+            },
+            "questions": {
+                "value": "1. Could you clarify how Bayesian PMF differs from standard PMF in practical terms? Specifically, how does incorporating an LKJ prior (Lewandowski et al., 2009) impact the predictions in practice?\n\n2. Including an ablation study to better quantify the contribution of each component\u2014such as tensor factorization, Bayesian PMF, and the use of profiles\u2014would help clarify their respective impacts on performance.\n\n3. There's a noticeable gap between the uncertainty-based active evaluation and the oracle method. Have you considered alternative heuristics for prioritizing evaluations that might close this gap?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Evaluating VLMs across various number of tasks is costly (as the number of benchmarks can be huge) and the model sizes can be very large as well. The paper tries to propose an approach to estimate the performance on some datasets, by converting the problem to that of sparse matrix factorization, a well studied statistical approach for matrix completion. They assume a M x N matrix, where M is the different models and N is the various tasks. Given some entries of this matrix, one can estimate the rest using matrix factorization. The paper proposes some trivial modifications to the standard PMF to fit this specific use case. While the proposed work is an application of existing techniques to this problem, it is unique and has not been done previously in this setting. The empirical results are great, and the proposed idea can be useful to the community as such, especially while practitioners are developing models and need to frequently evaluate a lot of checkpoints/variations/finetuned versions of VLMs."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- An interesting application of existing statistical method for the problem of estimating performance on benchmarks. \n- The work has potential for impact and being useful for the community, especially developers. \n- Easy to implement, nice and thorough empirical analysis with sufficient ablations and insights/discussions."
+            },
+            "weaknesses": {
+                "value": "- In the active evaluation, the authors order the priority of the task for evaluation based on its estimation uncertainty/deviation. But this doesn\u2019t factor in the cost of evaluation (time) or the model size for that entry. It can be possible that estimating 2 other entries with lower uncertainty initially, and a lower combined evaluation cost turns out to be better than evaluating the entry with highest uncertainty. Curious to know if the authors explored multi-objective optimization, or tried to incorporate evaluation cost in other versions of there proposed approach. \n- As such, the work is basically applying an existing statistical technique (matrix completion) to the problem of estimating performance on benchmarks. Authors do propose some small modifications over standard matrix factorization. One can say that using matrix completion for various applications in the real world is not a novel contribution.\n- It would have been much more compelling work, if the approach incorporated VLM specific ideas or benchmark specific stuff over an above the standard matrix factorization techniques."
+            },
+            "questions": {
+                "value": "See the weakness section"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a framework for predicting unknown performance scores of LVLMs by formulating it as a matrix completion task using probabilistic matrix factorization with MCMC. The paper addresses the challenge of high computational costs in evaluating LVLMs and aims to reduce unnecessary evaluations by predicting performance scores based on observed ones from other models or tasks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper evaluates 108 models on 176 datasets, covering a wide range of tasks and benchmarks. This systematic evaluation can provide a foundation for many future research.\n2. PMF for handling sparse data, such as tensor factorization, Bayesian PMF, and the use of model and dataset profiles, seems a more robust approach to mitigate potential weaknesses in the matrix completion task."
+            },
+            "weaknesses": {
+                "value": "Of course, it is statistically possible to make more robust predictions, but even humans can predict the performance level of a model to some extent just by observing certain patterns in the results. However, the reasons we still need to directly evaluate are:\n1. The learning methodology may show significant weaknesses or strengths on specific benchmarks, and such frameworks cannot analyze these.\n2. K-shot, certain promptings, or new evaluation methods could lead to changes in results across benchmarks, but this framework lacks insights into these aspects.\n\nTherefore, although we can statistically predict the results to some extent without directly evaluating a new model, we still confirm the actual performance through evaluation. Moreover, even testing just 10% less in a setting where only a subset of the test set is used can significantly undermine the reliability, making it even harder to trust this framework. In short, using this framework to predict scientific conclusions presents a risk that far outweighs the cost savings."
+            },
+            "questions": {
+                "value": "A more detailed analysis is needed. Conducting PMF based on different learning methodologies, evaluation pipelines, and promptings could improve the quality of the paper."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

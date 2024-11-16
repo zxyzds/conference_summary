@@ -1,0 +1,186 @@
+{
+    "id": "JCCPtPDido",
+    "title": "Jet Expansions of Residual Computation",
+    "abstract": "We introduce a framework for expanding residual networks using \\textit{jets}, operators that generalize truncated Taylor series.\nOur method provides a systematic approach to disentangle contributions of different computational paths to model predictions.\nIn contrast to existing techniques such as distillation, probing, or early decoding, our expansions rely solely on the model itself and requires no data, training, or sampling from the model.\nWe demonstrate how our framework grounds and subsumes the logit lens,\nreveals a (super-)exponential path structure in the network depth and opens up several applications. \nThese include the extraction of $n$-gram statistics from a transformer large language model, and the definition of data-free toxicity scores.\nOur approach enables data-free analysis of residual networks for model interpretation, development, and evaluation.",
+    "keywords": [
+        "Interpretability",
+        "residual networks",
+        "transformers",
+        "LLMs",
+        "expansions",
+        "Taylor series",
+        "logit lens"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "We introduce a novel framework that expands residual networks using jets, revealing their internal computational paths and enabling various applications of data-freee interpretability.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=JCCPtPDido",
+    "pdf_link": "https://openreview.net/pdf?id=JCCPtPDido",
+    "comments": [
+        {
+            "comment": {
+                "value": "### 4. Dependence among tokens\n**Question: If you filter out all self-attention paths, aren't the bigrams z1, z2 independent? this needs to be true because self-attention is the only mechanism for a transformer to route information amongst tokens.**\n\n No, filtering out all the self-attentions still maintains the dependence on the last input token. To clarify, the $z\\_2$ represents the output token, while the $z\\_1$ is the last token of the input sequence. Perhaps an easy way to convince you about this is to think about a \u201ctransformer\u201d with 0 blocks, which is just a special case of the setting we consider. In this case you only have an encoder and a decoder layer, no self-attentions involved. And for tokens (i.e. integers) $z\\_1$, $z\\_2$ you have \n\n$$\\\\mathcal{P}\\_q(z\\_2 | z\\_1) \\= \\\\mathrm{Softmax}\\[q(z\\_1)\\]\\_{z\\_2}$$\n\nwhere $q(z\\_1)=U \\\\gamma\\_1(\\\\eta(z\\_1))$ and the softmax score is indexed with $z\\_2$.\n\nSo, the paths that do not \u201cpass through\u201d any self-attention still maintain dependence on the last token of the sequence. Hence, they contribute toward the bi-gram statistics of the model.\n\n### 5. Jet weight optimization\n**Question: How are you optimizing the jet weights?**\n\nWe optimized jet weights by minimizing the loss we introduced in Remark 3\\. In our experiments we used SGD indeed, but we believe that there is also a closed form solution obtainable via KKT conditions \\[5\\]  although we haven\u2019t computed nor implemented this yet. Note that the loss indeed depends on an input $z$ as it requires computing the remainder, and hence the expansions. In the experiment of Figure 2 top the input is the sentence of which we are computing the jet lens. We do not use any other datasets except the query sentence itself. We will add details in the appendix (and the optimization routine will be part of the release code). \n\n---\n\nThanks for reviewing our paper again. We hope that the above comments help clarify your doubts and reconsider our submission under a different light. Please let us know if you have any further questions\\! \n\n[1] **PyTorch Documentation**. [*`torch.autograd.functional.jvp` \u2014 Jacobian-Vector Products (JVP) Function*](https://pytorch.org/docs/stable/generated/torch.autograd.functional.jvp.html)\n\n[2] **Veit et al** (2016). [*Residual Networks Behave Like Ensembles of Relatively Shallow Networks*.  NeurIPS 2016](https://arxiv.org/pdf/1605.06431)\n\n[3] **Elhoushi et al** (2024). [*LayerSkip: Enabling Early Exit Inference and Self-Speculative Decoding*. ACL 2024](https://aclanthology.org/2024.acl-long.681)\n\n[4] **Fan et al** (2024). [*Not All Layers of LLMs Are Necessary During Inference*](https://arxiv.org/abs/2403.02181)\n\n[5] [*Karush\u2013Kuhn\u2013Tucker Conditions* ](https://en.wikipedia.org/wiki/Karush%E2%80%93Kuhn%E2%80%93Tucker_conditions)"
+            }
+        },
+        {
+            "comment": {
+                "value": "### 2. Number of paths for analyzing\n**Question: The exponential expansion factor means that to analyze a model like LLaMa 405b, one would have 2^118 terms which seems a bit unwieldy.** \n  \nWe agree that it is not practical to compute (or examine) all the exponential number of paths in a large model at the size of Llama 405B. Rather, the exponential expansion represents the finest level of granularity we discuss in our work. We think it is worthwhile considering this level theoretically, especially in light of previous literature on analyzing residual network\u2019s behavior (see \\[2\\] Veit et al. 2016). This maximal expansion in theory demonstrates the flexibility of jet expansions, and allows us to ground our contribution in a more formalized setting.\n\nIn practice, however, one can choose any \\`\\`interesting\u2019\u2019 path they want to analyze or merge multiple paths instead of expanding at the finest level. In fact, we speculate that shorter paths are more relevant for understanding global model behavior, possibly extending with the findings reported by \\[2\\] Veit et al. 2016 in their section 5\\. Additional evidence supporting the importance of some paths over others comes from latest research on early exiting \\[3\\], layer skipping \\[4\\], where skipping later computation seems not to negatively impact or in some cases even improves the performance of the recursive residual computation. Jet expansion allows users to focus on the most relevant paths for a given target sentence, \u201cskipping\u201d the uninteresting ones.\n\n### 3 Expositions on the decoding nonlinearity $\\gamma_{L+1}$, jet weights $w$ in the algorithm\n**Question: Paragraph after eq (9): what is gamma\\_3?** \n\nThis is the decoding module non-linearity. In the previous equations of the paragraph \u201cExponential expansion of a two-blocks network\u201d (line 146), $\\gamma\\_3$ was wrapped in the decoding module $\\upsilon$. This is consistent with the notation we introduced in Section 2, please refer to Eq. (3) in line 085. In any case we will make this explicit also in the paragraph in our revision. \n\n**Question: Lemma 1: Unclear where w comes from. I have 3 hypotheses: (1) w is arbitrary and changes which member of the equivalence class you have (2) there is a specific value of w needed (\"there exists a w...\") (3) there's a typo and the LHS should be a weighted sum of x. This needs to be explicit.** \n\n(1) is correct. The jet weight $w$ is an arbitrary vector in the $N-1$ dimensional simplex, as it is declared in the Lemma. This means that the equivalence holds for every $w \\in \\Delta^{N-1}$. The intuition here is that, for every center $x\\_i$, you can expand the function by treating the non-chosen points $x\\_j$ (where $j\\\\neq i$) as part of the variate. Then, you can \u201crecompose\u201d the model computation using a convex combination of these different expansions (in fact, even a linear combination would suffice, please refer to Appendix A). The key observation here is that the original function $f(z)$ can be expressed as a weighted sum of multiple versions of itself: $f(z) \\= \\\\sum w\\_i f(z)$, where $w\\_i$ are the weights associated with the i-th expansion. This is the passage where the jet weights appear. Please see Appendix A for a full proof.\n\n**Question: What is the point of the if l \\< L in Algorithm 1? Isn't this always true? In the else, how can there be a gamma\\_{L+1} if there are L layers?**\n\nNo, you can call the algorithm with $l=L$, which corresponds to expanding the decoding layer; hence the branch-else in the algorithm (also, please note that the decoding layer is not in the recursive residual stacking). According to our notation in section 2 line 085, $\\gamma\\_{L+1}$ is the final normalization wrapped in the decoding module $\\\\upsilon$.\n\n**Question: where does w come from \\[in the algorithm\\]?** \n\nThe set of expansions $\\\\xi$\u2019s and the remainder $\\\\delta$ are both functions that take as input a jet weight vector. So the $w$ must be provided by the user when *evaluating the expansions* (indeed, please note that the algorithm returns functions, not points). Please refer to lines 201-206 for the formal definitions."
+            }
+        },
+        {
+            "comment": {
+                "value": "We thank you for your time and appreciate that you found our work \u201crelevant\u201d, our method \u201cvery interesting\u201d, and \u201capplicable to the most common model types\u201d. We wish to address some possible misunderstandings and provide clarifications to the issues that you raised. \n\n---\n\n### 1. Compute k-th order jets\n**Question: How to compute k-th order jets for network components. / How do you represent (computationally) and evaluate the jets? The paper presents them abstractly, which is fine, but in order to compute anything you need to be able to evaluate the k-th order jet for an MLP or self-attention layer.**\n\nWe want to emphasize that the derivatives (jets) in our work are taken with respect to the intermediate input, not the model parameters as it is typically done during training. Specifically, we compute the jets with respect to the vectors that accumulate in the residual stream during inference, when the model parameters are fixed. This choice has significant implications for computational complexity, especially when the number of model parameters vastly exceeds the dimensionality of the residual vector. For example, in Llama-2-7B, the total number of parameters is $7B$ while the residual vector size is just $4096$; a second-order jet w.r.t parameters would take $O(7B^2)$ which is approximately $O(4.9 \\times 10^{19})$ memory complexity, while second-order jet  w.r.t a residual vector would take just $O(4096^2)$, around  $O(1.7 \\times10^7) $ memory complexity; This illustrates a roughly $12$ orders-of-magnitude difference in memory complexity between the two cases. \n\nBy choosing to expand jets on residual vectors rather than model parameters, *we align the expansion process with the structure of recursive residual networks*. This approach naturally tracks the effects of residual vectors as they walk through different paths in the network, making it a computationally efficient and conceptually fitting method for such architectures. Our method is not designed for general neural architectures without recursive residual links, which would be hard to decompose into paths and compute the jets over the paths.\n\nImplementation-wise, the main difficulty in evaluating jets is to computing (higher order) jacobian-vector products (instead of the jacobian itself) and making sure that we differentiate w.r.t the **correct** variables (i.e. the block inputs, rather than block parameters as normally done when training a neural net). This can be done with modern automatic differentiation tools such as `pytorch.autograd` in a straightforward way using the jvp API \\[1\\]. Here is our pytorch implementation:  \n```python\ndef jet(f: Callable[[torch.Tensor], torch.Tensor], x: torch.Tensor, y: torch.Tensor, k: int):\n   \"\"\"\n   Computes J^f(x)(y); see Eq. (7). This is equivalent to the truncated Taylor expansion of f\n   around x of order k, evaluated at y.\n\n   :param f: a callable (to be evaluated on x).\n   :param x: center, in the domain of f\n   :param y: variate in the domain of f\n   :param k: jet order >= 0\n\n   :return: jet^k f(x)(y).\n   \"\"\"\n   assert callable(f), \"f needs to be a callable function\"\n   assert k >= 0, \"the jet order needs to be non-negative\"\n   res, funcs = [f(x)], [f] + [None]*k\n   yp = (y - x).detach()  # prevents gradient propagation through the variate\n\n   def make_functional(i): # using wrapper to return a function\n       def _jvp_y(_x):\n           # note: jvp returns the tuple  (f(x), D f(x) v), we need the second entry\n           return torch.autograd.functional.jvp(funcs[i], _x, yp, create_graph=True, strict=False)[1]\n       return _jvp_y\n\n   for j in range(1, k + 1):\n       funcs[j] = make_functional(j - 1)  # j-th order is done by taking derivative of the (j-1)-th order\n       d_prev = funcs[j](x)  # eval at x\n       res.append(d_prev / torch.math.factorial(j))  # taylor coefficients 1/j!\n   return sum(res)  # this is the numerical value of the full jet\n```\nWe use this primitive function to implement the expansion algorithm. An example of computing higher-order jets with the above `jet` function can be as follows  \n```python\n# Example function: f(x) = x^2\ndef f(x):\n   return x ** 2\n\nx = torch.tensor([2.0], requires_grad=True) # center point\ny = torch.tensor([3.0]) # variate\nk = 2 # order of expansion\n# Compute the jet of order 2 at y\nresult = jet(f, x, y, k)\n```\nWe will open-source our code upon acceptance."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a method for expanding residual networks, such as Transformers, using jets\u2014operators that generalize truncated Taylor series. This approach aims to disentangle the contributions of individual computational paths to model predictions. The authors claim that their method subsumes the Logit Lens and demonstrate its ability to extract n-gram statistics from intermediate model layers, also enabling a data-free approach to detoxification."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Well-written and theoretically well-developed, with content that is thorough yet not overwhelming."
+            },
+            "weaknesses": {
+                "value": "I find the theoretical foundation to be solid, but my main concerns lie with the experimental approach.\n\nThe experiments may be overly empirical and lack statistical rigor. For instance, in Section 5.1, only a handful of jet paths corresponding to specific linguistic functions are selected to demonstrate intervention effects. A more systematic approach is needed to demonstrate that the jet lens is more effective than the logit lens.\n\nWhile the paper primarily offers an analytical framework, it lacks actionable insights for model steering. For example, could it be demonstrated that the bi-gram statistics can be leveraged to guide more efficient pre-training or improve RLHF techniques for reducing toxicity?"
+            },
+            "questions": {
+                "value": "I have mostly raised them in the weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors develop a method that expands a residual network into the sum of an exponential number of jets (roughly, taylor expansions of different components). Each term is a \"path\" information takes as it traverses the network. They apply this to interperability,"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The method itself is very interesting; thinking of a network as a sum-of-paths is very natural and the jet formalism seems to capture it in a nice way.\n\nThe authors show that this generalizes  prior work such as the logit lens.\n\nSince the top network architectures are residual, this is applicable to the most common model types.\n\nInterpereting parts of the network is an important and relevant topic."
+            },
+            "weaknesses": {
+                "value": "- The primary issue is confusing exposition and incomplete details. These make the contributions difficult to asses. I enumerated specifics in the \"questions\" section. \n- The exponential expansion factor means that to analyze a model like LLaMa 405b, one would have 2^118 terms which seems a bit unwieldy\n- Presumably, you need ways of computing k-th order jets for network components (the authors don't seem to discuss this), which makes implementation difficult."
+            },
+            "questions": {
+                "value": "- Paragraph after eq (9): what is gamma_3? it is not defined or used in the figure. This seems important. Is it a hypothetical 3rd block? \n- Lemma 1: Unclear where w comes from. I have 3 hypotheses: (1) w is arbitrary and changes which member of the equivalence class you have (2) there is a specific value of w needed (\"there exists a w...\") (3) there's a typo and the LHS should be a weighted sum of x. This needs to be explicit.\n- What is the point of tthe if l < L in Algorithm 1? Isn't this always true? In the else, how can there be a gamma_{L+1} if there are L layers? where does w come from? \n\nline 264: \"For example, bi-grams statistics related to Pq (z2|z1, . . . ) can be computed\nby evaluating bi-gram paths, which we can obtain by expanding the LLM with Algorithm 2 and\nfiltering out all paths that involve self-attention modules.\"\n\nIf you filter out all self-attention paths, aren't the bigrams z1, z2 independent? this needs to be true because self-attention is the only mechanism for a transformer to route information amongst tokens.\n\nHow are you optimizing the jet weights? This seems to be very important as you show the weights in Figure 2, but you only briefly mention that it is \"done cheaply\" without any details. Do you need specific datasets? do you use SGD? How do you actually compute the residual in a way that can be optimized?\n\nHow do you represent (computationally) and evaluate the jets? The paper presents them abstractly, which is fine, but in order to compute anything you need to be able to evaluate the k-th order jet for an MLP or self-attention layer.\n\n\nMinor comments:\n\nIn eq (7), I found the notation `J^k f(x) = f(x) + ...` to be a bit confusing; suggest `(J^k f) x = y \\mapsto ...`"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors rewrite a model with skip connections as a composition of many Taylor series, evaluated at various points that are related to intermediate activations, promising data-independent global interpretability. The approach is demonstrated on LLMs and conceptually compared to related methods such as LogitLens."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The mathematical exposition is clear.\n- The authors acknowledge the limitation of their method in capturing the nonlinear model exactly.\n- The applicability of the proposed method for evaluating models globally is interesting and promising. In particular, the model diffing experiments provide the potential of useful metrics for assessing the effectiveness of a specific fine-tuning method, the rate of model improvement and saturation, and the potential for certain emergent properties from n-gram statistics."
+            },
+            "weaknesses": {
+                "value": "- The first four sections contain clear mathematical expressions. The remaining sections do not use any of these notations which makes it very hard to digest what the figures are measuring in the context of the proposed method. I\u2019d encourage the authors to improve the clarity of the figures and the captions. At the moment, they are very unclear.\n- One way to address the first weakness would be to add a new section, between the theoretical section and the empirical section, which explains in the greatest detail possible what exactly is going to be measured empirically.\n- The authors claim that their method provides global interpretability but it is unclear how their method is able to provide insights without evaluating the Jacobians at specific points.\n- Is the proof of Lemma 1 a novel contribution or is it a well-known result?\n- The proof of Lemma 1 (in the Appendix) is not clear.\n- Before Equation 9, you state \u201cx_{empty set} = eta\u201d. The notation $x_set$ wasn\u2019t previously defined and is therefore unclear.\n- Could the authors expand on the algorithm bubble? At the moment, the steps are not very clear.\n- It is unclear from the paper how the jet expansion relates to n-grams.\n- The relation between LogitLens and the proposed method should be made more explicit.\n- Superposition is mentioned multiple times throughout the paper. The relation with the jet expansion is not clear."
+            },
+            "questions": {
+                "value": "- \"filtering out all paths that involve self-attention modules\" \u2014 why is this necessary or reasonable?\n- Figure 2\n    - How is the top table related to the bottom figures?\n    - Is it necessary to put all this information in a single figure?\n    - Why should we measure the \u201ccosine similarities between original and jet logits of joint (left) and iterative (right) lenses\u201d? What do we learn from measuring it?\n    - How do we see evidence for superposition or neuron polysemy in this figure?\n    - Is a simpler method like LogitLens capable of identifying similar patterns?  Is there some simpler baseline you could compare your method to?\n- Tables 1 and 2\n    - \"\u2206 logit after intervention\" \u2014 what is the exact definition? unclear what this means.\n    - What's the order of the expansion?\n    - Is a simpler method like LogitLens capable of identifying similar patterns? Is there some simpler baseline you could compare your method to?\n- \"One-to-one bi-grams like\" and \u201cMany-to-many bi-grams\u201d \u2014 unclear what does this mean.\n- Figure 4\n    - What\u2019s the definition of a \"hit ratio\"?\n    - What\u2019s the definition of \"total mass\"?\n    - How do I see double descent or grokking in this figure?\n- What\u2019s the definition of \u201cdiffing jet bi-grams\u201d?\n- \"small change in mass\" \u2014 what\u2019s the definition of \u201cmass\u201d?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper utilizes a convex combination of Taylor expansions to rewrite residual networks up to a nonlinear residual term. Crucially, these expansions are such that the contributions from different combinations of network subunits can be studied separately. This results in a data-independent interpretation tool for understanding black-box residual networks. The authors use this developed tool to study the functionality of subunits, pretraining dynamics, and finetuning in the context of language models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The proposed approach is principled, intuitive and unifies certain prior works. As shown by experiments, it can identify the linguistic functionality of various computational subunits in language models."
+            },
+            "weaknesses": {
+                "value": "Overall, the approximation quality of the jet expansions is not guaranteed, and hence faithfulness to the actual network and its behavior is unclear. This is acknowledged by the authors, and the approximation quality does not necessarily improve with scaling k (as seen from the experiments). Therefore, experimental explorations with jet expansions are only indicative without any confidence."
+            },
+            "questions": {
+                "value": "In Figure 2, the truthfulness of jet logits decay when $k=2$. Could you comment about scaling with respect to $k$? Do you expect it to improve the quality of the expansions?\n\nCan you explain how to obtain bi-gram and skip-n-gram expansions? Overall, I think these two paragraphs (L259 \"Jet bi-grams and skip-n-grams statistics\") could be a bit more detailed for comprehension of the reader."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

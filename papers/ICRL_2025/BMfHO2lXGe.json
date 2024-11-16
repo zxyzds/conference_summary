@@ -1,0 +1,172 @@
+{
+    "id": "BMfHO2lXGe",
+    "title": "ProtMamba: a homology-aware but alignment-free protein state space model",
+    "abstract": "Protein design has important implications for drug discovery, personalized medicine, and biotechnology. Models based on multiple sequence alignments efficiently capture the evolutionary information in homologous protein sequences, but multiple sequence alignment construction is imperfect. We present ProtMamba, a homology-aware but alignment-free protein language model based on the Mamba architecture. In contrast with attention-based models, ProtMamba efficiently handles very long context, comprising hundreds of protein sequences. We train ProtMamba on a large dataset of concatenated homologous sequences, using two GPUs. We combine autoregressive modeling and masked language modeling through a fill-in-the-middle training objective. This makes the model adapted to various protein design applications. We demonstrate ProtMamba's usefulness for the generation of novel sequences and for fitness prediction. ProtMamba reaches competitive performance with other protein language models despite its smaller size, which sheds light on the importance of long-context conditioning.",
+    "keywords": [
+        "proteins",
+        "protein sequence",
+        "protein language model",
+        "computational biology",
+        "generative model",
+        "protein engineering",
+        "protein fitness prediction",
+        "protein design"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "ProtMamba is a protein state space model that can handle very long context and enables autoregressive generation and fitness prediction conditioned on a set of homologous sequences.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=BMfHO2lXGe",
+    "pdf_link": "https://openreview.net/pdf?id=BMfHO2lXGe",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces ProtMamba, a state-space protein language model that is trained on sets of homologous sequences concatenated together. The model is trained to both generate sequences from scratch and to infill sequences using a fill-in-the-middle objective. For fitness prediction on ProteinGym, the method is shown to perform on-par with much larger models that explicitly use a multiple sequence alignment. For a narrower dataset of chorismate mutase activities, they demonstrate that they can apply prompt engineering and the FIM objective to improve fitness prediction. Finally, they perform a limited evaluation of the model\u2019s autoregressive generation capabilities and show that the top 10% of generated sequences have some properties similar to natural proteins."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Prompting protein language models with sequences of homologous proteins (rather than an MSA) is an exciting direction for retrieval-augmented models. Given the inefficiencies of long-context transformers, using a state-space model for this objective is a natural idea to explore.\n\nThe choice to couple standard autoregressive language modeling with a fill-in-the-middle objective is an interesting one that has been relatively unexplored for protein language modeling, and the authors show its value for a fitness prediction task involving chorismate mutases.\n\nThe authors also provide a limited demonstration that prompting the model with high-activity sequences can improve its ability to perform fitness prediction."
+            },
+            "weaknesses": {
+                "value": "Major points:\nGeneral clarity: I have a hard time following all the details of the paper because of the copious references to supplementary figures to support central claims in the main text.\n\nTable 1: Given that the code & model parameters are publicly available, I would like to see the authors reproduce results for PoET [1], both without retrieval and with retrieval using the same prompt that is provided to ProtMamba. Given how similar the two approaches are, I cannot accept this paper without seeing this baseline.\n\nTable 1: I would like to see how ProtMamba performs when one uses the autoregressive log likelihood of an unmasked sequence, rather than the FIM objective. Without this comparison, the value of FIM vs. autoregressive language modeling is less clear to me, since the scope of the experiment in Section 3.3 is much more limited.\n\nLines 208-212: More recent work [2, 3, 4] suggests that it is beneficial to mask as much as 50% of a sequence. I would like to see ablations that evaluate different masking fractions, rather than just results for the somewhat arbitrary choice of 20%.\n\nFigure 4: There are major loss spikes and periods where the training loss actually increases. The authors should comment on the overall training stability of ProtMamba with some analysis of the gradient norms during training. This is important for a reader to decide whether they would choose to adopt Mamba over a transformer.\n\nMinor points\nLines 89-95: Modern attention implementations like FlashAttention have linear memory complexity, though they still have quadratic time complexity [5]. The authors should update the text to reflect this fact.\n\nTable 1: Indicating the top performers for each evaluation in bold would improve the readability of the table.\n\nFigures 6-7: It is unclear to me what L denotes, and why the 150 < L < 250 line extends so much further than the other 2 in Figure 6.\n\n[1] Truong Jr. & Bepler. PoET: A generative model of protein families as sequences-of-sequences. NeurIPS, 2023.\n[2] Wettig et al. Should You Mask 15% in Masked Language Modeling? EACL, 2023.\n[3] Tay et al. UL2: Unifying Language Learning Paradigms. arXiv, 2022.\n[4] Hayes et al. Simulating 500 million years of evolution with a language model. bioRxiv, 2024.\n[5] Dao. FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning. ICLR, 2023."
+            },
+            "questions": {
+                "value": "ProteinGym\u2019s performance metrics are computed by averaging together the Spearman correlations for all assays with the same (UniProt ID, Function) pair, computing the average-of-averages for each function, and then averaging over functions. When computing the depth-based (and other) averages, I believe the UniProt IDs are averaged first as well, though not the functions. Can the authors confirm that they use the appropriate hierarchical averages to compute results for ProtMamba in Table 1?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposed a Mamba-based protein language model, ProtMamba, using concatenated sequences from protein families, with a FIM training objective. This approach allows for faster training and inference speeds. Experiments demonstrate ProtMamba\u2019s versatility across protein fitness prediction and context-conditioned generation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- **Novelty**: This is one of the first works to incorporate state-space models (SSMs) in protein language modeling, utilizing the Mamba architecture for efficient long-context handling. \n\n- **Innovative Input Design**: The input consists of a concatenation of unaligned homologous sequences separated by CLS tokens, with a carefully designed masking strategy. This design effectively leverages long homology contexts, maximizing the model\u2019s ability to capture evolutionary information. Training with a Fill-In-The-Middle (FIM) objective enables flexible application to tasks like mutational effect prediction.\n\n- **Comprehensive Model Implementation and Training**: The authors have put substantial effort into implementing and training ProtMamba, incorporating techniques inspired by DNA modeling, such as callback mechanisms and sequence length warmup."
+            },
+            "weaknesses": {
+                "value": "- **Performance**: ProtMamba does not show significant performance improvements over strong baselines such as ESM-2 and Tranception, which may limit its competitive edge.\n\n- **Additional Comparisons**: Including comparisons with other baseline models, such as PoET-205M[1], SaProt[2], ProtHyena[3], or PTM-Mamba[4] would provide a fair evaluation and offer a more comprehensive view of ProtMamba\u2019s strengths and weaknesses.\n\n- One advantage of Mamba is its faster generation capability compared to transformer-based models. The authors could extend ProtMamba\u2019s use cases by addressing protein sequence generative tasks, such as unconditional generation. A more detailed discussion in Section 3.4 comparing ProtMamba to other generative models would strengthen the paper. You could follow the setting and metrics in PROTEINBENCH[5] paper.\n\n\n[1] Truong Jr, T., & Bepler, T. (2023). Poet: A generative model of protein families as sequences-of-sequences. Advances in Neural Information Processing Systems, 36, 77379-77415.\n\n[2] Su, J., Han, C., Zhou, Y., Shan, J., Zhou, X., & Yuan, F. (2023). Saprot: Protein language modeling with structure-aware vocabulary. bioRxiv, 2023-10.\n\n[3] Zhang, Y. (2024). Prothyena: A fast and efficient foundation protein language model at single amino acid resolution. bioRxiv, 2024-01.\n\n[4] Peng, Z., Schussheim, B., & Chatterjee, P. (2024). PTM-Mamba: A PTM-aware protein language model with bidirectional gated Mamba blocks. bioRxiv.\n\n[5] Ye, F., Zheng, Z., Xue, D., Shen, Y., Wang, L., Ma, Y., ... & Gu, Q. (2024). ProteinBench: A Holistic Evaluation of Protein Foundation Models. arXiv preprint arXiv:2409.06744."
+            },
+            "questions": {
+                "value": "- I\u2019m curious about the impact of the number of context sequences on ProtMamba\u2019s performance. For example, how does performance change with 0, 5, or more sequences, and is there a threshold beyond which additional context sequences no longer contribute to model performance? In your experiments on scaling FIM perplexity with the number of context sequences, it seems perplexity stabilizes with around 30 context sequences. Could you elaborate on this?\n\n- Inference Efficiency: Could you report on ProtMamba\u2019s efficiency during inference? Additionally, how does ProtMamba\u2019s performance, memory usage, and computational efficiency scale with increasing context length compared to transformer-based models, like PoET?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces **ProtMamba**, a novel protein language model that is homology-aware but alignment-free, addressing the limitations of traditional multiple sequence alignments (MSAs) in protein modeling. ProtMamba is built on the Mamba architecture, which enables it to handle very long sequences by efficiently processing concatenated homologous protein sequences. The model is trained using a hybrid of autoregressive modeling and Fill-in-the-Middle (FIM) objectives, making it highly versatile for tasks like protein sequence generation and mutational fitness prediction. ProtMamba demonstrates competitive performance on benchmarks like ProteinGym, outperforming similar-sized models in terms of efficiency and predictive accuracy. Additionally, the model excels in sequence generation tasks, producing novel sequences with structural properties comparable to natural proteins."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- ProtMamba is Homology-aware yet alignment-free\n- Mamba architecture adaptation efficiently handle long contexts\n- Explores hybrid training scheme for pLMs\n- ProtMamba strong results on ProteinGym for mutational fitness prediction\n- ProtMamba can generate reasonable sequences given homology context/sequences"
+            },
+            "weaknesses": {
+                "value": "1. Why use position encoding for ProtMamba? Given the recurrent nature of Mamba, positional information should theoretically be learned implicitly, which is why the original Mamba model does not employ explicit position encodings. The authors claim this is a significant modification, yet they fail to provide any experiments or ablation studies to demonstrate how this change improves model performance. I would like to see a comparison of with positional encoding (PE) vs. without PE, and additionally, a comparison of standard PE (additive) vs. the concatenation method used in ProtMamba. Authors should provide more details about PE implementation and comparison.\n\n2. Although the motivation for using a long-context language model like Mamba is compelling, the paper does not benchmark a vanilla transformer at any context length, which is a significant weakness. Without this comparison, it is difficult to argue whether ProtMamba is the optimal architecture for this task in terms of performance. While it is clear that state space models (SSMs) like Mamba will likely outperform transformers in terms of efficiency, the lack of performance benchmarks makes it hard to assess if ProtMamba achieves the best results. \n\n3. Regarding the ProteinGym benchmark, when incorporating MSA or homology sequences, ProtMamba does not outperform MSA-based models. This challenges the fundamental premise of the paper that a homology-aware, MSA-free model should perform better and eliminate the need for MSAs. The lack of superior performance compared to MSA-based models suggests that ProtMamba's approach may not fully leverage homology information as effectively as MSA based models."
+            },
+            "questions": {
+                "value": "1. How do the authors compute the total number of tokens and FLOPs for training? Can you provide more details on the implementation, such as whether you use any packages for FLOP calculations or how you approximate them?\n\n2. Why did you choose to use a Poisson distribution for masking instead of other distributions?\n\n3. In Figure 12, why does the model, in some DMS experiments, perform better without retrieval (MSA/homology sequences) than with MSA? This is especially surprising given that the model was trained over long contexts of homologous sequences. For instance, in VRPI_BPT7_Tsuboyama_2023_2WNM, there is a significant difference. Could you provide some explanations for this discrepancy?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents ProtMamba, a homology-aware but alignment-free protein language model. It's based on the Mamba architecture and trained on concatenated homologous sequences. Results show its effectiveness in various tasks like sequence generation and fitness prediction."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The authors propose a new training strategy, which effectively harnesses evolutionary information from homologous sequences without relying on MSA.\n- The architecture based on Mamba blocks allows for handling extremely long contexts, which is beneficial for protein modeling as concatenating homologous sequences often results in long inputs.\n- The results are comprehensive and prove the effectiveness of the proposed model."
+            },
+            "weaknesses": {
+                "value": "I am not certain whether combining protein language with mamba can be regarded as \"novel\", but it is ok for me since such combination is not explored yet. An interesting aspect of this study is the training paradigm, which might provide insights for future studies. Nevertheless, a disappointing point is that almost no ablation study of the method can be found.\n\n- The mask strategy (span-mask) is similar to that of T5 (you'd better add the missing reference: Raffel et al, Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer). There are some most related strategies that are not ablated, such as:\n  - what if training with token-level mask instead of span-mask? Token-level mask means something like: \"a b c <m1> <m2> <m3> g h  <eos> <m1> d <m2> e <m3> f\". \n  - what if no masking strategy is used and the model is trained in an autoregressive fashion? \n  - what if doing mask-prediction without observing subsequent tokens, which means the input is \"a b c <m1> <m2> <m3> g h\" while the target is \"b c d e f g h <eos>\"?\n  - I am not requesting the authors to ablate all of the above. However, for an AI conference, that would be very interesting and no ablation is unacceptable (in my opinion).\n- The authors claim that the incorporation of position embedding and the concatenation strategy are important. I think the authors can present some results for comparison, for example, a model without position embedding and a model with the addition strategy (of the position embedding).\n- Absence of comparison with a transformer (with FlashAttention) in the same setting.\n- Have you tried to scale up the parameter of the architecture?"
+            },
+            "questions": {
+                "value": "NA"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,203 @@
+{
+    "id": "ulJNq6FQrw",
+    "title": "Progressively Label Enhancement for Large Language Model Alignment",
+    "abstract": "Large Language Models (LLM) alignment aims to prevent models from producing content that misaligns with human expectations, which can lead to ethical and legal concerns. \n   In the last few years, Reinforcement Learning from Human Feedback (RLHF) has been the most prominent method for achieving alignment.\n   Due to challenges in stability and scalability with RLHF stages, which arise from the complex interactions between multiple models, researchers are exploring alternative methods to achieve effects comparable to those of RLHF.\n   However, these methods often rely on large high-quality datasets.\n   Despite some methods considering the generation of additional data to expand datasets, they often treat model training and data generation as separate and static processes, overlooking the fact that these processes are highly interdependent, leading to inefficient utilization of the generated data.\n   To deal with this problem, we propose PLE, i.e., Progressively Label Enhancement for LLM Alignment, a framework that dynamically adjusts the model\u2019s training process based on the evolving quality of the generated data.\n   Specifically, we prompt the model to generate responses for both the original query and the query guided by a set of carefully designed principles, and then utilize a dynamic threshold to determine the appropriate training approach for both responses based on their corresponding reward scores. \n   Experimental results demonstrate the effectiveness of PLE compared to existing LLM alignment methods.",
+    "keywords": [
+        "Large Language Model",
+        "LLM Alignment"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ulJNq6FQrw",
+    "pdf_link": "https://openreview.net/pdf?id=ulJNq6FQrw",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes a new method for aligning large language models. \n\nThe method proposed in the paper is PLE, i.e. Progressively Label Enhancement for LLM Alignment. This framework can dynamically adjust the model's training process based on the evolving quality of the generated data. \n\nSpecifically, the method designs a set of principles and uses these principles to guide the model to generate good responses, and then designs a ranking loss and a re-weight loss to train the language models. \n\nOn the dataset of HH, the proposed is demonstrated to be better than PPO, and DPO, these commonly used methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Guiding the language model with a set of principles is a straightforward yet effective approach for generating high-quality responses. This simplicity suggests promising potential for broader application of this method in the future."
+            },
+            "weaknesses": {
+                "value": "1. **Lack of Ablation Study**: The training loss comprises a ranking loss and a re-weighting loss; however, the paper does not include an ablation study to analyze the individual contributions of these losses to the model\u2019s performance.\n\n2. **Limited Scope of Principle-Based Evaluation**: While using principles proves effective in generating quality responses, the evaluation is limited to alignment tasks. This narrow focus leaves the generalizability of the approach uncertain. Testing across a wider range of tasks, such as mathematical reasoning, summarization, and controlled text generation, would provide stronger evidence of the method\u2019s broader applicability.\n\n3. **Lack of Systematic Study on Principle Design**: The paper does not systematically examine the design of principles or how different principles impact the model\u2019s overall performance."
+            },
+            "questions": {
+                "value": "Why GPT-4 is not used for annotation when calculating the win rates?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposed progressively label enhancement for LLM alignment, where the authors prompt the model to generate responses for both the original query and the query guided by a set of carefully designed principles, and then utilize a dynamic threshold to determine the appropriate training approach for both responses based on their corresponding reward scores.\nThe central idea lies in that at the earlier stage of training, the method tries to use pairs with larger reward margin, as the training proceeds, the reward margin can be decreased."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. prompting with principles is interesting and important; \n2. the idea of changing training data progressively using reward function is interesting;\n3. there are positive performances in the experiment."
+            },
+            "weaknesses": {
+                "value": "1. the method does not seem sound to me, there are a few questions left unclear:\n1) Essentially, this is a PPO method? so why does EQ 2 have no regularization terms (the KL term between \\pi_{sft} and \\pi_{\\theta};\n2) in Eq 7 and the line 15 of the algorithm, the tau seems to be a constant all the time, where you should have \\tau_{t+n} = \\tau_{t}*\\alpha?\n3) in the loss functions, normally we are optimizing with mini-batch, which sums all the log probability together in a mini batch (because samples are IID), so a better formulation should be like log\\pi_{\\theta}? Instead, the authors directly used the probability distribution, which is weird for me. \n2. About evaluation:\n1) the authors only tested the method with a base model of LLama3 8B, where I believe more base models should be verified, for instance , chatglm-x, qwen-x, and particularly with larger sizes to see if the claims still hold on larger models;\n2) the authors only experimented with one dataset, of course more datasets should be validated with;\n3) the authors measured the winrate and reward scores over baselines, but it is more interesting to see the results on other benchmarks, for instance, IFEval, MATH, BBQ, and other typical benchmarks."
+            },
+            "questions": {
+                "value": "See my comments in weaknesses. \nnote: I did not check into the details the theoretical analysis.\nMinor comment:\nDPO is not short for direct policy optimization, it is for direct preference optimization."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a novel language model alignment method by adaptively adjusting the training process based on the generated data quality, which is computed by determining whether a reward score of principle-guided response is higher than the generated response. The authors provide a theoretical analysis to show that the proposed method would lead to a convergence to the optimal model. The experiments are conducted on a single dataset, and the method is shown to achieve a higher performance than the baseline methods (vanilla SFT, DPO, PPO, RAFT)."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Proof of the convergence is provided in the work, showing evidence of the effectiveness of the proposed method on the theoretical aspect.\n\n* This paper considers the training process along the data quality together, giving a novel perspective compared to prior alignment works that consider training and data generation as two separate processes.\n\n* The paper is clear and easy to understand."
+            },
+            "weaknesses": {
+                "value": "* The experiment is only conducted on a single dataset and a single model variant. The paper could be strengthened by a series of post-training analyses.\n\n* Although the method is shown to have better performance on the Helpful and Harmless (HH) dataset, it would be useful if the authors could present a complexity comparison between the baselines, which may seem to be more efficient than the proposed method."
+            },
+            "questions": {
+                "value": "* Sec 4.1.: `Language model alignment requires a large amount of high-quality data` Consider LIMA, for example, only contains 1k examples, although its base model (65B) is larger than the model used in this work. \n\n* How are the principles integrated into the response generation? How many of such generations are required?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes the Progressively Label Enhancement (PLE) framework to improve LLM alignment with human expectations. PLE dynamically adjusts the training process by weighting both principle-guided and original responses based on their reward scores, enhancing data utilization efficiency. Experiment results show that PLE outperforms existing studies."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed approach is well-motivated.  \n2. The proposed approach is novel.  \n3. The approach show good performance."
+            },
+            "weaknesses": {
+                "value": "1. Although the approach is new, the high-level idea of using prompt to instruct LLM to generated human preferred answer and using reward to optimize the LLM is not new.  \n2. The paper evaluates model performance using a reward model. It would be better more details of the reward model can be provided. Also, it is possible that the reward model has bias. It would be better that the authors can discuss the effect of the reward model. Otherwise, trying multiple reward models may address the issue.  \n3. Some details of the experiments are missing. For the results of SFT, PPO, DPO in Table 2, are they the results obtained by the LLM trained by the authors? or they are the results of the instruct version of LLaMA-3 released by Meta? If they are the results obtained from the author, I'm curious about the results of directly evaluating the instruct version of LLaMA-3."
+            },
+            "questions": {
+                "value": "1. It would be better to make the font size of Figure 1 larger."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper addresses the decoupling of data generation and model training in current RLHF methods by proposing PLE (Progressively Label Enhancement for LLM Alignment). PLE dynamically adjusts the training process based on the quality of the generated data to maximize its utility. Specifically, the contributions of the paper are as follows:\n\n1. The authors are the first to identify that previous alignment methods overlooked the coupling of data generation and training. They introduce PLE to combine these two stages, demonstrating reasonable performance compared to baselines in experiments.\n\n2. The authors theoretically prove that, through a progressively updated threshold strategy, PLE can bound the error rate between the trained model and the optimal model."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The authors identify the decoupling issue between data generation and model training in current methods, and propose PLE to improve data utilization. Through both automatic and human evaluation on the HH dataset, they demonstrate that PLE outperforms baseline approaches. The authors theoretically prove that with a progressively updated threshold strategy, PLE can bound the error rate between the trained model and the optimal model."
+            },
+            "weaknesses": {
+                "value": "1. The authors provide comparative experiments with 4 baselines on the HH dataset and include training curves comparing principle-guided responses with original responses, but I believe the experiments remain insufficient despite the theoretical proof.\n\n- Additional evaluations on datasets like IMDb (as seen in DPO), the Reddit TL;DR summarization dataset, and UltraFeedback would offer valuable insights into model performance on diverse data using PLE. \n- It would also be beneficial to test generalization capabilities on out-of-distribution data\u2014for instance, training on UltraFeedback and evaluating on HH.\n- Including additional evaluation metrics, such as MSSTR and Distinct-n(as seen in RAFT), could enhance the credibility and robustness of the results.\n\n2. The paper lacks sufficient motivation for introducing progressive approaches and label enhancement methods. Additionally, the experimental results show somewhat minor improvements over the baselines and lack the comprehensiveness needed to justify these components(see weakness 1 for suggestions)."
+            },
+            "questions": {
+                "value": "1. When training baselines like SFT and DPO, it appears that the authors used preference responses from the HH dataset. I\u2019m curious how the baselines would perform if principled guided responses were used as preference responses for training instead.\n\n2. A few potential typos:\n\n    a. For PLE, is the full name \u201cProgressively Label Enhancement for LLM Alignment\u201d as stated on line 21, or \u201cSelective Label Enhancement for Language Model Alignment\u201d as on line 156?\n\n    b. In line 333, \u201cReward-based Fine FineTuning (RAFT)\u201d\u2014it seems this is not the full name of RAFT.\n\n3. Could the authors expand the experiments on the effects of different components of PLE (e.g., varying loss functions) or hyper-parameters? This would provide deeper insights into which parts contribute most effectively.\n\n4. For Figure 3, how many iterations were trained in total? Are there only 8 iterations in the entire training process?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

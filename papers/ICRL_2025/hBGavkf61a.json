@@ -1,0 +1,167 @@
+{
+    "id": "hBGavkf61a",
+    "title": "Diffusion Bridge AutoEncoders for Unsupervised Representation Learning",
+    "abstract": "Diffusion-based representation learning has achieved substantial attention due to its promising capabilities in latent representation and sample generation. Recent studies have employed an auxiliary encoder to identify a corresponding representation from data and to adjust the dimensionality of a latent variable $\\mathbf{z}$. Meanwhile, this auxiliary structure invokes an *information split problem*; the information of each data instance $\\mathbf{x}_0$ is divided into diffusion endpoint $\\mathbf{x}_T$ and encoded $\\mathbf{z}$ because there exist two inference paths starting from the data. The latent variable modeled by diffusion endpoint $\\mathbf{x}_T$ has some disadvantages. The diffusion endpoint $\\mathbf{x}_T$ is computationally expensive to obtain and inflexible in dimensionality. To address this problem, we introduce Diffusion Bridge AuteEncoders (DBAE), which enables $\\mathbf{z}$-dependent endpoint $\\mathbf{x}_T$ inference through a feed-forward architecture. This structure creates an information bottleneck at $\\mathbf{z}$, so $\\mathbf{x}_T$ becomes dependent on $\\mathbf{z}$ in its generation. This results in $\\mathbf{z}$ holding the full information of data. We propose an objective function for DBAE to enable both reconstruction and generative modeling, with their theoretical justification. Empirical evidence supports the effectiveness of the intended design in DBAE, which notably enhances downstream inference quality, reconstruction, and disentanglement. Additionally, DBAE generates high-fidelity samples in the unconditional generation.",
+    "keywords": [
+        "Diffusion Model",
+        "Represenation Learning",
+        "Autoencoders"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "This paper introduces Diffusion Bridge Autoencoders (DBAE) to design encoder dependent endpoint inference.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=hBGavkf61a",
+    "pdf_link": "https://openreview.net/pdf?id=hBGavkf61a",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper identifies The paper identifies a problem in diffusion-based representation learning models with auxiliary (lower dimensional) latent variables, which the authors call the \"information split problem\".\nThe identified problem is that such models rely on both the auxiliary latents $z$ and the diffusion endpoint $x_T$ when reconstructing (or unconditionally generating) data.\nThus, even a well-trained model (i.e., a model that can reconstruct data well) may not encode all relevant features of a given data point $x_0$ in $z$ and instead rely also on $x_T$ when reconstructing it.\nThis makes $z$ less useful as a representation of $x_0$ in downstream tasks (e.g., classification, clustering).\n\nThe paper proposes to resolve this issue by turning $z$ into an information bottleneck, thus ensuring that $x_T$ is conditionally independent from $x_0$ given $z$ (i.e., $x_T$ cannot contain any additional information about $x_0$ that is not already encoded in $z$).\nThe paper discusses and empirically evaluates training objectives of their proposed architecture for representation learning, reconstruction, and unconditional generation."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper addresses an important issue in representation learning with diffusion models.\nThe proposed solution appears theoretically sound and empirically convincing to me, but I have to admit that I am not an expert on the relevant literature regarding other solutions to the discussed issue (if any), nor on state-of-the-art empirical performance, so I will yield to the judgment of the other reviewers in this regard.\n\nThe paper is remarkably well organized.\nDespite addressing a rather complicated problem in a domain that requires a lot of prior knowledge, the paper manages to be self-contained and discusses all relevant background in a brief yet (as far as I can tell) complete way.\nThe addressed problem is introduced in a didactic way (first with examples, then gradually more formal), and its proposed solution is well motivated."
+            },
+            "weaknesses": {
+                "value": "I am not an expert on diffusion models with auxiliary encoders, so I cannot judge the novelty of the proposed method or the choice of baselines in the empirical evaluation.\n\nI only identified minor weaknesses (although I strongly recommend addressing at least the last point below as it should be relatively easy to fix and would make the paper much more accessible).\n\nI did not understand the significance of the information split problem in unconditional generation (Section 4.4.2).\nI appreciate that the discussion of the objective function (Section 4.4) distinguishes between different use cases of diffusion models.\nAnd I can see that the described information split problem can be an issue for representation learning.\nBut if all we care about are good unconditional samples, then why does it matter whether $x_T$ may contain some information that is not contained in $z$?\nWe would sample $x_T$ anyway.\nYet, empirically, it seems like the proposed DBAE+AE model outperforms the baselines even for unconditional generation.\n\nFurther, as a minor point, Eq. 9 seems suspicious to me.\nWhile I understand how a bound of this form would exist in general, in the specific instance both $p_\\theta^\\text{ODE}(x_0 | z, x_T)$ and $p_\\theta^\\text{ODE}(x_T |z_0, z)$ are delta-distributions unless I am mistaken, so the log-density of the former does not exist, and I would expect the KL-divergence term that involves the latter to be infinite.\nI presume that the \"two infinities cancel\" in some sense, but maybe the equation could be rewritten in a way that doesn't rely on \"cancellation of infinities\".\n\nApart from this, my only criticism concerns the large number of grammatical errors, which made the paper quite a bit more difficult to read for me than necessary.\nThis is a shame because it diminishes the otherwise excellent presentation.\nI know that being overly pedantic on grammar in scientific papers can impose cultural bias, but I am fairly certain that most of the errors could be caught by automatic tools.\nAnd while many errors are somewhat trivial (singular/plural or missing/superfluous/wrong articles), some sentences were right-out unintelligible to me and I had to pause reading and infer the intended meaning from context.\nSome examples include (there are more): lines 132-133, lines 160-162 (two separate sentences that were probably meant as one, but this isn't immediately apparent due to remaining grammar issues even when joining them), and lines 287-288 (missing verb; I actually can't infer the intended meaning here).\nI strongly recommend running the entire paper through a grammar checker, or asking an LLM to detect possible grammar issues in each paragraph.\nIt would make this otherwise great work more accessible to a broad (international) audience."
+            },
+            "questions": {
+                "value": "What is the significance of the information split problem in unconditional generation (see \"Weaknesses\")?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes Diffusion Bridge AutoEncoders to create latent variable-dependent endpoint embeddings, resolving the information split problem due to the auxiliary encoder and fixed and inflexible dimension problems in diffusion-based models. \n\nWith theoretical guarantees, the method outperforms the SOTA methods on various datasets and settings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Quality and clarity: the paper is well-written and the idea is motivated and easy to follow. \n\nOriginality: the paper aims to solve the so-called information-split problem in the field. The effectiveness of the proposed method is well-supported by theorems and comprehensive experiments. \n\nThe theorems indicate the proposed loss can indeed increase the mutual information between the input images and the latent variable. Moreover, the generated data distribution is guaranteed to be close to the input data distribution by the proposed loss.\n\nThe experiments show substantial improvement in the proposed DBAE method in terms of downstream tasks, reconstruction, disentanglement, and generation. Furthermore, the inference speed is also superior obviously."
+            },
+            "weaknesses": {
+                "value": "1. It is unclear how the loss makes the endpoint dependent on the latent variable. The theorems only show the relationship between the input data and the latent variable instead, which is not aligned with the claim.\n\n2. The intuition is missing in Section 4.1. For example, why the new forward SDE is defined as in Eq. 10? Providing more intuition would help readers to appreciate the forward process."
+            },
+            "questions": {
+                "value": "1. Could you provide more intuition behind Eq.10?\n\n2. The paper proposes the AutoEncoder structure for the Diffusion-based representation learning methods. Would it also be interesting to appreciate the work from a (Variational)AE perspective? Will this work provide insights to both sides as a bridge in the middle?\n\n3. Lastly, why and when the split of information will be problematic? For example, in the generation step, the information will be combined from both the latent variable and the endpoints. Thus, is it really necessary to have the information stored or learned in a single representation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a new Diffusion VAE model in order to combine the latent representation power of VAE and the generation power of Diffusion models. In previous Diffusion VAEs, the latent variable $z$ and $x_T$ are encoded separately from the data $x_0$. The latent variable is concatenated during the denoising process. However, the starting point $x_T$ is not dependent on $z$. The authors call this problem an information split, which can cause unfaithful reconstruction from $z$ and a large gap of mutual information. Motivated by this, the authors introduce another decoder from $z$ to $x_T$. Therefore, $x_T$ can obtain information from the original data. This dependence reduces the mutual information gap, and enhances the representation learning performance. The overall model appears to be a concatenation of VAE and the diffusion process. The authors conduct comprehensive experiments to show advantages in latent variable learning and generation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Combining VAE with diffusion is of practical interest. The motivation and solution seem reasonable to me. The authors also provide some theoretical justifications of the model and objective functions.\n\n2. There are thorough experiments to demonstrate the usefulness and performance of the proposed model."
+            },
+            "weaknesses": {
+                "value": "1. In the diffusion bridge Eq. (5), the input is transformed into a fixed target. However, in the proposed model, the target $x_T$ is random due to the randomness of the VAE. Does this affect the theory?\n\n2. In Section 4.4, the authors present objective functions for reconstruction and generation tasks. In experiments, did the authors optimize different objectives and use different models for different tasks? Can we obtain both reconstruction and generation abilities using the same model?\n\n3. I am wondering whether the training is difficult compared to without the AE part. Is there a trade-off between the expressive power of the AE and diffusion model?"
+            },
+            "questions": {
+                "value": "See above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces the Diffusion Bridge AutoEncoders (DBAE) framework to address the \"information split problem\" in diffusion-based autoencoding models for unsupervised representation learning. The authors argue that in conventional latent-variable-augmented diffusion models, the information in data $x_0$ is split between two latent variables--$z$, obtained from an auxiliary encoder, and $x_T$, the endpoint of the diffusion process. This split hinders effective encoding, especially for downstream tasks such as reconstruction. DBAE proposes a solution to remedy this by creating a dependency of $x_T$ on $z$, allowing $z$ to serve as a comprehensive information bottleneck and improving representation quality. Specifically, the authors propose the process to encode $x_0$ into $z$, decode $z$ into $x_T$, and then bridge $x_0$ and $x_T$ to define a diffusion process. The authors provide empirical evidence supporting DBAE\u2019s improvements in representation quality, reconstruction, and downstream tasks, suggesting it as a promising model for generative and reconstruction purposes."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper addresses a key challenge in latent-variable generative models, particularly in diffusion probabilistic models (DPMs) that are augmented with an auxiliary encoded latent variable $z$, which the authors refer to as the \"information split problem.\" The authors clearly illustrate how the information split between $z$ and $x_T$ diminishes the quality of latent representations for high-fidelity tasks. To overcome this issue, they propose a principled framework that integrates autoencoders with diffusion models by (1) encoding $x_0$ to define the latent endpoint $x_T$ of the diffusion process, and (2) connecting these two points utilizing Doob\u2019s $h$-transform. This approach combines the strengths of autoencoders\u2014such as dimensionality reduction and efficient encoding/decoding\u2014with the rich generative capabilities of diffusion models. Experimental results demonstrate that DBAE outperforms existing models across various benchmarks, underscoring its effectiveness in tasks like generation, reconstruction, and attribute manipulation. The paper also discusses potential extensions of DBAE to various downstream applications, highlighting its adaptability and potential for broader impact."
+            },
+            "weaknesses": {
+                "value": "Despite its strengths, I think the paper\u2019s impact is significantly diminished by its presentation. Below, I outline major concerns with suggestions for improvement.\n\n**Clarifying Motivation and Significance in the Introduction:**\nThe Introduction lacks a clear articulation of why the \u201cinformation split problem\u201d is critical to address. This issue is specific to a subset of diffusion probabilistic models (DPMs) that are augmented by an auxiliary encoded latent variable $z$. For readers to appreciate the significance of this issue, it would help to emphasize the relevance of these models, which combine strengths from both VAEs and DPMs. While the first two paragraphs provide an overview of latent-variable generative modeling, the current description introduces these models merely as proposed approaches rather than as leading techniques in the field. Highlighting their role as state-of-the-art or best-performing models would better contextualize the importance of tackling their limitations. Additionally, the Introduction could clarify why the information split problem is particularly relevant for tasks requiring accurate reconstruction of the original data, $x_0$. The authors might adapt statements like those in Lines 285\u2013286\u2014\u201cFor downstream inference, attribute manipulation, and interpolation, the model requires reconstruction capability\u201d\u2014to illustrate the utility of generative modeling and explain the advantages of integrating VAE and DPM functionalities. Establishing these goals clearly would help readers understand how the information split issue primarily affects reconstruction and how DBAE addresses this challenge.\n\n**Improving Precision in Terminology and Expression:**\nSeveral terms and expressions in the paper would benefit from clearer definitions and consistent use. For instance, in Line 49, \u201cinference of $x_T$\u201d may be ambiguous; specifying this as \u201cestimating the latent variable $x_T$ conditioned on $x_0$\u201d would clarify the intent. Similarly, the phrase \u201clatent variable inference,\u201d which appears in Section 4.1, could be made more precise by using \u201cestimating $x_T$ conditioned on $z$\u201d or \u201cencoding $x_0$ into $x_T$,\u201d depending on the context. Certain expressions, like \"$D_{KL}(q_{\\theta}^{\\textrm{ODE}}||p_{\\textrm{prior}})$ explains the information split problem\u201d (Lines 196\u2013197), are unclear; it would help to specify whether the KL divergence term\u2019s presence illustrates or quantifies this problem. Ensuring precise and consistent terminology throughout would enhance readability and help avoid potential confusion (see \u201cQuestions\u201d for further specific comments).\n\n**Providing Precise Description of Methodology/Tasks in Sections 4 & 5:**\n- *Methodology in Section 4:* The presentation of the proposed methodology in Section 4 is complex and challenging to follow. A concise pseudocode or boxed algorithm format summarizing DBAE\u2019s key steps, including training and inference procedures, would streamline comprehension. Providing a pseudocode outline for DBAE\u2019s main processes\u2014inferring $z$ from $x_0$, subsequently inferring $x_T$ from $z$, and bridging $x_0$ and $x_T$ using Doob\u2019s $h$-transform\u2014would help organize the workflow and provide readers with a structured overview before diving into the details.\n-  *Experimental Tasks in Section 5:* Section 5 could also benefit from a more systematic presentation of the six experimental tasks under investigation. Providing a precise, mathematical description of each task would make it easier for readers to interpret DBAE\u2019s advantages across different contexts. For example, the description of Interpolation problem in Lines 474 - 476 can be a good starting point -- presenting all tasks in a similar manner would help readers understand the desiderata and challenges in each tasks as well as DBAE\u2019s benefits across varied applications in a more structured way."
+            },
+            "questions": {
+                "value": "Line 46: The phrase \u201cand the endpoint $x_T$\u201d may be unclear. Would it be more precise to revise this to \u201cto the endpoint $x_T$\u201d to clarify the relationship between $z$ and $x_T$?\n\nLine 49: The term \u201cinference of $x_T$\u201d might be ambiguous for some readers. Could this be rephrased or annotated as \u201cestimating $x_T$ conditioned on $x_0$\u201d or \u201cencoding $x_0$ into $x_T$\u201d?\n\nLines 75\u201380: The third paragraph of the Introduction could benefit from additional clarity. The challenges described here seem to presuppose the goal of compressing $x_0$ into latent variables ($z$ and $x_T$) for reconstruction, but this goal is not explicitly stated, which could cause confusion. For example, readers focused on new sample generation might not understand why the information split issue affects reconstruction. Would the authors consider clarifying this context and explaining why reconstruction is a primary focus?\n\nLine 99: Consider capitalizing \u201ceq.\u201d to \u201cEq.\u201d when referencing specific equations. Also, while referencing equations before presenting them can add context, it is uncommon and might disrupt the logical flow. Would it be more effective to present equations first, then reference them?\n\nLines 160\u2013161: It might be helpful to provide the full names of \u201cVE\u201d and \u201cVP\u201d (at least in a footnote), rather than only using acronyms, to support readers who may be unfamiliar with these terms.\n\nLines 196\u2013197: For clarity and parallelism, consider specifying that $D_{KL}(q_{\\theta}^{\\textrm{ODE}}, p_{\\textrm{prior}})$ represents the KL divergence between $q_{\\theta}^{\\textrm{ODE}}$ and $p_{\\textrm{prior}}$. The phrase \u201c$D_{KL}$ explains the information split problem\u201d is also somewhat ambiguous. Could the authors clarify whether the KL divergence term\u2019s presence illustrates or quantifies the problem? Additional context could improve reader understanding.\n\nLines 203\u2013204: Since the references here were cited just two paragraphs above, the authors may want to omit them to save space.\n\nLine 213: The title of Section 4.1, \u201clatent variable inference,\u201d may be unclear\u2014does it refer to $z$, $x_T$, or both? Clarifying whether the authors mean both variables, and if so, how they relate, would improve clarity.\n\nLines 214\u2013215: The nature of the encoder and decoder is not clearly defined. For instance, is $\\text{Enc}{\\phi}$ deterministic or stochastic? If it is deterministic, how does it define the conditional probability $q{\\phi}$? Clarifying this would assist readers in understanding the model structure.\n\nSection 4: A concise pseudocode format summarizing the main DBAE algorithm, including training and inference procedures, would be helpful. Consider adding boxed pseudocode for core processes, such as (1) inferring latent variables for reconstruction or sample generation, and (2) training the encoder and decoder. This structured overview could improve comprehension before diving into the details.\n\nSection 4.1: It would be helpful if the authors could confirm the proposed procedure: (1) infer $z$ from $x_0$, (2) infer $x_T$ from $z$, and (3) use Doob\u2019s $h$-transform via Eq. (10) to bridge $x_0$ and $x_T$ and determine the distribution of intermediate $x_t$ values. Additionally, it is unclear if the encoder $q_{\\phi}$ and decoder $q_{\\psi}$ require training. Could the authors clarify this?\n\nLine 285\u2013286: The statement \u201cFor downstream inference, attribute manipulation, and interpolation, the model requires reconstruction capability\u201d could be introduced earlier in the Introduction to help illustrate the utility of generative modeling and contextualize the information split problem. Would the authors consider adding this as a motivation for addressing the information split issue?\n\nLine 317 (Theorem 1): The term \u201clinear SDE\u201d appears without prior explanation. Would the authors consider providing a brief definition?\n\nLine 331: Consider removing \u201cthe\u201d before \u201cSection 4.4.1\u201d for grammatical clarity.\n\nLine 342: Replacing \u201coptimize\u201d with \u201cminimize\u201d could provide greater clarity regarding the objective.\n\nLines 354\u2013355: Essential experimental details should ideally appear in the main text, rather than directing readers to the Appendix. This would allow readers to understand the experimental setup, including encoder and model architecture choices, without needing to consult additional sections. Would the authors consider including these details directly?\n\nSection 5: Could the authors provide a concise, mathematically rigorous description of each of the six experimental tasks to clearly communicate the goals, challenges, and benefits of DBAE? For example, describing the interpolation task in mathematically precise terms, as in Lines 474\u2013476, could serve as a model for presenting all tasks consistently."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

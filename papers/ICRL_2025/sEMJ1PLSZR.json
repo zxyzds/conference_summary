@@ -1,0 +1,170 @@
+{
+    "id": "sEMJ1PLSZR",
+    "title": "Adaptive Energy Alignment for Accelerating Test-Time Adaptation",
+    "abstract": "In response to the increasing demand for tackling out-of-domain (OOD) scenarios, test-time adaptation (TTA) has garnered significant research attention in recent years. To adapt a source pre-trained model to target samples without getting access to their labels, existing approaches have typically employed entropy minimization (EM) loss as a primary objective function. In this paper, we propose an adaptive energy alignment (AEA) solution that achieves fast online TTA. We start from the re-interpretation of the EM loss by decomposing it into two energy-based terms with conflicting roles, showing that the EM loss can potentially hinder the assertive model adaptation. Our AEA addresses this challenge by strategically reducing the energy gap between the source and target domains during TTA, aiming to  effectively align the target domain with the source domains and thus to accelerate adaptation. We specifically propose two novel strategies, each contributing a necessary component for TTA: (i) aligning the energy level of each target sample with the energy zone of the source domain that the pre-trained model is already familiar with, and (ii) precisely guiding the direction of the energy alignment by matching the class-wise correlations between the source and target domains. Our approach demonstrates its effectiveness on various domain shift datasets including CIFAR10-C, CIFAR100-C, and TinyImageNet-C.",
+    "keywords": [
+        "Test-Time Adaptation (TTA)",
+        "Out-of-domain (OOD)",
+        "Energy-based Model (EBM)"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "We propose an adaptive energy alignment (AEA) that accelerates the model adaptation in TTA.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=sEMJ1PLSZR",
+    "pdf_link": "https://openreview.net/pdf?id=sEMJ1PLSZR",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces an energy-based approach for addressing the test-time adaptation (TTA) problem. The authors analyze the classical entropy minimization loss widely adopted by existing TTA methods through the lens of energy-based model, pinpointing the potential issue lies within the entropy minimization. To address the issue, two alignment objectives termed source-free energy alignment (SFEA) and logit cosine similarity (LCS) are proposed. SFEA aligns the overall energy magnitudes between source and target domains to reduce the energy gap during adaptation, whereas LCS ensures the class-wise correlation of the target domain maintains consistent during energy alignment. Experiments are conducted on several common TTA benchmarks including CIFAR10-C, CIFAR100-C, TinyImageNet-C and ImageNet-C, as well as style shift dataset PACS. The results of the proposed method generally surpass the baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1.\tAs stated in the paper, Test-time adaptation is an important direction to mitigate the out-of-distribution issue of inference data and worths exploration.\n2.\tThe experiment is extensive on several benchmarks, and the proposed method achieves good results on most tasks within these benchmarks."
+            },
+            "weaknesses": {
+                "value": "1.\tIn both the summary and the introduction, the authors argue that \u201cthe EM loss can be decomposed into two energy-based terms with conflicting roles\u201d and such confliction \u201chinders the energy gap reduction when the EM loss is used alone.\u201d However, the authors do not address this issue in the proposed method. Minimizing the target energy does not resolve the conflict. On the contrary, the reviewer thinks that the free-energy maximization term in equation (4) is necessary for avoiding the explosion of the magnitude of logits. The reviewer\u2019s opinion is supported by the fact that the final objective of the proposed method still incorporates EM loss. \n2.\tThe authors highlight the strength of the proposed method that can reduce the energy gap more quickly than EM loss in the early batches. However, it appears from fig. 2 that the proposed method performs similarly to other baselines at the beginning. The result makes the author\u2019s claim questionable.\n3.\tGiven that previous works [1][2] adopt hinge loss for energy alignment, the reviewer suggests that the authors should conduct ablation study on the choice of loss to support their design.\n4.\tFor each target batch, the proposed method computes a new approximated energy of the source domain, which means that the estimated source energy varies over time. This is a seemingly strange design without explanation. In fact, the reviewer suspects that this particular design is the actual reason for performance enhancement and distinguishes it from the previous energy alignment method. In reviewer\u2019s opinion, the target energy is not actually aligned with the source energy, but rather is minimized towards an adaptively changing goal. This allows the energy minimization process to be more flexible and friendly to the model training.\n5.\tThe second line of equation (4) is mistaken. It should include parentheses over the two energy terms. \n\nRef: \n[1] Energy-based out-of-distribution detection.\n[2] Active learning for domain adaptation: An energy-based approach."
+            },
+            "questions": {
+                "value": "1.\tIn the caption of fig. 3, the \u2018relative distance in a logit space\u2019 is confusing. Please elaborate on the meaning of the x-axis in detail.\n2.\tFrom the experiment results, it appears that SHOT achieves better performance than most of the TTA methods. What is the reason?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper targeted at accelerating test-time adaptation from a new perspective, i.e., reducing the energy gap between the source and target domains. There are two key losses in the proposed method. The one is the source-free energy alignment (SFEA) loss to align the overall energy magnitude and the other is the logit cosine similarity (LCS) loss to guide the class-wise alignment direction. Experimental results on three common benckmarks (CIFAR10-C, CIFAR100-C, and TinyImageNet-C) have demonstrated the effectiveness of the proposed method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is easy-to-follow. The topic is essential yet the idea is moderate. Both test-time adaptation and energy-based models are important topics for the community and the paper addresses two formulations simultaneously."
+            },
+            "weaknesses": {
+                "value": "- **Limited motivation.** My major concern is about the motivation of this work. First, the necessity of the proposed logit cosine similarity (LCS) loss is not clear. Second, though the authors have tried to describe the correlation between energy gap reduction and better adaptation, it's not clear why TTA needs to do this. Especially, many previous works have proven its effectivebess in addressing distribution shift problems .Third, the proposed method is complicated but the improvements in Tables 1,2,3 is minor. \n\n- **Insufficient justifications.** From main results of Table 1,2,3, it can be observed that the proposed AEA obtains limited improvements in three small-scale image classification datasets (CIFAR10-C, CIFAR100-C, and TinyImageNet-C). Large-scale datasets and other tasks like segmentation or detection might be evaluated to demonstrate the AEA's utlization in various scenarios and applications."
+            },
+            "questions": {
+                "value": "- How to define the directional aspects of energy alignment?\n\n- It seems that the source-free energy alignment loss ($\\mathcal{L}_{SFEA}$) is calculated in each target batch. How can this calculation method avoid the noise caused by bath sampling?\n\nMinor comments:\n- Actually, the foundamental of this work is to answer why does energy alignment lead to better adaptation. Thus, in my view, Sec. A.4 should be moved to the main context and the revisit of EMBs can be moved to the appendix."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes an Adaptive Energy Alignment (AEA) method that enables fast online test-time adaptation (TTA). The introduced Source-Free Energy Alignment (SFEA) loss strategically aligns the overall energy magnitudes between source and target domains. Additionally, the authors propose a Logit Cosine Similarity (LCS) loss to ensure that class-wise correlations in the target domain align well with those in the source domain during energy alignment. Extensive experiments on three datasets demonstrate the advantages of the proposed AEA method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "*\tThe proposed SFEA loss provide novel insight for TTA, effectively reduce the domain gap.\n*\tThe authors have conducted a thorough ablation study to examine the impact of various components. Additionally, they have made the code and datasets available in the supplementary material.\n*\tThe paper is well-written, well-organized, and easy to read."
+            },
+            "weaknesses": {
+                "value": "*\tWhile the authors demonstrate the superiority of the proposed method on TTA, it would be interesting to evaluate its performance in a similar scenario, such as source-free domain adaptation (SFDA), where source data is also inaccessible. Additional evaluations could further illustrate the versatility of the proposed method.\n*\tThe authors did not clearly discuss the distinction between online test-time adaptation (OTTA) and TTA. In line 142, they claim to address the OTTA problem, but in other parts of the paper, the main focus appears to be on TTA.\n*\tA minor issue concerns the punctuation of equations. Eqs. (3), (4), and (9) should include the appropriate punctuation."
+            },
+            "questions": {
+                "value": "Please refer to the weakness part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes Adaptive Energy Alignment (AEA) for fast test-time adaptation (TTA) in out-of-domain scenarios. It reinterprets entropy minimization (EM) loss and shows that its conflicting energy-based components can hinder adaptation. AEA reduces the energy gap between source and target domains by aligning target sample energy levels with familiar source domains and matching class-wise correlations. The approach achieves efficient TTA with minimal computational overhead, demonstrating strong results on datasets like CIFAR10-C, CIFAR100-C, and TinyImageNet-C."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "*\tThis paper is well-written, well-organized, and easy to follow.\n*\tThe insight of leveraging the direction of energy alignment with the guidance of the structural relations between different classes is convince, and provide a new solution for accelerating test-time adaptation\n*\tThe proposed SFEA and LCS loss is novel to me, effectively reduce the energy gap and aligns the class-wise correlation across source and target domains.\n*\tOverall, the quality of the paper is commendable. The authors have conducted a thorough comparison experiments to examine the effectiveness of the proposed method. Additionally, they have made the code and datasets available in the supplementary material."
+            },
+            "weaknesses": {
+                "value": "*\tWhile the proposed AEA significantly accelerates test-time adaptation (as observed in Figure 1c), the authors provide insufficient discussion on how AEA achieves this acceleration. Further analysis and discussion are needed.\n*\tI noticed that in TEA, the backbone for CIFAR10-C is WRN-28-10, whereas ResNet-26 is used in this work. If the experimental results are reproduced using publicly available code, please provide the relevant details in the table caption."
+            },
+            "questions": {
+                "value": "Please refer to the weakness part.\n\n---\nI am open to discussing these points with the authors during the response period. If the concerns and questions are adequately addressed, I will consider raising my score."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

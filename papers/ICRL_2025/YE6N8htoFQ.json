@@ -1,0 +1,170 @@
+{
+    "id": "YE6N8htoFQ",
+    "title": "Vocabulary In-Context Learning in Transformers: Benefits of Positional Encoding",
+    "abstract": "Numerous studies have demonstrated that the Transformer architecture possesses the capability for in-context learning (ICL). In scenarios involving function approximation, context can serve as a control parameter for the model, endowing it with the universal approximation property (UAP). In practice, context is represented by tokens from a finite set, referred to as a vocabulary, which is the case considered in this paper, i.e., vocabulary in-context learning (VICL). We demonstrate that VICL in single-layer Transformers, without positional encoding, does not possess the UAP; however, it is possible to achieve the UAP when positional encoding is included. Several sufficient conditions for the positional encoding are provided. Our findings reveal the benefits of positional encoding from an approximation theory perspective in the context of in-context learning.",
+    "keywords": [
+        "Transformer",
+        "Universal approximation",
+        "In-context Learning;Vocabulary"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "Answer the question: Does the universal approximation property still hold if the context in in-context learning is restricted to a finite set?",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=YE6N8htoFQ",
+    "pdf_link": "https://openreview.net/pdf?id=YE6N8htoFQ",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper presents several theoretical results on the expressivity of\nindividual transformer models with fixed weights implementing different\nfunctions by changing their context.\n\n* The paper considers transformers that make predictions given a sequence of\n  embedded $x$/$y$ pairs as tokens in context.\n* The transformer architecture has a single-layer, single-head, attention-only\n  (no MLP) transformer (that is, essentially just a single attention\n  mechanism). In detail, the architecture computes query--key affiliation\n  scores based on the $x$-components of the tokens, processes these using\n  either a softmax transformation or element-wise ReLU activation, followed\n  by multiplication by a value score based on both $x$s and $y$s, after which\n  they extract the prediction corresponding to the final output.\n* The paper considers several settings and whether or not a transformer with\n  arbitrary fixed (full-rank) attention matrices achieve the universal\n  approximation property, in the sense that for any continuous function on a\n  compact domain there exists a context of some length that causes the\n  transformer's prediction of the next $y$ as a function of the next $x$ is\n  arbitrarily close to the continuous function.\n  1. If any real vectors are allowed as $x$/$y$ tokens in the context, the\n     paper shows that the transformers have the universal approximation\n     property in the above sense.\n     * The proof relies on constructing a context of length $n$ that makes\n       the transformer implement a given MLP with a single hidden layer of\n       width $n$, and the classical result that such MLPs have the universal\n       approximation property.\n  2. If the $x$/$y$ tokens that are allowed are restricted to a finite set of\n     pairs, then the paper argues that transformers lack the universal\n     approximation property.\n     * The argument proceeds by constructing a similarly constrained set of\n       MLPs that are constructed using a finite collection of hidden units,\n       and showing that these families of functions lack the universal\n       approximation property, then arguing that the connection between MLPs\n       and transformers from the previous setting shows that this is also the\n       case for transformers.\n  3. If the $x$/$y$ tokens are restricted to a finite set containing at least\n     certain irrational basis vectors, *and* the transformer's inputs are\n     augmented with an additive positional encoding that, when added to the\n     $x$-component of the finite tokens, creates a set of tokens that are\n     dense in the input space (or, in the case of ReLU networks, dense in at\n     least the unit hypercube), then the transformers again achieve the\n     universal approximation property.\n     * I have tried to understand the statement of this theorem but given my\n       expertise is not in approximation theory, I was unable to review this\n       proof in detail. A superficial summary is that the proof involves an\n       application of Kronecker's Theorem on approximating real vectors with\n       integer multiples of irrational vectors.\n* The paper motivates the importance of the above results with the\n  observation that transformers used in natural language processing involve a\n  finite vocabulary, which gives rise to a finite set of embedded token\n  vectors. Therefore, an informative analysis of the in-context expressivity\n  of transformers should involve such a finiteness constraint. In this\n  context, the paper's results demonstrate that the inclusion of a positional\n  embedding is crucial to retaining the universal approximation property.\n\nI also include a summary of my review as follows.\n\n* While functional approximation is not my area of expertise, I found the\n  paper interesting and thought-provoking, and relatively clearly written and\n  relatively easy to follow. I particularly liked the framework for studying\n  transformers implementing different functions in context, and the neat\n  construction of how to implement an arbitrary MLP using the attention\n  mechanism.\n* Unfortunately, I found what appears to be a potentially serious gap in the\n  argument that the finite-vocabulary transformer architecture does not have\n  the universal approximation property, and I was not able to see an easy way\n  to close this gap. If I am correct and the authors are unable to close this\n  gap then this would appear to undermine one of the major results of the\n  paper.\n* Aside from this, my overall impression of the novelty and significance of\n  the paper was weakened by the strength of some of the assumptions and a\n  lack of detailed comparison to what appears to be a closely related work\n  (the cited work of Petrov et al., 2024b).\n* While studying the paper I also noted a number of what seem to me to be\n  minor technical errors that would probably be easy to fix, I list these\n  along with questions to the authors I encountered while studying the paper."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "I think understanding the expressivity of neural architectures is an\ninteresting and important theoretical problem in deep learning. It is\nimportant to have a clear understanding of the theoretical limits of our\nmodels, and, while in my opinion there is often a disconnect between positive\nexpressivity results and the way that neural networks learn to implement\nfunctions in practice, we can still derive qualitative insights about how\nneural networks might implement certain kinds of functions using features\nsuch as depth, or, in this case, an attention mechanism, which can be\ninformative in practice.\n\nWithin this topic, the current paper presents an analysis of the problem not\nof the expressivity of transformers as a neural architecture, but of the\nexpressivity of an arbitrary transformer model with fixed weights through\nchanges to the prompt alone. This is an ambitious undertaking and has the\npotential to shed light on one of the most important topics in modern deep\nlearning, namely the nature of in-context learning.\n\nIn this setting the authors have put forward an elegant notion of the\nin-context expressivity of a fixed transformer through the provision of a\nparticular context. While as I have mentioned functional approximation is not\nmy area of expertise, it appears to me that this framework is novel and I\nbelieve it has been well done.\n\nA neat example of the in-context framework is the link the authors have\nachieved between single-hidden-layer neural networks and their in-context\ntransformer (captured in Lemma 2 for the case of ReLU attention and embedded\nin the proof of Lemma 3, though I have not reviewed the latter). I found this\nconnection interesting and thought-provoking, and it leads to a very elegant\nproof of the universal approximation property of prompting a fixed\ntransformer in the setting with arbitrary token vectors."
+            },
+            "weaknesses": {
+                "value": "**Gap in Theorem 6:**\nTheorem 6 is accompanied by a very brief proof that says the result\nimmediately follows from the connection between FNNs and transformers plus\nLemma 5. I couldn't see how this conclusion follows from these results, and\nin fact I have come to suspect that it might not follow from them at all.\n\nConsider the case of ReLU networks. By \"the connection between FNNs and\nTransformers\" I take it you are referring to Lemma 2. As far as I can tell,\nthe Lemma is one-directional, showing the existence of a context for every\nFNN but *not* the existence of an FNN for every context. At the very least,\nthe reverse direction would require further justification.\n\nGiven this, in Theorem 6 it is not sound to reason that because there are\nsome functions that cannot be approximated as an FNN with ReLU activation\nthese same functions must not be approximable by the transformer with any\ncontext. It seems to me that you also have to rule out the existence of\nanother context which might approximate the function.\n\nIn the case of softmax networks the same issue may apply, however the status\nis not clear to me because there is no separate Lemma for \"the connection\nbetween FNNs and Transformers\" for the case of softmax activation, with the\ndetails apparently to be found in the proof of Lemma 3 and involving\nreasoning via a custom architecture involving exponential activation.\n\nI don't immediately see how this argument can be recovered, and I invite\nclarification from the authors. If I am not mistaken about this problem with\nthe proof of Theorem 6, and it is not able to to be resolved, then I can't\nrecommend the paper for acceptance.\n\n\n**Inadequate discussion of closely related work:**\nThe authors state in the introduction \"Meanwhile, Petrov et al. (2024b)\nexplored the role of prompting in Transformers, proving that prompting a\npre-trained Transformer can act as a universal functional approximator.\" I\nwas not previously familiar with this cited work, but from the authors' own\ndescription it sounds quite closely related in scope to the present work,\nwhich is also about proving that under certain conditions a transformer can\nact as a universal function approximator.\n\nCould the authors please clarify the relationship between the contributions\nof Petrov et al. (2024b) and their contributions?\n\n**Some implausible assumptions:**\nI believe the authors are interested in finding universal approximation\nresults that will eventually speak to the limitations of architectures\nused in practical deep learning settings. Given this motivation, I was made\nuncomfortable by the following features of the setting and assumptions.\n\n1. **The use of ReLU attention.** Of course, ReLU is a very commonly used\n   activation function, including with transformer architectures. However, I\n   have never seen it used in place of softmax for the post-processing of the\n   query--key affiliation scores (usually it would be used, for example, as\n   part of an MLP step after the attention step in a transformer block).\n\n2. **The reliance on a dense positional encoding.** In Theorem 8 the\n   universal approximation property is achieved under the assumption that the\n   positional encoding essentially turns the finite input token vocabulary\n   into a set that is dense in $\\mathbb{R}^{d_x}$.\n\nThese features are apparently in a kind of trade-off: In Corollary 10, the\nauthors give a universal approximation result requiring the positional\nencodings are merely dense in the unit hypercube, not the whole input space.\nThis is also a tall order but seems much more plausible. However, this\nCorollary is only given for transformers with ReLU attention, not the more\nstandard softmax attention.\n\nFinally, I appreciate that the authors have acknowledged the strong\nassumption that the positional encoding is dense, and pointed out that they\ncan be addressed with future work. However, I would have liked to see a more\nin-depth discussion around this topic: do the authors have any reasons to\nbelieve that this assumption could be relaxed, or does it appear to be\nfundamental to the entire diophantine approximation approach pursued here?"
+            },
+            "questions": {
+                "value": "I studied the technical results up to and including the statement of Theorem\n8, and I noticed the following potential minor errors, all of which I expect\nwould be easy to fix (if I am not mistaken about them in the first place). I\nwould be happy to clarify any of my questions in further detail as needed.\n\nDefinition of transformer and feed-forward architectures:\n\n1. In the definition of attention, $Q$ and $K$ have undefined shapes (only the\n   shape of $B$ and $C$ are defined). One can infer from usage that $Q$ and\n   $K$ have $d_x + d_y$ columns, but the number of rows could be any number\n   greater than or equal to $d_x$ and the equations could come out the same.\n   I invite the authors to consider removing the zero rows entirely such that\n   $Q = [B\\ 0]$ and $K = [C\\ 0]$.\n\n2. In the definition of attention, $V$ is described with shape $d_y$ by $d_y$.\n   This must be a mistake since:\n   * $V$ is multiplied by $Z$ of shape $d_x+d_y$ by $n+1$ implying it should\n     have $d_x+d_y$ columns.\n   * The shape of the output of attention has the same number of rows as $V$,\n     and needs to be added to $Z$ (equation 10), suggesting that $V$ should\n     have $d_x+d_y$ rows too.\n   * Indeed later (line 266) the authors partition $V$ into blocks such that\n     the shape is $d_x+d_y$ by $d_x+d_y$.\n\n3. In Equation 10 there is an undefined symbol $h$ which, from context,\n   appears should be the activation function $\\sigma$.\n\n4. Equation 10 uses input $x; Z_{:, 1:n}$ whereas later invocations of\n   $T^\\sigma$ use $x; X, Y$ (and the RHS of equation 10 is expressed in terms\n   of $Z$).\n\n5. I invite the authors to consider promoting some assumptions on the\n   transformer architecture from later in the text to section 2.1 where the\n   architecture is introduced, so that they are all in one place.\n   * This applies to the decomposition of $V$ into four parts.\n   * Also the assumption that $B$, $C$, and $F$ are non-singular would then\n     make sense in section 2.1.\n\n6. As written, the definition of feed-forward networks does not appear to\n   allow for the use of softmax activation, which is not an element-wise\n   function due to normalisation.\n\n    This led me into some confusion later in the paper when the authors talk\n    about how softmax FNNs with a finite vocabulary of units leads to an\n    infinite-dimensional family of functions. Could the authors please clarify\n    the definition of FNNs with softmax activation and the definition of the\n    finite-vocabulary family of softmax networks, if they indeed intend for\n    these networks to have normalisation?\n\n7. Finally, in equation (11) (the definition of the finite-vocabulary family\n   of transformers), $n$ is fixed, but I think the authors intended for it to\n   be any positive integer. This would make more sense by analogy to\n   classical FNN approximation results for unbounded width (see also the\n   correspondence between FNN width and context length of Lemma 2), and\n   in Theorem 8 the authors explicitly allow unbounded context length.\n\n   It seems important that the definition of the family should allow\n   unbounded context length, because the authors want to say, for example in\n   Theorem 8, that \"[the family] can achieve the UAP\", and in Theorem 6, that\n   it cannot, but, trivially, if the family uses a finite context length then\n   (given the tokens are also finite) it is a finite family of functions and\n   therefore it trivially cannot have the UAP.\n\nLack of universal approximation properties for finite vocabulary setting:\n\n8. What norms are being used in the approximation property statements?\n   Starting with Lemma 1, which I think is the norm used throughout, but then\n   also for Theorem 6, there is a norm with subscript $C(K)$ (is that the\n   same?)\n\n9. What do the authors mean on line 308 by \"the case of non-softmax\n   activation\"? I think they simply mean ReLU activation, but I am left\n   uncertain as to whether they are trying to make a more general claim.\n\n10. What do the authors mean on line 309 by \"It is well known that\n   finite-dimensional spaces are compact\"? This is false in the generality\n   stated. Am I missing an assumption? It seems to me that the span would be\n   unbounded and therefore it is not compact. Nor does the family of networks\n   appear to be a closed and bounded subset of the span, which would ensure\n   compactness given that the span is finite-dimensional.\n   Actually, I am not immediately sure how to resolve this, but I hope the\n   authors might be able to address it.\n\n    As an aside, I invite the authors to consider stating the ReLU case as a\n    numbered lemma and giving a formal proof, even if turns out to be a short\n    proof.\n\n11. On line 312 the authors state that \"the dimension of the span of [the\n   finite set of softmax networks] might be infinite\". I didn't immediately\n   understand this claim, and I wanted to check my understanding. Is is due\n   to the presence of normalisation between units that even though the softmax\n   networks are each comprised of weighted units from a fixed finite\n   collection of basic units, the normalisation means that these networks\n   won't generally be linear combinations of each other?\n\n12. In Lemma 5, the statement must hold for any $\\epsilon_0 > 0$. Intuitively\n   I thought the choice of inapproximable function should have to depend on\n   $\\epsilon_0$, but I don't see such a dependence in the proof sketch, and\n   in the proof it is stated that $\\epsilon_0 = 0.1$. I am concerned that the\n   proof does not go through for $\\sin(m \\pi x)$ if $\\epsilon_0$ is large\n   enough since the approximation will no longer have to distinguish between\n   zeros and peaks.\n\n    Perhaps the constructed function should be something more like\n    $\\frac{10}{\\epsilon_0}\\sin(m \\pi x)$? (I'm not sure what norm is being\n    used but I chose $10$ based on the decision to use $\\epsilon_0 = 0.1$ in\n    the proof).\n\nRestoration of universal approximation property through positional encoding:\n\n13. Theorem 8: In the statement, there is no introduction of the function $f$,\n   which I assume should be introduced as a continuous function from the\n   compact domain to $\\mathbb{R}^{d_y}$.\n14. Line 383: In the definition of $S$, you want $j \\in \\mathbb{N}^+$ rather\n    than $i \\in \\mathbb{N}^{+}$.\n15. Line 431: The same error again, you want $j \\in \\mathbb{N}^+$.\n\nTypos:\n\n16. Line 58: \"Transformersin\" missing space.\n17. Line 111: \"for for\".\n18. Line 283: \"Propriety\" in title of section 2.4.\n19. Line 383: \"and ,\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper is about the approximation properties of transformers in ICL: The authors fix the transformer\nweights V ,Q,K, then given a target function f, they aim to adjust the content of the context so that the output of the Transformer network can approximate f. The claim is that when there is no restriction on the size of the vocabulary, single layer transformers have the universal approximation property in ICL. But when the size of the vocabulary is limited, single layer transformers do not have the\nuniversal approximation property in ICL, which is remedied by allowing for position encodings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "ICL is poorly understood, and this paper makes a step towards understanding the capacity that transformers have for ICL and the role of positional encodings."
+            },
+            "weaknesses": {
+                "value": "A lot of the paper is spent setting up notation. However, many statements are imprecise and opaque. For example, the proof sketch of theorem 8 is quite hard to follow. \n\nLogically, the idea of fixing the network weights and \"adjusting the content of the context so that the output of the Transformer network can approximate f\" doesn't commonly arise in practical scenarios. For example, Lemma 3 finds a vocabulary matrix X, Y to fit an arbitrary function f. But after the model is trained, in a typical ICL setting the model has to learn to adapt to the arbitrary function f on the fly given the fixed vocabulary matrix and weights V, Q, K. That is, one does not optimize over the context to find the function.  \n \nNo experiments or simulations to illustrate the result -- not a serious problem for a theory paper but does take away the significance of this work."
+            },
+            "questions": {
+                "value": "Theorem 8: However, in natural tasks, we don't have a choice over the content of the context, we are\ngiven sequences and yet the network must fit the target function f in-context. Could the authors please elaborate on why this is a reasonable setting?\n\nLine 398: \"From previous work\" -- which one?\n\nIs there a missing hypothesis in line 383/theorem 8: \"If S = \\{x_i + P^{(j)}_x \u2223 x_i \\in Vx, i \\in N_+\\} is\ndense in R^{dx} , and\" \n\nLine 409 \"The contradiction arises from the finite nature of the vocabulary, which limits the finiteness of UY and X\u22a4B\u22a4C\". What does finiteness mean here?\n\nLine 410 \"We invoke the density of the set S = {xi + P(j) x \u2223 xi \u2208 Vr, j \u2208 N+} in Rdx ,\nwhich ensures the density of X\u22a4T B\u22a4C.\" But don't we learn a particular position encoding which is then fixed for the\ntransformer, so for a particular transformer S can't be dense -- doesn't this defeat their paper's goal?\n\nLine 424 \"The finiteness and boundedness of V impose stringent requirements on\npositional encoding, which, to some extent, necessitates unbounded positional encoding\" It's unclear what this statement means."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper provides a mathematical theory of how adding positional encoding information to input tokens affects a transformer's ability to exhibit the Universal Approximation Property (UAP). \nThis is the study of when a simple, single-layer transformer can function as a universal approximator - that is, it can model any continuous function with arbitrary precision. The researchers showed that positional coding plays a crucial role: without it, single-layer transformers fall short of universal approximation. \nA key aspect of the mathematical proof is the use of the Kronecker Approximation Theorem to establish conditions that ensure the density of the sum of the positional encoding and the input tokens. This theorem allows us to show that positional encoding provides a sufficiently rich sum of tokens.\n This result underscores that positional encoding is not only helpful, but essential for transformers to effectively model complex patterns, especially when working with limited, discrete vocabularies, from a UAP perspective."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "-The paper advances the theoretical understanding of in-context learning and its relation to positional encoding in transformers, especially under finite vocabulary constraints, by mathematically proving that positional encoding allows transformers to achieve UAP.\n- The mathematical proof is based on the effective f use of the Kronecker Approximation Theorem, and the rational formulation of the theory.\n- The paper provides clear conditions for UAP: The study defines explicit mathematical conditions and sufficient criteria for positional encoding to enable UAP, providing a basis for further theoretical and applied research in NLP."
+            },
+            "weaknesses": {
+                "value": "- Although the theoretical contribution is clear, the practical insights for practitioners are limited.\n- This paper lacks experimental validation. While the mathematical differences are qualitatively clear, there are no experimental demonstrations to show how these theoretical differences translate to actual differences in model performance."
+            },
+            "questions": {
+                "value": "- Is it possible to provide some numerical demonstration that clearly shows that the difference suggested by this theory in positional encoding actually produces different performance? \n- In the discussion, it may be better to describe a bit more about the theoretical insights based on the understanding gained through the proof for practitioners who will be designing positional encoding or just using Transformer."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The most important contribution of this work is theoretic: In (single-layer) Transformer,s (vocabulary) in-context learning can only (possibly) achieve UAP when positional encoding is there. I am not an expert in this field, but compared to the most known Transformer ICL+UAP research to my knowledge (e.g., Yun et al., Luo et al., Petrov et al.), this work emphasizes the positional encoding in Transformer."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The theoretical insight and contribution: The promise of this work is intriguing to me, as it\u2019s the first time I\u2019ve seen research attempting to bridge the theoretical understanding of in-context learning from positional encoding through the lens of universal adversarial perturbations.\n- The proofs (especially Theorem 6). With a finite vocabulary and no positional encoding, the authors prove that single-layer Transformers cannot achieve universal approximation properties (UAP) for ICL tasks.\n- The discussion of ReLU is a plus to me."
+            },
+            "weaknesses": {
+                "value": "This paper makes a good number of assumptions.\n- I accept most of the assumptions made as valid, but...\n- I would prefer the authors mention all assumptions more clearly in bullets or \u201cAssumption $n$\u201d like the Theorems. For example, Lines 378-379 state an important assumption of the density property using Diophantine approximation. I almost missed it\u2026\n- The part I am a bit concerned about is that this work only studies absolute positional encodings and single-layer transformers. The latter is fine, but I think the authors should discuss (at least on a higher level) how the results of this work could potentially generalize to other PEs like RPE and RoPE.\n\n[Minor] In Sec 1.2 where positional encodings are discussed, I believe that the Rotary Position Embedding (RoPE) [1] should be mentioned.\n\n[1] Su, Jianlin, et al. \"Roformer: Enhanced transformer with rotary position embedding.\" Neurocomputing 568 (2024): 127063."
+            },
+            "questions": {
+                "value": "**Question 1**: In line 160 \u201cUnlike the setting in Ahn et al. (2024); Cheng et al. (2024), in this paper, we do not assume a correspondence between $x^{(i)}$ and $y^{(i)}$\u201d Are you suggesting that there is **independence** between  $x^{(i)}$  and $y^{(i)}$, or that they are **unpaired data** in a **weakly supervised setting**? Or do you mean there may be **false** or **unmatched pairs** of $x$ and $y$? \n\n**Question 2**: Can the results generalize to RPE and RoPE? Could authors include a discussion section on how their results might extend to or differ for other types of positional encodings like RPE and RoPE."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 1
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

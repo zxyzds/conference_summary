@@ -1,0 +1,170 @@
+{
+    "id": "0fwJMANq9P",
+    "title": "Efficient Heuristics Generation for Solving Combinatorial Optimization Problems Using Large Language Models",
+    "abstract": "Recent studies exploited Large Language Models (LLMs) to autonomously generate heuristics for solving Combinatorial Optimization Problems (COPs), by prompting LLMs to first provide search directions and then derive heuristics accordingly. However, the absence of task-specific knowledge in prompts often leads LLMs to provide unspecific search directions, obstructing the derivation of well-performing heuristics. Moreover, evaluating the derived heuristics remains resource-intensive, especially for those semantically equivalent ones, often requiring unnecessary resource expenditure. To enable LLMs to provide specific search directions, we propose the Hercules algorithm, which leverages our designed Core Abstraction Prompting (CAP) method to abstract the core components from elite heuristics and incorporate them as prior knowledge in prompts. We theoretically prove the effectiveness of CAP in reducing unspecificity and provide empirical results in this work. To reduce the required computing resources for evaluating the derived heuristics, we propose few-shot Performance Prediction Prompting (PPP), a first-of-its-kind method for the Heuristic Generation (HG) task. PPP leverages LLMs to predict the fitness values of newly derived heuristics by analyzing their semantic similarity to previously evaluated ones. We further develop two tailored mechanisms for PPP to enhance predictive accuracy and determine unreliable predictions, respectively. The use of PPP makes Hercules more resource-efficient and we name this variant Hercules-P. Extensive experiments across various HG tasks, COPs, and LLMs demonstrate that Hercules outperforms the state-of-the-art LLM-based HG algorithms, while Hercules-P excels at minimizing computing resources. In addition, we illustrate the effectiveness of CAP, PPP, and the other proposed mechanisms by conducting relevant ablation studies.",
+    "keywords": [
+        "Heuristic Generation",
+        "Large Language Models",
+        "Combinatorial Optimization Problem"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=0fwJMANq9P",
+    "pdf_link": "https://openreview.net/pdf?id=0fwJMANq9P",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper presents Hercules, an LLM-based algorithm for generating heuristics for combinatorial problems. The paper seems to extend the framework in Ye et al., 2024 with a more advanced direction generation (based on identifying core components in heuristics) as well as an LLM-based fitness calculation. The experiments show gains over the baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Strengths:\n- The topic is interesting and of recent interest\n- The approach (CAP and PPP) seems novel.\n- The experiments show significant gains over the baselines in deriving penalty heuristics for guided local search, as well as more moderate gains on constructive heuristics for TSP, heuristic measures for ant colony optimization, and reshaping of attention scores in neural combinatorial optimization,"
+            },
+            "weaknesses": {
+                "value": "Weaknesses:\n- I found the claim about information gain to be quite confusing. \n\t- First, a lot of information is missing: why the number of core components corresponds to the number of heuristics (can we not have multiple core components per heuristic or the same core component in multiple heuristics)? why do we assume that the set of all possible directions can be partitioned into mutually exclusive subsets that correspond to components (can we not have the same direction for multiple core components)?\n\t- Second, it is really not clear why the information gain means we get better heuristics (as indicated in lines 284-285)? If the components generated are of low-quality the directions may be of lower quality as well.\n\n- Experimental evaluation:\n\t- It is not clear what is being reported under gain: the definition is based on \"the performance of ...\" but it is not clear how performance is measured.\n\n- Writing: the writing could improve as a lot of information is not clearly presented. For example there are no clear definitions for a range of terms like parent heuristics, elite heuristics, etc.\n\n- The paper does not provide significant insight into the impact of the proposed techniques (CAP and PPP) beyond the experimental results. For example, it would be interesting to show an analysis of the correlation between predicted fitness values and quality of heuristics."
+            },
+            "questions": {
+                "value": "I would appreciate the authors response and clarification on the points listed under \"weaknesses\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the generation of heuristics for combinatorial optimization problems using LLMs. \n\nThe work continues similar work in this space that tries to mimic evolutionary computation (crossover, mutation) via LLMs. The result is an LLM-infused metaheuristic algorithm. \n\nUnlike the previous work, the paper claims 1) to address introducing more problem specificity into the prompts and 2) to speed up the process by using LLMs to predict the performance of generated accuracies to skip over evaluating them fully. \n\nOverall, I enjoyed reading this paper, and I appreciated the work that went into building an end-to-end pipeline with several components."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "Integrating LLMs with heuristic solving is an exciting combination. \nThe paper implements an end-to-end pipeline that starts with a seed query that then mimics evolutionary computing via LLMs, yielding heuristics that can be embedded in the Local Search Meta-Heuristics for different combinatorial problems. \nThe connection with Information Gain is an excellent addition\nFrom a practical perspective, the paper considers several details into account such as reducing costs via LLM predictors."
+            },
+            "weaknesses": {
+                "value": "As rightly noted in the paper, the idea of mimicking evolutionary computation via LLMs is not new. In fact, most (all?) crossover and mutation operators are from Ye et. al. 2024. On the one hand, the experiments and the ablation study show that the proposed modifications might offer some benefit in the results, and on the other hand, they can be regarded as incremental, and it is not clear what's the main takeaway. \n\nRegarding the presentation, I found it difficult/confusing that many moving parts are introduced as large components with several acronyms Hercules, CAP, PPP, EXEMPLAR, Cons --but after all, the provided pseudocode shows the overall algorithm, so I am not sure what these abstractions add to the presentation. Also, the paper claims our \"propriety\" CAP algorithm  --what does that mean? \n\nThe idea of adding more specificity to the prompts seems reasonable at a high level, but the paper overindexes too much into the example in Figure 1. The information gain analysis is interesting (and is borrowed from a Hu et. al. 2024) but at the end what happens is we select top-k core components. And that's also not uniform, we do that only some number of iterations (denoted by \\lambda in the paper), all of which remain as more hyper-parameters to deal with.\n\nThe experiments cover TSP, CVPR, Binpacking, Multi-Knapsacks. Importantly, the starting seed function seems critical to the approach. The method generates heuristics but the overall approach to solve these problems are meta-heuristics.  (please correct me if I understand this correctly). For TSP, we use guided local search. For BinPacking and Knapsacks we use Ant-Colony Optimization. One might argue that the settings of the outer meta-heuristics and their performance are crucial to the overall results and not just the heuristics (generated by LLMs here.) The experiments do not discuss or study any of this. \n\nAdditionally, all comparisons are with other LLM-based heuristics generations. Note that this is quite a costly approach (hence some effort with performance predictors to save time etc.). According to the tables in the appendix, we are consuming many many minutes upto 5 hours. Then, it is not clear to me how to fairly evaluate these results. How does the same GLS and ACO without the advanced heuristics found by LLM but with standard heuristics perform given the same amount of time? (Btw, does this time include LLM queries or only running the heuristics after the LLM generates them against the instances?) \n\nThis might not be surprising that the choice of LLM quite affects the results (Table 1; LLama vs GPT-4o). But then it makes one wonder how much of the value comes from the many moving components proposed here vs. plain and simple, the underlying LLM."
+            },
+            "questions": {
+                "value": "Could you provide details on the outer meta-heuristics (GLS, ACO etc.)? How much of the results are due to the LLM integration with CAP, PPP etc. vs. the meta-heuristics leading the search into good solutions. \nIt would be interesting to know the comparison between default GLS, ACO or even other baselines for TSP, BinPacking, MKP to position the results in this paper. As is, it is hard to evaluate the significance"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a framework to use LLMs to generate heuristics for solving\noptimization problems. The authors describe their framework and evaluate it\nempirically, comparing to other approaches in the literature."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The proposed framework is interesting and seems to work well in practice."
+            },
+            "weaknesses": {
+                "value": "The choice of KGLS as seed heuristics should be justified as it was not designed\nfor the general TSP. Why not LKH? This should also be considered in the\nempirical evaluation; in particular to answer the question of whether KGLS is a\nreasonable heuristic to start with in this case (improving over a weak heuristic\nis easier than improving over a strong heuristic).\n\nFigure 5 has no axis labels."
+            },
+            "questions": {
+                "value": "The differences are small in some cases and it would be great if the authors could\nprovide error bounds or confidence intervals for the empirical results.\n\nWhy is KGLS is reasonable base heuristic?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper explores the application of LLM in autonomously generating heuristics to solve COPs and proposes a novel algorithm named Hercules to address the two main challenges of existing approaches.\n\nHercules utilizes the Core Abstraction Prompting (CAP) method to abstract core components from elite heuristics and incorporate them as prior knowledge in prompts, thereby reducing the specificity of search directions. This paper further introduces Hercules-P, an efficient variant of Hercules that integrates CAP with the novel Performance Prediction Prompting (PPP) method. PPP leverages LLMs to predict the fitness values of newly derived heuristics based on their semantic similarity to previously evaluated ones, significantly reducing the required computing resources."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is laudable for its well-structured and logical presentation, providing a comprehensive understanding of the research topic.\n\n2. The article is praiseworthy for its extensive experimental data and significant findings. The authors have selected a number of baselines for comparative experiments on different benchmarks.\n\n3. The supplement provided in this article is adequate. It explains in detail for the reader what is not expanded in detail in the paper, including specific experimental data, hyperparameter settings, Critical Difference Analysis, etc."
+            },
+            "weaknesses": {
+                "value": "1. In the literature of TSP and CVRP, it is known that those conventional heuristic algorithms, such as LKH [1] and EAX [2], exhibit robust performance. It appears, however, that this submission does not address LKH and EAX, nor does it provide a comparative analysis of the proposed algorithm against these established methods.\n\n1. In lines 85-100 of the Introduction section, the authors describe two challenges to LLM-based HG methods, mentioning in the second challenge that these methods introduce numerous linear operations and conditional branches that make the GPU less efficient for these algorithms. In lines 113-128, the authors claim to have proposed Hercules-P in order to better address the second challenge, but I don't seem to have read in the manuscript how Hercules-P reduces linear operations and conditional branches, making GPUs more efficient in processing these algorithms. May I ask if the authors have solved this challenge? If not, these representations are inappropriate.\n\n2. Does the appearance of CVRP in Section 4.4 stand for Capacitated Vehicle Routing Problem? The authors do not explain what CVRP stands for in the body of the manuscript, and the only explanation appears in the code comments in the Appendix section (line 1337). This cannot be very clear to the reader when it comes to understanding the manuscript.\n\n3. In Section 2.3, the authors mention two challenges for NCO solvers: improving generalisation capabilities and large-scale COPs performance. In Table 5, for LEHD, the performance improvement of either Hercules or Hercules-p gradually decreases as the problem size of TSP or VCRP increases. Does this mean that Hercules also fails to address the challenges faced by NCO solvers? Can Hercules still provide performance gains when the problem size is larger? Further discussion is requested from the authors.\n\n\n## References\n[1] Keld Helsgaun. General k-opt submoves for the Lin-Kernighan TSP heuristic. Mathematical Programming Computation 1(2-3): 119-163 (2009)\n\n[2] Yuichi Nagata, Shigenobu Kobayashi. A Powerful Genetic Algorithm Using Edge Assembly Crossover for the Traveling Salesman Problem. INFORMS Journal on Computing 25(2): 346-363 (2013)"
+            },
+            "questions": {
+                "value": "Please reply to my comments in \"Weaknesses\"."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "This submission does not have ethics concerns."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

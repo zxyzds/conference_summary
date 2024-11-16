@@ -1,0 +1,221 @@
+{
+    "id": "ji6MYm4Htg",
+    "title": "Pruning Aggregation Parameters for Large Language Models",
+    "abstract": "Pruning is a highly effective approach for compressing large language models (LLMs). By strategically reducing model size, pruning significantly decreases both latency and GPU memory usage during inference, resulting in more efficient and cost-effective deployment of these models. Despite their effectiveness, current structured pruning algorithms have limitations. They still require extensive continued pre-training on large datasets to achieve model compression. Moreover, most of these methods are unable to reduce the memory usage of the key-value cache during generation tasks. In this work, we propose a novel pruning algorithm that requires no additional training and targets specific parameters within LLMs. We classify the model's parameters into three categories: aggregation, transformation, and normalization. Our method primarily focuses on pruning the aggregation parameters in the higher layers of the model. To further improve the performance of the pruned LLM, we also introduce a rescaling parameter that adjusts the output of the pruned block. We conduct comprehensive experiments on a wide range of LLMs, including LLaMA3.1-8B/70B, Qwen2-7B/72B, Gemma2-9B, and Mistral-7B-v0.3. Our evaluation includes both generation and discriminative tasks across various benchmarks. The results consistently demonstrate that our method outperforms recent block pruning methods. This improvement is particularly notable in generation tasks, where our approach significantly outperforms existing baselines.",
+    "keywords": [
+        "LLM",
+        "Pruning"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ji6MYm4Htg",
+    "pdf_link": "https://openreview.net/pdf?id=ji6MYm4Htg",
+    "comments": [
+        {
+            "comment": {
+                "value": "W1: The biggest problem with this paper is that it presents no quantitative data as to whether inference using these pruned models is actually cheaper or faster than traditional inference, and it doesn't contextualize the results against other ways of making a model cheaper to run. The strongest claim in the paper is that the KV-cache size can be reduced, which is useful, but that is not the same as a speedup. The authors did not compare against pruning methodologies that require fine-tuning, or against other forms of quantization or sparsity. Techniques like these have to be understood in context, and the paper doesn't provide it.  Q1: What is the measured speedup of this approach, especially when changing the batch size to take advantage of the KV-cache compression.\n\nA1: Please note that we focus on enhancing throughput in LLM serving rather instead of improving inference speed. Our approach increases throughput by reducing the KV cache, which, while designed to accelerate LLMs, also significantly increases GPU memory consumption. The reduction in KV cache usage is directly related to the number of aggregation layers removed. By removing k layers, we can reduce KV cache usage to k/L, where L is the total number of layers in the LLM. In https://arxiv.org/pdf/2403.03853, a comparison between LayerPruner and LLMPruner (structured pruning) shows that LayerPruner outperforms LLMPruner, and our method also surpasses LLMPruner, highlighting our approach's superiority over structured pruning. Additionally, structured pruning algorithms cannot reduce KV cache usage, whereas our method achieves this, further emphasizing its advantages.\n\nQ2: Did you evaluate using BF16 number formats? Could you compare against PTQ with FP8?\n\nA2: We use BF16. Our focus is not on comparisons with quantization methods, as the LLaMA3-70B model cannot be loaded onto an 80GB GPU without them. To facilitate our experiments, we used the Hugging Face quantization method to conserve memory and enable testing. Therefore, we didn't compare against PTQ with FP8.\n\nQ3: Could you compare against other pruning approaches?\n\nA3:  In [https://arxiv.org/pdf/2403.03853], a comparison between LayerPruner and LLMPruner (structured pruning) shows that LayerPruner outperforms LLMPruner, and our method also surpasses LLMPruner, highlighting our approach's superiority over structured pruning. Additionally, structured pruning algorithms cannot reduce KV cache usage, whereas our method achieves this, further emphasizing its advantages."
+            }
+        },
+        {
+            "comment": {
+                "value": "W1: Classifying LLM parameters based on the nature of GNNs is of some interest, but lacks some theoretical and experimental support. The different layers of the LLM have their different effects, and the higher layers have their special role in some cases of work. The authors need to have more experiments to support this claim.\n\nA1: Previous studies [1,2] have theoretically demonstrated the issue of over-smoothing in Transformers. These works suggest that removing aggregation layers can help mitigate over-smoothing, indicating that excessive aggregation may be detrimental. Our study builds upon these theoretical foundations, though we focus primarily on other contributions; hence, we omit the detailed theoretical analysis presented in previous works. [3,4] have experimentally demonstrated the roles of various parameter types, and our work builds upon their findings.\n\nW2: The authors lack comparisons with SOTA methods e.g. FLAP, Wanda. It would be unfair to simply compare with selfattn/ffn/layer pruner, as no control model parameter is identical.\n\nA2: We did not find experimental results on the target LLM of our paper in the Wanda and FLAP papers. However, we found evidence in [https://arxiv.org/pdf/2403.03853] comparing LayerPruner and LLMPruner (structured pruning), showing that LayerPruner outperforms LLMPruner, while our method also outperforms LLMPruner. This indicates that our approach is superior to structured pruning. Furthermore, structured pruning algorithms cannot reduce the KV cache, whereas our method can, underscoring its advantages.\n\nW3: Alg. 1 is redundant and can be moved to the appendix. But Alg.2 lacks a detailed description and the authors need to describe the method in more detail.\n\nA3: We will rewrite this part.\n\n[1] Revisiting Over-Smoothing in BERT from the Perspective of Graphs\n\n[2] Mitigating Over-Smoothing in Transformers via Regularized Nonlocal Functionals\n\n[3] Transformer feed-forward layers are key-value memories\n\n[4] Mass-editing memory in a transformer"
+            }
+        },
+        {
+            "comment": {
+                "value": "W1: Theoretical or empirical foundation\n\nA1: Previous studies [1,2] have theoretically demonstrated the issue of over-smoothing in Transformers. These works suggest that removing aggregation layers can help mitigate over-smoothing, indicating that excessive aggregation may be detrimental. Our study builds upon these theoretical foundations, though we focus primarily on other contributions; hence, we omit the detailed theoretical analysis presented in previous works.\n\nW2: The paper would be stronger with a clearer examination of how AggregationPruner performs relative to simpler or alternative pruning baselines (e.g., random initialization or whole-layer pruning). This would clarify if the exclusive focus on aggregation parameters provides a true advantage.\n\nA2: We compare our method with whole-layer pruning. In Figure 2, the green line represents the results of whole-layer pruning, while our method is shown in red.\n\nW3: There is limited discussion of when and why AggregationPruner might fail or struggle compared to other methods. This omission leaves the impression that the results are selectively presented to favor AggregationPruner without sufficient critical analysis.\n\nA3: Firstly, we did not selectively choose our results; we evaluated six large models across ten benchmarks. In contrast to the baseline methods [3,4], we conducted significantly more experiments, providing a broader evaluation. The reviewer's critique lacks responsibility, as we clearly explained in the experimental section (lines 480\u2013512) why our method encounters challenges, particularly on simpler tasks where it underperforms relative to the baselines.\n\nW4: Without a clearer framework or theoretical underpinning, this method appears to offer only incremental improvements in memory efficiency rather than advancing pruning methods as a whole.\n\nA4:  We have highlighted that the primary bottleneck in current LLM serving is GPU memory bandwidth. By reducing GPU memory usage, we can improve throughput, which is precisely the focus of frameworks like vLLM and various inference platforms. Therefore, our method can improve inference.\n\nQ1: Could the authors explain why simpler alternatives were not included as baselines? Given the minor variation, this comparison might help illustrate the impact of targeting only aggregation parameters.\n\nA5: We established three baselines\u2014Self-AttentionPruner, FFNPruner, and LayerPruner\u2014and conducted comparisons across various possible baseline methods. Nonetheless, our approach demonstrates significantly better performance than all of them.\n\nQ2: On what basis do the authors claim that aggregation parameters contribute less unique information in higher layers? Was this hypothesis tested directly, or is it purely derived from the analogy to GNNs?\n\nA6: Recent studies[3,4] have shown (we have discussed in Section 2.2), through various metrics, that high-level parameters contribute less effective information.\n\nQ3: How would AggregationPruner perform if applied to smaller LLMs or other architectures with different attention mechanisms? Could this method generalize across architectures?\n\nA7: All current LLMs are decoder-only models, and we plan to experiment with non-decoder models if they become available. Our results include evaluations on six LLMs, covering smaller models in the 7B/8B range.\n\nQ4: Why was a grid search over the \u03b1 parameter chosen rather than a more optimized approach? Could this choice be a source of inefficiency?\n\nA8: This approach is the optimal search that ensures performance, requiring no additional training or further searches. \nAs shown in Figure 3, our search has yielded excellent results. On the benchmark, our method has achieved state-of-the-art performance compared to similar approaches.\n\nQ5: Can the authors clarify whether the effectiveness of AggregationPruner would differ between shorter and longer inference tasks?\n\nA9: We have examined lines 469\u2013479 in detail.\n\n\n\n[1] Revisiting Over-Smoothing in BERT from the Perspective of Graphs\n\n[2] Mitigating Over-Smoothing in Transformers via Regularized Nonlocal Functionals\n\n[3] What Matters in Transformers? Not All Attention is Needed\n\n[4] ShortGPT: Layers in Large Language Models are More Redundant than Expected\n\n[5] FlexGen: High-Throughput Generative Inference of Large Language Models with a Single GPU\n\n[6] SGLang: Efficient Execution of Structured Language Model Programs\n\n[7] Efficient Memory Management for Large Language Model Serving with PagedAttention"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces AggregationPruner, a pruning algorithm designed to improve the memory efficiency of Large Language Models (LLMs) by focusing on \"aggregation parameters\" (queries and keys) in the higher layers, specifically targeting parameters in the attention mechanism without additional training. The authors argue that aggregation parameters contribute less unique information in higher layers, enabling their selective pruning to reduce memory demands, particularly in the key-value (KV) cache. The proposed method is experimentally tested on various LLMs, including LLaMA and Qwen models, across several tasks, reportedly outperforming other pruning strategies."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The aim of reducing memory usage without retraining is practical and relevant for real-world LLM deployments.\n- By exclusively targeting aggregation parameters, the authors contribute to a niche aspect of pruning in LLMs.\n- Broad Experimentation: The experiments cover a wide range of tasks and models, suggesting the authors\u2019 commitment to evaluating their approach comprehensively"
+            },
+            "weaknesses": {
+                "value": "- The central idea of selectively pruning only the aggregation parameters lacks a theoretical or empirical foundation that justifies this choice over simpler alternatives. The GNN analogy is interesting but ultimately weakly connected to the experimental findings.\n- The paper would be stronger with a clearer examination of how AggregationPruner performs relative to simpler or alternative pruning baselines (e.g., random initialization or whole-layer pruning). This would clarify if the exclusive focus on aggregation parameters provides a true advantage.\n- There is limited discussion of when and why AggregationPruner might fail or struggle compared to other methods. This omission leaves the impression that the results are selectively presented to favor AggregationPruner without sufficient critical analysis.\n- Without a clearer framework or theoretical underpinning, this method appears to offer only incremental improvements in memory efficiency rather than advancing pruning methods as a whole."
+            },
+            "questions": {
+                "value": "1. Could the authors explain why simpler alternatives were not included as baselines? Given the minor variation, this comparison might help illustrate the impact of targeting only aggregation parameters.\n2. On what basis do the authors claim that aggregation parameters contribute less unique information in higher layers? Was this hypothesis tested directly, or is it purely derived from the analogy to GNNs?\n3. How would AggregationPruner perform if applied to smaller LLMs or other architectures with different attention mechanisms? Could this method generalize across architectures?\n4. Why was a grid search over the \u03b1 parameter chosen rather than a more optimized approach? Could this choice be a source of inefficiency?\n5. Can the authors clarify whether the effectiveness of AggregationPruner would differ between shorter and longer inference tasks?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The work proposes a pruning algorithm aimed at compressing the KV cache in large language models (LLMs) without additional training. Referring to GNN, the authors classify LLM parameters into three categories: aggregation, transformation and normalization, focusing on the pruning of high-level aggregation parameters (KV cache). The authors evaluate their approach on various LLMs and benchmarks, reporting improvements over recent pruning techniques."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Pruning the KV cache is important for compressing LLMs.\n2. There is something interesting about analogizing the parameters of LLM to GNN."
+            },
+            "weaknesses": {
+                "value": "1. Classifying LLM parameters based on the nature of GNNs is of some interest, but lacks some theoretical and experimental support. The different layers of the LLM have their different effects, and the higher layers have their special role in some cases of work. The authors need to have more experiments to support this claim.\n2. The authors lack comparisons with SOTA methods e.g. FLAP, Wanda. It would be unfair to simply compare with selfattn/ffn/layer pruner, as no control model parameter is identical.\n3. Alg. 1 is redundant and can be moved to the appendix. But Alg.2 lacks a detailed description and the authors need to describe the method in more detail."
+            },
+            "questions": {
+                "value": "See the weakness part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a methodology for pruning LLMs without needing to do any fine-tuning of the model, by targeting \"aggregation\" parameters, as defined by the authors, in the later layers of the mode. By doing so, the KV-cache can be reduced in size, which should result in cheaper inference. The authors demonstrate that accuracy losses for several popular LLMs can be manageable with this methodology."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Pruning techniques that don't require fine-tuning the model are always welcome, and this technique does seem to be able to change many of the layers in popular LLMs without hurting the accuracy too much. I also thought the reasoning as to why the authors wanted to prune these particular parameters was interesting."
+            },
+            "weaknesses": {
+                "value": "The biggest problem with this paper is that it presents no quantitative data as to whether inference using these pruned models is actually cheaper or faster than traditional inference, and it doesn't contextualize the results against other ways of making a model cheaper to run. The strongest claim in the paper is that the KV-cache size can be reduced, which is useful, but that is not the same as a speedup. The authors did not compare against pruning methodologies that require fine-tuning, or against other forms of quantization or sparsity. Techniques like these have to be understood in context, and the paper doesn't provide it."
+            },
+            "questions": {
+                "value": "1. What is the measured speedup of this approach, especially when changing the batch size to take advantage of the KV-cache compression.\n2. Did you evaluate using BF16 number formats? Could you compare against PTQ with FP8?\n3. Could you compare against other pruning approaches?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a pruning algorithm (AggregationPruner) which prunes the Key and Value weights (aggregation parameters) of higher layers of LLMs to reduce the GPU memory consumption during LLM inference tasks (primarily during generative tasks). The method (being post training-free) outperforms the baselines in retaining the performance on various benchmark datasets and models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is clearly motivated, very well structured and has a great value for LLM inference community.\n2. The connection between GNNs and LLMs and various design choices (why they picked only higher layers, picking aggregation matrices) are well established.\n3. The analysis that pruned models might be good for discriminative tasks while have effect on generative tasks (Fig 8) is pretty interesting and sort of intuitive. (Infact, I believe this statement holds true for any compression method given the nature/complexity of these tasks but might need validation). That being said, I've a question wrto AggregationPruner, refer 1st point in weakness"
+            },
+            "weaknesses": {
+                "value": "These are not exactly weaknesses per se, but some thoughts I've to improve the paper. \n\n1. [**Experiment**] Can the authors have an experiment to truly validate the claim that picking lower layers will degrade the performance due to the importance of the layers (line 3 in Algorithm 4)? While the math is quite intuitive from GNNs, an experiment/ablation on all layers (0-32) for model on various tasks can be a good addition? \n2. [**Comment**] Continuing from previous point, can the authors comment on design choice on choosing the number of layers for real time usage of the method (line 3 in Algorithm 4)? From Fig 2, it seems to be having a lot of variation for different models/datasets.  \n3. [**Comment**] As mentioned in L419-420, KV cache doesn't get created for discriminative tasks. So, can the authors explain how effective AggregationPruner is for discriminative tasks? I believe authors might have to consider explaining this part more clearly in the paper!\n4. [**Experiment**] The paper has been motivated to be effective on GPU memory consumption on generative tasks. Can the authors provide an actual experiment to demonstrate this? \n    - *For eg*: Pick a model, a generative task, measure the perplexity/wall-clock time/speed/memory for the baseline model vs AggregratedPruner method. If an experiment of this sort can't be perform, please comment on why that might be the case.\n5. [**Experiment/Comment**] L144-146: The authors have mentioned that \"given the black-box nature, we choose the KV matrices\" and demonstrated the results in the paper. And I also believe Self-AttentionPruner, FFNPruner and LayerPruner are the terms introduced in this paper (please correct me if I am wrong and cite these methods accordingly). \n   - Now, given these key design choices, I would like to know if it's possible to report the sparsity ratio for these various methods? For eg: AggregationPruner might be better compared to FFNPruner because the number of parameters being pruned is very-very less in the former (similar to [1]). While I am not expecting an apples-apples comparison in terms of pruned parameters, these details will be informative. \n    - I am also aware that the total number of parameters to be pruned in AggregationPruner might be different depending on the size of KV cache which will vary; so the authors can make assumptions while reporting results in the tables. If it's not possible for some reason, please comment.\n6. [**Experiment**] Can the authors perform an experiment on the choice of dataset on Greedy Search of Alpha? i.e how dependent the alpha values are with respect to dataset. Suppose it turns out to be dataset dependent, then is it safe to say that the method is calibration-dataset dependent? If so, I believe addition of these details (either in Appendix or main section) will be beneficial."
+            },
+            "questions": {
+                "value": "**Possible Relevant citation**\n- L464 - L468: Following the point 5 from weakness section, while not the exact relation is established, I believe this study [1] has some connection with respect to compressing the FFN blocks vs Attention blocks and the number of parameters involved while pruning different blocks. \n\n[1] The Cost of Compression: Investigating the Impact of Compression on Parametric Knowledge in Language Models - https://arxiv.org/abs/2312.00960\n\n**Format**\n1. [**Typo**] - L366: It is FFNPruner\n2. [**Presentation Suggestion**] The authors might consider a small block diagram explaining the difference between FFNPruner, LayerPruner, AttentionPruner and AggregationPruner. Or maybe a diagram for the algorithm\n3. [**Presentation Suggestion**] It seems like the assumptions/claims on GPU memory consumption has been mentioned at different places without an experiment to validate. So, the authors might reconsider text formatting.\n\n**Note:** Suggestions are not mandatory improvements and the authors can wish to ignore it totally."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The study introduces a novel pruning algorithm that specifically targets aggregation parameters within large language models to reduce the model size and lower GPU memory usage during inference. By incorporating a rescaling parameter,  the method enhances the performance of pruned models without additional training."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This work proposes a novel pruning algorithm that requires no additional training and targets specific parameters within LLMs. \n2. This work introduces a rescaling parameter that adjusts the output of the pruned block to further improve the performance of the pruned LLM.\n3. Extensive experiments demonstrate that the proposed method outperforms the recent block pruning algorithms."
+            },
+            "weaknesses": {
+                "value": "1. While the experimental results support the effectiveness of the proposed method, the paper lacks theoretical analysis on why pruning aggregation parameters has minimal impact on model performance. The authors should provide more theoretical support or in-depth analysis.\n2. The paper bases the selection of the rescaling parameter \u03b1 on grid search but does not discuss its impact on model performance in detail. The authors should further explore how the choice of \u03b1 affects model performance.\n3. The paper focuses on model compression and acceleration but few discuss the generalization of pruned models across different domain tasks. \n4. The paper lessly discusses the model's performance and efficiency on actual hardware.\n5. To promote the study's reproducibility, authors are recommended to provide the code used in the experiment and the preprocessed data so that other researchers can reproduce the results."
+            },
+            "questions": {
+                "value": "1. Existing methods bring additional training and huge computational overhead. What is the extra cost? What is the cost comparison between the proposed method and the existing method?\n2. Why do existing methods maintain performance in domains not well covered by additional training data? What was the experiment? Analyze the specific reasons.\n3. What is the key problem to be solved in this paper?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

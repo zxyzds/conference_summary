@@ -1,0 +1,274 @@
+{
+    "id": "0spR7wDwBh",
+    "title": "A grid world agent with favorable inductive biases",
+    "abstract": "We present a novel experiential learning agent with causally-informed intrinsic reward that is capable of learning sequential and causal dependencies in a robust and data-efficient way within grid world environments. After reflecting on state-of-the-art Deep Reinforcement Learning algorithms, we provide a relevant discussion of common techniques as well as our own systematic comparison within multiple grid world environments. Additionally, we investigate the conditions and mechanisms leading to data-efficient learning and analyze relevant inductive biases that our agent utilizes to effectively learn causal knowledge and to plan for rewarding future states of greatest expected return.",
+    "keywords": [
+        "intrinsic rewards",
+        "inductive biases",
+        "planning",
+        "uncertainty",
+        "deep reinforcement learning",
+        "reinforcement learning"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "Experiential learning in grid worlds with causally-informed intrinsic reward and inductive biases.",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=0spR7wDwBh",
+    "pdf_link": "https://openreview.net/pdf?id=0spR7wDwBh",
+    "comments": [
+        {
+            "comment": {
+                "value": "We appreciate your review and the feedback provided! Below, we respond to your observations and outline adjustments.\n\nQuestions:\n\nQ1: The Curiosity Model is a key component of the planner in NACE. It operates as a secondary objective in planning, guiding the agent to systematically explore states where its existing knowledge is least applicable. This is quantified through the State Match Value, derived from the match quotients of rules applied to cells in the state. During planning, if no action sequence leads to greater-than-zero expected return, the planner uses the Curiosity Model to identify action sequences that minimize the State Match Value, encouraging the agent to explore less familiar areas. It supports NACE\u2019s systematic acquisition of missing causal knowledge.\n\nQ2: Thank you for raising this. In our notation, $c$ represents a cell, $v$ is a value, $a$ denotes an action, and $R(r)$ refers to the reward predicted by a rule $r$. We chose concise lower-case letters to align with the variables\u2019 names, but we recognize that this may cause confusion given the multiple variables introduced. We will revise and clarify the notation.\n\nWeaknesses:\n\nMotivation: We acknowledge that grid worlds may not fully reflect the complexity of real-world environments, and therefore may not align with everyone\u2019s research interests. However, they are valuable for testing and benchmarking algorithms, particularly in addressing challenges such as partial observability, sequential dependencies, and combinatorial state spaces. Minigrid, in particular, is a widely used benchmark and has been featured in numerous recent publications at ICLR and other leading conferences. Additionally, many SOTA techniques were extensively studied in Minigrids, including those used in our comparisons, further underscoring its relevance and the open challenges it presents. While we recognize that grid worlds are not inherently realistic, their controlled settings enable systematic experimentation and comparison, which aligns with our research goals. We are happy to elaborate on this motivation to provide greater context.\n\nRL in grid worlds: With respect, we do not intend to claim that RL is incapable of solving these tasks. If our wording suggests otherwise, we are happy to revise it. Some of our results demonstrate competent performance from various DRL techniques, which we trained and comprehensively evaluated across the environments, and these results are largely consistent with findings in the literature. However, we acknowledge that some of the weaker results may stem from hyperparameter choices, which we adopted from the repositories cited in the corresponding papers. We appreciate your suggestion to include them, as this will enhance the quality of the final submission.\n\nMissing details: We agree that Subsection 4.3 before 4.2 would improve clarity, as state is not yet defined in its current order. Thank you for noting this oversight. This adjustment will resolve the issue and improve clarity, particularly for first-time readers engaging with these novel concepts.\n\nLenghty DRL descriptions: We greatly appreciate this observation, as it provides the space we need to address the other suggestions and further improve the paper.\n\nLack of novelty: We are optimistic that the novelty of our contribution can be objectively assessed, as our architecture is unique and built on formulations not found in existing literature. However, we acknowledge the importance of strengthening the Related Works section to better contextualize our approach and highlight its distinctive aspects.\n\nPerformance variations: Note that we are reporting results within a maximum of 10^7 time steps. DQN is not learning on MiniGrid-Empty-16x16-v0 in this time frame because the problem space is significantly larger than in MiniGrid-DistShift2-v0. Given additional time steps, DQN would certainly be able to learn in MiniGrid-Empty-16x16-v0 as well. For context, we also tested MiniGrid-Empty-6x6-v0, which has a similar problem size to MiniGrid-DistShift2-v0, and DQN converged within (9 * 10^5) time steps. This is expected, as the task is simpler and demonstrates how DQN's performance is influenced by the problem size and time steps allotted.\n\nUndefined notations: As we mentioned in our response to a related question, $c$ represents a cell, $v$ denotes a value, $a$ refers to an action, and $R(r)$ is the reward associated with a rule $r$. Lower-case letters were chosen for alignment with their respective names, but we understand your frustration and will hence spend time to improve our notations.\n\nWe appreciate the time and effort you dedicated to reviewing our paper. Your feedback has highlighted areas where clarity and structure can be improved, and we are committed to addressing these in the final version. Specifically, we will refine our notations, reorganize sections for better flow, and adjust our explanations to ensure the content is accessible and engaging for readers."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your thoughtful and detailed review! Your feedback has provided us with valuable insights and suggestions for improving our work, and we hope that our responses clarify the design and contributions of NACE. We address each of your points below:\n\nW1: In accordance with your feedback we will integrate more specific descriptions for each inductive bias in 4.1 as follows:\n\n- Temporal Locality: NACE builds rules based solely on the current and previous state.\n\n- Causal Representation: NACE's rules are structured as \"(precondition, action) implies consequence\".\n\n- Spatial Equivariance: learned rules can be applied at any location.\n\n- State Tracking: NACE explicitly keeps track of a bird's-eye view map by recording observations into it, updating the values that are within its observability window.\n\n- Attentional Bias: only rules that show a change from the previous to the current time step, or differ from the predicted value, are considered for rule formation, evidence updating, and prediction.\n\nRegarding ablation studies: we agree and will include a discussion on this in the main paper, referring to the appendix for more detail. For instance, if the agent cannot track observation locations, its performance often declines after picking up a key when the previously observed door is no longer in view. Also, if rules are tied to the specific locations where they were learned, they fail to generalize across locations, requiring the agent to relearn the same knowledge at each location, which greatly reduces sample efficiency. Furthermore, without attentional bias using the change and prediction mismatch sets, processing becomes significantly more resource-intensive due to the need to create and update a larger number of rules.\n\nW2: Yes as in RL framework iterations. The Minigrid environment uses the Gymnasium API, whereby in each timestep the agent gets one observation from the environment, performs one action, and receives the resulting reward given by the environment. We will clarify this in the text.\n\nW3: Thank you for pointing it out. NACE's computational complexity depends primarily on the asymptotics of its planning algorithm, which we mentioned to be a depth- and breadth-bounded Breadth-First Search. We are happy to explicitly include the asymptotics in the final version for clarity.\n\nW4: The behavior varies across techniques and environments considered, and the standard deviations are helpful to answer your question. For instance, in the first environment, Minigrid-Empty-16x16, RND's average reward is zero, but its non-zero standard deviation indicates some variation even at the end. DQN, on the other hand, shows both an average reward and standard deviation of zero, with values consistently near zero throughout the run.\n\nW5: Thank you for your excellent input! We ran a new experiment in accordance with your suggestion, with an increased truth expectation threshold of 0.85 for rule usage. We find it makes the system spend longer (due to 3 confirmations of a rule until exceeding the threshold) to take explorative actions before exploiting its rule base, which makes the system less greedy (more likely to find optimal ways to obtain reward) and could help improving performance in non-deterministic environments as well.\nAnd as noted in other answers, additional factors contribute to non-optimality: NACE's rule-based learning mechanism, does not capture the statistics of the structure of the generated environments that DRL policies can leverage. Additionally, constraints in NACE's prediction horizon and search breadth further contribute to suboptimal performance and would benefit from more efficient implementation. For instance if NACE's planning depth in MiniGrid-DoorKey-8x8-v0 is restricted to 8, we find that NACE does not succeed within the maximum time steps in about 50% of the episodes, leading to an average reward of only 0.48 on average, increasing the gap to the optimal solution (0.975) further.\n\nWe are sincerely grateful for your detailed review and thoughtful feedback. Your insights have been instrumental in highlighting areas for improvement and have provided valuable guidance for strengthening our work. Thank you again for your time and engagement. We welcome any further questions or feedback you might have."
+            }
+        },
+        {
+            "comment": {
+                "value": "We greatly appreciate the time and effort you invested in reviewing our work. We address your comments and suggestions, starting with answering your questions:\n\nQ1: Thank you for highlighting this. We plan to include the hyperparameter choices in the final submission. For most of the baseline algorithms, we adopted hyperparameters from their original repositories to ensure fair comparisons.\n\nQ2: We agree that this requires further discussion. Both theoretical considerations (e.g., NACE rules not capturing the statistics of the structure of generated environments) and practical factors (e.g., length of planning horizon which will benefit from more efficient implementation, and choice of exploration parameters such as the truth expectation threshold) contribute to NACE\u2019s inability to consistently find the optimal policy, which we will elaborate on in the final version.\n\nAddressing weaknesses:\n\nW1: Agreed. We will expand this section to provide more detailed explanations for each inductive bias and how in particular it is realized in the technique.\n\nW2: We agree and will incorporate a diagram and additional examples for Section 4.3 to clarify the state and rule representations.\n\nW3: Thank you for this suggestion. We will include a causal rule in the final version to illustrate NACE\u2019s structure more effectively.\n\nThank you for your thoughtful review and valuable insights. We appreciate your engagement with our work and look forward to incorporating your suggestions to enhance the final version of our paper."
+            }
+        },
+        {
+            "comment": {
+                "value": "Addressed questions:\n\nQ1: The key differences lie in NACE\u2019s compound state representation, which enables it to handle the high-dimensional state space of Minigrid efficiently, the particulars of how uncertainty is estimated, and the agent\u2019s intrinsic motivation to seek out for states its knowledge applies the least in.\n\nQ2: In the state and rule representation section, we mention that the state is an array of cell values. As suggested, we will formalize and clarify this further. In the Minigrid environment, this array is provided for the observation window, and NACE integrates this into its \"mental map\", including both observed and currently unobserved cell values outside its view.\n\nQ3: NACE obtains the expected returns for the trajectories within its planning horizon as specified in the Planner description in section 4.4., which makes it choose one trajectory over the other. Hereby only the first action of the obtained plan is executed, then the cycle repeats.\n\nAddressed weaknesses\n\nW1: Thank you for this observation, we will add more information about each bias in relation to the techniques used.\n\nW2: The problems we addressed can be modeled as POMDPs. Partial observability was considered in most DRL techniques via LSTMs, as they were previously applied to partially observable Minigrid environments, enabling fair comparison. In NACE, partial observability is handled through its explicit map maintenance. We believe that addressing partial observability effectively remains an open research question, rather than an inherent limitation of NACE or our comparisons.\n\nW3: Thank you for pointing this out, we will correct this notational oversight to improve clarity.\n\nW4.1: We agree and have explicitly stated that NACE handles grid worlds, which remain challenging for RL methods and have many variations. Extending NACE to work outside of grid worlds (such as to continuous environments) would be an interesting direction for further research, as mentioned in our future works.\n\nW4.2: To our knowledge, RMax depends on an explicit tabular model with discrete, non-structural states, which does not scale to high-dimensional spaces like Minigrid's 2D-array-based observation window. Current literature indicates that DRL methods with intrinsic rewards are SOTA in Minigrid, which is why these methods have been the basis of our comparison, along with more basic DRL algorithms. However, we acknowledge that RMax\u2019s optimistic value estimates could be valuable if extended to a DRL model. If you are aware of an RMax extension that could apply here, we would be glad to reference it in our final submission.\n\nThank you for your valuable review. We hope that our responses clarify the design and contributions of NACE, as well as address any potential misunderstandings regarding its capabilities and limitations. We appreciate your thorough assessment and would be happy to engage further on any remaining questions."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your thoughtful questions and observations!\n\nAddressing questions:\n\nQ1: Yes it is. We agree it may not be entirely clear from the current wording. We will make this explicit in the final version and appreciate your feedback.\n\nQ2: The relevant cells are determined by the union of the two sets: change set, and prediction mismatch set. (1) The change set contains cells that have been changed from the last time step to the current step. (2) The prediction mismatch set contains cells that have a different observed value than was predicted for the current time step. While this is already part of the formalization of $w_+(r)$, we can mention this explicitly to enhance clarity.\n\nQ3.1: It is part of the conceptual design to increase the computational efficiency by considering only cells that have either changed or (\"or\" due to the union of the sets in the definition of w+(r)) differ from the prediction as \"relevant cells\" for rule formation, evidence updating, and selective prediction.\n\nQ3.2: The match quotient measures to what degree the rule preconditions match the observed cell values. It equals to 1 only if all the precondition cell value constraints of the rule are satisfied.\n\nQ3.3: It cannot, positive evidence is only obtained when the rule predicts correctly. The misconception might stem from the fact that the rule formation is only considering cells in the set of changed cells and prediction mismatch cells, which acts as a filter that is separate from the actual cell values to compare.\n\nQ4: There are usually multiple rules utilized to predict a given state in its entirety. In the simplest case, if the reward prediction of all these rules aligns with the observed reward, their average will also align, while the sum would overestimate the outcome.\n\nAddressing weaknesses:\n\nW1: While we believe our approach introduces novel formulations not present in existing literature, we understand the importance of contextualizing it with related work in structured learning. Our Related Works section currently includes comparisons with several relevant methods, but we will add the reference to further highlight distinctions and similarities.\n\nW2: NACE does not rely on an pre-defined model of the grid world. It starts with empty rule base, building them purely from observations, without assumptions about the environment beyond its strong priors. Only after these rules are learned, the agent knows how to operate in the environment. The rules are derived directly from the observation arrays provided by the environment, with no predefined notion of the objects involved.\n\nW3: Rules in NACE are based on evidence measures rather than true/false values, providing some tolerance to less precise state representations. We acknowledge that comprehensive studies are needed to demonstrate and quantify this. Regarding lacking strengths, Grid World environments remain a challenge in RL, for multiple reasons, such as the sequential dependencies, as you mentioned. We do not consider the use of rules itself as a limitation, provided they effectively capture relevant dependencies and enable the agent to learn efficiently and perform competently.\n\nW3.1: True, but it falls outside of the scope of the tested domains. Extending the work to learn rules based on absolute coordinate values is reserved for future work, and not essential for Minigrid benchmarks.\n\nW3.2: Since the agent can learn multiple rules with AND conditions, it can capture many cases where OR conditions might otherwise be required. For example, ((a OR b) implies x) is logically equivalent with ((a implies x) and (b implies x)). As for dynamics involving variable values, this is outside the scope of the Minigrid benchmarks.\n\nW3.3: NACE was specifically designed to handle \"agent-external changes\" within the observation window of the agent, as hypotheses formed from spurious correlations produce wrong predictions, generating negative evidence.\n\nW4.1: We appreciate your suggestion and will incorporate this change for improved clarity.\n\nW4.2: Thanks for catching this. We will correct the symbol usage and clarify related areas of confusion in the final version.\n\nW4.3: With \"Match Ratio\" R conflicts with the reward symbol. \"Match Goodness\" with the symbol G may be an alternative.\n\nW4.4: Thank you for noting. We will certainly correct these issues.\n\nWe are grateful for your thorough and insightful review, which helps us strengthen our work. And we hope our responses have clarified potential misunderstandings!\nWe would also like to highlight that this is a new technique and the first paper to comprehensively compare it with DRL in grid worlds. We hope these comparisons add value for the research community as well."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for valuable feedback and your interesting questions!\n\nWe address each question in the following paragraphs:\n\nQ1: Besides possible implementation limitations, NACE rules do not exploit the statistics of the generated environment structure, which DRL policies do capture. Additionally, limits in the prediction horizon and search breadth bounds in the planning component of NACE can lead to more greedy, non-optimal behavior, even when relevant knowledge is already learned, as the expected return is calculated over the planning horizon.\nWe appreciate that you noticed the data efficiency properties, which is NACE's core strength. Our paper also outlines sample efficiency differences across the compared DRL techniques, which we believe could provide additional value to the research community.\n\nQ2: Complexity can increase in various ways. For instance, what NACE delivers is the effective consideration of sequential dependencies, which, as we also demonstrated, significantly increases the training data demand of Deep Reinforcement Learning techniques, even with techniques that involve intrinsic rewards for better sample efficiency. This can also be seen in our paper when going from MiniGrid-Unlock-8x8-v0 to MiniGrid-DoorKey-8x8-v0 (Lines 486-505), which only adds one necessary additional sequential dependency to reach a goal location after the door has been opened with the key. Our DRL results in this regard are also consistent with the results in the literature.\nA key challenge, as you noted, is generalizing beyond grid worlds. We are currently researching NACE's integration with mobile robots in simulation using ROS2, featuring automatic downsampling of occupancy grid maps, and continuous action invocation via Nav2. However, this work lies outside the scope of the current paper.\n\nQ3: NACE achieves system tolerance through continuous evidence updating. The truth expectation of a rule determines whether it is being utilized, and this is a statistical measure that takes the prediction success rate into account as well as how many data points met the rule preconditions. With increasing amounts of collected evidence, the truth expectation measure becomes more stable, making the system to consider the statistically most likely outcomes of its actions even when they do not always generate the same outcome.\n\nNow, we address the weaknesses:\n\nW1: Respectfully, we agree in part and recognize that the page limit restricted us from providing extended explanations for some mathematical notations. However, we feel that these notations are not entirely ``unexplained\", since the description of the Observer includes a brief sentence about these sets. We will clarify these descriptions for improved readability.\n\nW2: Thank you for this suggestion. We agree that additional explanations would enhance understanding. We will include a more detailed appendix covering interactions among architecture components as well as the pseudo-code of the algorithm, which we already have, but could not fit in the main body of the paper.\n\nW3: With respect, we believe the statement ``usable only in deterministic grid world settings\" is somewhat inaccurate. While we focused on deterministic domains to maintain consistency with the nature of the RL benchmarks used for comparison, our technique is explicitly designed to handle non-determinism via evidence accumulation and updating. Specifically, the $f(r)$ value of a rule reflects its prediction success ratio, which stabilizes (and its truth expectation increases) with accumulated evidence $w(r)$, as noted in our prior response to question 3.\n\nW4: Thank you for your suggestion, we will include experimental setups and additional information in the appendix for the final version.\n\nW5: Thank you for pointing it out, we have hardware information available and we will include it too.\n\nThank you for your detailed review and valuable feedback. We hope to have addressed your questions and suggestions thoroughly, and we are working to incorporate these improvements in the final version of the paper. We appreciate your insights, which will help strengthen our work, and we hope our ideas sparked your interest. Please let us know if there are any further questions or if additional clarifications are needed."
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose NACE, a technique to efficiently solve grid world environments and compare this to state-of-the-art deep reinforcement learning algorithms."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The experimental results are easy to follow, and the figures are well made."
+            },
+            "weaknesses": {
+                "value": "I find the motivation of the authors' interest in gridworld problems to be lacking, and the testbeds to be simplistic. I am not convinced that RL is unable to solve such simple tasks as is claimed by the authors, and believe this to be due to suboptimal hyperparameters which appear to be missing from the text. The overall presentation of the paper lacks sufficient depth in details to where it is difficult to follow along in a meaningful way with notation left undefined. It is written in a manner not meant to be read by someone seeing this material for the first time. For example, Subsection 4.3 should likely be in the beginning of Section 4 or at least before Section 4.2, as it formally defines a rule, what a cell is, that you are doing conjunction, etc. All of this we can assume in 4.3, but for clarity, it should be clearly stated beforehand. \n\nSome areas the authors spend too much time explaining - for example, DQN or PPO, and a whole page is dedicated to these algorithms; each algorithm's description/shortcoming should have been reduced to 1-2 sentences (e.g., don't need to define DQN here just get to the point), giving the authors 0.5 page back that could have been used to better explain their contribution. At the end, I am left with a feeling that this is nothing new, I am still unclear how this compares to existing work *that is similar*, and how everything ties together. Also, how can DQN not solve MiniGrid-Empty-16x16-v0 but can solve MiniGrid-DistShift2-v0? This makes me question hyperparameters, because it should have been possible for DQN to randomly discover at least once a path from start to goal and then improve upon it, like is seen in the other more difficult task.\n\nMany notations are not defined in 4.4 to the point where the paper is frustrating to read. What are c, v, a, R(r). Is lower-case r rules? Or reward? Why a lower-case r for a set of rules?"
+            },
+            "questions": {
+                "value": "1. Where does the Curiosity Model fit into the overall NACE Architecture in 4.4?\n2. What are c, v, a, R(r). Is lower-case r rules? Or reward? Why a lower-case r for a set of rules?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "NACE (Non-Axiomatic Causal Explorer) is a novel experiential learning agent leveraging causal reasoning and intrinsic reward signals to enable more efficient learning within grid world environments. The authors compare the proposed method against state-of-the-art RL algorithms, demonstrating its benefit in terms of sample efficiency across many different grid world environments."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Novelty: the work brings novelty due to the adoption of a curiosity model based on causal reasoning. \n- Narration: the paper's narration is well-done and sound, and the work is generally well-written.\n- Experiments: the experimental campaign is convincing since it considers several state-of-the-art RL algorithms and exploration frameworks. The evaluation metric regards the sample efficiency of each method, demonstrating NACE's brilliant results.\n- Supplementary materials: the attached zip file containing NACE's codebase runs easily and smoothly."
+            },
+            "weaknesses": {
+                "value": "- **Some notations are not very clear.** In particular, the section dedicated to the NACE architecture (section 4.4) leaves some symbols unexplained, such as the observer's sets $M_t^{change}, M_{t}^{observation-mismatched}, M_t^{prediction-mismatched} $, which have been introduced here only in mathematical notation. Still, I would suggest to explain their meaning. Same for the function $f_{exp}$ whose usage and terms composition are not completely clear.\n- Apart from the notation, also **intuitions behind the need for some components of the architecture are not immediately understandable**. I would have rather added an appendix to explain those details more deeply. For example, I would explain the interactions between the different components of the architecture more verbosely, also describing the flow diagram in Figure 1 and the role of each component in natural language, to give an intuition about the maths behind it. Perhaps, a pseudocode of the entire algorithm could come in handy. \n- The main limitation of NACE is due to its application since it is **usable only in deterministic grid world settings**. However, authors highlight as future works possible extensions to more complex problems.\n- **Experimental setups could have been explained more in detail** in the Appendix, by reporting a more extended description of the presented scenario, perhaps with the support of the relative images (bird-view map). Furthermore, authors could add those scenarios that have not been presented in the main paper, but that can be run in the codebase, such as the *soccer world*. \n- **Hardware employed to run the experiments and time consumption of the framework** not provided."
+            },
+            "questions": {
+                "value": "- From learning curves is evident that NACE is more sample efficient than all the other tested algorithms. However, I would like to ask why it is not able to reach the optimal policy and which can be the intuition behind this recurrent behavior.\n- Thinking out of the grid world environment, I would like to ask how this method can work and if you see limitations and challenges that have to be considered in more complex problems.\n- Regarding non-deterministic transitions, how can NACE give \"system tolerance\" as stated in line 294?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors present NACE, a learning agent which uses strong inductive biases, causal reasoning and a causally-informed intrinsic reward to explore more efficiently in grid-world environments. NACE maintains an internal state consisting of a 2D array corresponding to each cell of the grid world, a 1D array to track non-spatial values such as inventory, as well as a set of rules of the form \u201c(preconditions, action) => consequence\u201d with counts of associated positive and negative evidence. At each step, it updates the 2D array and calculates which observed cells changed and which did not match their predicted values, uses this evidence to update the set of rules, then plans an action sequence to maximize expected return\u2013 or if no positive return trajectory is found, then to reach a state with minimum familiarity (average over all cells of how well they match the best fitting rule). Finally, the best-fitting rules are used to predict the cell values of the next state. They test on a number of minigrid environments and show that NACE reaches good performance in about 1000 steps, while existing DRL methods take around 1e6-1e7 steps to reach similar performance, although the best methods converge to higher average rewards at the end of training."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The sample efficiency results look very good.\n\n In general, the writing quality is high. \n\nThe Observer and Hypothesizer components of NACE, along with the State Match measure of state familiarity, appear to be quite novel. \n\nSuch a method should be quite interpretable - though the authors do not show any of the rules learnt by NACE in the test environments."
+            },
+            "weaknesses": {
+                "value": "The authors do not mention or compare to existing methods for efficient structured learning which capture inductive biases, for example [1]. It is hard to evaluate the work\u2019s originality given that the authors did not contextualize it among existing related approaches. \n\nThough NACE heavily relies on an explicit model of the gridworld, they also do not compare to any explicitly model-based deep RL algorithms such as [2] or [3]\n\nThe significance of the contribution seems limited. NACE shares a lot of weaknesses with existing methods- (depends heavily on quality of state representations, would struggle where defining impactful state changes is difficult) - while lacking strengths (adaptable to continuous state spaces or high-dimensional action spaces, theoretical optimality guarantees). It seems limited to very simple rules, and the environments the authors tested on likewise covered a very small number of dynamics- navigating to a goal location with obstacles, and picking up a key to unlock a door to test sequential dependencies. \n\n - The authors did not test the ability to develop rules that capture dependencies across space rather than time, e.g. the need to flip a switch to unlock a set of doors. In fact, because the precondition constraints are defined on cells\u2019 relative positions to the consequence cell, this method would likely do poorly on this dynamic, since this constraint would be best expressed as a condition on a cell specified by its global position (the switch location). \n\n - The constraints also require the cells to be exactly equal to a certain value, and are limited to cases where all constraints must be satisfied, rather than other conjunctions like Or, which excludes dynamics where values need only be above some threshold or within a set of allowable values (e.g. the Put Near minigrid environment where the agent must place one object near to another object).\n\n - The environments did not contain any stochasticity or objects that can move independently of the agent, e.g. the Dynamic Obstacles environment. A core component of NACE is observing which cells changed at each step and using that to create and update rules- is this method robust to settings where cells change irrespective of the agent\u2019s action?\n\n\nThe clarity of the paper has room for improvement:\n - The cell notation is inconsistent and confusing- the subscript changes between $c$, $c_r$, $c_{t,x,y}$, $c_t$ without any explanation. Different symbols should be used for cell variables than for cell values e.g. in the definition $\\bar{c}:=(c_r=c)$. If the precondition constraints are on cells\u2019 relative positions, there should be notation for that in contrast to the global position notation $c_{t,x,y}$ \n\n - K is used for the number of rules and also the number of equality constraints- consider using a different symbol.\nsome aspects of the method were not fully explained- see the Questions section.\n\n - Should consider using a different notation for the Match Quotient, since Q is usually used for the Q value function in RL. \n\n - Small grammar errors throughout the paper. E.g. \u201cSuch [an] approach\u201d on line 154, quotation marks are flipped on line 163\n\n[1] Tsividis, Pedro A., et al. \"Human-level reinforcement learning through theory-based modeling, exploration, and planning.\" arXiv preprint arXiv:2107.12544 (2021).\n\n[2] Hafner, Danijar, et al. \"Mastering diverse domains through world models.\" arXiv preprint arXiv:2301.04104 (2023).\n\n[3] Sekar, Ramanan, et al. \"Planning to explore via self-supervised world models.\" International conference on machine learning. PMLR, 2020."
+            },
+            "questions": {
+                "value": "Is the match quotient Q(r,c) defined for cell c being the consequence cell?\n\nNew rules are created \u201cwhen positive evidence is found for the first time\u201d - but how are the set of precondition equality constraints determined for the new rule? I.e., how does NACE determine which cells are relevant? \n\nWhy is positive evidence only counted for a rule if all of the precondition cells changed values and/or didn\u2019t match the prediction at the last step? Since the precondition is an AND conjunction of many cell values, it is possible only one might need to change for a rule to be activated. And why can the positive evidence count still increase even if the rule fails to predict the outcome?\n\nWhy is the predicted reward not the sum, rather than the average, of the reward of each of the N utilized rules? Each rule seems to describe a way to obtain a certain reward, so if multiple rules are satisfied shouldn\u2019t multiple rewards be obtained?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors designed NACE (Non-Axiomatic Causal Explorer), a learning agent that incorporates a set of inductive biases that the authors consider to be important for an acting agent. These include causal relations, temporal locality, spatial equivariance, state tracking, and attentional biases. \nThe design of the agent is based on predicate rules that are proposed by the agent given the observations. The agent then plans to either explore rules (to collect new evidence about the rule) or maximize reward.\nFinally, the authors test this agent in various scenarios of Minigrid and compare it against a wide range of (deep) RL agents. They show that in these particular scenarios, NACE is particularly sample efficient compared to the RL agents."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is motivated by the importance of the inductive biases they propose to grid world environments. Thus, the authors proposed to study these by incorporating them all in their agent design. Finally, showing that these biases have a huge effect on sample efficiency.\n2. The paper is mostly well written with some gaps in notation that I had a hard time following (see Questions)\n3. The agent design seems to be novel in the way they instantiate the different biases based on predicate rules."
+            },
+            "weaknesses": {
+                "value": "1. It is clear that NACE beats all the (deep) RL agents. However, given the comprehensive design, it is hard to understand where the benefit comes from. Perhaps ablating the effects of each inductive bias would be a good way to understand its contribution. Moreover, all RL agents considered are used in all experiments, but each one of them incorporates different biases that are incorporated in NACE. Perhaps grouping the RL agents based on the biases would make a clearer point of the importance of each bias.\n2. RL baselines are shown to be less sample efficient. This could be the result of their generality (less inductive biases) as claimed. But I\u2019m concerned that it seems that in all these cases the problems violate the Markov assumption, putting all these RL agents at a disadvantage. Is there an explicit handling of partial observability? Are there any RNNs/memory involved?\n3. In the formal presentation of the agent, some notation is overloaded (e.g. c for cells, clauses in a rule, c(r) in line 288) which makes some of the method presentation hard to follow. \n4. Although this is stated at the core of the paper, NACE is specifically designed for the grid world considered. It\u2019s unclear how the results would extrapolate to other type of tasks. Also, I think it would be relevant to compare NACE to RMax, at least to discuss its similarities and differences."
+            },
+            "questions": {
+                "value": "1. How does this compare to RMax? It seems to me that it has a similar flavor, in which we observe transitions and the agent explores such transitions until sure.\n2. The formal definition of a cell is missing. I supposed the cell is the value of the 3rd dimension of the state definition.\n3. Is there any value estimation happening? If so, how are you estimating the value function?\n\nMinor comments\n- Planner. Lines 311-314. Unclear wording.\n- Overloading c(r) I think (line 288)\n- Fix notations (use \\citep)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces Non-Axiomatic Causal Explorer (NACE), an agent optimized for grid world environments using causality-informed intrinsic rewards and inductive biases, including temporal and spatial modeling, to achieve data-efficient learning. Unlike most standard RL approaches, which require extensive training data, NACE efficiently learns policies in fewer steps by systematically exploring unfamiliar states. Experiments in MiniGrid scenarios show NACE's superior sample efficiency across various environments. The paper suggests that NACE\u2019s principles could extend to more complex domains, promising advancements in data-efficient reinforcement learning."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The authors target a very important and interesting question: How to incorporate inductive bias into Reinforcement Learning and increase the data efficiency. Moreover, the method is compared to various other already established algorithms and tested with different examples."
+            },
+            "weaknesses": {
+                "value": "Unfortunately, the reviewer cannot recommend the paper for publication at ICLR due to the following issues:\n\n- The reviewer notes that while NACE\u2019s systematic exploration of unfamiliar states is highlighted as its primary distinction from other RL methods, the incorporation of additional inductive biases defined in Section 4.1 remains unclear. Could the authors elaborate on how each bias is implemented within NACE\u2019s framework? Additionally, conducting ablation studies on the contribution of each inductive bias would provide valuable insight into their individual impacts on performance.\n\n- In the experimental results, the authors present rewards over time steps. Could the authors clarify how time steps are defined in this context? Specifically, are these time steps equivalent to RL framework iterations, with each time step representing the generation and evaluation of a potential solution?\n\n- The reviewer suggests that comparing computational costs between algorithms would enhance the study's rigor. The current comparison lacks detail, as one time step in NACE may involve higher computational complexity than in other algorithms.\n\n- In many of the RL frameworks tested, rewards remain stagnant for extended periods. If the results were examined at a finer scale, would smaller reward changes become visible, or does the mean reward remain consistently at zero?\n\n- After the initial rapid increase in reward, NACE plateaus below the maximum attainable reward across all environments. The reviewer recommends exploring this behavior further and considering modifications to the algorithm that might enhance performance during the latter stages of learning. This could provide insights into whether additional mechanisms could support continued improvement toward optimal rewards."
+            },
+            "questions": {
+                "value": "See Weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce NACE, a novel learning agent that utilizes a causality-informed curiosity model to make intelligent hypotheses about causal information in grid world environments. NACE is comprised of 4 components: an observer that updates a \"bird-view\" map of the environment and assesses prediction-observation failures, a hypothesizer that generates new rules, a planner that balances an exploration-exploitation tradeoff for accruing reward and refining hypotheses, and a predictor that models the environment. The authors assess NACE in a variety of environments from the Minigrid library clustered into three relevant groups: stationary environments, dynamic environments, and dynamic environments with sequential dependencies. Although NACE does not always find the optimal policy, its data efficiency is unparalleled by modern DRL algorithms."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- Existing RL techniques for solving gridworlds are systematically laid out and elaborated on in Section 3, which makes it easy for the reader to contextualize the work.\n- Section 4 introducing NACE is concise well-described.\n- Section 5 provides compelling results with a comparison to multiple baselines. Figures highlight the salient contributions that the authors attempt to make with NACE: extreme sample efficiency.\n- The overall prose of the paper is extremely clear."
+            },
+            "weaknesses": {
+                "value": "- A more thorough discussion of the 5 kinds of inductive biases, including examples, would make them easier to grasp.\n- A diagram depicting the states and rule representations described in section 4.3 would be useful. Section 4.3 could use more development and examples.\n- An example of a full set of causal rules for a simple environment would be welcomed."
+            },
+            "questions": {
+                "value": "1. How were the hyperparameters chosen for the baseline algorithms?\n2. Why is NACE unable to find the optimal policy? What improvements could be made to enable NACE to do so? A case-study on a specific environment would be interesting."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

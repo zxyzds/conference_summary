@@ -1,0 +1,171 @@
+{
+    "id": "K0WzGPTGwx",
+    "title": "Enhancing Treatment Effect Estimation with Generation-Driven Data Augmentation",
+    "abstract": "We introduce $\\texttt{GATE}$, a framework for improving the estimation of conditional average treatment effects (CATE) from observational data. Our framework leverages generative models to selectively augment datasets with synthetic potential outcomes, thus addressing the covariate shift problem inherent in CATE estimation. However, data augmentation can also introduce bias when the generative model is imperfect; we theoretically analyze this trade-off and demonstrate that _performance benefits can still be obtained when augmentation is performed only in a carefully chosen subset of the covariate space_. To validate our approach, we instantiate $\\texttt{GATE}$ with various generative models, including those trained on the observational dataset and those trained on external data sources, such as large language models (LLMs). Our empirical results show that $\\texttt{GATE}$ effectively improves performance across various CATE models, especially in low-data regimes and under strong covariate shift. By focusing on data manipulation rather than model specification, $\\texttt{GATE}$ offers a flexible, model-agnostic solution capable of enhancing _any_ CATE learner and reducing the performance gap between different CATE models.",
+    "keywords": [
+        "treatment effect estimation",
+        "causal inference",
+        "data augmentation",
+        "generative models"
+    ],
+    "primary_area": "causal reasoning",
+    "TLDR": "We propose a framework leveraging generative models to augment observational datasets with synthetic potential outcomes, addressing the challenge of covariate shift inherent in CATE estimation.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=K0WzGPTGwx",
+    "pdf_link": "https://openreview.net/pdf?id=K0WzGPTGwx",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces a novel data augmentation approach for Rubin causal inference, specifically designed to address covariate shifts in Conditional Average Treatment Effect (CATE) estimation. The authors evaluate the effectiveness of augmenting only a subset of the covariate space, demonstrating that their method generally improves performance. This enhancement is attributed to the flexibility inherent in the GATE framework."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper provides a straightforward approach for data augmentation in CATE estimation using LLM.\n- It provides a comprehensive set of experiments to showcase the improvement over non-augmented approaches."
+            },
+            "weaknesses": {
+                "value": "- The theoretical analysis lacks a clear connection to the design choices made for the GATE framework.\n- Lacks the results for more recent CATE learners, such as TARNet [1], BART [2].\n- No clear explanation on how to set up and train the generative models or utilize the LLM for GATE framework.\n- The datasets used in these experiments are mostly synthetic datasets.\n- No clear improvement when using augmentation in most cases.\n\n[1] Shalit, Uri, Fredrik D. Johansson, and David Sontag. \"Estimating individual treatment effect: generalization bounds and algorithms.\" International conference on machine learning. PMLR, 2017.\n[2] Souto, Hugo Gobato, and Francisco Louzada Neto. \"K-Fold Causal BART for CATE Estimation.\" arXiv preprint arXiv:2409.05665 (2024)."
+            },
+            "questions": {
+                "value": "- In section 4.1, how is the generative model set up when training on $D^{(obs)}_t$? Particularly, what type of generative model is used in this case? How does that affect the performance?\n- Does the model only train to impute the mean outcome in that mean-imputing generative model?\n- The scoring function directly influences the size of the selected set $X_t$. How exactly does this scoring function work when the generative model performs badly?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a data augmentation method GATE to improve CATE estimation. In particular, GATE first uses generative models to generate missing potential outcomes, and select only a subset of the generated outcomes to augment the observational dataset. These augmented missing potential outcomes reduces the covariate shift problem as long as the bias of the generative model can be controlled. The authors consider multiple generative models including the LLMs and demonstrate the efficacy of GATE on multiple benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- CATE estimation is an important problem with numerous applications.\n- The proposed method is sound, both intuitively and theoretically.\n- This paper is well-written. \n- Figure 1 is very helpful for understanding the proposed method.\n- The experiments are comprehensive. \n- The consideration of *external data source* generative model (i.e., LLM) is very promising"
+            },
+            "weaknesses": {
+                "value": "## Originality \nThis work is based on the principle that **augmenting the observational dataset through potential outcome imputation on a selected subset of individuals** can reduce covariate shift, and if the bias of the imputation is small, then the augmented observational dataset can benefit any downstream CATE model. This principal is **identical** to the an one-year-old work [1] submitted to ICLR 2024 (with an arXiv version [2]), which also proposes a data augmentation method for CATE estimation.\n\nAlthough this work uses different phrases, e.g., *\"augmenting the observational dataset with carefully selected missing potential outcomes sampled from a generative model\"* in this work vs. *\"it performs imputation for the counterfactual outcomes of these selected individuals\"* in [1], the principal is **exactly the same**. This can be further evidenced by the highlighted sentences in two works:\n- In line 62 in this manuscript, *\"benefits which can be strong enough to counterbalance the bias potentially introduced by an imperfect generative model\"*.\n- At the beginning of page of [1], *\"the positive impact of disparity reduction will outweigh the negative impact of imputation error\"*.\n\n## Almost Identical Theoretical Result \nThe whole theory section (Section 3) of this work is **uncannily similar** to the theory section (Section 4.2) of [1]. In particular, both work motivates the data augmentation methods through generalization bounds of  CATE models. Both of the generalization bounds from these two works (Theorem 3.1 in this work and Prop 3 in [1]) include three terms: \n- (i) a factual loss term (this work calls it the empirical risk and includes an extra finite-sample term established by another work); \n- (ii) a statistical distance term that measures the distance between two measures on the covariates $X$ (this work uses IPM while [1] uses Total Variation); \n- (iii) a statistical distance term involving the true potential outcome and the imputed potential outcome (this work uses IPM distance while [1] uses the L_2 distance between the true and estimated potential outcome functions).  \n\nWhile it is fine for theoretical results to appear similar, given the similarity of their motivations and principles, and that they are addressing the same problem (both this work and [1] propose data augmentation methods), I think **a detailed discussion and comparison with Prop 3 in [1]** is definitely needed. Also note that this is **the only theoretical result** in this work. \n\n## Almost Identical Insights from the Theoretical Result\n\nGiven the similar theoretical result, it is not surprising that the insights of this work is similar to that of [1]. For example, just to name a few,\n- *\"tuning Q via the admissible set Xt allows to navigate the trade-off involved in data\naugmentation'* in this work versus\n- *\"this theorem provides a rigorous illustration of the trade-off\nbetween the statistical disparity across treatment groups and the imputation error\"* in [1],\n\nand \n- *\"excluding from Xt regions where the generative model performs poorly can\nfurther enhance performance\"* in this work versus\n- *\"It underscores that by simultaneously minimizing disparity and imputation error, we can enhance the performance of CATE estimation model\"* in [1]\n\n## Technical Weakness: Selection of the Missing Potential Outcome\nThe term 2 in Theorem 3.1 is interpreted as the noise of the generator, which consists of **both bias and variance**. The author proposes to select the generated outcomes with the variance, **completely ignoring the bias**. \n\n[1] \"Counterfactual Data Augmentation with Contrastive Learning\" (https://openreview.net/forum?id=7mR83Q12cJ).\n\n[2] Aloui, Ahmed, et al. \"Counterfactual Data Augmentation with Contrastive Learning.\" arXiv preprint arXiv:2311.03630 (2023)."
+            },
+            "questions": {
+                "value": "- What percentage of the generated potential outcomes are eventually used to augment the observational dataset? If my understanding is correct, the percentage should be exactly $\\alpha$.\n- Are the variances of LLMs really highly correlated with their bias on all the benchmarks?\n- How are the hyper parameters selected? For example, how do you choose the $\\alpha$ in practice?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Research integrity issues (e.g., plagiarism, dual submission)"
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "The **motivation, insights, and theoretical contribution of this work is extremely similar to an one-year-old work**  [1] which was submitted to ICLR 2024. Please see the *Weakness* section for a detailed discussion. This missing acknowledgement of [1] is considerably uncanny given that this works in fact cites [2], which is a historical arXiv version of [1] and includes the same motivation, insights, and theoretical contribution already. \n\nFrom my perspective, **this work GATE should be considered as a generalization of [1,2]** where GATE treats the missing potential outcome imputation model as a general component that can be instantiated with various generative models including LLMs, and investigates methods to identity the reliable generated outcomes from LLMs.\n\nOverall, I think this work needs heavy editing during rebuttal to acknowledge [1] and expand sections about LLMs, which I believe is the main contribution of this work. **If this was done appropriately**, I am more than willing to lean towards acceptance based on the **additional contribution** of this work on top of [1,2].\n\n[1] \"Counterfactual Data Augmentation with Contrastive Learning\" (https://openreview.net/forum?id=7mR83Q12cJ).\n\n[2] Aloui, Ahmed, et al. \"Counterfactual Data Augmentation with Contrastive Learning.\" arXiv preprint arXiv:2311.03630 (2023)."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a generative modeling based approach to impute missing potential outcomes in a subset of the covariate space. It presents one general theoretical result supporting the general methodology of augmentation as well as empirical studies."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper presents a new generative modeling approach to impute a reliable subset of the missing potential outcomes."
+            },
+            "weaknesses": {
+                "value": "The main weakness lies in the incremental nature of the contribution. While using LLMs to generate a subset of missing potential outcomes is novel, the core concept of identifying a subset of individuals within the feature space for imputation has been previously explored, as in Aloui 2023 (which is mentioned by the authors) and Nagalapatti 2024 (https://arxiv.org/pdf/2401.15447). More extensive studies on the effects of various generative models and a comparison of their performance are needed to make the work more comprehensive. Moreover, The code was not added in the supplementary materials, adding even a notebook with few experiments, would have have been helpful to assess the reproducibility of the results."
+            },
+            "questions": {
+                "value": "1. How do the authors tune the parameter $\\alpha$, in real world experiments only the factual data is availabe and estimating the epehe to validate is not possible, how do the authors intend to deal with this?\n\n2. If the selected generative model (or the LLM) used has an inherent bias due its training can it bias the imputation as well?\n\n3. Can the authors explain the variance problem? And how is it related to the imputation error? I can have deterministic imputation (by imputing 0 to every missing potential outcomes) hence it has a zero variance but what matters more is the imputation error? Shouldn't the tradeoff by between imputation error and covariate shift between treatment groups?\n\n4. How sensitive are the imputation for changing the prompts in both the in context and no context prompts?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper addresses the estimation of conditional average treatment effects (CATE) from observational data using a framework called GATE. It employs generative models to augment datasets with synthetic potential outcomes, focusing on mitigating covariate shift. The key contribution is demonstrating that targeted data augmentation can improve CATE estimation, especially in low-data scenarios."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The experiments conducted are extensive and well-supported.\n\n2. The main content of the paper is clearly written and easy to follow."
+            },
+            "weaknesses": {
+                "value": "1. First, I have some questions about the originality of this paper; data augmentation for causal data is not a novel concept, and I do not see any significant differences from existing works in the authors' theoretical discussions and method design.\n\n2. The paper primarily focuses on qualitative analysis regarding covariate shift but lacks quantitative assessments to substantiate the claims that the augmented data effectively mitigates covariate shift. This absence of rigorous empirical validation undermines the overall effectiveness of the proposed method.\n\n3. The depiction and explanation of Figure 1 are quite ambiguous and do not effectively convey the key points of the method. I recommend making some revisions for clarity."
+            },
+            "questions": {
+                "value": "1.\tIn Figure 1, it appears that the symbol \\( k \\) is not utilized. Is this an oversight or is there a specific reason for its absence? I kindly request clarification from the authors, as this is crucial for understanding your methodology.\n\n2.  Can you provide a more intuitive example to explain how your causal data augmentation method differs from general data augmentation and other causal enhancement methods?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

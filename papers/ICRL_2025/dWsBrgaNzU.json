@@ -1,0 +1,256 @@
+{
+    "id": "dWsBrgaNzU",
+    "title": "GPU-Accelerated Counterfactual Regret Minimization",
+    "abstract": "Counterfactual regret minimization is a family of algorithms of no-regret learning dynamics capable of solving large-scale imperfect information games. We propose implementing this algorithm as a series of dense and sparse matrix and vector operations, thereby making it highly parallelizable for a graphical processing unit, at a cost of higher memory usage. Our experiments show that our implementation performs up to about 352.5 times faster than OpenSpiel's Python implementation and up to about 22.2 times faster than OpenSpiel's C++ implementation and the speedup becomes more pronounced as the size of the game being solved grows.",
+    "keywords": [
+        "counterfactual regret minimization",
+        "extensive-form games",
+        "graphical processing units",
+        "imperfect information games",
+        "Nash equilibrium"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "We implemented CFR as dense and sparse matrix and vector operations, achieving orders of magnitude speedups on GPUs compared to OpenSpiel's baselines.",
+    "creation_date": "2024-09-13",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=dWsBrgaNzU",
+    "pdf_link": "https://openreview.net/pdf?id=dWsBrgaNzU",
+    "comments": [
+        {
+            "title": {
+                "value": "Thank you for your review!"
+            },
+            "comment": {
+                "value": ">Well, it is unclear to me if this paper fits well for ICLR since there is no new algorithm / methodology / theory proposed.\n\nIt is true that, in our paper, we do not propose anything theoretically novel. Rather, we introduce methods to accelerate the highly relevant CFR algorithm to take advantage of GPUs for orders of magnitude speedup.\n\n>It may fit more to ML system venue.\n\nWe would like to point out that one of the relevant subject areas mentioned by ICLR \"infrastructure, software libraries, hardware, etc.\" fits our work quite well, and ICLR has published systems papers before.\n\n>The benchmark selected (Game in OpenSpiel) is less known\n\nOpenSpiel's games are widely used in the field of CFR to benchmark different CFR variants. Our contribution of the accompanying software (in the supplementary file) is a software library that is not only compatible with discrete games on OpenSpiel but also shows significant acceleration.\n\nAgain, thank you for your review, and we hope this addresses some of your reservations about our paper."
+            }
+        },
+        {
+            "title": {
+                "value": "Thank you very much for your response!"
+            },
+            "comment": {
+                "value": "We have to admit that we were not familiar with Reis's work, as it was not published in a peer-reviewed venue and their code is unavailable.\n\nIt is now clear that Reis has already done the level-by-level updating for CFR. Thank you for bringing this to our attention.\n\nWith that said, we firmly believe that this does not disqualify our work.\n\n* The idea of using level graphs for graph calculations is a very widespread technique. We simply thought this was not done for CFR before.\n* The code shown in the thesis would not compile. Also, his code cannot be found online.\n  * Figure 12 Line 4's missing semicolon.\n  * Figure 18 Line 8's mismatched square braces.\n* We reduce everything to matrix/vector operations which is much more efficient on GPUs due to opcodes optimized for those purposes. On the other hand, their implementation requires each thread to carry out more generalized kernel instructions for updating at each node.\n* Their compatibility (and exploration) of games is limited to custom variants of poker. In our analysis, we explore selections of discrete games that are available on OpenSpiel (widely used for research in CFR).\n\nWith that said, we do see a need to update our manuscript to mention the works you brought up. We will work to revise the manuscript and update it by the end of this week.\n\nAgain, thank you for the catch, and we hope this addresses all your reservations about the paper."
+            }
+        },
+        {
+            "comment": {
+                "value": "Apologied for the typo. I mixed up the authores. I was referring to Reis's thesis, not Rudolf's report. \n\nIn Figures 17 and 18 of Reis's thesis, the pseudocode of the iterative version of CFR is described. It computes the reach probabilities level-by-level in ascending order and compute utilities level-by-level in descending order. It does not require recursive tree traversal. In fact, it appers to perform operations similar to those in Equations 26 and 21 in your paper. \n\n> The part of the matrix multiplication that utilizes GPU acceleration in Reis\u2019s code is almost the section of the for-loops that is parallelized.\n\nSince the computation of one level depends on other levels, the main GPU acceleration in CFR comes from parallelizing the computations within each level. The sparse matrix/vector operations achieve this implicitly by accelrating matrix multiplication using the GPU, while the pseudocode achieves this explictly by assigning multiple CPU/GPU cores to distribute the for-loops (\"#parga omp parallel for\" in Line 2 of Figures 17 and 12)."
+            }
+        },
+        {
+            "title": {
+                "value": "Thank you for your response!"
+            },
+            "comment": {
+                "value": ">In summary, I don't think there is much difference between the two methods\n\nWe still maintain that our approaches to tree traversal are substantially different.\n\n### Rudolf (Line 92 to 136 and 51 to 90): https://github.com/janrvdolf/gpucfr/blob/master/src/gpucfr.cu\n\n* For each node in the game tree, Rudolf's code, starting from that node, **moves up the game tree** toward the root.\n* In other words, **for each node, Rudolf makes O(H) extra visits** where H is the maximum height of the tree.\n* Since the height of the tree depends on the game, the number of nodes Rudolf visits each iteration is **linearithmic (n log n) in practice and O(n^2) in the worst case.**\n* He does this because each node must take account of all nodes in the subtree rooted at that node.\n\n### Ours\n\n* We parallelly calculate each node level by level.\n* Each node is only visited **once**.\n* We managed to parallelize tree traversal while maintaining linear time complexity.\n\nIn both of our approaches, through tree traversal, relevant data is aggregated to each information set. From this point, the calculation is vastly easier to parallelize (which you noticed was similar).\n\n>The part of the matrix multiplication that utilizes GPU acceleration in Rudolf\u2019s code is almost the section of the for-loops that is parallelized.\n\n* Yes, the equation we use in some parts is identical because we implement the **same** algorithm!\n* If these are different, then one of us is not implementing CFR correctly.\n\nIn addition, we would like to stress that Rudolf's code only supports 2-player games (See Line 125). Our code supports any finite number of players. This makes the implementation much more complex as we must keep track of counterfactual reach probabilities, counterfactual utilities, utilities, etc. for each player.\n\nI hope this resolves any misunderstanding on our and their approaches."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for the quick response. \n\nUsing Rudolf\u2019s implementation as an example, the iterative CFR described in section 4.3 does not require recursive tree traversals during CFR iterations. From my perspective, the implementation of iterative CFR is similar to the method proposed in the paper. \n\nBoth methods use a recursive tree traversal initially to compute the relationship between adjacent levels in the tree, setting up the structure for subsequent CFR iterations. During CFR iterations, both methods compute utilities by levels in descending order and compute the reach probabilities levels in ascending order, and no recursive tree traversals are needed. The dense matrices defined in the paper, such as $\\Pi, U,$ and $\\bar{\\sigma}$, correspond to the data structures stored in Rudolf\u2019s code. Additionally, the sparse matrix/vector operations defined in the paper serve as the formal definitions for the for-loops in Rudolf\u2019s code. The part of the matrix multiplication that utilizes GPU acceleration in Rudolf\u2019s code is almost the section of the for-loops that is parallelized.\n\nIn summary, I don't think there is much difference between the two methods"
+            }
+        },
+        {
+            "title": {
+                "value": "Thank You for Your Review!"
+            },
+            "comment": {
+                "value": "There are **significant** differences in how GPUs are used in our work versus the works that you brought up.\n\n* We frame the problem of CFR as a series of sparse matrix/vector operations, and the utilization of GPUs for this task is very well studied.\n* Reis and Rudolf (not Weng) wrote the CFR implementation **including iterative/recursive tree traversal on CUDA**. (edit: added iterative).\n* DeepStack's GPU usage is for their **neural network evaluation**. They still perform costly recursive traversal for the lookahead operation (not parallelized). The \"Student of Games\" and \"ReBeL\" algorithms also use GPU for their NN, and these particular algorithms are mentioned in our introduction.\n\nThey or their connection to GPUs were not mentioned due to space constraints and their (perceived) irrelevance to our approach. With that said, we will mention them in our revision if the reviewer feels strongly about it.\n\n>Space complexity\n\nIt's linear w.r.t. the game size.\n\n>accelerate the calculation of exploitability?\n\nYes, our approach can be used. But, we did not explore it in this work.\n\nWe hope this addresses some of your concerns."
+            }
+        },
+        {
+            "title": {
+                "value": "Thank You for Your Very Detailed Review!"
+            },
+            "comment": {
+                "value": "We would like to address some points that were brought up.\n\n>The open spiel codebase is not an example of a performant CFR implementation, it is meant to be extremely generic.\n\n* Our implementation is **also** designed to be extremely generic, compatible with all discrete games on OpenSpiel plus more.\n* Their C++ implementation is **supposed to be** their performant version.\n* OpenSpiel is also **widely used** by researchers... a faster library compatible with OpenSpiel's games can be useful.\n\n>The games tested are extremely tiny. [...] It's not clear what a perfect information game is doing there. [...] `tic_tac_toe.py` dark variant of tic-tac-toe.\n\n* These games are **widely used** to test the convergence speed of algorithms in the field of CFR [1].\n* CFR can **absolutely** be used to solve perfect information games.\n* In our tests, we **only** used `gpugt/games/open_spiel.py`.\n\n>this method becomes more and more wasteful as the depth of the game increases.\n\nWe don't quite understand this. Our experiments indicate that our method scales well. Also, note that the growth of the depth is logarithmic w.r.t. the game size.\n\n>Modifying the algorithm seems extremely expensive and cumbersome\n\nSome modifications are trivial, as stressed in the paper. With that said, we acknowledge that in the paper as a limitation.\n\n>not very GPU friendly and a lot of FLOPS are probably wasted\n\nAgain, empirical experiments show our method is still quite performant. We acknowledge the lack of further profiling in the paper.\n\n>The paper does not include any exploitability results.\n\nThe convergence behavior of CFR is **already very well known** and we **do not propose** any new algorithm or variant. With that said, it can be added to the Appendix if the reviewer feels strongly about it.\n\n>Why [...] CuPy?\n\nSimilar API as NumPy which allows us to swap between them to see performance with and without parallelization.\n\n>How long does it take to setup the game tree?\n\n* Our code performs a single game tree traversal, followed by filling in the matrices.\n* It takes from 0.015 seconds (Kuhn poker) to 67.951 seconds (tic-tac-toe).\n* The times can be added to the Appendix if the reviewer feels strongly about it.\n\n>Were 32 or 64-bit floats used? Were tensor cores enabled?\n\n* 64-bit floats were used.\n* Tensor cores were not used.\n\n>reason for making the nature player have infosets\n\n* We found it to be more consistent. \n* It helped us derive the matrix/vector equations.\n\n>it is not the product of average strategies that converges to the set of CCEs, but rather the average product.\n\nOur Equation 8 is identical to Equation 4 in Zinkevich et al [2].\n\n>The introduction should include the CFR theorem\n\nSome CFR papers omit this. But, we can add it in our revision.\n\n>what purpose Figure 1 serves in the paper [..] error bar\n\nWe see your point. You are right.\n\n>why is alternating CFR hard to implement?\n\nAt the time of writing the paper, it seemed to require updating sparse matrix values mid-way. But, now, we understand that this can be implemented by creating separate masks for each actor during setup.\n\n>This statement is not backed by anything in this paper\n\n* We did not elaborate due to space constraints.\n* Tammelin et al. [3] parallelized CFR by chunking the game tree with a trunk and many subtrees. Each subtree and trunk was assigned to a node that traversed the assigned tree.\n* Our approach is simply a series of sparse matrix/vector operations, and distributing this is a well-studied problem in systems.\n\n>the number of infosets for liars_dice seems to be wrong\n\n* We considered nature's decision node to form a singleton infoset, hence the 16 infosets for Kuhn poker (instead of 12), 1093 for Leduc poker (instead of 936), et cetera.\n\nWe apologize for the long response... there was a lot to cover. We hope we addressed some of your concerns. Thank you for your stylistic suggestions.\n\n[1] H. Xu et al., 2024. Dynamic Discounted Counterfactual Regret Minimization. URL: https://opnreview.net/forum?id=6PbvbLyqT6\n\n[2] M. Zinkevich et al., 2007. Regret Minimization in Games with Incomplete Information. URL: https://poker.cs.ualberta.ca/publications/NIPS07-cfr.pdf\n\n[3] O. Tammelin et al., 2015. Solving Heads-up Limit Texas Hold\u2019em. URL: https://poker.cs.ualberta.ca/publications/2015-ijcai-cfrplus.pdf"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper presents a GPU-accelerated approach for Counterfactual Regret Minimization (CFR), a class of no-regret learning algorithms widely used in solving large-scale imperfect information games like poker. Traditionally, CFR algorithms rely on recursive tree traversal, which limits their efficiency. This work proposes a restructured CFR algorithm that converts the operations into a series of dense and sparse matrix and vector computations, making it highly parallelizable on GPUs at the cost of increased memory usage.\n\nThe study concludes that the proposed approach could serve as a foundational step for highly scalable CFR on supercomputing infrastructures, enabling faster solutions to complex game-theoretic problems."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Originality: The paper introduces a creative approach by reformulating Counterfactual Regret Minimization (CFR) as matrix operations suitable for GPU processing. This novel restructuring allows a highly parallelizable version of CFR, which has not been extensively explored in existing CFR literature.\n\nEfficiency in Design: By avoiding recursive tree traversal, the implementation achieves substantial speed gains, especially in larger games, demonstrating an efficient design choice that effectively leverages GPU hardware.\n\nThorough Empirical Evaluation: The paper evaluates the new approach on a diverse set of games with varying complexity and size, rigorously benchmarking it against established OpenSpiel baselines in both Python and C++. This experimental breadth strengthens the validity of its claims about speedup and scalability.\n\nSignificant Potential for Scalability: The approach is well-suited for large-scale games, with experiments showing up to 352.5 times faster performance than OpenSpiel\u2019s Python baseline and 22.2 times faster than its C++ counterpart, especially promising for future work on supercomputing platforms or even more extensive imperfect information games."
+            },
+            "weaknesses": {
+                "value": "Originality Limitations: Although innovative, the paper applies GPU parallelization to the vanilla CFR algorithm, which is somewhat limited in novelty given the existence of other CFR variants that incorporate modern enhancements (e.g., CFR+ or discounting techniques). A broader implementation encompassing these would increase the relevance of this work.\n\nLimited Exploration of Advanced CFR Variants: The paper does not explore compatibility with modern CFR variants, such as sampling-based or discounting techniques, which are widely used in state-of-the-art game-solving algorithms. This omission reduces the approach\u2019s applicability in advanced game AI contexts.\n\nHigh Memory Requirements: The matrix-based reformulation, while speeding up calculations, results in high memory consumption, especially for larger games. This trade-off is not thoroughly analyzed or discussed, particularly regarding potential bottlenecks for memory-constrained systems, which limits practical usability.\n\nNarrow Application Scope: The results indicate that this GPU implementation is unsuitable for small games, where it can actually perform worse than CPU implementations due to overhead. This could reduce its perceived impact and limits its practicality in domains that deal with a wide range of game sizes."
+            },
+            "questions": {
+                "value": "N/A"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper aims to frame the CFR algorithm as a sequence of matrix operations (Think GraphBlas)."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "This paper is interesting because it tries to solve two problems at the same time:\n- APIs like [GraphBLAS](https://graphblas.org/) have successfully represented graph algorithms as a sequence of BLAS-like operations over semirings. This paper tries to do the same for CFR.\n- It's not obvious how GPUs, the powerhouse of deep learning, can be used to accelerate game solving (other than calling neural networks). This paper tries to solve this gap."
+            },
+            "weaknesses": {
+                "value": "Overall, this paper tries to aim for a best-of-both-worlds approach: low coding effort and high performance. \nInstead, it ends up with an exposition that is somehow less clear than the original CFR paper, benchmarks that don't inspire confidence, and the resulting algorithm seems to be not very flexible and requires major efforts to do the simplest changes like going from simultaneous to alternating variants of CFR.\n \n- The open spiel codebase is not an example of a performant CFR implementation, it is meant to be extremely generic. Comparing with more reasonable implementations is necessary (for instance the Cepheus codebase for Leduc, there are other codebases as well).\n- The games tested are extremely tiny. The largest game (tic tac toe) takes less than 3 seconds to traverse on a pure Python implementation and is a perfect information game. It's not clear what a perfect information game is doing there. The number of nodes in Appendix A is the number of infosets + terminals (i.e., there is only one node per infoset), and looking at the code, `tic_tac_toe.py` is not a dark variant of tic-tac-toe.\n- The updates are batched and masked. Effectively, for each depth $d$, a (sparse) matrix multiply is done but only the output at depth $d$ is stored. As a matter of efficiency, this method becomes more and more wasteful as the depth of the game increases.\n- Modifying the algorithm seems extremely expensive and cumbersome. (see  line 515)\n- The computations presented here are probably not very GPU friendly and a lot of FLOPS are probably wasted (Yet this has not been analyzed).\n- The paper does not include any exploitability results."
+            },
+            "questions": {
+                "value": "- What was the inspiration for using CuPy?\n- Why are there no exploitability results?\n- How long does it take to setup the game tree?\n- Were 32 or 64-bit floats used? Were tensor cores enabled?\n\n- 022- The abstract is used in the introduction\n- 037- GPU is defined twice\n- 062- What is the philosophical reason for making the nature player have infosets? I find this very nonstandard\n- 163- While CFR can find approximate coarse correlated equilibrium, the formulation presented in this paper does not. The reason is that it is not the product of average strategies that converges to the set of CCEs, but rather the average product.\n- 175- The introduction should include the CFR theorem ($r^{(T)}(i_{+,j}\\in\\mathbf{I}_{+})$ is bounded by the sum of the local regrets)\n- 201- Case in point in that this paper tries to inflate its notation, $l\\in[1, D]\\cap \\mathbf{Z}$ is just weird.\n- 292- Hadamard product was not defined. I would argue that it is not a common notation and should be defined explicitly.\n- 397- It is not clear what purpose Figure 1 serves in the paper.\n- 432- Why is there no error bar on the time measurements?\n- 515- I understand that pruning the tree may be expensive (surely a very big downside) but why is alternating CFR hard to implement?\n- 523- \"Our approach is also much easier (and likely more efficient) to be run on supercomputers compared to previous methods\" This statement is not backed by anything in this paper, see Weaknesses.\n- 651- the number of infosets for liars_dice seems to be wrong, it should be 24576 not 24583 (or 12288 if we remove infosets with only one action)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies hardware acceleration for counterfactual regret minimization."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The acceleration seems quite significant as the author claimed."
+            },
+            "weaknesses": {
+                "value": "Well, it is unclear to me if this paper fits well for ICLR since there is no new algorithm / methodology / theory proposed. It may fit more to ML system venue. The benchmark selected (Game in OpenSpiel) is less known. I will suggest show improvements on more common benchmarks. I have to admit I do not have sufficient GPU hardware background to evaluate this paper."
+            },
+            "questions": {
+                "value": "see above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 1
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a GPU implementation of the CFR algorithm. It stores the game tree structure in matrices and performs a series of matrix operations to compute reach probabilities, expected payoffs, and other relevant information level by level, thereby avoiding the costly tree traversal process. By leveraging GPU acceleration for these matrix operations, the approach significantly enhances CFR\u2019s speed, albeit at the expense of increased memory usage."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* The paper is well-written, and the notations are clearly defined.\n* The GPU implementation significantly boosts the speed of the CFR algorithm, and the difference from the OpenSpiel implementation grows as the game size increases.\n* The code is open-sourced, making it easy to apply to games in OpenSpiel."
+            },
+            "weaknesses": {
+                "value": "This is not the first approach to implementing CFR on GPUs. For example, the thesis by Reis [1] and the report by Weng [2] also present GPU implementations of CFR. Additionally, DeepStack [3] [4] constructs the look-ahead tree and runs CFR on GPUs. These works and this paper use a similar approach, computing relevant information in CFR level by level and accelerating it with GPUs. However, the paper does not compare or discuss these related works.\n\n[1] Reis J. A gpu implementation of counterfactual regret minimization. Master Thesis, University of Porto, 2015.\n\n[2] Weng L. Counterfactual regret minimization on gpu.\nhttps://cent.felk.cvut.cz/courses/GPU/archives/2020-2021/W/rudolja1/, 2021\n\n[3] Morav\u010d\u00edk M, Schmid M, Burch N, et al. Deepstack: Expert-level artificial intelligence in heads-\nup no-limit poker. Science, 2017, 356(6337): 508-513.\n\n[4] Schmid M. DeepStack for Leduc Hold'em. https://github.com/lifrordi/DeepStack-Leduc, 2017"
+            },
+            "questions": {
+                "value": "* What is the space complexity of the method?\n* Can this method be used to accelerate the calculation of exploitability?\n\nMinor Suggestions:\n\n* It will help to improve clearity by adding a symbol table and an example figure.\n* It will help to enhance readability by keeping the symbol descriptions consistent with CFR literatures, such as using $I$ for an information set and $h$ for a history node."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This manuscript discussed about how to leverage GPU\u2019s computation power on sparse matrix multiplication to improve the computation speed for large scale games."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* Leveraging GPUs to improve the computation for game solving is still under-explored and this manuscript has a solid step towards it."
+            },
+            "weaknesses": {
+                "value": "* This is a more engineering-driven paper without lots of scientific contribution.\n* I\u2019m not quite sure about where the benefit is from. See the questions."
+            },
+            "questions": {
+                "value": "* Is OpenSpiel\u2019s implementation paralleled? I think this can have a lot of differences in the performance. Only comparing with the benchmark implementation can be limited.\n* You showed there is a trade-off for memory efficiency and computation time. However I don\u2019t see there are any reasons on this if we store every sparse matrix within the corresponding format. Can you further explain this?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

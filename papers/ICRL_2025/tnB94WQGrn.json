@@ -1,0 +1,184 @@
+{
+    "id": "tnB94WQGrn",
+    "title": "Knowledge Graph Based Agent For Complex, Knowledge-Intensive QA in Medicine",
+    "abstract": "Biomedical knowledge is uniquely complex and structured, requiring distinct reasoning strategies compared to other scientific disciplines like physics or chemistry. Biomedical scientists do not rely on a single approach to reasoning; instead, they use various strategies, including rule-based, prototype-based, and case-based reasoning. This diversity calls for flexible approaches that accommodate multiple reasoning strategies while leveraging in-domain knowledge. We introduce KGARevion, a knowledge graph (KG) based agent designed to address the complexity of knowledge-intensive medical queries. Upon receiving a query, KGARevion generates relevant triplets by using the knowledge base of the LLM. These triplets are then verified against a grounded KG to filter out erroneous information and ensure that only accurate, relevant data contribute to the final answer. Unlike RAG-based models, this multi-step process ensures robustness in reasoning while adapting to different models of medical reasoning. Evaluations on four gold-standard medical QA datasets show that KGARevion improves accuracy by over 5.2%, outperforming 15 models in handling complex medical questions. To test its capabilities, we curated three new medical QA datasets with varying levels of semantic complexity, where KGARevion achieved a 10.4% improvement in accuracy.  The source code is provided at https://anonymous.4open.science/r/KGARevion-B3B6.",
+    "keywords": [
+        "Medical Reasoning; Medical QA",
+        "Agent",
+        "Knowledge Graph",
+        "LLM"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "A knowledge graph based agent designed to address the complexity of knowledge-intensive medical queries",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=tnB94WQGrn",
+    "pdf_link": "https://openreview.net/pdf?id=tnB94WQGrn",
+    "comments": [
+        {
+            "title": {
+                "value": "Additional points and references"
+            },
+            "comment": {
+                "value": "**Readability.** As also mentioned by all four reviewers, I found this manuscript hard to follow (though I spent hours on it). Specifically, the motivation in the Introduction section is not logically clear (see, e.g., the \"reliability\" point above). More importantly, the methods section seems to be over complex (but not in the positive way). This makes it hard for me to know what exactly KGARevion performs at each step. This in turns hampers the reproducibility of the manuscript, as one cannot get enough technical details for fully replicating the approach after reading the manuscript (note that here by reproducibility I am more referring to the writing, not the source code). Therefore, it seems that the manuscript requires a thorough revision before it can be published in top venues like ICLR.\n\n**Computational cost and accessibility.** A final question I have is regarding the computational cost of the fine-tuning stage. Normally, this should be as least important to a methodology paper in academia. However, since KGARevion uses KG to deal with medical QA---both are very sensitive to knowledge recency---one may then desire that the approach could be easily updated to leverage the newest KG at the moment (imagine that if KGARevion uses a KG proposed before 2019, then how could it accurately reason about questions regarding COVID-19?). However, I noticed that the authors mentioned in their Appendix, 4 H100 GPUs were used for fine-tuning the LLMs. This then seems to make the update of KGARevion very expensive. I am wondering about the exact cost of the fine-tuning stage (e.g., total GPU hours, memory consumption), and would this be accessible by labs with only one or two consumer-level GPU(s) (e.g., RTX 4090). \n\nI would appreciate it if the authors could kindly address my concerns (though I know they would be busy with responding to the reviewers).\n\n[1] H. Nori et al., Capabilities of GPT-4 on Medical Challenge Problems, arXiv (2023).\n\n[2] D. Veen et al., Adapted large language models can outperform medical experts in clinical text summarization, Nat. Med. (2024).\n\n[3] J. Yang et al., Poisoning medical knowledge using large language models, Nat. Mac. Intell. (2024).\n\n[4] M. Polak and D. Morgan, Extracting accurate materials data from research papers with conversational language models and prompt engineering, Nat. Comm. (2024)."
+            }
+        },
+        {
+            "title": {
+                "value": "A Public Comment"
+            },
+            "comment": {
+                "value": "I have taken some time reading this manuscript as I am myself interested in AI4Healthcare. While I found certain aspects of this work to be valuable, I however had several concerns as listed below that I want to discuss with the authors.\n\n**Evaluation (data leakage).** After reading this manuscript I have the same concern as **reviewer jrR1**. To add to his/her comments, using a fine-tuned LLM to enhance reasoning, while intuitive, would pose significant concern to the fairness of the evaluation results on general medical benchmarks due to potential data leakage. While I understand that this is too big a question to be thoroughly addressed in a conference paper, the authors could have either $i)$ attempted to quantitatively measure the extent of the data leakage [1], $ii)$ more carefully designed the experiments to avoid this, or $iii)$ at least thoroughly discussed this as an important thread to validity of the results (though given the direct impact of these on the validity of the evaluation, this may not be sufficiently convincing) [2]. Yet it seems that these are not presented in the current manuscript. This makes it hard for me to interpret the results: whether the reported improvement by KGARevion is actually because of the its technical advancement, or has been simply benefited from the data leakage?\n\n**Reliability 1 (KG quality).** The authors criticized existing RAG-based approaches for being susceptible to the quality of retrieved information. However, KGARevion also heavily relies on an external KG to fine-tune the LLM, whose quality would affect the performance as well as reliability of the approach. This makes the point that the authors intend to argue seem questionable. Notably, there has been recent works showing that existing KG can be easily \"poisoned\" by factually incorrect information presented in the source data used for constructing it [3]. In light of this and the giant scale of existing KGs, it is highly possible that the KG used in KGARevion also contain various unreliable information. It remains unclear how prevalent are such errors and how would they effect the performance of KGARevion. I am interested in these questions as they are important for a system targeted at the health domain.\n\n**Reliability 2 (LLM for entity extraction).** Another concern I have regarding reliability is the generation step (Section 3.1). Here the authors used an LLM for extracting medical triplets from the questions. Considering the well-known hallucination issues of the LLMs, it is very likely that the LLM used here may \"invent\" some entities that do not actually exist in the original question. The current manuscript does not touch on this. Also, how could you ensure that the LLM can extract EVERY relevant triplet in the questions, and if not, how this will impact the performance of KGARevion? To compare, LLM-based entity extraction is the core of [4], and the authors have employed specific strategies (i.e., multi-round prompting with follow-up questions) to avoid hallucination.\n\n**Explainability & trustworthiness.** Another concern I have regarding KGARevion is the lack of explainability. Since the veracity checking of triplets in KGARevion heavily relies on LLMs and KG embeddings, which are both black-boxes themselves, it would make it hard to justify why a provided answer is favored by KGARevion. This issue is especially critical in the medical context given its high-stakes nature. From my experience talking to clinicians in the UK, they would prefer a system that could faithfully justify the rational behind a decision rather than a high-performance black-box that you never know how it makes decisions. In this aspect, I think more conventionally yet transparent computational fact-checking methods like the Knowledge Linker (KL) or KG-Miner may offer more desirable behaviors and could at least be discussed in the paper. I do not think SOTA performance is the only measure for the success of a computational approach in the medical domain. Given these, I am wondering whether the authors have considered graph topology-based methods like KL or KM. How would they perform with KGARevion? Is there any relevant experiments data? And, how did the authors balance between performance and explainability?"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the integration of factual knowledge with free text information into LLMs. It introduces KGAREVION, a medical Question Answering (QA) agent, which additionally fine-tunes a LLM on a knowledge base completion task to improve its performance on evaluating medical facts. For an input question the agent can perform three actions:\n 1. **Generate** relevant medical fact candidates \n 1. **Review** the generated fact candidates to check factual incorrect facts\n 1. **Revise** to add more facts and change the factual incorrect candidate from Review\nThe outputs of the last action are used as part of a prompt to generate the final answer. The agent is compared on multiple choice and open ended questions against several baselines. It is able to reach state of the art performance."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**Medical Application**\n\nThe paper study the application of an LLM-based agent to a complex and difficult domain, viz. medicine. I appreciate that the authors took up this challenge to make a relevant contribution. \n\n**Evaluation**\n\nThe presented approach is evaluated thoroughly. It covers a comparison against a large number of competitors on open-ended and multi-choice reasoning. It shows that the presented approach is able to reach state of the art performance and moves the bar.  Apart from this performance analysis the paper also offers an ablation study and sensitivity analyses."
+            },
+            "weaknesses": {
+                "value": "Complex approach: \n\nThe presented approach is complex and requires a lot of steps and technical components. It depends on a separate entity recognizer to map entities to UMLS, two LLMs performing different tasks (generation and revision, review), and a knowledge graph for fine-tuning. This reduces reusability, since the entire system would need to be replicated. Reducing all this into one LLM and dataset would make the contribution for accessible for others."
+            },
+            "questions": {
+                "value": "Did you consider using the facts and relations from UMLS for the KB completion task?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This article introduces KGARevion, an LLM which performs medical Q&A by verifying generated information (in the form of triplets) against the information in a knowledge graph (provided as knowledge graph embeddings). By doing so, it achieves competitive performance on several medical Q&A benchmarks. Additionally, the authors provide a new biomedical Q&A benchmark, which they call MedDDx. MedDDx leverages information from another Q&A dataset, but it is supplemented with several incorrect answers which are semantically similar to the correct answers.  KGARevion can be used with a variety of base LLMs and KGs, making it not only competitive but also versatile."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- **Figures:** the figures are nice for understanding the paper; in particular, figure 2 is great. \n\n- **Creative Benchmark:** the idea to create a benchmark with incorrect answers that are semantically similar to correct answers is very creative. In addition, separating questions into levels of difficulty is also quite clever. \n\n- **Reproducibility:** I commend the authors for providing code. Although I did not test it, it looks well documented and well written. \n\n- **Versatility:** the KGARevion approach seems versatile, able to be used with other base LLMs, KGs, and other domains in general."
+            },
+            "weaknesses": {
+                "value": "I have a few concerns about the scientific robustness and the presentation of this work: \n\n1. Firstly, my greatest concern regards the overlap between information in the knowledge graph(s) (KGs) used and the information used to create the benchmarks. Specifically, the authors designed their new QA benchmark, MedDDx, based upon the STaRK-Prime benchmark. **However, according to the corresponding STaRK-Prime paper (https://arxiv.org/abs/2404.13207), the biomedical QA from STaRK-Prime was built upon the PrimeKG, the exact KG which the authors used to fine-tune their approach, KGARevion.** Ultimately, this is not scientifically robust as the authors are providing their LLM with the same, structured data on which their benchmark was built. \n\n    I understand that the authors have also used other \"gold-standard\" benchmarks for comparison. However, there is also likely data leakage in some of these cases as well. For example, the PrimeKG is built from structured data derived from other sources, including the Disease Ontology (DO), the Gene Ontology (GO), UMLS, and DrugBank (Fig. 2, https://www.nature.com/articles/s41597-023-01960-3), all of which are also included in the creation of the BioASQ benchmark (https://pmc.ncbi.nlm.nih.gov/articles/PMC10042099/). Unfortunately, the other KG used within Section 4.4, ogb-bioKG, does not have any provenance information (https://github.com/snap-stanford/ogb/issues/111) but it was built by the same person (M. Zitnik) as PrimeKG, so it likely comes from similar sources. Ultimately, I would still avoid using obg-bioKG if the provenance can not be verified. \n\n    **I recommend that the authors research the data lineage of each of the benchmarks and KGs used. Perhaps they can present this as supplementary material. Then, I recommend that the authors only present the results in which there is no clear overlap between the structured data included within the KGs for fine-tuning and the benchmark datasets. The authors should omit all results where data leakage between the KGs and benchmarks is certain or likely.**\n\n\n\n2. Secondly, I found this paper generally difficult to follow. Specifically, I believe the study could be more clearly motivated within the introduction, and Section 3 (\"Approach\") could be more clearly explained. Below, I list some specific points for improvement: \n\n- Paragraph 1 and the first half of paragraph 2 of the introduction seem loosely connected to the rest of the motivation; I suggest cutting these paragraphs and skipping more directly to the points in paragraph 3. \n\n- Figure 1 is problematic for several reasons. First, it is presented in the middle of the introduction, which is an inappropriate place to present results. Secondly, it is presented with no experimental context. Finally, it is not clear whether the figure even supports the claims being made in the introduction. I suggest moving or removing this figure. \n\n- RAG systems are presented as less desirable alternatives due to a reliance upon the quality of the documents provided, but the authors acknowledge that KGs may also have incorrect or incomplete information. Therefore, the motivation for the work seems unclear. \n\n- Section 3.2 on the Review section is extremely difficult to read. I believe this could be made clearer through more structure within the subsection (sub-headings or numbered steps). Perhaps the textual structure could correspond to flagposts or landmarks within Figure 2, so that the reader can refer back and forth between the text and Figure 2 easily. \n\n- Although fine-tuning with a KG is an integral part of the methodology, PrimeKG is not mentioned anywhere within Section 3. Until I read the Supplementary materials, I had understood that the KG being used for fine-tuning was the set of triplets derived from the \"Generate\" action. The authors should make it clearer that the KG comes from another, external source."
+            },
+            "questions": {
+                "value": "1. page 3, Section 3: The authors give an example of a possible question and a set of possible answers. However, wouldn't this question warrant a yes/no response, rather than the set of answers provided? \n\n2. page 5: On which prediction task was TransE trained?  \n\n3. page 5: Why have the authors chosen TransE for the KG embeddings? \n\n4. page 5: Where does the description dictionary D(r) come from? I do not see this in the appendix, and there is no appendix section 8. \n\n5. page 6, section 3.3: How, specifically, does the Revise action \"adjust the triplets in F to include more knowledge\"? \n\n6. page 8, Fig. 3: What do the blue v. orange plots mean? The only y-axis label I see is accuracy, and I see no key for blue v. orange."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a novel knowledge graph-based prompting technique for question answering in the medical domain. The approach consiststs of four steps: (1) Given a question in natural language, an LLM is used to generate subject-predicate-object triples from the question. (2) The triples are checked by means of a knowledge graph. Triples that are not clearly wrong are kept. (3) Then an LLM is asked to revise the triples. (4) Finally, the question is answered by means of an LLM and the revised triples."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper tackles an important problem: question answering in the medical domain\n- Original, novel question answering architecture: (1) generate triples, (2) review triples, (3) revise triples, (4) answer question\n- Strong evaluation: multiple datasets, evaluation depending on question complexity, and ablation study\n- Clarity: high-quality figures that help understanding"
+            },
+            "weaknesses": {
+                "value": "- Section 3.2 \"fine-tuning stage\" I find this part rather hard to understand. Figure 2b definitely helps, but it might be good to clarify this part even further by providing an example.\n- Section 4.4: It suprises me that the results barely depend on the knowledge graph. I am wondering whether the knowledge graph is required at all then. What do the results look like for a knowledge graph that is not specialized to medicine (e.g., Freebase15k-237)? If the results for Freebase15k-237 are almost the same as for PrimeKG, then the KG would be irrelevant.\n- Related work on fact-checking seems to be missing. \n\nCiampaglia, Giovanni Luca, Prashant Shiralkar, Luis M. Rocha, Johan Bollen, Filippo Menczer, and Alessandro Flammini. \"Computational fact checking from knowledge networks.\" PloS one 10, no. 6 (2015): e0128193.\n\nShi, Baoxu, and Tim Weninger. \"Discriminative predicate path mining for fact checking in knowledge graphs.\" Knowledge-based systems 104 (2016): 123-133."
+            },
+            "questions": {
+                "value": "- Can you give an example for the \"fine-tuning stage\" in Section 3.2?\n- Section 3.2 \"inference stage\": How often does each case occur (triple removed vs triple kept) for the given dataset?\n- Can you run your question answering approach with a knowledge graph that is mostly unrelated to the questions (e.g., Freebase15k-237)? Do the results get significantly worse or do they stay approximately the same?\n- In how far does each component of the approach handle and support multi-hop paths in knowledge graphs? It seems, the generate and revise steps do not support paths. The review step might support paths indirectly via KG embeddings.\n- How does the review phase of the approach compare to fact-checking approaches?\n- The approach seems rather general. Wouldn't it also work on other domains besides medicine?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces KGAREVION, a novel approach that combines the non-codified knowledge of LLMs with the structured knowledge  in KGs to tackle the complexities of knowledge-intensive medical question answering. The method involves extracting relevant triples, using a fine-tuned LLM to verify the correctness of these triples, revising incorrect triples, and generating answers. This approach effectively addresses the challenges in the medical domain that require analogies and the integration of multi-source evidence, demonstrating improved performance across multiple datasets."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "**Originality**: This paper proposes a new KG-based agent KGAREVION, which can handle complex and knowledge-intensive question answering tasks in the medical field. This work is original because it combines multi-source medical knowledge such as LLMs and KG, and the integration of revise into the processing flow is innovative, especially when dealing with complex problems that require precise domain knowledge.\n\n**Quality**: The quality of the paper is reliable, with each step in the KGAREVION process clearly described and supported by appropriate methodologies. The authors also validate the model's effectiveness through experiments on multiple datasets, including new and challenging ones.\n\n**Clarity**: The paper demonstrates a high level of clarity in presenting the KGAREVION model and its experimental results. The methodology section provides a clear description of the process, with well-organized main diagrams. Additionally, the tables and figures illustrating the experimental results are easy to understand.\n\n**Significance**: This research holds significant importance in the field of medical question answering. It offers an effective tool that integrates data from multiple sources, such as LLMs and KGs, thereby enhancing the ability to accurately address complex medical questions."
+            },
+            "weaknesses": {
+                "value": "In the description of the methodology, certain parts lack coherence and completeness. For instance, the revise and answer stages do not specify the exact processing methods used."
+            },
+            "questions": {
+                "value": "**1.** What model is used for the revise process? A more detailed description should be provided. If an unfine-tuned LLM is used, does it have the capability to correct erroneous triples?\n\n**2.** How are triples involving entities not included in the knowledge graph (Incomplete Knowledge) handled? Are they further processed or directly accepted as credible knowledge?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

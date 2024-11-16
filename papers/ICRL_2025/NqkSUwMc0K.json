@@ -1,0 +1,213 @@
+{
+    "id": "NqkSUwMc0K",
+    "title": "Private Blind Model Averaging \u2013 Distributed, Non-interactive, and Convergent",
+    "abstract": "Scalable distributed differentially private learning would benefit notably from reduced communication and synchronization overhead. The current best methods, based on gradient averaging, inherently require many synchronization rounds. In this work, we analyze blind model averaging for convex and smooth empirical risk minimization (ERM): each user first locally finishes training a model and then submits the model for secure averaging without any client-side online synchronization. This setting lends itself not only to data point-level privacy but also to flexible user-level privacy, where the combined impact of the user\u2019s trained model does not depend on the number of data points used for training.\n\nIn detail, we analyze the utility side of blind model averaging for support vector machines (SVMs) and the inherently multi-class Softmax regression (SoftmaxReg). On the theory side, we use strong duality to show for SVMs that blind model averaging converges toward centralized training performance if the task is robust against L2-regularization, i.e. if increasing the regularization weight does not destroy utility. Furthermore, we provide theoretical and experimental evidence that blind averaged Softmax Regression works well: we prove strong convexity of the dual problem by proving smoothness of the primal problem. Using this result, we also conclude the first output perturbation bounds for Softmax regression. On the experimental side, we support our theoretical SVM convergence. Furthermore, we observe hints of an even more fine-granular connection between good utility of model averaging and mid-range regularization weights which lead to compelling utility-privacy-tradeoffs for SVM and Softmax regression on 3 datasets (CIFAR-10, CIFAR-100, and federated EMNIST embeddings). We additionally provide ablation for an artificially extreme non-IID scenario.",
+    "keywords": [
+        "differential privacy",
+        "scalable distributed learning",
+        "privacy-preserving machine learning",
+        "privacy",
+        "federated learning",
+        "non-interactivity"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "Blind model averaging is, in contrast to gradient averaging, non-interactive, maintains a competitive utility-privacy tradeoff and converges for high-regularized SVMs; we also present the first output sensitivity result for Softmax Regression",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=NqkSUwMc0K",
+    "pdf_link": "https://openreview.net/pdf?id=NqkSUwMc0K",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper considers *blind model averaging* for differentially private federated learning. Here, each \"user\" holds data for many individuals, whose privacy we wish to protect. Each user trains a model locally with privacy. These models are averaged to produce a final model."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "This is a topic of practical and theoretical interest. I am not deeply acquainted with this literature, but to the best of my knowledge the questions considered in this submission are not fully answered by prior work."
+            },
+            "weaknesses": {
+                "value": "I found this paper hard to read and do not believe it meets the necessary level of rigor. \n\nI was often confused by the organization and informal discussion. Here are a couple issues I observed.\n- Figure 1 lists \"Phase I\" as \"local ERM training\" for SVM or softmaxReg and \"Phase II\" as the averaging, but Section 4 is \"PHASE I: DIFFERENTIALLY PRIVATE SOFTMAXREG\" and doesn't include any analysis of SVMs. Then Section 5, titled \"PHASE II: NON-INTERACTIVE BLIND MODEL AVERAGING (BLINDAVG)\", only appears to address SVMs. Then Section 6 is \"SYSTEM DESIGN OF BLINDAVG\", which I would think also describes Phase II.\n- Some crucial concepts appear undefined, like \"honest\" users or the version of SGD used.\n- Definition 3.1 is where we define the \"configuration,\" ie learning setting, but it has a number of strange features. It introduces the notation $I$ for the identity matrix and $K_{\\mathrm{comp}}$ for \"the number of compositions,\" but neither are used in the notation $\\zeta(\\cdots)$ that denotes the configuration. \"$i$\" is used, but that confuses me, since it appears to just index into the set $\\lbrace 1,\\ldots, w\\rbrace$. \"$n$\" also appears but is undefined.\n- Theorem 3.2 mentions parameters $c$ and $R$ in the hypothesis but not in the conclusion; these are only tied to $\\Lambda, L,$ and $\\beta$ later in the text. \n\nOn a technical level, I will focus on Theorem 5.2, which concerns the convergence of an average of SVMs, each trained on a subset of the data, to the \"global\" model trained on all the data. Here are a few issues around this.\n1. The theorem and proof don't address the noise for privacy. I don't understand how these results relate to claims about the privately trained model.\n1. The proof establishes that, for a sufficiently large $\\ell_2$ penalty, the average (over the best local models) equals the best global model (ie, over all data). It's not clear why this is interesting: we can obtain an approximate version of this claim \"at a glance\" by noting that sufficiently high regularization will push all weights to zero. It's not clear why we should care about such a regime.\n2. The theorem mentions \"projected subgradient descent using weighted averaging,\" but it doesn't show up in the algorithms and is only mentioned, but not described, in the proof. Algorithm 3 uses projected SGD but doesn't specify what that entails.\n4. I'm confused by what it means to take the average of the models, even in Definition 3.1: I don't understand the \"type\" of $T$, so it's not clear why $\\sum_i T(D^{(i)})$ is well-defined. In the proof of Corollary K.2 it looks like we sum models in the dual space, but Algs 2 and 3 look to me like we're working in the weight space. I think this distinction matters when we talk about adding noise.\n5. The theorem relies on Lemma 5.1, which (in its proof) assumes that the datasets are disjoint, i.e., no two data points are repeated across users. I don't see why this is a justified assumption, as differential privacy needs to hold for worst-case datasets.\n1. Two sections in the appendix are titled \"Proof of Thm 5.2\", J.5.2 and K.5.2, only the latter actually contains a proof. \n\nThis submission would need substantial revisions before I would be comfortable accepting it."
+            },
+            "questions": {
+                "value": "No questions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper tackles the reduction of communication and synchronization overhead in distributed, private learning.\nFocusing on differentially private (DP) empirical risk minimization for convex and smooth functions, the authors analyze a private blind model averaging technique with provable utility.\nBlind model averaging is a non-interactive technique where each user only sends a single message, and a minimal amount of communication is therefore used.\nThe paper provides bounds and empirical results for SVMs and softmax regressions.\nSupported by their theoretical findings, the authors observe that blindly averaged softmax regression outperforms blindly averaged SVMs when dealing with a large number of classes, while blindly averaged SVMs outperform gradient averaging (such as federated learning) when dealing with a large number of users.\nThe authors therefore conclude that, under their assumptions, blind model averaging can provide a good privacy-utility trade-off."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper tackles a relevant problem, as distributed learning is essential in privacy-preserving ML.\nThe overall separation of the paper's content and structure in two \"phases\", that is, the individual training and the averaging in the models, is conveniently presented and helps readability.\nThe proof of differential privacy for softmax aggregation trained with SGD follows from the proof that the objective function is strongly convex, smooth, and Lipschitz.\nWhile details were not checked, the derivation seems sound and convincing.\nThe experimental evaluation supports the theoretical findings and is reasonably extensive.\nI think this is overall a good manuscript which, if improved in presentation/form (see weaknesses), can be a very well rounded contribution ."
+            },
+            "weaknesses": {
+                "value": "**Structure**\n\nWhile the derivation of the results is quite streamlined, the many aspects of the organization of the paper should be improved.\nSpecifically, the introduction presents the overview of the method using symbols which have not been defined yet.\nWhile I understand the usefulness of describing the approach early on, I feel like this may be confusing.\nOn a similar note, the \"main result\" is presented in Figure 2, in the introduction.\nSimilarly, a summary of the comparison of the proposed approach against related work is part of Section 2 (related work).\nIn this case as well, I feel like moving the discussion of results to the experiments section would benefit readability.\nI think that moving the related work section to the bottom of the manuscript could also be a possibility.\nThe subdivision of the work in several named paragraphs (that is, paragraphs which begin with bold text) does not help readability, in my opinion.\nMaybe using subsections for this could help to visually and conceptually separate the different parts of the contribution.\nBold text is also used in figures where, I feel, it is not necessary to highlight several lines of text.\n\n\n**Presentation of empirical results**\n\nFollowing up on my previous comment, empirical results are difficult to parse.\nFirstly, the plots are very small with very tiny labels, across the whole manuscript.\nSecondly, the experimental results section discusses 4 research questions which have, however, not clearly been introduced before.\n\n\n**Imprecise language**\n\nThe terminology used is at times imprecise (e.g., \"spread\" the dataset in line 103, of \"perfectly converge\" in line 481), or not introduced (e.g., \"local DP\" and \"group privacy\" are never introduced as concepts).\nLocal DP and group privacy should, in my opinion, definitely be at least informally introduced in the main body.\nThe results in figure 6 are, in this sense, pretty much impossible to parse by referencing the main text only.\nIn fact (see for instance Section 6), the concepts \"local DP\" and \"privacy with local aggregator\" are not compatible but can be easily confused.\n\n\n**Limitations and discussion** \n\nI think the limitations and discussion section should be improved.\nWhile I understand that page limits may be tricky, I feel like the limitations of the contribution are unclear from the main body of the text and at least a few lines should be dedicated to it.\nA more thorough discussion should also mention possibile improvements and future work directions.\n\n\n\n**Minor points**\n\n* line 27 \"we also conclude the first\" -> \"we also derive\", maybe?\n* line 146 (and others) \"noised\" -> \"noisy\"\n* lines 74 and 81, are \"phase I\" and \"phase II\" inverted?"
+            },
+            "questions": {
+                "value": "* Can you make the connection between group-DP and local DP clearer (i.e., expand on the discussion for figure 6)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes and analyzes a privacy-preserving model averaging technique based on output perturbation. Privacy guarantees are established for Support Vector Machines and Softmax Regression. Empirical results are also presented."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The proposed method requires only one round of model aggregation, due to the use of output perturbation. The privacy analysis is provided and seems to be correct."
+            },
+            "weaknesses": {
+                "value": "(1) The proposed method has limited applicability. For complex models, the sensitivity of model parameters is often unbounded.\n\n(2) The advantages of using output perturbation over other private optimization techniques, such as DP-SGD or objective perturbation, for optimizing local models are not clear to me.\n\n(3) Finally, the paper's organization and notation are somewhat disorganized. \n> For instance \n> - 1. In the Contributions section, the order of Phase 1 and Phase 2 is reversed. \n> - 2. Some notations are unclear. For example, on line 343, the meaning of \"_\" is ambiguous. Additionally, the definition of the inner product between functions on line 330 should be formally stated.\n> - 3. Definition D.8 is not well-articulated \n> - 4. What is the meaning of ADP in Lemma K.6?"
+            },
+            "questions": {
+                "value": "(1) If the primary contribution is reducing communication time, could the authors elaborate on the rationale for using output perturbation to privately train local models? How does output perturbation compare to other methods, such as objective perturbation or NoisySGD, for training local models?\n\n(2) Can the proposed method be applied to a broader range of models, beyond SVMs and Softmax classifiers?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a method called Blind Model Averaging (BlindAvg) to improve the scalability and privacy of distributed machine learning, particularly for differentially private settings. Unlike traditional gradient-averaging methods, BlindAvg allows each client to train a model independently and submit it for secure averaging without any online synchronization. This approach is shown to work effectively for convex, smooth empirical risk minimization (ERM) tasks like Support Vector Machines (SVM) and Softmax regression."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Scalability and Efficiency: By proposing a non-interactive learning framework, the paper addresses the high communication and synchronization costs that typically come with FL. \n\nEnhanced Privacy Guarantees: The BlindAvg approach integrates DP at both the data point and user levels,"
+            },
+            "weaknesses": {
+                "value": "1) Limited Applicability to Non-Convex Models: The theoretical convergence guarantees provided in the paper apply primarily to convex models like SVMs and smooth ERM-based models. The lack of results for non-convex models, such as deep neural networks, restricts BlindAvg\u2019s applicability in modern machine learning. \n\n2) **Fatal Presentation Problem**: The paper suffers from a significant presentation issue, as numerous variables are introduced and used without clear, standalone definitions, which considerably hinders readability. For example, variables such as $d$ (dimensionality of the input) and $c$ (input clipping bound) in line #240 are used without clear definitions, making it challenging to understand their roles in the algorithms and theoretical analysis. Beyond these examples, many other variables/names/functions/algorithms lack clarity, compounding the difficulty. This lack of clarity in variable presentation is one of the worst I\u2019ve encountered, severely impacting the paper\u2019s accessibility. \n\n\nPresentation: \n1) You should define all variables before use in your algorithm. Variable $x$ was not defined in algorithm 1. You only define $D={(x_j, y_j)}$ in the algorithm 1. If you want to loop through every $x_j$, you must specify the loop in the algorithm. Otherwise, it is ambiguous and unclear. \n2) Algorithm 2. \"run the client code of secure summation...\" and \"Run the server protocol of $\\pi$\" are unclear illustrations. I can see your illustration in #378-#381 and appendix D.5. However, who sent what information to whom? Who did what calculation on which variables? e.g. you can write $F(n^(i)/w\\cdot f_{priv}_1, n^(i)/w\\cdot f_{priv}_1)$ for secure summation. and \"send $f$ to server\", \"receive $f$ from client\". Even though you want to hide the detail of secure summation in the appendix, a certain level of abstraction should be provided in the algorithm, instead of a plain unclear illustration. \n3) Figure 5. why there is \"?\" after \"distributed\"? I can only recognize it as a typo. Please use clear expressions in the figure, instead of indication. Besides, in this figure your global model and SVM-SGD both use a black solid line, which is confusing. Please be professional. \n\nMinor: \n1) Gauss mechanism -> **Gaussian** mechanism. \n2) #224, for m **in** 1...M."
+            },
+            "questions": {
+                "value": "N/A"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This papers addresses the problem of privacy protection in blind model averaging for convex and smooth empirical risk minimization. The performance of blind model averaging is discussed in problems of SVM and Softmax regression. The privacy approach is differential privacy."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The discussed problem of privacy protection is interesting and important."
+            },
+            "weaknesses": {
+                "value": "1. The results are limited to convex and smooth objective functions. Given that many machine learning problems are essentially nonconvex and nonsmooth, it would be important to relax this assumption.\n\n2. The applicability of the approach also seems limited. The paper only discusses SVM and Softmax regression applications. It will be interesting to know if the approach also applies to other applications, particularly deep learning applications.  \n\n3. The design of differential privacy seems straightforward. It is unclear if there are any challenges."
+            },
+            "questions": {
+                "value": "see above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

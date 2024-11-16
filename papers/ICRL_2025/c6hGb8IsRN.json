@@ -1,0 +1,175 @@
+{
+    "id": "c6hGb8IsRN",
+    "title": "Fed-REACT: Federated Representation Learning for Heterogeneous Time Series Data",
+    "abstract": "Motivated by high resource costs and privacy concerns that characterize centralized machine learning, federated learning (FL) emerged as an efficient alternative that allows the participating clients to collaboratively train global model while keeping their data local.\nIn practice, distributions of clients' data vary over time and from one client to another, creating heterogeneous conditions that deteriorate performance of conventional FL algorithms. In this work, we study an FL framework where clients train on heterogeneous time series data and introduce to these settings Fed-REACT, a novel federated learning method leveraging representation learning and evolutionary clustering. The algorithm consists of two stages: (1) in the first stage, the clients learn a model that extracts meaningful features from local time series data; (2) in the second stage, the server adaptively groups clients into clusters and coordinated cluster-wise learning of task (i.e., post-representation) models for local downstream tasks, e.g., classification or regression. We demonstrated high accuracy and robustness of the proposed algorithm in experiments on real-world time series datasets, and provided theoretical analysis of its performance.",
+    "keywords": [
+        "Federated learning",
+        "representation learning",
+        "time series data"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "We study an FL framework where clients train on heterogeneous time series data and introduce Fed-REACT, a novel federated learning method leveraging representation learning and evolutionary clustering for time series data.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=c6hGb8IsRN",
+    "pdf_link": "https://openreview.net/pdf?id=c6hGb8IsRN",
+    "comments": [
+        {
+            "title": {
+                "value": "Reply to Reviewer bjq8"
+            },
+            "comment": {
+                "value": "We thank the reviewer for the valuable feedback. Please see our responses below:\n\nWeakness 1.1: Contrastive Loss Definition \u2014 The contrastive loss defined in (1) is used to develop Phase 1 of the Fed-REACT algorithm and is applied in our experiments. In the theoretical analysis (Section 3), we use a simplified version of the contrastive loss (1), focusing on positive pairs to make the analysis more tractable, as done in previous representation learning literature (e.g., $\\textit{Does learning from decentralized non-iid unlabeled data benefit from self-supervision?}$). This purpose of the analysis is to provide theoretical insights into time-series representation learning in a federated learning setting.\n\nWeakness 1.2: Notation Consistency \u2014 Notations vary throughout the manuscript for clarity: $\\theta$ represents the feature extractor model parameters, while $\\theta_{task}$ represents task model parameters. In Phase 2, $W_t$, $\\psi_t$, and $N_t$ are used for evolutionary clustering in task model updates. Here, $W_t$ denotes the similarity matrix of task model parameters, with each element representing the cosine similarity of parameters from two clients, as specified in lines 177\u2013178.\n\nWeakness 2: Purpose of Section 3 \u2014 This work addresses federated learning on heterogeneous time-series data, leveraging self-supervised learning to capture meaningful temporal features. Section 3 aims to offer theoretical insights into federated self-supervised learning on time-series data. Specifically, we analyze a time-varying local objective function, $f_{t, i}$, and adopt time-smoothed gradient descent for time-series settings. We show that the regret converges to a small error, supporting the feasibility of federated self-supervised learning on time-series data.\n\nWeakness 3: Performance with Large Client Numbers \u2014 For scenarios with 100 clients, in Figure 3, the Fed-REACT algorithm achieves the highest Rand Score = 1 within just three communication rounds, converging to the true clustering membership. In contrast, baseline methods fail to identify the true clusters, with Rand Scores fluctuating with average below 0.8. Additionally, Table 3 shows that baseline methods (IFCA and FLSC) fall short of Fed-REACT across one or multiple distribution parameter values, $\\beta$, demonstrating Fed-REACT\u2019s efficacy in federated self-supervised learning on heterogeneous time-series data. The Phase 2 design in Fed-REACT further improves accuracy, achieving consistent results across all $\\beta$ values.\n\nWeakness 4: Limited Novelty \u2014 To the best of our knowledge, this work is the first to address the novel problem of federated self-supervised learning on heterogeneous time-series data. For this problem, we specifically propose Fed-REACT that contains the federated self-supervised learning phase and the task model learning phase. The federated self-supervised learning framework has not been explored in heterogeneous time series data. The evolutionary clustering, has not been explored in the federated learning setting, either, since most work does not consider the clients\u2019 models evolve over time. Phase 2\u2019s adaptive forgetting factor further enhances evolutionary clustering, distinguishing Fed-REACT from simple combinations of existing methods.\n\nWeakness 5: Specification to Time-Series Data \u2014 Does $\\textit{any type of data}$ refer to static data? Time-series data, with its temporal dimension, is a generalization of static data and requires specific consideration. Most FL algorithms focus on static data and do not extend naturally to time-series data. Fed-REACT is specifically designed for time-series data and can also handle static data as a special case by excluding the temporal dimension.\n\nQuestion 1: Specification to Time-Series Data \u2014 Fed-REACT is tailored for federated learning on heterogeneous time-series data, with four unique aspects:\n\n1.\tPhase 1 leverages contrastive learning, with positive/negative pairs selected within time-series trajectories.\n\n2.\tPhase 2 applies evolutionary clustering and adaptive forgetting, both critical for evolving local models in time-series contexts.\n\n3.\tClients collect streaming time-series data for input into local models, resulting in a time-varying objective function.\n\n4.\tThe optimization adopts time-smoothed gradient descent to address the time-varying objective function.\n\nThank you for the thoughtful feedback. We hope these responses clarify our approach and contributions."
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors proposed a method Fed-REACT to tackle the time-series analysis in federated learning. They adopt self-supervised training in the first stage to learn useful representations. In the second stage, they use evolutionary clustering to cluster clients for local downstream tasks. Extensive experiments are conducted to evaluate the performance of the proposed mechanism."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. Overall, the paper is well-written with a clear presentation. \n2. Investigating time-series analysis in FL is a significant problem and direction.\n3. Extensive experiments have been conducted to evaluate the performance of the proposed framework."
+            },
+            "weaknesses": {
+                "value": "1. The explanation of motivation in the introduction is unclear. The reason for applying clustering and self-supervised learning to investigate time-series analysis in FL could be clarified.\n2. The novelty of Weighted Averaging with Forgetting is limited. It is quite common to do clustering or aggregation by clients\u2019 current and historical weights.\n3. The compared baselines are too old. Some SOTA works about time-series FL or clustered FL could be considered.\n4. As a heuristic algorithm, what is the efficiency and cost performance of evolutionary clustering?\n5. The author could consider comparing with SOTA time series analysis models, such as Time-LLM, PatchTST, TimesNet, etc.\n6. Are the experimental results repeated multiple times? Are there any standard deviation results shown?"
+            },
+            "questions": {
+                "value": "Please refer to weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This study presents Fed-REACT, a federated learning method tailored for heterogeneous time series data, integrating representation learning and evolutionary clustering. The method operates in two stages: first, clients employ self-supervised learning to extract features from their local data; second, the server uses evolutionary clustering with an adaptive forgetting factor to cluster clients based on their features. Clients from the same cluster collaborate in order to learn the parameters of a downstream task. \n\nThe paper provides a theoretical analysis for self-supervised feature extraction, when a rank one approximation of  the covariance matrix is employed. \n\nThe paper provides numerical simulations demonstrating the effectiveness of the proposed approach, in particular in settings with a small number of clients."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "* The paper provides a reasonable number of numerical simulations in order to evaluate the performance of the proposed approach. \n* The paper does not have any major errors, and most of the claims are correct."
+            },
+            "weaknesses": {
+                "value": "* The paper is overall hard to follow due to the confusion notation. For example, (1) introduces the contrastive loss that would be used in the first phase of feature extraction. However, the theoretical analysis does not make any reference to (1); instead it introduces an other objective function, $f_{\\text{SSL}}$. An other example of inconsistent notation, is the introduction of $\\phi_t$, $W_t$, and $N_t$, which are not explicitly connected to the parameter  of the problem $\\theta$ and $\\theta_{\\text{task}}$. \n* I do not really see how Section 3 fits in the paper and how it serves its goal. This section proves the convergence of federated projected gradient descent under a restrictive set of assumptions to a neighborhood of a stationary point. \n* The numerical simulations show the advantage of the proposed method when the number of clients is small, but the advantage of this method is small when the number of clients is relatively large (>50).\n* The paper is principally proposing to learn a feature extractor in a federated self-supervised fashion. Afterwards, evolutionary clustering is used to learn one model by cluster. Both these techniques are already known, therefore the novelty of the paper is limited.\n* The proposed approach is claimed to be tailored for time series, but it could be used for any type of data."
+            },
+            "questions": {
+                "value": "Can you please explain how is the proposed approach specific to time series?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper investigates the federated representation learning problem for time series data. A new method based on evolutionary clustering is proposed to handle the problem. Theoretical analysis is given to discuss the properties of the proposed method. Experiments are conducted to show the effectiveness of the proposed method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "[1] Sufficient theoretical analysis is provided, which provides a solid guarantee of the usefulness of the proposed method. \n\n[2] The idea of balancing the contribution of structure and feature information makes sense, especially when the missing situation is unknown or uncertain."
+            },
+            "weaknesses": {
+                "value": "[1] Experiments are carried out on only two datasets. More datasets should be considered to lead to comprehensive performance results.\n\n[2] There should be more discussion on the unique challenges in time series representation learning and how existing federated learning/federated representation learning methods fail to perform well. \n\n[3] Usually, representation learning aims to learn high-quality representations that can be utilized in various downstream tasks. However, this paper only discusses the optimization for the SVM classifier, which is not aligned with the goal of representation learning. \n\n[4] More up-to-date baselines should be compared with the proposed method in the experimental part."
+            },
+            "questions": {
+                "value": "N/A"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a novel federated learning framework designed to address the challenges of heterogeneous time series data across multiple clients. The proposed method, Fed-REACT, consists of a two-stage learning process: the first stage focuses on self-supervised learning to extract meaningful features from local time series data, while the second stage employs evolutionary clustering to adaptively group clients and train task models that reflect data heterogeneity. The authors present an adaptive evolutionary clustering approach that enhances stability by incorporating both current and historical model weights. Through theoretical analysis and experimental validation on given datasets, the paper demonstrates that Fed-REACT improves model performance compared to existing methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is well-structured and well-written, making it easy to understand.\n2. The paper provides a novel approach that combines representation learning and evolutionary clustering.\n3. The paper also gives a theoretical analysis of the proposed method, including convergence properties and a global regret function.\n4. The authors include a thorough experimental analysis on the given datasets demonstrating the effectiveness of Fed-REACT."
+            },
+            "weaknesses": {
+                "value": "1. While the paper discusses the necessity of federated learning in non-IID settings, it does not include detailed experimental results. Only results on one dataset do not help generalize the performance of the method over non-iid.\n2. A detailed privacy analysis of the proposed method is missing which is very important in a federated setting.\n3. A more thorough literature review would be nice, including state-of-the-art methods in time series federated learning"
+            },
+            "questions": {
+                "value": "1. How does the proposed method perform in non-IID data distributions among various clients (include more datasets)?\n2. Can you provide a detailed privacy analysis of the proposed methods, and how do you plan to address this important aspect in the context of federated learning?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

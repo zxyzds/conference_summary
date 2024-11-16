@@ -1,0 +1,188 @@
+{
+    "id": "KkVV561IMb",
+    "title": "Deep Sparse Latent Feature Models for Knowledge Graph Completion",
+    "abstract": "Recent progress in knowledge graph completion (KGC) has focused on text-based approaches to address the challenges of large-scale knowledge graphs (KGs). Despite their achievements, these methods often overlook the intricate interconnections between entities, a key aspect of the underlying topological structure of a KG. Stochastic blockmodels (SBMs), particularly the latent feature relational model (LFRM), offer robust probabilistic frameworks that can dynamically capture latent community structures and enhance link prediction. In this paper, we introduce a novel framework of sparse latent feature models for KGC, optimized through a deep variational autoencoder (VAE). Our approach not only effectively completes missing triples but also provides clear interpretability of the latent structures, leveraging textual information. Comprehensive experiments on the WN18RR, FB15k-237, and Wikidata5M datasets show that our method significantly improves performance by revealing latent communities and producing interpretable representations.",
+    "keywords": [
+        "Knowledge Graph Completion (KGC)",
+        "Stochastic Blockmodels (SBMs)",
+        "Variational Autoencoder (VAE)"
+    ],
+    "primary_area": "learning on graphs and other geometries & topologies",
+    "TLDR": "A probabilistic generative model based on SBMs enhances KGC performance and interpretability.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-15",
+    "forum_link": "https://openreview.net/forum?id=KkVV561IMb",
+    "pdf_link": "https://openreview.net/pdf?id=KkVV561IMb",
+    "comments": [
+        {
+            "comment": {
+                "value": "We sincerely thank the reviewer for the thoughtful and constructive feedback, which has helped us improve the clarity, rigor, and quality of our manuscript. Below, we provide point-by-point responses to the comments and outline the corresponding changes made to the paper.\n\n## Weaknesses 1\n> The paper is not organized clearly, which is not friendly for understanding. For example, there is a lack of preliminary details for how to model MB and other module in 3.1 GENERATIVE MODEL.\n\n### Response\nWe thank the reviewer for highlighting the issues regarding organization and clarity.\n\nFirst of all, we would like to clarify the modeling described in Section 3.1 GENERATIVE MODEL, where we present a **probabilistic framework**. The \u201cmodules\u201d described in this section correspond to probabilistic distributions assumed for the variables. For instance, Equation 4,  $w_{hr} \\sim \\mathcal{N}(w_{hr} | \\mathbf{0}, \\sigma^2 \\mathbf{I})$ means that $w_{hr}$ follows a Gaussian distribution. Similarly, the \"$\\mathcal{MB}$ module\" refers to a multivariate Bernoulli distribution, as defined in the Preliminary section (Equation 1)\n\nWe have structured the modeling and implementation details as follows:\n-  **In Section 3.1**, we describe the **probabilistic distributions for latent variables**, such as $p(z_{hr}) and p(w_{hr})$, as well as for observed triples $A_{hr, t}$ in Equation 7.\n- **In Section 3.2**, we explain how to **learn the posterior distributions** of the latent variables $\\mathcal{H}$ (Equation 11 to 15) using a VAE encoder (Equations 11\u201315)\n- **In Section 3.3**, we describe the decoding process, which **uses the latent variables to complete missing triples**.\n\nThus, Section 3.1 introduces the core probabilistic modeling, while Sections 3.2 and 3.3 detail the implementation steps for encoding and decoding. We hope this clarifies the structure and flow of the manuscript.\n\n## Weaknesses 2\n> Figure 2 lacks of explanation, \\textit{e.g.,} how the modules work together and match the equations in the main paper. The paper lacks the necessary reproduction file for the results.\n\n### Response\nWe agree that Figure 2 would benefit from more detailed explanations. We have **updated the caption of Figure 2** to include a comprehensive description of how the modules work together.\n\nWe have prepared a detailed supplementary material file, including all the necessary reproduction files, such as datasets, code, and instructions for running the experiments.\n\n## Weaknesses 3\n> The paper lacks the analysis of time complexity as well as space complexity, which is necessary to study the efficiency of the model.\n\n### Response\nWe appreciate the reviewer\u2019s emphasis on the importance of time andspace complexity in model evaluation. In the revised manuscript, we have made the following enhancements to address this concern:\n\n1. We provide a detailed **analysis of the time and space complexity** involved in computing the ELBO (Lines 281, Page 6 and Lines 796, Page 15).\n\n2. We have also added a **new table (Table 7, Line 930, Page 18) comparing the parameter count and training time** of our method against the baseline model, SimKGC. The results indicate that introducing SBM and VAE **only increases the parameter count by 1.4M (0.8%)**. While the ELBO training requires **additional epochs to converge**, resulting in a slight increase in total training time, we find this increase to be **within an managable range**.\n\n## Weaknesses 4\n> The authors do not compare the model with other SOTA KGE methods, e.g.,[1][2][3]. The performance of, MRR in FB15K-237 is 0.36 while that of the proposed paper is 0.355. In this way, the performance of the proposed paper is not significant and the authors may better give a reasonable explanation.\n\n### Response\nThank you for pointing out the need for comparison with SOTA methods.\n\n1. **Baseline Inclusion**. In the revised manuscript, we **have included the SOTA results from KRACL [3]**  for its best performance on WN18RR, as shown in Table 1. However, we would like to clarify that the **original submission already included several SOTA KGE methods, such as HittER and N-Former**, which achieve strong performance on FB15k-237, with MRR scores of 37.3 and 37.2, respectively. The inclusion of the additional baseline **does not alter the overall comparative assessment presented in our paper**.\n\n2. **Performance on FB15k-237**. Regarding the relatively poorer performance on FB15k-237, we have dedicated substantial effort to **analyzing this issue in the original submission**, covering the discussion in detail **from Section 5.2 (MAIN RESULTS) to Section 6 (ANALYSIS)**. In summary, the dense connections and highly correlated relations in FB15k-237 lead to **fewer distinguishable clustering patterns**, making it challenging for our model to extract cluster-based features. Despite this, our method demonstrates **significant improvements on WN18RR and Wikidata5M and achieves a 2-3 point gain over text-based methods on FB15k-237**."
+            }
+        },
+        {
+            "title": {
+                "value": "Clarifying Model Motivation, Comparisons with GNN and TAG Models, and Baseline Selection for Text-Based KGC"
+            },
+            "comment": {
+                "value": "Thank you for the reviewer\u2019s thoughtful feedback and valuable suggestions regarding motivation, clarity, and baseline selection. Below, we address each of the reviewer\u2019s comments individually, including references to the specific revisions made in the manuscript.\n\n## Response to Weakness 1\nThank you for your insightful feedback regarding the motivation and positioning of our proposed method relative to GNN-based and TAG models. We would like to provide a detailed comparison between our method and each of the mentioned type of models.\n\n1. Regarding the difference between GNN-based methods and our approach in integrating complex connectivity information among nodes, our approach consider **not only the features of each triple itself** when determining relationships between entities, **but also the underlying clustering information**. As illustrated in Figure 1, if there is a strong connectivity between two communities, it is likely that nodes in these communities may also share certain relationships.\n\n- GNN-based methods typically assume that **nodes with similar neighborhoods will have similar representations for learning node embeddings**. This **contrasts sharply** with our approach, which addresses KGC through **relationships between clusters**. In addition, SEA-KGC integrates pretrained language models with KGE methods to capture semantic structure **without relying on GNNs**. Studies [1][2] further indicate that **Message Passing GNN-based KGC methods struggle to effectively leverage neighborhood information**.\n\n- To clarify these points, we have **revised the manuscript**, specifically updating the **motivation** in the Introduction (Line 41, Page 1), expanding our **listed contributions** (Line 84, Page 2), and adding a dedicated section in **Related Work** comparing KGC methods that **leverage neighborhood information** (Line 479, Page 9).\n\n2. GLEM and GraphFormers both utilize GNNs and LMs to integrate graph structure information with node text information. Below, we discuss these two models separately:\n\n- **GLEM** effectively combines global information extracted by GNNs with local information by LMs through an EM training approach, **targeting node classification tasks**. Its **stepwise extraction and integration of multimodal features via the EM algorithm** provide a valuable strategy.\n\n- **GraphFormers** are essentially a type of representation encoder for textual graphs that combines GNNs and transformers, which could directly replace the Bert encoder we currently use to generate more expressive representations, with an anticipated improvement in KGC performance. However, **for fair comparisons, most text-based models currently use bert-base-uncased during evaluation**.\n\nIn general, there are several challenges when applying TAG models to text-based KGC:\n- Effectively incorporating additional edge types (relations) into the model.\n- As noted above, the GNN module needs careful design to fully utilize neighborhood features.\n- Text-based KGC often relies on large batch sizes for robust contrastive training, where traditional MLE training typically falls short. This necessitates lightweight implementations of models like GraphFormers to accommodate these requirements.\n\n## Response to Weakness 2\nCertainly, recent approaches have achieved notable success in KGC tasks by leveraging LLMs. These methods either directly utilize the **strong reasoning capabilities of LLMs to extract triple features** (CSProm-KG) or employ them to **generate additional information that enriches existing knowledge** (KICGPT). In contrast, our work focuses on **enhancing representation learning** of existing text-based KGC methods to achieve **better performance and improved interpretability**. We believe that directly comparing two types of models towards fundamentally different optimization direction, plus vastly different parameter scales, may lead to unfair evaluations.\n\nWhile we have not included some LLM-based baselines for comparison, we have also incorporated several recent state-of-the-art methods from both embedding-based (N-Former, KRACL) and text-based (KG-S2S, GHN) approaches to ensure a comprehensive evaluation in Table 1, Page 7.\n\n[1] Are Message Passing Neural Networks Really Helpful for Knowledge Graph Completion?\n\n[2] Rethinking graph convolutional networks in knowledge graph completion."
+            }
+        },
+        {
+            "comment": {
+                "value": "We would like to thank the reviewer for the thoughtful feedback and helpful suggestions on representation, clarity and experiment settings. Below, we provide a point-by-point response to the reviewer\u2019 comments, with references to the changes made in the manuscript.\n\n## Weakness 1\n> The paper repeatedly emphasizes the advantages of the proposed model on large-scale graphs; therefore, it would be beneficial to include comparative experiments on time complexity or runtime performance between the proposed model and the baseline.\n\n### Response\nWe appreciate the reviewer\u2019s emphasis on the importance of time complexity in model evaluation. In the revised manuscript, we have made the following enhancements to address this concern:\n\n1. We provide a detailed **analysis of the time and space complexity** involved in computing the ELBO (refer to Lines 281, Page 6 and Lines 796, Page 15).\n\n2. We have also added a **new table (Table 7, Line 930, Page 18) comparing the parameter count and training time** of our method against the baseline model, SimKGC. The results indicate that introducing SBM and VAE **only increases the parameter count by 1.4M (0.8%)**. While the ELBO training requires **additional epochs to converge**, resulting in a slight increase in total training time, we find this increase to be **within an managable range**.\n\n## Weakness 2\n> At the end of the introduction section, a more direct listing of the contributions of this paper should be provided, with particular emphasis on the novel points introduced for the first time in this work.\n\n### Response\nThank you for your valuable feedback. We have revised the end of the Introduction (Line 84, Page 2) to provide a more direct and clear listing of our contributions.\n\n## Weakness 3\n> The paper uses more baselines on WN18RR and FB15k-237 compared to Wikidata5M. Is this due to differences in dataset scale? The authors should provide a detailed explanation.\n\n### Response\nWe understand the reviewer\u2019s concerns regarding the fairness and consistency of using different numbers of baselines across datasets. **The Wikidata5M dataset is primarily used by text-based methods**, and KGC performance results on this dataset are **rarely reported in embedding-based literature**. Therefore, to ensure meaningful comparisons, we selected only text-based baselines on the Wikidata5M dataset to evaluate our method\u2019s performance.\n\n## Weakness 4\n> The primary parts in this framework, SBM and VAE, are derived from previous work, with extensive references to existing literature in the framework description. I am not entirely clear on the main innovations introduced by the authors in these two methods. It would be helpful if the authors could enhance the explanation of their contributions in the text or directly clarify these innovations in their response to me.\n\n### Response\nWe understand the reviewer\u2019s concerns regarding the **motivation and contributions** of our work. In the following content, we will make clarification on these two points, the corresponding revisions of which in the manuscript will also be mentioned.\n\n**Motivation**\n1. **Connections among node communities**\u2014a key inductive feature of graph data\u2014have not yet been leveraged for KGC. While a few existing methods incorporate node clustering information, they typically rely on **separate clustering modules** like KMeans, resulting in **suboptimal KGC performance, limited cluster interactions, and a lack of end-to-end design**. To clarify this motivation, we have bolded the relevant content in the Introduction (Line 40, Page 1) and added a dedicated section in Related Work on KGC methods that use neighborhood information (Line 478, Page 9).\n\n2. Although SBM and VAE have proven effective in statistical link prediction (LP) for detecting node communities, there are two significant differences between traditional LP and KGC: (1) LP methods predict the presence of a link between two nodes, while **KGC requires multi-label edge prediction** and evaluates models based on **tail entity prediction** given a head-relation pair; and (2) modern **KGs are far larger, containing millions of nodes**, unlike typical LP datasets like Cora with only thousands. As such, **directly applying SBM and VAE to KGC is challenging** (Line 82, Page 2).\n\n**Contributions**\n\n1. We propose **a novel probabilistic generative model for KGC** based on SBM, which enables the integration of complex and meaningful latent structures within KGs in future research.\n\n2. Our implementation **combines techniques from VAE and text-based KGC methods**, ensuring both **high performance and scalability**. Additionally, the inclusion of text information introduces a fresh approach to clustering within KGs.\n\n3. We conduct extensive experiments demonstrating our method\u2019s **robust performance, interpretability, and highlighting certain limitations** of leveraging clustering information."
+            },
+            "title": {
+                "value": "Response Addressing Model Complexity, Contributions, and Baseline Issues"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the limitations of recent text-based knowledge graph completion (KGC) methods that fail to adequately consider the complex interconnections among entities in large-scale knowledge graphs. It introduces a novel framework utilizing sparse latent feature models optimized via a deep variational autoencoder (VAE), which enhances link prediction and offers interpretability of latent structures by integrating textual information. Experimental results on multiple datasets demonstrate that the proposed method significantly improves performance by uncovering latent communities and generating interpretable representations."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The proposed method aims to balance the retention of critical knowledge with the elimination of redundancy, which is an interesting topic.\n2. The authors not only effectively complete missing triples but also provide clear interpretability of the latent structures which seems reasonable."
+            },
+            "weaknesses": {
+                "value": "1. The paper is not organized clearly, which is not friendly for understanding. For example, there is a lack of preliminary details for how to model MB and other module in 3.1 GENERATIVE MODEL. \n2. Figure 2 lacks of explanation, \\textit{e.g.,} how the modules work together and match the equations in the main paper. The paper lacks the necessary reproduction file for the results. \n3. The paper lacks the analysis of time complexity as well as space complexity, which is necessary to study the efficiency of the model. \n4. The authors do not compare the model with other SOTA KGE methods, e.g.,[1][2][3]. The performance of, MRR in FB15K-237 is 0.36 while that of the proposed paper is 0.355. In this way, the performance of the proposed paper is not significant and the authors may better give a reasonable explanation.\n[1] Compounding Geometric Operations for Knowledge Graph Completion\n[2] Geometry interaction knowledge graph embeddings\n[3] KRACL: Contrastive Learning with Graph Context Modeling for Sparse Knowledge Graph Completion"
+            },
+            "questions": {
+                "value": "Please refer to Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces DSLFM-KGC, a novel framework of sparse latent feature models for KGC. The framework leverages stochastic blockmodels (SBMs) and deep variational autoencoders (VAEs) to capture latent community structures in KGs and improve link prediction. Experimental results show the effectiveness of DSLFM-KGC."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.The paper is clearly written and easy to follow.\n\n2. The theoretical foundation of this paper is solid, utilizing extensive mathematical formulations to elucidate the structure of the proposed model or to demonstrate its validity.\n\n3. The experiments conducted on benchmark datasets demonstrate the effectiveness of DSLFM-KGC in improving KGC performance and uncovering interpretable latent structures."
+            },
+            "weaknesses": {
+                "value": "1.The paper repeatedly emphasizes the advantages of the proposed model on large-scale graphs; therefore, it would be beneficial to include comparative experiments on time complexity or runtime performance between the proposed model and the baseline.\n\n2. At the end of the introduction section, a more direct listing of the contributions of this paper should be provided, with particular emphasis on the novel points introduced for the first time in this work.\n\n3. The paper uses more baselines on WN18RR and FB15k-237 compared to Wikidata5M. Is this due to differences in dataset scale? The authors should provide a detailed explanation.\n\n4. The primary parts in this framework, SBM and VAE, are derived from previous work, with extensive references to existing literature in the framework description. I am not entirely clear on the main innovations introduced by the authors in these two methods. It would be helpful if the authors could enhance the explanation of their contributions in the text or directly clarify these innovations in their response to me."
+            },
+            "questions": {
+                "value": "Please refer to the \"weaknesses\" section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel deep sparse latent feature model for knowledge graph completion. It is optimized through VAE, with the goal of uncovering the latent structures in KGs and completing missing triples. Experiments demonstrate that this approach outperforms existing methods in terms of both performance and interpretability."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Strengths  \n1. Experimental Results: The model shows significant performance improvements on the Wikidata5M dataset (e.g., a 5% increase in MRR and a 6.5% increase in Hit@1), with similar results observed on the WN18RR dataset.  \n2. Scalability: The VAE framework enables the model to perform inference on large-scale knowledge graphs, demonstrating good scalability."
+            },
+            "weaknesses": {
+                "value": "Weaknesses\n1. Model motivation: SBM is well-known graph clustering algorithm. There are many works that combine GNN with SBM to achieve community detection. Except from the used data structure, the key difference between the proposed method and existing works is not obvious.   \n2. Model Complexity: The introduction of various latent feature sampling and inference mechanisms makes the inference process relatively complex, necessitating more efficient training strategies to speed up training and reduce memory usage.  \n3. Limited Effectiveness: As noted in the paper, the proposed approach is primarily effective for sparse latent features, with limited performance in dense scenarios. Furthermore, some clustering-based KGE methods should be included in compared baselines."
+            },
+            "questions": {
+                "value": "1. How to determine the number of clusters in a KG? \n2. How to find the specific meaning represented by each cluster?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a sparse latent feature model that is optimized via a deep variational autoencoder to achieve interpretable completions for knowledge graphs. Experimental results verify the effectiveness of the proposed model."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper is well-written and easy to follow\n2. Many experiments are conducted to demonstrate the effectiveness of the proposed method."
+            },
+            "weaknesses": {
+                "value": "1. My biggest concern is the motivation of the proposed method. The authors claim that existing text-based methods overlook the complex interconnectivity among entities, however, there are some GNN-based TKGC models such as SEA-KGC [1] that can model graph information, what's the superiority of the proposed method compared with GNN-based methods? Moreover, given the text descriptions of the entities, many text-attributed graph embedding methods can also be applied to complete knowledge graphs, such as GLEM [2] and GraphFormers [3]. It's interesting to see their performance and further analysis of is there any unique challenges of applying these TAG models for text-based KGC.\n\n2. Recently some methods have proposed to use LLMs to understand the text semantics within TKGs to perform completion or reasoning tasks (e.g., CSProm-KG [4] and KICGPT [5]), which have gained good performance and generalization ability across different KGs. The authors should provide more comparison and analysis for these methods since they also use text information within KGs.\n\n\n[1] Unifying Structure and Language Semantic for Efficient Contrastive Knowledge Graph Completion with Structured Entity Anchors\n\n[2] Learning on Large-scale Text-attributed Graphs via Variational Inference\n\n[3] GraphFormers: GNN-nested transformers for representation learning on textual graph\n\n[4] Dipping PLMs Sauce: Bridging Structure and Text for Effective Knowledge Graph Completion via Conditional Soft Prompting\n\n[5] KICGPT: Large Language Model with Knowledge in Context for Knowledge Graph Completion"
+            },
+            "questions": {
+                "value": "See weakness"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

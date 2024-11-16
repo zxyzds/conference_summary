@@ -1,0 +1,145 @@
+{
+    "id": "WA84oMWHaH",
+    "title": "Adaptive Pruning of Pretrained Transformer via Differential Inclusions",
+    "abstract": "Large transformers have demonstrated remarkable success, making it necessary to compress these models to reduce inference costs while preserving their performance. Current compression algorithms prune transformers at fixed compression ratios, requiring a unique pruning process for each ratio, which results in high computational costs. In contrast, we propose pruning of pretrained transformers at any desired ratio within a single pruning stage, based on a differential inclusion for a mask parameter. This dynamic can generate the whole regularization solution path of the mask parameter, whose support set identifies the network structure. Therefore, the solution path identifies a Transformer weight family with various sparsity levels, offering greater flexibility and customization.In this paper, weintroduce such an effective pruning method, termed SPP (Solution Path Pruning). To achieve effective pruning, we segment the transformers into paired modules, including query-key pairs, value-projection pairs, and sequential linear layers, and apply low-rank compression to these pairs, maintaining the output structure while enabling structural compression within the inner states. Extensive experiments conducted on various well-known transformer backbones have demonstrated the efficacy of SPP.",
+    "keywords": [
+        "Differential inclusion",
+        "Mask-based pruning",
+        "Sparse optimization."
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "We adaptively pruned pretrained transformer based on a differential inclusion.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=WA84oMWHaH",
+    "pdf_link": "https://openreview.net/pdf?id=WA84oMWHaH",
+    "comments": [
+        {
+            "comment": {
+                "value": "**Weakness 1: The results are insufficient.**\n\nAs shown in Table 1, for Deit-Small, with the same number of flops 2.6, WDPruning has an accuracy of 78.4% compared to 78.9% for our method. For Deit-Base, we outperform all methods with 81.2% accuracy and keep fewer flops, only 6.9.\n\nAs we explained to Reviewer 1jDf, our method not only provides better numerical results but also introduces a new pruning approach based on differential inclusion. We identify the sparse structure of the model in the inverse space and map it to the solution path. The most important parameters are learned first, followed by the less important ones, allowing us to prune based on each parameter's importance. Therefore, our approach learns a regularization path, eliminating the need to re-prune the network for each sparsity level.As shown in Figure 2, our method is very consistent, ensuring that adaptive pruning is done effectively.\n\n**Weakness 2: Figure 1 and tables lack legends and comments.**\n\nWe will rewrite the comments for Figure 1 and Table 1 to make them clearer and easier to understand.\n\n**Weakness 3: Typo error.**\n\nThank you for pointing out the typo . We will correct this and improve our writing when revisiting the manuscript.\n\n**Question 1: The application of low-rank compression to paired modules of transformers.**\n\nThe detailed application equations can be found in Section 3.1.\n\n**Question 2: The actual running time of the proposed method.**\n\nThe latency times for the uncompressed and compressed CLIP models are shown in Table 7. The search epochs and training epochs are listed in Table 6."
+            }
+        },
+        {
+            "comment": {
+                "value": "**Weakness 1: Marginal Improvement Over Existing Methods**\n\nTraditional mask-based pruning methods, while effective in fixed-ratio compression, are not efficient in adaptive pruning, which is important for deployment in many scenarios. This paper provides a comprehensive solution. First, by adopting the perspective of differential inclusion, we can efficiently obtain a solution path from sparse to dense, making it well-suited for adaptive training. Moreover, our dynamics enjoys the inverse scale space property:  important features will select at earlier epochs, and while be consistently maintained in later epochs (figure 2). Finally, we establish the convergence results, ensuring the reliability of our algorithm. \n\n**Weakness 2: Lack of Broad Comparison with Other Mask-Based Methods**\n\nIn Table 1, we have compared with several masked based pruning methods, such as UPop [1] and VitSlimm [2], which have achieved state-of-the-art results. \n\n[1]Shi, Dachuan, et al. \"Upop: Unified and progressive pruning for compressing vision-language transformers.\" International Conference on Machine Learning. PMLR, 2023.\n\n[2]Chavan, Arnav, et al. \"Vision transformer slimming: Multi-dimension searching in continuous optimization space.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022.\n\n**Question 1: How does the method scale to very large transformers\uff1f**\n\nThe detailed algorithm is shown in Algorithm 2. As stated in line 762-765, we apply zero shot pruning to LLMs with our method. Since there is no weight update, our pruning method is efficient while preserving the generalization ability.\n\n**Question 2: What is the stability of the solution path across different random seeds?**\n\nOur method is robust across seeds. \n\n**Question 3: How sensitive is the method to the choice of hyperparameters \u03ba and \u03bb?**\n\nOur method is not sensitive to hyperparameters as is shown in Table 8. In fact, as long as \u03ba and \u03bb are set in a way that allows the inverse space to learn the important parameters, the method will work effectively.\n\n**Question 4: Can this method be extended to dynamic/runtime pruning scenarios?**\n\nIn theory, we could add weight updates during algorithm iterations to achieve runtime pruning. However, this would result in additional training costs and make the model's loss function too complex, which could prevent proper convergence. Besides,  It would increase the training time. Starting from a fixed, pretrained checkpoint is more efficient."
+            }
+        },
+        {
+            "comment": {
+                "value": "**Weakness 1: Training cost of the proposed method.**\n\nThe training cost of our proposed method is provided in detail in Table 6 and Table 8 of the Appendix. We have listed both the search cost and the fine-tuning cost. Our fine-tuning cost for the Deit models is 300 epochs, which is the same as other methods such as WDpruning[1] and UPop[2].\n| Method       | Search Epochs | Finetuning Epochs  |\n|-------------|-----------|-------------|\n| UPop   | 60            | 300               |\n| WDpruning | 100           | 300          |\n| ViT-Slim[3]   | 50             | 300       |\n| Ours  | 40             | 300              |\n\n[1]Yu, Fang, et al. \"Width & depth pruning for vision transformers.\" Proceedings of the AAAI Conference on Artificial Intelligence. Vol. 36. No. 3. 2022.\n\n[2]Shi, Dachuan, et al. \"Upop: Unified and progressive pruning for compressing vision-language transformers.\" International Conference on Machine Learning. PMLR, 2023.\n\n[3]Chavan, Arnav, et al. \"Vision transformer slimming: Multi-dimension searching in continuous optimization space.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022.\n\n**Weakness 2: Comparison between weight-based pruning and mask-based pruning.**\n\nWeight-based pruning has already been shown to be less effective compared to mask-based pruning in the VitSlimm[1] method. DessiLBI[2] method has the same pruning metric with weight-based pruning. The comparison with DessiLBI method can be tought to be comparison with weight-based pruning. While Lasso can be used for mask-based pruning (line 246, Eq.7), it is computationally expensive to adaptively train nonlinear models which do not have a closed-form solution path, as we have for linear models (line 249-250). That means, we need to optimize the loss in Eq. (7) for each regularization parameter \\lambda. Moreover, UPop and VitSlimm are advanced mask-based pruning methods that existed before our method. We compared these methods with ours in Table 1.\n\n[1]Chavan, Arnav, et al. \"Vision transformer slimming: Multi-dimension searching in continuous optimization space.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022.\n\n[2]Fu, Yanwei, et al. \"Dessilbi: Exploring structural sparsity of deep networks via differential inclusion paths.\" International Conference on Machine Learning. PMLR, 2020.\n\n**Question 1: How our method extends to pruning large language models.**\n\nThe detailed algorithm is shown in Algorithm 2. For large language models, the fine-tuning cost is higher than for models like ViTs and CLIP. As mentioned in line 762, it is important for LLMs to maintain their generalization performance even after pruning. Current pruning methods for ViTs cannot preserve generalization. Therefore, we extended our method to zero-shot pruning with no weight update, where the RIA [4] method performs best.\n\n[4] Zhang, Yingtao, et al. \"Plug-and-play: An efficient post-training pruning method for large language models.\" The Twelfth International Conference on Learning Representations. 2024.\n\n**Question 2: Typo error.**\n\nThank you for pointing out the typos. We will make sure to improve our writing when revisiting the manuscript."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a method to prune pretrained transformers at any desired ratio within a single pruning stage. The proposed method enjoys a theoretical analysis to guarantee the global convergence. Extensive experiments validate the effectiveness of the proposed method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. This paper is motivated well. The method for any desired pruning ratio is needed in many real-world applications. And the proposed method is able to achieve this.\n2. This paper identifies the limitation of Lasso and develops a differential inclusion-based method to achieve various compression ratio pruning. \n3. There is a sound theoretical analysis to guarantee the global convergence of the method. A detailed proof is included in the appendix.\n4. Experimental results are strong. Many experiments are conducted, including ViTs for image classification, CLIP, and even large language models."
+            },
+            "weaknesses": {
+                "value": "1. Although the authors claim the proposed method significantly reducing the cost of model pruning. The training cost is not reported in this paper. It is better to introduce how long the search stage is. And make a comparison for training cost between different methods.\n2. The ablation studies are weak. Experiments demonstrate the strong performance of the proposed SPP. But it is hard for the reader to figure out why the proposed method is effective. More ablation studies are needed. For example, make comparison for weight-based pruning and mask-based pruning. Why does the weight-based pruning not be applicable to the Transformer? What if using Lasso for the searching stage. By optimizating Eq. 7, Lasso is able to achieve different level of sparsity during training."
+            },
+            "questions": {
+                "value": "1. For pruning large language models, why to combine the propsed SPP with the RIA pruning metric? However, pruning CV models (ViTs and CLIP) does not use pruning metric. What is the difference between pruning CV models and LLMs?\n2. In line 207, it seems that the dimension is d_1 rather than d."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes SPP (Solution Path Pruning), a novel approach to mask-based pruning for pretrained transformers. SPP leverages differential inclusions to create a dynamic solution path that produces a range of sparsity levels in a single pruning stage, eliminating the need for multiple retraining steps for different compression ratios. The method applies fine-grained, pair-wise shared masks across transformer layers, including attention heads and MLP layers, achieving high flexibility and model performance retention. SPP is tested on various datasets and transformer backbones, showing efficiency improvements with minimal accuracy loss."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "**Adaptive Solution Path for Pruning**  \n   - Unlike traditional mask-based pruning, SPP generates models with different sparsity levels in a single pruning run, allowing for a Transformer Weight Family adaptable to varying hardware or performance needs without retraining.\n\n**Flexible, Fine-Grained Pruning Strategy**  \n   - SPP\u2019s pair-wise shared mask strategy applies pruning at the smallest functional units within transformers (e.g., query-key and value-output pairs), allowing for greater flexibility and effectiveness in compression compared to conventional methods.\n\n**Reduced Computational Cost**  \n   - The SPP method reduces the need for repeated pruning stages, resulting in significant cost savings, especially for large-scale transformer models."
+            },
+            "weaknesses": {
+                "value": "**Marginal Improvement Over Existing Methods**  \n   - Although the method introduces adaptive pruning, it does not fundamentally change the mask-based pruning paradigm. The improvements, while novel in terms of execution, may appear incremental compared to existing mask-based and structural pruning strategies.\n\n**Lack of Broad Comparison with Other Mask-Based Methods**  \n   - The paper does not provide an in-depth comparison with other advanced mask-based pruning techniques, making it difficult to fully assess SPP's advantages in performance and efficiency."
+            },
+            "questions": {
+                "value": "- How does the method scale to very large transformers (e.g., GPT-3 scale)?\n- What is the stability of the solution path across different random seeds?\n- How sensitive is the method to the choice of hyperparameters \u03ba and \u03bb?\n- Can this method be extended to dynamic/runtime pruning scenarios?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a pruning method of pretrained transformers at any desired ratio within a single pruning stage, based on a differential inclusion for a mask parameter."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tClear motivation.\n2.\tThe theoretical proof and experiment are quite sufficient."
+            },
+            "weaknesses": {
+                "value": "1.\tThe results of ablation studies are insufficient to demonstrate the effectiveness of the proposed method for the following reasons: 1) For DeiT-Small and Swin-Tiny models, the proposed SPP achieves higher accuracy with more parameters and higher or equal FLOPS, which does not indicate that SPP is superior. 2) Conducting experiments solely with the DessiLBI method lacks generalizability. \n2.\tFigure 1 and tables lack legends and comments.\n3.\t\"FLOPs\" is generally not written as \"Flops\" when used as an abbreviation for \"floating point operations\"."
+            },
+            "questions": {
+                "value": "1.\tThe manuscript does not describe how low-rank compression can be applied to paired modules of transformers.\n2.\tThe reviewer is concerned about the actual running time of the proposed method and how much its efficiency improves compared to methods with a single pruning rate.\n3.\tThere seem to be some errors in the details of the manuscript, for example, \"Specifically, note that for each element i, V (i) \u2264 1 if V (i) = 0, and is equal to 1 when it becomes non-zeros\"."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,205 @@
+{
+    "id": "uYAG9Gla5u",
+    "title": "Multigraph Message Passing with Bi-Directional Multi-Edge Aggregations",
+    "abstract": "Graph Neural Networks (GNNs) have seen significant advances in recent years, yet their application to multigraphs, where parallel edges exist between the same pair of nodes, remains under-explored. Standard GNNs, designed for simple graphs, compute node representations by combining all connected edges at once, without distinguishing between edges from different neighbors. There are some GNN architectures proposed specifically for multigraph tasks, yet these architectures perform only node-level aggregation in their message-passing layers, which limits their expressive power. Furthermore, these approaches either lack permutation equivariance when a natural edge ordering is absent, or fail to preserve the topological structure of the multigraph. To address all these shortcomings, we propose MEGA-GNN, a unified framework for message passing on multigraphs that can effectively perform diverse graph learning tasks. Our approach introduces a two-stage aggregation process in the message passing layers: first, parallel edges are aggregated, followed by a node-level aggregation that operates on aggregated messages from distinct neighbors. We show that MEGA-GNN supports permutation equivariance and invariance properties. We also show that MEGA-GNN is universal when the edges are consistently ordered. Experiments on synthetic and real-world financial transaction datasets demonstrate that MEGA-GNN either significantly outperforms or is on par with the accuracy of state-of-the-art solutions.",
+    "keywords": [
+        "graph neural networks",
+        "multigraph",
+        "message passing",
+        "financial fraud detection"
+    ],
+    "primary_area": "learning on graphs and other geometries & topologies",
+    "TLDR": "A unified framework for message passing on multigraphs that can effectively perform diverse graph learning tasks.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=uYAG9Gla5u",
+    "pdf_link": "https://openreview.net/pdf?id=uYAG9Gla5u",
+    "comments": [
+        {
+            "title": {
+                "value": "Author Response 2/2"
+            },
+            "comment": {
+                "value": "### Q1\n- In Table 2, MEGA-GNN significantly outperforms all the baselines. Specifically, our model achieves an average increase of 9.25% in minority-class F1 score on the HI datasets and a 13.31% improvement on the LI datasets over the best-performing baseline, Multi-GNN.\n- While Multi-GNN is permutation equivariant only if there is a natural ordering of the edges, e.g., defined by timestamps. However, MEGA-GNN satisfies the permutation equivariance property without requiring such an ordering. In our experiments, the financial transaction datasets include timestamps, providing a natural edge ordering. If the reviewer finds it useful, we could perform an ablation study by removing the timestamps, which would cause Multi-GNN to lose permutation equivariance, while MEGA-GNN would still retain it. We would be happy to repeat the experiments on the AML Small datasets for edge classification and on the ETH dataset for node classification under this condition.\n- In Table 3, MEGA-GNN performs on par with the Multi-GNN baseline and shows a 20% improvement over ADAMM. For this specific dataset, with an average node degree of 4.5, the single-level PNA aggregator (which combines 4 standard aggregators: sum, mean, max, and std) and the following MLP can effectively reconstruct the multiset of neighbors without any loss, as shown in the PNA [1] paper (Appendix A). Thus, for this dataset, the single-level PNA aggregation is as effective as the two-stage PNA aggregation. If the reviewer finds it useful, we can also include a theoretical analysis to further explain the impact of dataset characteristics on performance and include these insights in the paper.\n### Q2\n- The multi-edge aggregation functions used in our experiments are described in lines 375-377 of our paper. For more detailed information on the specific EdgeAgg functions, please refer to Appendix B.2.\n### Q3\n- The impact of Ego-IDs has already been studied in the Multi-GNN paper, so we did not repeat those ablation studies in our work. However, if the reviewer finds it helpful, we can either include these studies in the paper or mention which baselines also adopt Ego-IDs to ensure clarity and fairness in the comparison\n\n[1] Principal Neighbourhood Aggregation for Graph Nets, NeurIPS 2020"
+            }
+        },
+        {
+            "title": {
+                "value": "Author Response 1/2"
+            },
+            "comment": {
+                "value": "We appreciate the reviewer\u2019s effort in reviewing our paper, thank them for their comments. We have carefully considered each point and addressed them individually to ensure clarity.\n\n### W1\n- Two-Stage Aggregation for Multigraphs: To the best of our knowledge, MEGA-GNN is the first MPNN to apply a two-stage aggregation process for message passing on multigraphs. MEGA-GNN is designed to handle the unique complexity of multiple connections between the same pair of nodes -which is not fully addressed by prior research.\n- Bi-directional Message Passing with Multi-Edge Aggregations: MEGA-GNN\u2019s bi-directional message passing approach involves non-trivial and novel mechanisms. While earlier approaches, such as Multi-GNN, also utilize bi-directional message passing, our method differentiates itself by incorporating two artificial nodes for each directed multi-edge: one for aggregating the forward messages and one for aggregating the backward messages. This inclusion goes beyond merely using the reverse edges; it directly integrates these reversed edges into our two-stage message aggregation mechanism.\n- We hope this response clarifies the originality of MEGA-GNN\u2019s bi-directional message passing and its two-stage aggregation process.\n\n### W2\n- We acknowledge the reviewer\u2019s concern about the general applicability of multigraph learning. There is a limited availability of well-established and labeled edge-attributed multigraph benchmark datasets for edge and node classification tasks. To provide fair comparisons with baseline methods such as Multi-GNN, we used the same financial transaction datasets they used: synthetic (AML) datasets recently introduced at NeurIPS'23, and one real-world dataset from Ethereum transactions, as real-world financial data is often restricted due to privacy concerns. We also considered using OGB and TGB benchmarks, but these datasets do not provide edge-attributed multigraphs with node or edge labels. If the reviewer could suggest some edge-attributed multigraph datasets with edge or node labels, we would be happy to evaluate our solutions on them.\n\n### W3 \n- We chose GIN aggregation as a strong baseline widely used in graph learning across various tasks. Additionally, we adopted PNA aggregation because the authors of Multi-GNN paper demonstrated its superior performance. To further enhance our model, we also incorporated the state-of-the-art learnable aggregation function, Generalized Aggregator (GenAgg). The choice of the aggregator depends on the task as aggregation is a lossy operation. GenAgg, a generalized operator, parametrizes a function space that includes all standard aggregators, and allows to minimize information loss effectively. By doing so, we believe we have covered the most important aggregation functions, yet if the reviewer has any other suggestions, we would be happy to explore them.\n- The artificial nodes serve as intermediate feature representations for the aggregated parallel edges in our model. Their role is detailed in lines 210-227 of the paper."
+            }
+        },
+        {
+            "title": {
+                "value": "Official Comment by Authors"
+            },
+            "comment": {
+                "value": "We appreciate the reviewer\u2019s comments and would like to clarify the novelty of our approach regarding bi-directional message passing and multi-stage aggregation within a multigraph context.\n- The techniques developed for hypergraphs and heterogeneous graphs are not directly applicable to multigraphs. As we have already covered the differences between multigraph GNNs and hypergraph GNNs in our previous response, we will cover only heterogeneous graphs here. Relational GNNs proposed for heterogeneous graphs work very differently from our multigraph GNNs. Relational GNNs require definition of explicit relation (edge) types and use different transformation functions for different relation types. Our approach directly works on edge attributes, does not require definition of any edge types, and does not differentiate between different relations. Our approach is orthogonal and can be combined with relational GNNs on heterogeneous graphs with edge attributes when multiple edges of the same type (with different edge attributes) exist between the same two graph nodes.\n- In Section 2 of our paper, we have described the challenges associated with supporting multi-edges, the prior work specifically designed for this purpose (Multi-GNN and ADAMM), and where they fall short. Our main contribution is the introduction of artificial nodes, which enable multi-edge aggregations in both forward and reverse directions. This mechanism is nontrivial and new, and was not part of any previous solutions. Notably, unlike the prior solutions, our approach preserves both the permutation equivariance and the multigraph topology. Furthermore, it is efficiently integrated into multigraph message passing. Our MEGA-GNNs lead to consistent improvements, in the range of 9-13%, in comparison to Multi-GNNs as shown in Table 2. We also achieve around 20% improvement with respect to ADAMM as shown in Table 3. We believe these improvements clearly show the significance of our contribution. \n- We would be glad if the reviewer could be more specific about the type of ablation studies requested. However, detailed ablation studies evaluating the performance impact of using Ego-IDs, reverse message passing, and multigraph port numbering in combination with different baseline GNNs are readily available in the Multi-GNN paper. In this paper, we have tried to build on the lessons learned from Multi-GNN and ADAMM, and demonstrated our improvements with respect to these two methods."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for the detailed response on the differences between multi-graphs and hypergraphs, especially regarding the different structural features of hyperedges vs. multi-edges and the specific aggregation hierarchies each requires. \n\nHowever, my main point remains that the core techniques employed in MEGA-GNN, such as bi-directional message passing and multi-stage aggregation, are already well-established in this line of research. The fundamental approach of multi-level aggregation for non-simple graphs (e.g., hypergraphs and heterogeneous graphs) has been extensively explored. In this regard, I find it difficult to view MEGA-GNN\u2019s approach as conceptually novel, as it builds on established methodologies without clearly demonstrating unique functional advantages in handling multi-edges. It would be great to explicitly highlight any specific technical challenges that are unique in multi-graph contexts and show how the design of MEGA-GNN addresses these challenges differently than existing solutions. Further empirical studies, such as ablation, could also help clarify the unique contributions of this work, especially if they go beyond adaptations of aggregation mechanisms."
+            }
+        },
+        {
+            "comment": {
+                "value": "We first would like to address a potential misunderstanding by pointing out the differences between Hypergraph GNNs and our Multi-Graph GNNs:\n- Hypergraphs are not multigraphs and multigraphs are not hypergraphs.\n- A hyperedge is a collection of nodes whereas a multi-edge is a collection of edges.\n- Hypergraph GNNs first aggregate feature vectors of the nodes in each hyperedge to compute latent representations of the hyperedges and then aggreate the latent representations of the hyperedges to compute latent representations of the nodes. \n- Our multigraph GNNs (MegaGNNs) first aggregate the feature vectors of the edges between the same pair of nodes to compute late representations of multi-edges and then aggregate latent represantions of the multi-edges to compute the latent representations of the nodes.\n- Hypergraphs are generalizations of graphs and not multigraphs. Hypergraphs with repeated hyper edges (multi-hypergraphs) would be generalizations of multi-graphs. However, the papers the reviewer listed do not cover multi-hypergraph GNNs.\n- It is possible to combine our multigraph GNNs with hypergraph GNNs to construct multi-hypergraph GNNs. However, that would - require three stages of aggregations: 1) hyperedge aggregations, 2) multi-hyperedge aggregations, and 3) node aggregations. A mechanism of this form is not available in the papers cited by the reviewer or in other papers we have seen.\n- We hope that we have sufficiently expressed the differences between hypergraph GNNs and our multi-graph GNNs and clarified that these two approaches are orthogonal. If the reviewer finds it convenient, we will include some of these explanations also in the paper."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies neural architecture for learning on multigraphs. Existing methods either reduce to simple graphs or break properties such as permutation equivariance. A two-stage message-passing framework is proposed by introducing artificial nodes for parallel edges that preserves several desirable properties. The proposed MEGA-GNN is evaluated on synthetic and real-world financial transaction datasets and shows better or comparable performance compared to SoTA methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The use of two-stage aggregation and artificial nodes can effectively address the limitations of existing GNN models to capture information across parallel edges while preserving certain properties.\n\n- The MEGA-GNN framework shows good flexibility and performance in applications on financial transaction datasets.\n\n- The authors offer in-depth analysis and jusfiication for the proposed framework regarding properties of permutation equivariance, injectivity and universality."
+            },
+            "weaknesses": {
+                "value": "- The techniques used in MEGA-GNN such as bi-directional message passing and multi-stage aggregation are already well established, and the technical challenges for multi-graph have also been largely addressed by hypergraph learning research, which limits the overall novelty.\n\n- The model is only evaluated on financial datasets, which raise questions about wheter multi-graph learning is applicabile for broad scenarios. \n\n- Some choices, such as specific aggregation functions and the role of artificial nodes, lack detailed justification.\n\nFeng, Yifan, et al. \"Hypergraph neural networks.\" AAAI\u201919  \nGao, Yue, et al. \"Hypergraph learning: Methods and practices.\" TPAMI\u20192020."
+            },
+            "questions": {
+                "value": "- Q1 In practice, is permutation equivariance indeed needed for multi-graph applications? Based on results from Tables 2 amd 3, Multi-GNN without this property is a very strong baseline, especially for the node classification task.\n\n- Q2 What aggregation functions (EdgeAgg in Eqs 4, 8, AGG in Eqs 5,9) are used for the results reported in Tables 2 and 3?\n\n- Q3 Could the authors include ablation studies to highlight the contribution of Ego-IDs? Comparsion with other baselines without node labelling seems unfair.\n\nYou, Jiaxuan, et al. \"Identity-aware graph neural networks.\" AAAI'21"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces MEGA-GNN, a novel message-passing framework tailored for multigraphs\u2014graphs that include multiple parallel edges between node pairs. Unlike standard GNNs that aggregate all edges at once, MEGA-GNN introduces a two-stage aggregation strategy: Parallel Edge Aggregation and Node-Level Aggregation. The authors demonstrate the permutation equivariance and invariance of the proposed model and show that it is universal when the edges are consistently ordered."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper is clearly written and easy to follow with various figures demonstrating the ideas in the paper.\n- Novel Aggregation Mechanism: The two-stage approach addresses the limitation of traditional GNNs, enhancing expressivity by first aggregating parallel edges and then aggregating at the node level.\n- The paper provides proofs for permutation equivariance, injectivity, and universality.\n- Experimental Evaluation: The proposed method shows promising improvements in the included datasets.\n- The code is included in the supplementary material."
+            },
+            "weaknesses": {
+                "value": "1- Scalability: Although multigraphs are well-suited to some applications, real-world graphs can be vast in scale. The two-stage aggregation with artificial nodes might pose computational challenges and memory overhead for large, densely connected multigraphs. Some discussion on scalability in practical settings or optimizations for large-scale data would be appreciated.\n\n2- The paper shows that under a consistent ordering of edges the model is universal. However, for many real work scenarios, this is not always feasible, especially in dynamic setting. Have authors considered dynamically evolving multigraph setting?\n\n3- The experiments are limited to financial datasets and lack diversity in application areas, which might constrain the broader applicability of MEGA-GNN. I am not familiar with the multi-graph learning literature but are there other domains you can explore?"
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors introduce MEGA-GNN, a message-passing framework for multigraphs\u2014graphs where multiple parallel edges can exist between the same pair of nodes. Traditional GNNs are not well-suited for multigraphs due to their single-stage node-level aggregation. \n\nMEGA-GNN addresses this limitation by implementing a two-stage aggregation process: first, it aggregates parallel edges between the same nodes, and then it performs node-level aggregation on the aggregated messages from distinct neighbors. The authors give theoretical proofs that MEGA-GNN supports permutation equivariance, injectivity, and universality under specifi conditions. \n\nExperimental results on synthetic and financial transaction datasets demonstrate that MEGA-GNN either outperforms or matches the accuracy of state-of-the-art models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. MEGA-GNN gives a solution to a gap of GNNs' effecitveness, by focusing on multigraphs rather than simple graphs, where multiple edges between nodes could be useful for many applications, such as financial fraud detection (as benchmarked in the paper).\n\n2. The authors theoretically validate MEGA-GNN\u2019s permutation equivariance, injectivity, and universality properties.\n\n3. MEGA-GNN achieves state-of-the-art or comparable performance across various (synthetic and real-world0 datasets, particularly in edge and node classification tasks."
+            },
+            "weaknesses": {
+                "value": "1. The proof for the universality property assumes that there is an ordering over the edges of the multigraph. This is not always the case for real-world setups, giving a small question-mark on what happens when the edge ordering is not consistent.\n\n2. Although I find the utilization of financial transaction datasets quite interesting, I think it's not very diverse. I'd be very interested in seeing whether such a multigraph approach can be useful in other domains (e.g. knowledge graphs could potentially be of relevance due to the variety and number of different relations that can occur between identical pairs of nodes. For example, biomedical knwoeldge graphs could a potential use). \n\n3. The method requires the addition of artificial nodes, and the two-stage aggregation. This hints a computational overhead that is not discussed in the paper, and how it'd affect message passing in large/dense graphs."
+            },
+            "questions": {
+                "value": "1. How does MEGA-GNN scale with larger, more complex multigraphs, and what are the computational costs with the two-stage aggregation process?\n\n2. Is it possible to relax the assumption of consistent edge ordering, and if so, how would that impact the theoretic properties of MEGA-GNN?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a novel message-passing procedure on multigraphs. By first aggregating all edge states between two nodes, and using those as messages for MPNNs, a permutation equivariant method is constructed. The effectiveness of the proposed method is shown on several edge classification and one node classification task."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "I like the proposed method. It is intuitive, simple and effective. The paper is nicely written and mostly easily to follow and sufficiently detailed described."
+            },
+            "weaknesses": {
+                "value": "W1 Theorem 3.1: All MPNNs are permutation equivariant, as they do not use indices directly. I do not understand the need to specifically point this out. \n\nW2 Corollary 3.1: This statement is false the way it is stated. First, you need f, g_v, and g_e to be injective as well. Lemma 5 of Xu et al. also only holds for functions over countable multisets, which is ignored in this statement. In fact, if you follow Lemma 5 of Xu et al., there needs to be an additional function that is applied before EdgeAgg for possible injectivity.\n\nW3 Theorem 3.2: It should be clearly defined what the authors mean with universality. If a consistent ordering of the edges is given, permutation equivariance is lost. I find the claim that \"our method is universal and capable of detecting any directed subgraph pattern in multigraphs\" to be strongly misleading. How to construct a consistent ordering is not discussed and from my understanding not used for the experiments. Therefore, the point of this theoretical statement is unclear to me.\n\nW4: Eq. 4 computes h^(l) but Eqs. 5,6 use h^(l-1). Is this intended?\n\nW5: The introduced artificial nodes are not used in the proposed method. States are only computed for edges and nodes, but not for the artificial ones. Discarding the artificial nodes would make the framework much cleaner. \n\nW6 Experiments: \n* The baseline results seem to be reused from previous methods. It is unclear whether the same dataset splits were used, the same number of parameters, and the same hyperparameter search space.\n* There are no ablation studies. For example, to better understand this method it would be nice to see how results would change if there was a single edge state between two nodes instead of having multiple edge states."
+            },
+            "questions": {
+                "value": "* l. 376: What does GIN aggregation mean? GIN uses sum aggregation + an MLP.\n* MEGA-GNN seems to require a single vector of edge features, independently of the number of edges between two nodes. From my understanding all edge between two nodes would be equal if there are no initial edge features for each edge. This seems to a large constraint and it is not discussed in the experiments. Are these given for all datasets? Are baseline methods utilizing those as well?\n* see weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

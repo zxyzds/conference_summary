@@ -1,0 +1,134 @@
+{
+    "id": "fAAaT826Vv",
+    "title": "BIRD: A Trustworthy Bayesian Inference Framework for Large Language Models",
+    "abstract": "Predictive models often need to work with incomplete information in real-world tasks. Consequently, they must provide reliable probability or confidence estimation, especially in large-scale decision making and planning tasks. Current large language models (LLM) are insufficient for such accurate estimations, but they can generate relevant factors that may affect the probabilities, produce coarse-grained probabilities when the information is more complete, and help determine which factors are relevant to specific downstream contexts. In this paper, we make use of these capabilities of LLMs to provide a significantly more accurate probabilistic estimation. We propose BIRD, a novel probabilistic inference framework that aligns a Bayesian network with LLM abductions and then estimates more accurate probabilities in a deduction step. We show BIRD provides reliable probability estimations that are 30% better than those provided directly by LLM baselines. These estimates can further contribute to better and more trustworthy decision-making.",
+    "keywords": [
+        "Large language models",
+        "Reasoning",
+        "Planning",
+        "Trustworthiness",
+        "Interpretability",
+        "Probability Estimation",
+        "Bayesian Methods"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=fAAaT826Vv",
+    "pdf_link": "https://openreview.net/pdf?id=fAAaT826Vv",
+    "comments": [
+        {
+            "summary": {
+                "value": "This work proposes an inference framework that aims to produce more reliable and accurate probability/confidence estimations using LLMs for large-scale decision-making and planning tasks. The proposed method, BIRD, uses abductive factor generation to factorize the inference task, and estimates the outcome by accumulating the predictions made on the specific factors. The experimental results on three datasets show that BIRD is able to produce more accurate probability estimations in decision-making and planning, which can be used to (1) improve the accuracy of decision-making; (2) supervise the training of small models; (3) propose follow-up questions for decision-making. For all these applications, BIRD shows superior performance than the baseline methods."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The proposed Bayesian inference framework is conceptually interesting. Factoring the overall decision-making into multiple fine-grained factors is intuitive and useful for mitigating LLMs' limitations in providing accurate fine-grained probability/confidence estimation.\n\n2. The experiments performed are carefully designed, and the overall writing is clear and with enough details.\n\n3. The experiment results demonstrate the effectiveness of BIRD, showing its value in multiple application scenarios."
+            },
+            "weaknesses": {
+                "value": "1. The training setting for \"Learning algorithm for constrained optimization to estimate $P(O_i|f)$\" (Line 266) should be more clearly described. The current description does not clarify (1) the number of learnable parameters ($P(O_i|f_j)$); (2) whether different instances share the same factors $f_j$; (3) whether there are $f_j$ in the test data that are unseen in the training data.\n\n2. In the experiment for \"Applying BIRD\u2019s Probabilities in Decision-Making\" (Line 430), the test instances on which BIRD's decision is unknown are filtered out. While it is claimed that \"this does not undermine our experiment setting because such removal is label-agnostic\" (Line 450), it may still introduce biases since this filtering process depends on the output of BIRD. It might be the case that BIRD predicts \"unknown\" when it is uncertain internally."
+            },
+            "questions": {
+                "value": "In Section 4.3, \"The Usage of the Reliably Estimated Probability\", it seems that the original T5 large model is better on some datasets compared to the fine-tuned models. What would be the reasons for this? Besides, what is \"PatternTime\" in Table 3? It is not mentioned anywhere else in the manuscript.\n\nPlease see \"Weaknesses\" for a few additional questions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a method allowing LLMs to reason more soundly about complex problems with uncertainty, by combining LLM introspection and verbal estimates of uncertainty into Bayesian reasoning about outcomes. In many ways it resembles chain-of-thought, in that the LLM is being asked to provide high level reasoning about an uncertain scenario, and is required to brainstorm to solve the problem. The incorporation of a Bayes net sets the method apart from prior work, and experiments show that this leads to much better estimates in pairwise evaluation of propositions, but less compelling evidence for the work when evaluated on decision making benchmarks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "This paper presented a very novel idea, a detailed method for achieving this, and a convincing evaluation of the utility of the technique. Specific strengths include:\n - mechanism for prompting a LLM to extract factors & potential outcomes of a complex decision problem\n - means to convert the factors into a binary Bayes network\n - incorporation of model uncertainty estimates into the parameterisation of the Bayes network\n - evaluation against human judgements of probability\n - strong baselines"
+            },
+            "weaknesses": {
+                "value": "The paper was quite dense to start, and took several pages to make the application scenario clear. On my first pass it wasn't apparent to me what elements of the data were part of the problem definition, what parts were computed by the LLM, and what was computed by inference in a Bayes net. Fig 1 is reasonably easy to follow, but Fig 2 is less clear - why have the conditions changed between Fig 1 and Fig2, and what parts of the central box are given as part of the data versus inferred from LLM interactions? As I understand it, the whole of the inner box is auto-generated, as well as the edges linking the given conditions with coarse probability estimates.  \n\nThe paper also takes a long and detailed dive into Bayes net formality, which is more than needed given the setting is relatively simple and could be communicated effectively with more of a focus on the running example (Fig 2 could be unpacked). As it stands, the paper takes several pages to get going, but ends up deferring many critical details to the Appendix. The method for prompting the LLM is of fundamental importance to the technique, for instance, but none of this is in the main paper."
+            },
+            "questions": {
+                "value": "There several magic numbers in 3.3 and 3.4 (mappings of rankings to probabilities), as well as key design decisions in model formulation. Can you comment on sensitivity of the method to these values/decisions?\n\nWill the evaluation data - and the code - be released?\n\n372, 449: What instances lead to 'unknown' predictions for all factors? Is this a shortcoming with the factor generation method, or is it that the problem itself is riddled with uncertainty.\n\n452: Can you elaborate on the spurious biases that affect CoT, giving it such strong performance? The same criticism could be applied to the LLM prompting as part of Bird, and the probabilities produced."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a BIRD framework that enables more reliable probability estimation based on incomplete instances from LLMs. It leverages factors generated by LLMs to make a Bayesian network and estimates more precise probabilities. BIRD with optimized prob presents a better performance in several experiments than existing methods. BIRD also demonstrates improved reasoning performance across various datasets, particularly excelling in more complex scenarios."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1) The proposed framework and optimization settings, which account for weak ordering and non-interaction in the set of factors, are valid.\n2) The authors' assumptions about enhancing the validity of the proposed Bayesian Inference Framework are reasonable.\n3) Including unobserved factors in the calculations strengthens the effectiveness and utility of the authors' proposed method.\n4) Besides precise probability estimation, the presence of follow-up generation and cross-domain experiments demonstrates the proposed method's reliability and practicality."
+            },
+            "weaknesses": {
+                "value": "1) In Line 147 and Line 155, the explanation of the outcomes is separated. It seems possible to consolidate these explanations into one part. Additionally, the explanation of \ud835\udc39 in the same paragraph could be made more concise. The space saved from these revisions could then be used to more clearly elaborate on the connection between Equation (5) and Equation (6) and the content in Algorithm 1.\n\n2) Ablation settings could be expanded to cover more aspects. For example, experiments could be conducted by excluding the MR loss from the unified loss function or by assuming that in an unobserved factor, each value does not have an equal probability of being selected."
+            },
+            "questions": {
+                "value": "1) Page 1: LLMs\u2019s \u2192 LLMs\u2019\n2) The LaTeX expression for P in the introduction differs from its expression in the later sections.\n3) Where is the example of the factor, \"The color of the vehicle,\" mentioned by the authors in Line 228, depicted in Figure 2? I couldn't find it in the figure as described in the text.\n4) Appendix A.2: Week \u2192Weak\n5) This may be a minor issue, but there could be confusion between Line 318 'S + U\u2083 implies d\u2081 and f\u2082' and f, which is a possible instance of complete information due to the notation.\n6) An additional question is, have the authors considered any experiments involving more than two outcomes (i.e., beyond binary classification)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

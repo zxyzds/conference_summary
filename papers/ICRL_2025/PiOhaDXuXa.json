@@ -1,0 +1,168 @@
+{
+    "id": "PiOhaDXuXa",
+    "title": "Bayesian Binary Search",
+    "abstract": "We present Bayesian Binary Search (BBS), a novel probabilistic variant of the classical binary search/bisection algorithm. BBS leverages machine learning/statistical techniques to estimate the probability density of the search space and modifies the bisection step to split based on probability density rather than the traditional midpoint, allowing for the learned distribution of the search space to guide the search algorithm. Search space density estimation can flexibly\nbe performed using supervised probabilistic machine learning techniques (e.g., Gaussian process regression, Bayesian neural networks, quantile regression) or unsupervised learning algorithms (e.g., Gaussian mixture models, kernel density estimation (KDE), maximum likelihood estimation (MLE)). We demonstrate significant efficiency gains of using BBS on both simulated data across a variety of distributions and in a real-world binary search use case of probing channel balances in the Bitcoin Lightning Network, for which we have deployed the BBS algorithm in a production setting.",
+    "keywords": [
+        "bayesian",
+        "binary search",
+        "bitcoin",
+        "lightning network"
+    ],
+    "primary_area": "probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",
+    "TLDR": "We present Bayesian Binary Search (BBS), a novel probabilistic variant of the classical binary search algorithm leveraging an estimate of the probability density of the search space to improve efficiency.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=PiOhaDXuXa",
+    "pdf_link": "https://openreview.net/pdf?id=PiOhaDXuXa",
+    "comments": [
+        {
+            "summary": {
+                "value": "This work proposes to use bayesian method to do binary search where the midpoint is not equal to the average of an internal, in contrast to the classical binary search method.\n\nAlthough this idea sounds interesting, I am not convinced by the proposed method, either based on the experimental results or the presentation.\n\nExperiment:\nThe authors spent so much time listing all variants of binary search in the introduction. However, during the experiments, the authors only compare with the most basic baseline, ignoring everything the authors have discussed at the beginning."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The authors ask a good research question --- how we should perform binary search when the uniform distribution assumption does not hold."
+            },
+            "weaknesses": {
+                "value": "Lack of baselines. The authors discuss many variants of binary search during introduction. However, none of them are used as baselines for comparison other than the classical binary search method.\n\nPlus, the proposed method described here is not very different from doing active learning using Gaussian Process.\n\nOne more thing, doing density estimation can be time consuming. This could ultimately slow down the the search process and be much slower than the classical binary search method."
+            },
+            "questions": {
+                "value": "Can you compare with all baselines you listed in your introduction paragraph and report results during rebuttal?\n\nHow is your method different from active learning via the help of Gaussian Process?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 1
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors present a modified version of the standard binary search algorithm by incorporating probabilistic techniques. They consider the input to their Bayesian Binary Search (BBS) algorithm as an ordered sequence of integers, $x_1, \\ldots, x_n$, where each $x_i$ is assumed to be an IID sample from an unknown distribution $\\mathbb{P}$.\n\nIf the distribution $\\mathbb{P}$ were known and had a density function $p$, binary search could be optimized by using the median $m$ of the distribution as the pivot:\n$$\n\\int_{-\\infty}^m p(x) \\, \\mathrm{d}x = 0.5\n$$\ninstead of using the midpoint of the current upper and lower bounds in the sequence.\n\nSince the distribution $\\mathbb{P}$ is typically unknown, the authors propose estimating the density of the sequence $x_1, \\ldots, x_n$ to obtain an approximation $\\hat{\\mathbb{P}}$ of $\\mathbb{P}$, using it as a surrogate in their probabilistic binary search algorithm.\n\nThe authors conduct an empirical evaluation of the algorithm, using synthetic data generated from a discretized univariate Gaussian distribution and a real-world dataset from the Lightning Network."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "BBS is shown to improve efficiency in non-uniform search spaces, as evidenced by lower average steps to reach target values compared to standard binary search, especially in scenarios with a known or estimable distribution of search targets.\n\nThe real-world example on the Lightning Network demonstrates a potential real-world use of the algorithm, if implemented appropriately."
+            },
+            "weaknesses": {
+                "value": "There is nothing \"Bayesian\" about the proposed algorithm. Perhaps a more appropriate name would be \"Probabilistic Binary Search\".\n\nOn the Lightning network experiment:\n\nThe primary weakness of the experiment lies in a misalignment between the stated motivation for Bayesian Binary Search (BBS) and its actual implementation.\n\n- The experiment does not apply BBS to actual probing in the Lightning Network, where probing costs (in terms of network resources and latency) are the main concern. Instead, they simulate probing by using inexpensive predictions from a random forest model, which removes the practical need for BBS to reduce costly network probes.\n\n- Since predictions from the random forest are computationally cheap, the added complexity of BBS (which relies on density estimation and probabilistic bisection) offers limited benefit in this context. \n\n- There is no reported raw computation time. The added computational overhead of first performing density estimation would likely be much larger than the marginal gains achieved when performing BBS over binary search.\n\nIn summary, the experiment does not convincingly demonstrate BBS\u2019s utility in addressing real-world probing expenses. Without actual network interaction, it fails to showcase how BBS would reduce probing costs in a live setting, which is the central argument for its use."
+            },
+            "questions": {
+                "value": "Have the authors considered demonstrating the use of BBS in a live, online setting, where probing costs are relevant? Since the current experiment is based on offline predictions, it\u2019s unclear if the BBS approach would indeed reduce costs in a real-world probing scenario within the Lightning Network."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Bayesian Binary Search (BBS), a probabilistic approach compared to the traditional binary search, and it aims to improve search efficiency when the target distribution is non-uniform and the probing is expensive. BBS modifies the traditional binary search by replacing the midpoint splitting with median splitting w.r.t an estimated PDF.\n\nContributions include\n1. Novel algorithm framework: the formulation of BBS integrates PDFs into binary search, and various of PDF estimation methods are supported in this framework. This framework promises better efficiency for non-uniform distribution, while reduces to traditional binary search when the distribution is uniform.\n2. BBS demonstrates robust performance through KL divergence simulations, which shows graceful degradation as PDF estimation accuracy decreases\n3. Showcase a real-world application in Bitcoin Lightning Network. The development of random forest PDF estimation methods using network features is itself valuable for practical implementations with BBS."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Originality\n1. Creatively combines classical binary search with probabilistic methods and introduces a flexible framework for incorporating various of PDF estimation methods\n2. Provides a new perspective on search optimization through statistical learning\n\nQuality\n1. Clear mathematical formulation and intuitive algorithm design\n2. Rigorous analysis of robustness of BBS through KL divergence degradation simulation\n\nClarity\n1. The paper is well structured and the clarity is pretty good\n\nSignificance\n1. Interesting application to Bitcoin Lightning Network\n2. This proposed framework can be easily implemented using various existing ML tools, and its significant performance improvements make it highly practical"
+            },
+            "weaknesses": {
+                "value": "1. Lack the theoretic analysis of optimality of median split strategy\n2. Lack theoretic analysis for convergence bounds with imperfect PDF estimation\n3. The paper mentioned a few methods for PDF estimation (RF, GPR, BNN, etc.), however, only RF was used for the Bitcoin Lighting Network problem. Since PDF estimation is a crucial piece in the algorithm framework, it is necessary to offer comparative analysis among different PDF estimation approaches, as well as discussion of the trade-offs.\n4. Simulation study covered only the three basic distributions, but for real-world applications, it is common that the distribution is heavy-tailed or complex. I would expect more comprehensive analysis over real-world distribution patterns"
+            },
+            "questions": {
+                "value": "1. Beyond Lightning Network, can you elaborate on other applications you think would benefit most from BBS?\n2. What characteristics make an application suitable for BBS?\n3. Other than median splitting strategy, have you considered other strategies in probability space, and what are the trade-offs?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors revisit bisection by introducing a probability density over the search interval rather than the usual uniform assumption. The main change is to cut where the probability reaches 50% rather than in the middle of the search interval. To estimate the required probability density, several alternatives are proposed. Then some simulation experiments are proposed."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The experiments show some improvements over a simple baseline.\n- A realistic application is considered: probing channel balances in the Bitcoin Lightning Network."
+            },
+            "weaknesses": {
+                "value": "- The problem definition lacks the assumptions: for instance, bisection can only work if the underlying function is monotonous.  Otherwise, the problem may be of contour or level set estimation.\n- It is not possible to separate the contribution from what already exists in the literature.\n- The comparison is against a single simple baseline. Why not including comparisons with some of the cited references, like Waeber et al., or Jedynak et al?"
+            },
+            "questions": {
+                "value": "Could you clarify the assumptions and highlight better the contribution? \nUnder which conditions is the search provably successful? How does it depend on the estimated pdf error?\n\nHow is the variance over repeated runs zero in some tables? Perhaps the problem is too simple?\n\nFor Bayesian optimization: see e.g., Garnett, R. (2023). Bayesian optimization. Cambridge University Press. And for other probabilistic bisection algorithms: \n- Rodriguez, S., & Ludkovski, M. (2020). Probabilistic bisection with spatial metamodels. European Journal of Operational Research, 286(2), 588-603.\n- Frazier, P. I., Henderson, S. G., & Waeber, R. (2019). Probabilistic bisection converges almost as quickly as stochastic approximation. Mathematics of Operations Research, 44(2), 651-667.\n\nTypos:\n- specifoed\n- Maxmimum"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,128 @@
+{
+    "id": "sYrdb3mhM4",
+    "title": "Predicting Spatial Transcriptomics from Histology Images via Biologically Informed Flow Matching",
+    "abstract": "Spatial transcriptomics (ST) has emerged as a promising technology to bridge the gap between histology imaging and gene expression profiling. However, its application to medical diagnosis is limited due to its low throughput and the need for specialized experimental facilities. To address this issue, we develop STFlow, a flow-based generative model to predict spatial transcriptomics from whole-slide histology images. STFlow is trained with a biologically-informed flow matching algorithm that iteratively refines predicted gene expression values, where we choose zero-inflated negative binomial distribution as a prior distribution to incorporate the inductive bias of gene expression data. Compared to previous methods that predict the gene expression of each spot independently, STFlow models the interaction of genes across different spots to account for potential gene regulatory effects. On a recently curated HEST-1k benchmark, we demonstrate STFlow substantially outperforms all baselines including pathology foundation models, with over 18% relative improvement over current state-of-the-art.",
+    "keywords": [
+        "Spatial Transcriptomics; Histology Images"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=sYrdb3mhM4",
+    "pdf_link": "https://openreview.net/pdf?id=sYrdb3mhM4",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors presented STFlow to predict ST from histology images. STFlow uses a flow matching algorithm to predict gene expression values, and achieves a performance boost over baselines on the HEST benchmark"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Predicting spatial transcriptomics using histology data is a relevant and important problem and has a large impact on the future of computational pathology and bioinformatics research.\n- The author\u2019s approaches uses state-of-the-art ML approaches, and seems to achieves performance boost over some baselines provided."
+            },
+            "weaknesses": {
+                "value": "- Author\u2019s approach assembles many prior off-the-shelf methods for ST prediction, including a two-stage approach for histology, tile-level foundation models, and flow matching. Notably, the approach uses a frozen patch encoder, that does most of the heavy lifting in the representation learning, leaving it frozen inhibits the model\u2019s ability to learn.\n- The model performance boost is not substantial, and are often within error bar of the much simpler baselines. The comparison of the proposed method doesn\u2019t have the proper slide-based baselines using the same patch encoder. For example, comparison to Hist2ST and HistToGene in table 1 does not make sense because the patch encoder is different.\n- Key implementation details of the author\u2019s approach is missing, including the model size and compute time. A comparison of the author\u2019s model size to the baseline\u2019s sizes provides important insight into the performance comparison.\n- The authors employs leave-one-out cross validation at the patient level (which is also at the slide level for many benchmarks), except for CCRCC. Leave-one-out cross validation may lead to overfitting, and this is become more concerning here because the authors use a complex approach which can easily be overfitted on to the small number of datapoints at the slide level."
+            },
+            "questions": {
+                "value": "Please address the concerns raised in weakness section, especially on the implementation/evaluation details and the comparison to the baselines."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces STFlow, using history imaging to predict spatial transcriptomics (ST). STFlow is a flow-based generative model to predict ST from whole slide image. STFlow chooses a zero-inflated negative binomial distribution as prior distribution. STFlow models the interaction of of gene across different spots compared to previous methods that predict at each spot independently. On a HEST1K benchmark, STFlow outperforms all baselines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "This paper focus on an important steps of predicting ST from WSI. It uses an innovative flow-based generative model. By incorporating spatial attention, STFlow captures dependencies between neighboring spots, reflecting the biological reality of gene regulatory networks."
+            },
+            "weaknesses": {
+                "value": "Motivation of using ZINB prior is not strong: Is there a specific reason of using this distribution? Cited literatures are single cell RNA seq which is not ST. In the Table 2, it's also clear that ZINB is not helping especially for UNI and gigapath.\n\nNotation is not easy to follow: It's claiming that algorithm 2 has a sampling factor which is gradually decrease. However, the last step is basically, $Y_{t+1} \\leftarrow Y_t + (\\hat{Y} - Y_t) / (T-t)$, I don't think it's decreasing? \n\nDifferent range of t in training and inference. It's clear the t in train is from 0 ~ 1 which in inference is from 0 to T - 1. I don't know how to model account for different range of t.\n\nLimited Generalization Under Transformations: The paper mentions that the pathology foundation models used are not E(2)-invariant, potentially restricting the model's ability to generalize under certain spatial transformations. This could limit the applicability of STFlow in diverse datasets with varying orientations and scales.\n\nLimited Dataset Diversity: The evaluation primarily focuses on the HEST-1k benchmark. Including additional datasets like STImage-1K4M from varied sources could strengthen the claims of generalizability and robustness."
+            },
+            "questions": {
+                "value": "What's the motivation of using ZINB? How does this generalize to ST? Is there any other alternative?\n\nCould you use a more clear way of presenting algorithm 2?\n\nPlease address the issue of different range of t.\n\nExploring or integrating E(2)-invariant architectures for the pathology foundation models could enhance the overall invariance of STFlow, improving its robustness to spatial transformations.\n\nPlease consider more dataset like STImage-1K4M."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a method 'STFlow' to predict gene expression from H&E images for the Spots in ST-Data. The proposed method uses flow matching starting from data sampled from zero-inflated negative binomial distribution to account for the sparsity in the gene data. The model is a VIT based architecture and the attention is constructed to take into account K nearest neighbors spots predicted gene expressions at time T, their relative positions, and their image encodings. The authors evaluate their  method on benchmarks from the Hest1K paper and compare with spot based and slide based approaches using different backbones. Using STFlow with different foundational models shows improved performance to other baselines. The paper also includes ablation studies for different prior distributions and E(2) representation invariance approaches."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is well written and easy to follow.\n- The proposed method seems effective for the application and surpasses all other baselines.\n- The authors provide all the hyperparameters for their experiments."
+            },
+            "weaknesses": {
+                "value": "- The novelty in the method is limited / incremental.\n\n- The motivation for ZINB priors is not clear given the ablation study showing that using zero priors gives almost same results.\nIn the ablation studies, using \"zero distribution, where all samples are zero\". I'm not sure what it means to apply Log1p to the samples. That would mean Log 0 which is zero. This needs to be clarified. Also, the results with the zero distribution see very close to ZINB. So why go through the trouble of esimtating the parameters for ZINB? and they are better than Gaussian which sounds counterintuitive but is not explained.\n\n- How does the proposed method compare to recent methods using diffusion models for the same task, such as: stDiff: a diffusion model for imputing spatial transcriptomics through single-cell transcriptomics, Briefings in Bioinformatics, Volume 25, Issue 3, May 2024. \n\n- Results with ResNet50 would be insightful as to how much power is obtained from the image encoding. Similarily, a model like BLEEP is using a ResNet50 but using embeddings from more recent foundational models would make a more fair comparison to the method.\n\n- The qualitative results in Fig 3 (a) are not convincing, specially when we visually compare the Triplex results to STFLow on TENX95. Even though the reported numbers for STFlow show higher correlation, TRIPLEX results look better.\n\n- In Table 2, Row 4 is a copy of row 7. Looks like it was copied by mistake."
+            },
+            "questions": {
+                "value": "Please refer to the weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

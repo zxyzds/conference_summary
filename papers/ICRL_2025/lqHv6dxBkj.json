@@ -1,0 +1,134 @@
+{
+    "id": "lqHv6dxBkj",
+    "title": "SLoPe: Double-Pruned Sparse Plus Lazy Low-Rank Adapter Pretraining of LLMs",
+    "abstract": "We propose SLoPe, a Double-Pruned **S**parse Plus **L**azy L**o**w-rank Adapter **P**r**e**training method for LLMs that improves the accuracy of sparse LLMs while accelerating their pretraining and inference and reducing their memory footprint. Sparse pretraining of LLMs reduces the accuracy of the model, to overcome this, prior work uses dense models during fine-tuning. SLoPe improves the accuracy of sparsely pretrained models by adding low-rank adapters in the final 1% iterations of pretraining without adding significant overheads to the model pretraining and inference. In addition, SLoPe uses a double-pruned backward pass formulation that prunes the transposed weight matrix using N:M sparsity structures to enable an accelerated sparse backward pass. SLoPe accelerates the training and inference of models with billions of parameters up to 1.25\u00d7 and 1.54\u00d7 respectively (OPT-33B and OPT-66B) while reducing their memory usage by up to 0.63\u00d7 and 0.61\u00d7 for training and inference respectively.",
+    "keywords": [
+        "sparse training",
+        "low rank adapter",
+        "LLM",
+        "optimization"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "We propose SLoPe, a double-pruned sparse plus low-rank adapter method improves sparse LLM accuracy while accelerating pretraining and inference, offering up to 1.25x and 1.54x training and inference speedup with reduced memory usage.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=lqHv6dxBkj",
+    "pdf_link": "https://openreview.net/pdf?id=lqHv6dxBkj",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces SLOPE, a novel pretraining method aimed at improving the efficiency of large language models (LLMs) by combining sparsity and low-rank approximations. SLOPE employs double-pruning techniques\u2014applying N:M sparsity masks during both forward and backward passes\u2014and introduces lazy low-rank adapters in the final training stages. The double-pruning approach reduces memory and computational overheads, while the lazy low-rank adapters help maintain model accuracy by mitigating the quality loss from sparsity."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. This is a technical solid article that designs optimized CUDA kernels that jointly optimize Nvidia 2:4 sparse kernels and low-rank calls through efficient tiling and scheduling.\n\n2. SLOPE yields up to 1.25x faster training and 1.54x faster inference on models with billions of parameters, with a memory reduction of up to 63% during training."
+            },
+            "weaknesses": {
+                "value": "1. Structured and semi-structured sparsity with low-rank adapters, are not new concepts in the literature (e.g., see Losparse [1]).\n\n2. This article lacks an introduction to related work and baseline methods, such as FST. Readers unfamiliar with the field may find it challenging to follow the content.\n\n3. Could you provide results on additional zero-shot datasets in GLUE beyond MMLU, ARC-c, and OpenBookQA for GPT-2 when comparing SR-STE?\n\n\n[1] Li, Yixiao, et al. \"Losparse: Structured compression of large language models based on low-rank and sparse approximation.\" In International Conference on Machine Learning, pp. 20336-20350. PMLR, 2023.\n\nMinor: \n1. L 430 typo of \"accuracy\"\n\n2. The bold values in the Tables are misleading:\n\nTable 1: Why are some values of FST also bolded?\n\nTable 3: Why are the values of SR-STE not bolded on the MMLU dataset?"
+            },
+            "questions": {
+                "value": "Please see the weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces double-pruned sparsity, a technique that applies two rounds of N:M sparsity to the weight matrices of a neural network: one for accelerated forward pass and another on the transpose of the already N:M sparse matrix for an accelerated backward pass. The proposed method is combined with LoRA-tuning in the final 0.01 iterations of pre-training resulting in the method termed Double-Pruned Sparse Plus Lazy Low-rank Adapter Pre-training (SLoPE). The authors use efficient tiling of upsample tensors and kernel fusion to reduce overhead, resulting in further boost in training and inference speed. They show that their approach results in speedup and memory reduction of pre-training LLMs of various sizes. They also show their method improves zero-shot accuracy of GPT2-small compared to a sparse pre-training baseline."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1-The proposed double-pruned N:M sparsity for both forward and backward acceleration offers a novel perspective on N:M\nsparsity, improving flexibility compared to existing transposable N:M masks.\n\n2-The tiling and kernel fusion solution that integrates LoRAs with sparse weights for enhanced efficiency is interesting.\nThe authors effectively demonstrate the acceleration and memory reduction benefits of their approach across various models, outperforming FST [1].\n\n3- The method achieves performance surpassing SR-RTE[2] and approaches that of a densely pre-trained model in tasks like MMLU, Arch Challenge, and OpenQA.\n\n[1] Accelerating Transformer Pre-Training with 2:4 Sparsity, Hu et all, ICML 2024\n\n[2] Learning N:M Fine-grained Structured Sparse Neural Networks from Scratch, Zhou et. all, ICLR 2021"
+            },
+            "weaknesses": {
+                "value": "1- The most significant weakness is the limited evaluation of how the proposed sparsity impacts performance. The sparse pre-training method negatively affects performance, and the use of a static sparse matrix further limits flexibility. While the authors claim this does not hinder flexibility, more evidence across a broader range of downstream tasks is needed to support this claim. Given the inherent trade-off between speed and performance, the current experiments do not sufficiently demonstrate the method's effectiveness. Table 3 should include more tasks (tasks in FST[1]) to give the reader a clearer understanding of the impact.\n\n2- Even in the limited downstream task evaluation, some important baselines are missing. The authors put FST in parentheses after SR-STE in the text, although these are distinct methods: FST refers to [1] while ST-RTE is [2]. Zero-shot FST results in their own setting on these tasks are not reported. Additionally, while comparing their method to a larger dense model may be unfair, it would be informative to see how a smaller dense model performs without sparse pre-training.\n\n3- The impact of LoRA fine-tuning in the final iterations appears minimal. The benchmarks (MMLU, Arch Challenge, and OpenQA) are not reported for the LoRA ablations. Since a major contribution of this work is the tiling and kernel fusion solution designed to mitigate issues caused by adding LoRAs, it is concerning that adding LoRAs seems to have little effect, especially based on the current results.\n\n[1] Accelerating Transformer Pre-Training with 2:4 Sparsity, Hu et. all, ICML 2024\n\n[2] Learning N:M Fine-grained Structured Sparse Neural Networks from Scratch, Zhou et. all, ICLR 2021"
+            },
+            "questions": {
+                "value": "1-The authors show that their method is faster than FST during pre-training, which is expected since FST dynamically searches for a mask, whereas their method uses a static one, making the training column in Table 1 clear. However, the inference column of Table 1 suggests that their method is also faster than FST for inference. All sparse pre-training methods use the full model for inference. Does this imply that their method uses the sparse matrix for inference (e.g., during zero-shot evaluations)? Then what is the point of sparse pre-training? In the table caption, it\u2019s mentioned that \"the lack of inference speedup in FST is due to the final dense pre-training during the final iterations, resulting in a dense model for inference.\" Could the authors clarify if you have included fine-tuning on a downstream task as inference? and how are the SLOPE values in the inference columns calculated?\n\n2-Is flash attention used for the baselines as well (line 312)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No ethical issues were found."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes SLoPE, a Double-Pruned Sparse Plus Lazy Low-rank Adapter pretraining method that improves the accuracy and accelerates training and inference of sparse LLMs. By incorporating a low-rank adapter during the final 1% of pretraining iterations, the model accuracy is well maintained. Experimental results show that the proposed method significantly speedups in both pretraining and inference phases and efficiently reduces memory footprint."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The authors propose a double-pruned backward pass to improve model quality and reduce mask search overhead. They introduce additional low-rank adapters in the final 1% iterations of pretraining and improving model capacity.\n\n2. The paper is well-written and easy to follow up. The finding of adding low-rank adapter in the last 1% iterations achieving better performance is interesting!"
+            },
+            "weaknesses": {
+                "value": "1. Why does introducing additional zeros in an N:M pattern during the computation of the input gradient in the backward pass of the first 99% of iterations not severely affect accuracy?\n\n2. The memory footprint for the pretraining should be higher than for inference, so why are the memory footprint reduction multiples similar? In the backward pass, calculating weight gradient involves a dense computation. While double-pruning reduces the computation of input gradients, the overall memory reduction should be more substantial.\n\n3. As discussed in section 2.2, the authors introduce a hyperparameter to balance the memory footprint, computational efficiency, and model quality. In the experiments on the effects of low-rank adapters, ranks are set to 4,16, and 64. Why weren\u2019t larger ranks used? Since the low-rank adapter is only applied in the final 1% of iterations, the computational overhead should be minimal."
+            },
+            "questions": {
+                "value": "Please see above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

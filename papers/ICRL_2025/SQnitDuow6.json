@@ -1,0 +1,167 @@
+{
+    "id": "SQnitDuow6",
+    "title": "Value-Incentivized Preference Optimization: A Unified Approach to Online and Offline RLHF",
+    "abstract": "Reinforcement learning from human feedback (RLHF) has demonstrated great promise in aligning large language models (LLMs) with human preference. Depending on the availability of preference data, both online and offline RLHF are active areas of investigation. A key bottleneck is understanding how to incorporate uncertainty estimation in the reward function learned from the preference data for RLHF, regardless of how the preference data is collected. While the principles of optimism or pessimism under uncertainty are well-established in standard reinforcement learning (RL), a practically-implementable and theoretically-grounded form amenable to large language models is not yet available, as standard techniques for constructing confidence intervals become intractable under arbitrary policy parameterizations.\n\nIn this paper, we introduce a unified approach to online and offline RLHF --- value-incentivized preference optimization (VPO) --- which regularizes the maximum-likelihood estimate of the reward function with the corresponding value function, modulated by a sign to indicate whether the optimism or pessimism is chosen. VPO also directly optimizes the policy with implicit reward modeling, and therefore shares a simpler RLHF pipeline similar to direct preference optimization. Theoretical guarantees of VPO are provided for both online and offline settings, matching the rates of their standard RL counterparts. Moreover, experiments on text summarization, dialogue, and standard benchmarks verify the practicality and effectiveness of VPO.",
+    "keywords": [
+        "preference optimization",
+        "the principle of optimism/pessimism",
+        "RLHF theory"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "Principled and practical exploration for preference optimization (e.g., RLHF) can be achieved without requiring explicit uncertainty modelling.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=SQnitDuow6",
+    "pdf_link": "https://openreview.net/pdf?id=SQnitDuow6",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes VPO which can either optimistically or pessimistically compute the reward function so that it can be used for both online and offline settings. Interestingly, ignoring the prompt-dependent baseline reward value due to the BT model, there is a computationally efficient algorithm to compute the resulting policy. In fact the formulation results in adding a KL regularization to DPO.\nThe paper proved a regret bound for online setting and a PAC bound for offline setting.\nThe experimental results have several evidence to claim that VPO outperforms DPO."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper gives a new view of online/offline learning for RL research.\n\n- Solving online and offline learning problems using the same algorithm with (theoretically) just an adjustment of one hyperparameter is very interesting.\n- The method is simple and easy to implement.\n- The assumption and the optimization criteria of the method is clearly stated so that what the method intended to optimize is clearly stated in the paper, which makes the understanding of the algorithm much better. It is connected to the body of RL research.\n- The analytical results are nice to have, yet its practical implication is difficult to verify in experiments."
+            },
+            "weaknesses": {
+                "value": "The impact of the paper to the field of natural language processing and large language model is not clear to me.\n\n- In terms of practical benefit to the LLM development, the experimental results are not decisive to conclude that VPO is better than DPO. I believe that the number of runs is not reported. The standard deviation/error is also not reported (sorry if I missed it).\n- From what I understand, ARC-challenge is not a benchmark for alignment. It is a multiple-question answering task just to evaluate the knowledge of the LLM. It is difficult to judge if VPO has an advantage over IPO/DPO for online learning settings given that aside from the format, ARC is mostly just a collection of discrete knowledge that shares little among each instance. I would like to take a look at the generation examples. Or, I would guess using the standard benchmarks for alignment algorithms like AlpacaFarm or HH-RLHF makes more sense."
+            },
+            "questions": {
+                "value": "- How many runs are conducted for Figure 1 and Table 1? Figures 4 and 5 show the average but do not show the standard deviation or standard error.\n- I'm curious about why ARC-Challenge is chosen as the task for the offline learning task. ARC is a collection of questions evaluating the knowledge of the LLM. It is mostly used to evaluate the non-instruction tuned pretrained LLMs but not the result of the alignment process. Isn't the *POs just learning the format of the multiple question answering format? I also couldn't find how the evaluation is done for ARC. Do you consider only the exact match to be the correct answer?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Reinforcement Learning from Human Feedback (RLHF) is emerged as one of the most powerful approach to finetune the large language model (LLM) and align its performance to the human. However, even with the reward model-less approach like DPO, the uncertainty of the preference label remains as a core challenge. This work, VPO, highly exploits the closed form formulation between the reward function and optimal policy. From the intuition of the policy-invariance against prompt-dependent reward function shifting, they derive a tractable objective function that reflects the pessimism / optimism of the uncertainty. Proposed objective function has a guarantee of the uncertainty bound, and experimental results show an outperforming output than the baseline."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Their formulation and statements, thesis, have solid foundation and concrete derivation. They provide a reasonable error bound that allows one to estimate the difference between the trained policy and the optimal policy. Their base framework is easily applicable to the both online and offline settings with minimal modification and its implementation is quite simple. The language of the paper is tidy and easy to read."
+            },
+            "weaknesses": {
+                "value": "Above all, the empirical gap is insufficient. Especially on table 1, the performance gap is around 0.5%p, therefore proper statistical tests are required to verify the effectiveness of the proposed method. Furthermore, Iter 3 setting tends to underperform than Iter 1 and Iter 2, thus it diminishes the intuition of theorem 1. The second concern is the misleading introduction. To my best knowledge, the term 'uncertainty' in the RLHF context usually refers to the ambiguousity and noise of the preference label. However, due to my understanding, this paper mainly focuses on the uncertainty and errors that occurred from the imperfect optimization of the RL framework itself. This part might be rewritten to avoid misleading and highlight their contribution."
+            },
+            "questions": {
+                "value": "Is there any statistical result to validate the significance of the performance gap in Table 1? The gap looks marginal without any additional information. Reporting the standard deviation may be helpful, in my opinion. Rewriting your focus will reduce the misleading; the term uncertainty usually sounds like an error from the noisy label. Finally, it may be a subjective comment; the weight of the theory content was relatively high, and it reduced the volume of the experimental contents. I wish some more ablation studies could support your core contribution to the guaranteed confidence boundary."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a new algorithm for RLHF, value-incentivized preference optimization (VPO), which allows for training an LLM with either optimistic or pessimistic principles in both offline and online settings. Experiments show VPO is more robust to over-optimization in the offline setting and outperforms online DPO in online settings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The theoretical motivation is clear and makes sense, and proposing both offline and online variants makes it more applicable in popular LLM training settings.\n- The ARC-challenge experiments do seem to show that VPO does avoid over-optimization relative to DPO and IPO."
+            },
+            "weaknesses": {
+                "value": "- The AlpacaEval results seem quite weak, with further iterations of VPO underperforming multiple iterations of DPO, and having a fairly small gap in the one iteration setting (2 points). It would be useful to either run more seeds or try more models (e.g., VPO on top of llama 3 models) to see if the improvement is robust.\n- There has been a lot of work into DPO-like algorithms recently in the field (I think the recent rainbowPO paper [1] has a good discussion of them). It would be useful to discuss how the proposed offline algorithm relates to these other approaches, such as SimPO [2] or WPO [3] (which appear to perform much more strongly on benchmarks like AlpacaEval 2). I see there is some discussion about how the method relates to DPOP, which is good.\n- Following the above, it would be good to see comparisons with these newer, reportedly better-performing DPO variants as well, to see if VPO still can perform better or similarly.\n\nOverall, I think the proposed algorithm is reasonable and incorporating principles of pessimism and optimism into RLHF is interesting, but I think that the empirical evidence that this leads to strong performance is somewhat weak. While the robustness to over-optimization is good, I think there is relatively little evidence in the work as-is that the proposed approach leads to solid improvements.\n\n[1] Zhao et al. 2024. RainbowPO: A Unified Framework for Combining Improvements in Preference Optimization. https://arxiv.org/abs/2410.04203.\n\n[2] Meng et al. 2024. SimPO: Simple Preference Optimization with a Reference-Free Reward. https://arxiv.org/abs/2405.14734\n\n[3] Zhou et al. 2024. WPO: Enhancing RLHF with Weighted Preference Optimization. https://arxiv.org/abs/2406.11827"
+            },
+            "questions": {
+                "value": "- How does the proposed approach differ to and work with other *PO approaches? (as mentioned in weaknesses)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces Value-Incentivized Preference Optimization (VPO), a novel method designed to unify online and offline Reinforcement Learning from Human Feedback (RLHF). The primary goal of VPO is to address the challenge of incorporating uncertainty estimation into the reward function, a key issue in both online and offline RLHF. VPO regularizes the maximum likelihood estimate of the reward function using the value function, modulated by a sign to indicate whether optimism or pessimism is chosen. The method also directly optimizes the policy with implicit reward modeling, simplifying the RLHF pipeline. Theoretical guarantees for VPO are provided, showing that it matches the performance rates of standard RL algorithms in both online and offline settings. Experimental results on text summarization, dialogue, and standard benchmarks verify the practicality and effectiveness of VPO."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. VPO provides a unified approach to both online and offline RLHF, addressing a significant gap in the literature. This makes it applicable to a wide range of scenarios where preference data is either abundant or scarce.\n\n2. The paper offers strong theoretical guarantees, demonstrating that VPO matches the performance rates of standard RL algorithms. This theoretical foundation adds credibility to the practical applicability of VPO.\n\n3. VPO is designed to be practically implementable and theoretically grounded, making it suitable for large language models (LLMs). The regularization technique using the value function is straightforward and computationally feasible.\n\n4. By directly optimizing the policy with implicit reward modeling, VPO simplifies the RLHF pipeline. This reduces the complexity and computational cost of training LLMs, making the method more accessible and efficient.\n\n5. The paper includes comprehensive experiments on various tasks such as text summarization, dialogue, and standard benchmarks. These experiments demonstrate that VPO is effective and practical, outperforming or matching existing methods in different scenarios.\n\n6. The work suggests a broader methodology for designing practical algorithms with principled optimism or pessimism under more general RL setups, opening avenues for future research and applications."
+            },
+            "weaknesses": {
+                "value": "1. Although the paper covers several tasks, the scope of the experiments might be limited. More diverse and challenging tasks, particularly those involving real-world applications, could further validate the robustness and generalizability of VPO. While the paper claims that VPO matches or outperforms existing methods, a more detailed comparison with state-of-the-art techniques, including recent advancements in RLHF, would strengthen the claims and provide a clearer picture of VPO's advantages.\n\n2. The theoretical guarantees provided are based on certain assumptions, such as well-behaved reward functions and policies. These assumptions may not always hold in real-world scenarios, limiting the applicability of VPO in more complex environments.\n\n3. The paper does not extensively discuss the scalability of VPO to extremely large datasets or models. Addressing these scalability issues would be crucial for deploying VPO in industrial-scale applications."
+            },
+            "questions": {
+                "value": "Is VPO equal to the DPO+KL penalty?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,167 @@
+{
+    "id": "GqsepTIXWy",
+    "title": "Bi-modality medical images synthesis by a bi-directional discrete process matching method",
+    "abstract": "Recently, medical image synthesis gains more and more popularity, along with the rapid development of generative models. Medical image synthesis aims to generate an unacquired image modality, often from other observed data modalities. Synthesized images can be  used for clinical diagnostic assistance, data augmentation for  model training and validation or image quality improving. In the meanwhile, the flow-based models are among the successful generative models for the ability of generating  realistic and high-quality synthetic images. However, most flow-based models require to  calculate flow ordinary different equation (ODE) evolution steps in synthesis process, for which the performances are significantly limited by heavy computation time due to a large number of time iterations. In this paper, we propose a novel flow-based model, namely bi-directional Discrete Process Matching (Bi-DPM) to accomplish the bi-modality image synthesis tasks. Different to other flow matching based models,  we propose to utilize both forward and backward ODE flows and enhance the consistency on the intermediate images over a few discrete time steps, resulting in a synthesis process maintaining  high-quality generations for both modalities under the guidance of paired data. Our experiments on three datasets of MRI T1/T2 and CT/MRI demonstrate that Bi-DPM outperforms other state-of-the-art flow-based methods for bi-modality image synthesis, delivering higher image quality with accurate anatomical regions.",
+    "keywords": [
+        "Bi-modality Images",
+        "Medical Image Synthesis",
+        "Flow-based Model"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "Bi-direction Discrete Process Matching",
+    "creation_date": "2024-09-23",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=GqsepTIXWy",
+    "pdf_link": "https://openreview.net/pdf?id=GqsepTIXWy",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces a flow-based generative model aimed at improving medical image synthesis across different modalities (e.g., MRI T1/T2 and CT/MRI). Unlike traditional flow-based models that focus on a unidirectional path, the proposed method leverages forward and backward Ordinary Differential Equations (ODEs) to ensure consistency across intermediate image states, enhancing the synthesis process's accuracy and quality."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "x. Bi-DPM matches intermediate states at discrete time points between forward and backward ODEs, enhancing consistency and allowing high-quality image synthesis that preserves anatomical details.\n\nx. Loss function flexibility: The model incorporates a loss function that can handle both fully paired and partially paired datasets using metrics like LPIPS for perceptual similarity and MMD for unpaired data.\n\nx. Empirical validation: Experiments conducted on MRI T1/T2 and CT/MRI datasets show that Bi-DPM outperforms state-of-the-art flow-based models, such as Conditional Flow Matching (CFM) and Rectified Flow (RF), in terms of SSIM, PSNR, and FID scores.\n\nx. Clinical relevance and 3D image synthesis: The paper includes evaluations by physicians, where Bi-DPM-generated images were deemed highly realistic, with a Turing test indicating the difficulty in distinguishing these images from real ones."
+            },
+            "weaknesses": {
+                "value": "x. **Need more elaboration on mathematical derivations**: While I understand the overall purpose of the derivations, some of the deeper mathematical proofs and their implications, like those in Remark 1, could be more thoroughly explained or connected to the practical advantages of the model.\n\nx. **Over-argument**: In Section 3.2.4, while the authors present the slicing approach as a straightforward extension of their 2D method, they do not sufficiently explain how this adapts to or addresses the complexities of 3D medical imaging. This simplification might give the impression that applying 2D techniques to 3D data is easier than it is in practice. \n \nx. **Missing details on efficiency**: While Bi-DPM is described as computationally more efficient with larger step sizes, the paper does not provide detailed comparisons of training and inference times against other models. A computational resource analysis (e.g., time per training epoch, memory requirements) would be valuable for practical considerations."
+            },
+            "questions": {
+                "value": "x. **ODE step size**: How sensitive is Bi-DPM to changes in the ODE step size? Did the authors test different step sizes systematically, and what were the observed trade-offs in terms of computational efficiency and image quality?\n\nx. **Hyperparameter selection**: How were the weight parameters $w_n$ for the loss function chosen, and how do they impact the training stability and results?\n\nx. **Physician feedback**: What qualitative feedback did the physicians provide during the image evaluation, and were there specific features or characteristics that made the synthetic images more or less convincing? \n\nx. **Performance on unpaired data**: While Bi-DPM handles paired and partially paired data well, how does it perform on completely unpaired data? Is there a significant performance drop, and if so, what are the main challenges?\n\nMinor: Segmentation may be considered a downstream task / additional metrics to evaluate image quality."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents Bi-Directional Discrete Process Matching (Bi-DPM) for bi-modality medical image synthesis. Bi-DPM employs a bi-directional process to align intermediate states across discrete time steps in both forward and backward directions with flow models. This method introduces a weighted \"meeting point\" loss, which includes terms for paired and unpaired data, allowing it to handle both types of data. By leveraging this bi-directional matching, Bi-DPM captures complex relationships between modalities, such as MRI T1/T2 and CT/MRI."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The method proposes a bi-directional recipe for the flow-matching models. Compared to methods like RF and CFM, the authors propose to constrain the consistency between intermediate states instead of restricting the velocity field to the difference. This allows a non-linear translation, as is shown in Fig. 2 and 3. \n\nThe 2D toy results shows convincing results on preserving the bi-direction relationship, even with few paired data."
+            },
+            "weaknesses": {
+                "value": "The methodology may have an advantage over RF and CFM, but the authors have picked a bad application scenario. My major concern is the applicability of such methods in medical imaging. Unlike style translation in natural images, anatomy consistency is the utmost crucial factor in translating images between modalities. The MMD in (8) seems to be a very weak constraint for anatomical consistency in unpaired data. Is it even doable to translate medical images? Why can you recover T1/T2 properties of protons in the magnetic field given the HU in CT, there is as far as I know no theoretical ground to support this. \n\nThe results involved a physician rating, but the point here is not about letting them tell if the image is realistic. One can produce realistic images with many methods, like styleGAN, cycleGAN, etc., and many methods can do the same thing. The authors should have asked the question, \u201cdoes the translated image tell the same information as the real images from the machine?\u201d. The answer is probably no, because the resultant SSIM of CT-MRI is below 0.70. With such a low SSIM, most of the diagnostic-crucial information cannot be recovered. The algorithm is making random guesses in many areas. However, the accuracy of details are important for this task in clinical scenarios.\n \nThe experiments were not well-conducted, lacking ablation studies on hyper-parameters like the weight of the unpaired data MMD loss, which can be important for the final performances. The datasets are too small for a solid evaluation of the methods (described in sec. 3.2). \n\nThe figures of the paper are relatively hard to read, and the font size of the legends in Fig.5/7 is too small."
+            },
+            "questions": {
+                "value": "Notation inconsistency: \u201cX1 follows the target distribution q(z)\u201d (line 064) \u201cX1~q(x)\u201d (line 065), should be \u201cX1~q(z)\u201d I suppose. Line 132, \u201cto measures\u201d. \n\nThe paper doesn\u2019t consider some state-of-the-art unpaired/partially paired data translation methods (e.g. Schr\u00f6dinger Bridge methods and some GAN-based methods other than CycleGAN, which is relatively out of date.).\n\nIn the training settings, the paper uses an equal proportion of the unpaired data and the paired data (line 366). But the training data consists of different proportions of the paired data (1%, 10%, 50%, and 100% illustrated in the experiments). The methods of augmenting the data to balance it into equal proportions must be specified."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This manuscript presents a novel flow-based method called Bi-directional Discrete Process Matching(Bi-DPM). The method utilizes both forward and backward ODE flows and enhance the consistency on the intermediate images to maintain high-quality generation under the guidance of paired data. Notably, it achieves significant improvements in PSNR, FID and SSIM, demonstrating the superior performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "1.\tInnovative Approach: This manuscript introduces an innovative flow-based model of medical image synthesis techniques to enhance the consistency on the intermediate images over discrete time steps in flow-based models, which helps maintaining pair information through synthesis process.\n2.\tSignificant Empirical Improvements: The method substantially improves PSNR, FID and SSIM scores, demonstrating its effectiveness over existing methods.\n3.\tDetailed Methodological Framework: This manuscript presents a well-structured and comprehensive methodological framework, introducing the use of both forward and backward flow ODEs to preserve paired information."
+            },
+            "weaknesses": {
+                "value": "1.\tThis manuscript lacks of sufficient description of the motivation and necessity of using both forward and backward ODE flows, I can\u2019t see the necessity of this operation. The authors may add more detailed description on this.\n2.\tThere lacks of implementation details. I would suggest the authors to add some description on their implementation."
+            },
+            "questions": {
+                "value": "1.\tThe authors claim that diffusion models can not be directly used to perform image-to-image translation tasks, I wonder how do the authors draw this conclusion. I have read some researches doing this task using diffusion models, I recommend the authors to read these relevant references and add a comparison experiment with diffusion model. They are listed below:\n[1]Graf, Robert, et al. \"Denoising diffusion-based MRI to CT image translation enables automated spinal segmentation.\" European Radiology Experimental 7.1 (2023): 70.\n[2]Ozbey, Muzaffer, et al. \u201cUnsupervised medical image translation with adversarial diffusion models.\u201d IEEE Transactions on Medical Imaging 42. 12(2023): 3524-3539.\n[3]Kim, Jonghun, et al. \u201cAdaptive Latent Diffusion Model for 3D Medical Image to Image Translation: Multi-modal Magnetic Resonance Imaging Study.\u201d IEEE Winter Conference on Applications of Computer Vision 2023: 7604-7613.\n2.\tThe only GAN used for comparison is CycleGAN, which is proposed in 2017. It seems out of date to me. I strongly suggest the authors to add comparisons with more advanced GAN models.\n3.\tThe authors mentioned that the proposed Bi-DPM allows for a faster transfer process. I suggest the authors to add an experiment showing superior image synthesis speed to support their conclusion.\n4.\tI noticed that in the partially paired data results, 2-step Bi-DPM performs poorer than 1-step Bi-DPM when the paired ratio is low, can the authors add more detailed explanation on this phenomenon?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a novel bi-directional discrete process matching method to model the bi-modality image synthesis tasks. This method utilizes the both forward and backward ODE flow and enhances the consistency across each intermediate images. The method only requires a few discrete time steps for inference. The method can be used for variety of paired and unpaired datasets."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper proposes novel bi-directional flow-based method for medical two modality synthesis, each can take advantage of paired information in two modality and keep consistent cross modalities. \n- The paper is well-written and easy to follow. \n- The paper considers variety of use cases including 3D image synthesis, pairs and unpaired datasets."
+            },
+            "weaknesses": {
+                "value": "- For diffusion-based generative method, after modification, these models can be used for two-modality synthesis task, such \n- To keep each intermediate step matching on the flow trajectory from backward and forward direction, it might hurt the ability the model's generalization ability."
+            },
+            "questions": {
+                "value": "- Can the authors provide more comparison between your method with other diffusion based method, such as latent diffusion model?\n- Can the authors provide some experiments on unseen data to test the generalization of your proposed method, such as EGD dataset?Chakrabarty, Satrajit, et al. \"MRI-based classification of IDH mutation and 1p/19q codeletion status of gliomas using a 2.5 D hybrid multi-task convolutional neural network.\" Neuro-Oncology Advances 5.1 (2023): vdad023.\n- Can the authors provide some comparisons between the effects on step size for MRI synthesis of proposed method, since there is only 1-step and 2-step size results?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

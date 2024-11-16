@@ -1,0 +1,167 @@
+{
+    "id": "L34BvDTwls",
+    "title": "Off-Policy Maximum Entropy RL with Visitation Measures",
+    "abstract": "We introduce a new maximum entropy reinforcement learning framework based on the distribution of states and actions visited by a policy. More precisely, an intrinsic reward function is added to the reward function of the Markov decision process that shall be controlled. For each state and action, this intrinsic reward is the relative entropy of the discounted distribution of states and actions (or features from these states and actions) during the next time steps. We prove that this distribution is the fixed point of a contractive operator. Furthermore, the problem of maximizing the expected discounted sum of these intrinsic rewards is proven to be an approximation of the minimization of an upper bound on the suboptimality gap of the state-action value function of the policy. We finally describe how existing algorithms can integrate these intrinsic rewards to enhance exploration and introduce a practical algorithm for learning this fixed point off-policy, using state-action transitions, relying on N-step bootstrapping of the operator. Empirically, this maximum entropy reinforcement learning framework provides exploration policies with good coverage of the state-action space, and high-performing control policies, which both can be computed off-policy.",
+    "keywords": [
+        "reinforcement learning",
+        "maximum entropy RL",
+        "exploration"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "A maximum entropy reinforcement learning framework is proposed, using intrinsic rewards based on the relative entropy of the distribution of future state-action pairs, resulting in high-performing control policies and efficient off-policy learning.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=L34BvDTwls",
+    "pdf_link": "https://openreview.net/pdf?id=L34BvDTwls",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes an exploration method using maximum-entropy RL in the off-policy setting. It describes the MaxEntRL framework in terms of an arbitrary feature-space, unifying state-entropy and action-entropy methods. It describes a way to compute entropy using an N-step bootstrapping operator. The main claim of the paper seems to be the novelty of unifying state-entropy and action-entropy, though I am not positive my interpretation is correct."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Maximum entropy RL is an important subject, and off-policy extensions can drastically improve sample efficiency. Using varying samples from N-step returns is an interesting and sensible idea. The two proofs in the appendix seem rigorous and correct. It\u2019s possible that focusing on state-and-action entropy is an important direction for improving exploration, though the experimental results don't rigorously investigate this."
+            },
+            "weaknesses": {
+                "value": "To me, the thesis of this submission is somewhat confused, and the empirical evidence undirected towards proving it. What is the core contribution exactly? Is it the N-step sampling for learning an estimator? If so, there should be experiments highlighting its effectiveness, and showing it's benefits over other approaches.  Is it the \u201coff-policy\u201d part? If so, that setting needs to be more clearly defined and explained. Is it the focus on S *and* A entropy rather than prior methods doing either S *o*r A? If this is the main contribution, the paper/experiments should be written to reflect that (e.g. with comparisons to only-state entropy methods). Is it a theoretical contribution of introducing the \"S and A as z\" framework?\n\nGenerally, I think this paper did not do an effective job of positioning itself with respect to prior work. I think the sentence \u201cit results in the first off-policy algorithm with state and action spaces exploration\u201d is either very incorrect or requires much more context to show it\u2019s true. I would argue that most bonus-based exploration satisfies this requirement. For example, pseudocount-based methods at least in theory operate on (S x A), and model-prediction error definitely does. As another example, \u201cBehavior From the Void\u201d (Liu, Abbeel) is an off-policy state-entropy method, isn\u2019t it?\n\nRelated, the sentence in the introduction that begins \u201cOptimizing jointly the reward function of the MDP\u2026\u201d is not correct \u2013 that\u2019s usually called bonus-based exploration. MaxEntRL can be framed as a subset of BBE, but is not its entirety.\n\nThe experimental results in this paper would be made much stronger by including relevant comparisons, such as other exploration or MaxEntRL methods. Additionally, the environments are quite simple and as such don\u2019t convincingly demonstrate this method\u2019s efficacy. Just comparing to vanilla SAC does not seem sufficient to me. As a small comment, the plots should have labels for the x and y axes.\n\nAm I correct that this method is off-policy in the sense that it uses importance sampling to correct for policy-discrepancy? This is much weaker in my mind than off-policy in the Q-learning sense (only requires a dataset of transitions). Is importance sampling the central difference between this and on-policy MaxEntRL methods?\n\nThe use of $q^*$ in Equation 3 is confusing or possibly inconsistent. In Eq 3 it is just some arbitrary distribution. But then, as far as I can tell, Theorem 1 makes it seem like the distribution generated by the optimal policy. Unless it\u2019s following established notation, using the $*$ superscript for an arbitrary (non-optimal) distribution is quite confusing.\n\nIn Equation 7, $Q^\\pi(s,a)$ is undefined. Usually I wouldn\u2019t complain because we all know what it means in standard RL, but here I\u2019m actually unclear whether you\u2019re talking about extrinsic discounted returns or intrinsic+extrinsic."
+            },
+            "questions": {
+                "value": "The experiments are all effectively tabular. Is this necessary under this method to compute the objective? Can you be more clear what you mean by \u201cthe intrinsic reward equation (3) can be estimated by Monte-Carlo\u201d? Do you need access to a generative simulator of the environment during training? If this method was applied to more complicated domains, how would it differ from for example \u201cBehavior From the Void\u201d (Liu, Abbeel)?\n\nCan you clearly state the central contribution/thesis of this work, framed with respect to prior work? I had trouble understanding what the main point was, compared with parts that were in support of the main point. You cite \u201cMarginalized State  Distribution Entropy Regularization in Policy Optimization,\u201d which uses a similar measure of entropy \u2013 what is the essential difference between that paper and yours?\n\nCan you clarify whether $q*$ refers to the optimal policy\u2019s distribution in Theorem 1? If so, that should be explicit."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a new intrinsic reward for exploration in RL, which combines the commonly used action entropy and another entropy term on the states visitation. Implementing this intrinsic reward requires to model the state visitation, here obtained through a TD-like methodology in a discounted setting. The intrinsic reward can be incorporated into any discounted RL algorithm, e.g., SAC, for improved exploration on the state space. The resulting method is evaluated against vanilla SAC on some sparse-rewards environment from MiniGrid."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- The paper introduces a general framework for MaxEnt RL encompassing all of the previous literature;\n- The paper proposes an intrinsic reward that incentives entropy over states beyond the action entropy, which can benefit exploration in sparse-reward tasks especially;\n- The paper makes an effort to motivate the resulting intrinsic reward through a theoretical result."
+            },
+            "weaknesses": {
+                "value": "- The paper seems to be built on the misconception that entropy over states has not been thoroughly explored already, as it only mentions three related work on that stream. While the proposed method looks at least partially departing from previous works, this casts some clouds over the novelty of the contribution;\n- The main theoretical result in Th. 1 is mostly implied by previous results, while the link with the resulting algorithm fades with the layers of approximations required by the practical implementation;\n- The empirical analysis looks weak for an essentially methodological contribution. It only considers MiniGrid with discrete action space and not continuous control as much of the prior works. Moreover, the reported statistics are also non-standard and leaves the significance of the improvement unclear.\n\nGiven these concerns, which I further expand in the comments below, I am inclined to a negative evaluation of the paper. However, some of the technical solutions look interesting and putting the spotlight on what is new w.r.t. prior work may go a long way in making this paper a more substantial contribution to the field.\n\n**COMMENTS**\n\n1) Prior Work on State Entropy.\n\nThe paper mentions a few works on the maximization of the entropy of the visited states (Lee et al, Guo et al, Islam et al) but seems to neglect a large body of literature on this problem. The problem of the state entropy maximization has been first introduced by Hazan et al (2019) and then studied in a series of subsequent works (below). Notably, the works by Mutti et al (2021), Liu and Abbeel (2021), Seo et al (2021), Yarats et al (2021) also introduce an intrinsic reward derived from kNN entropy estimators that avoid to perform a costly density estimation. Even though the setting of this work may not perfectly match the discounted setting of this paper, I believe they shall be mentioned and discuss at grater length. I provide a (partial) list of the work in this stream below:\n- Hazan et al., Provably efficient maximum entropy exploration, 2019;\n- Mutti and Restelli, An intrinsically-motivated approach for learning highly exploring and fast mixing policies, 2020;\n- Zhang et al., Exploration by maximizing R\u00e9nyi entropy for reward-free rl framework, 2021;\n- Mutti et al., Task-agnostic exploration via policy gradient of a non-parametric state entropy estimate, 2021;\n- Liu and Abbeel, Behaviour from the void: Unsupervised active pre-training, 2021;\n- Liu and Abbeel, Aps: Active pretraining with successor features, 2021;\n- Seo et al., State entropy maximization with random encoders for efficient exploration, 2021;\n- Yarats et al., Reinforcement learning with prototypical representations, 2021;\n- Mutti et al., Unsupervised reinforcement learning in multiple environments, 2022;\n- Mutti et al., The importance of non-Markovianity in maximum state entropy exploration, 2022;\n- Nedergaard and Cook, k-means maximum entropy exploration, 2022;\n- Mutti, Unsupervised reinforcement learning via state entropy maximization, 2023; \n- Yang & Spaan, CEM: Constrained entropy maximization for task-agnostic safe exploration, 2023; \n- Zisselman et al., Explore to generalize in zero-shot rl, 2023;\n- Tiapkin, Fast rates for maximum entropy exploration, 2023;\n- Jain et al., Maximum state entropy exploration using predecessor and successor representations, 2023;\n- Kim et al., Accelerating reinforcement learning with value-conditional state entropy exploration, 203;\n- Zamboni et al., How to explore with belief: State entropy maximization in pomdps, 2024;\n- Zamboni et al., The limits of pure exploration in POMDPs: When the observation entropy is enough, 2024.\n\n2) Novelty.\n\nThe previous comment also open some questions on the novelty of the presented intrinsic reward. In fairness, most of the previous works they are unsupervised (do not consider the presence of an external reward) and in the finite-horizon setting. However, extending them to discounted settings looks mostly doable and there are some papers studying the combination of external and intrinsic rewards (e.g., Seo et al. 2021). Especially, the claim for which this paper introduces the \"first off-policy algorithm with state and action spaces exploration\" seems a little overblown. RE3 also does that as it can be implemented with a SAC backbone. However, important implementation details between the two may make a huge difference\n\nThe main novelty seems to lie into the choice of a discounted visitation measure (instead of finite horizon) and an incentive for the entropy of future states (instead of all the states into the replay buffer). I believe the paper shall focus on those novel aspects and analyse how they contribute to improved performance.\n\nSeveral time the method by Janner et al is mentioned in the paper, without an explicit comparison. Can the authors thoroughly compare their method with that of Janner et al?\n\n3) Theoretical Ground for the Intrinsic Reward.\n\nResult of Th. 1 looks a little bit trivial: It is basically saying that the error can be bounded with the infinity norm of the occupancy, which is well known (see Kakade and Langford, \"Approximately optimal approximate reinforcement learning\", 2002, and Pirotta et al., \"Safe policy iteration\", 2013). In practice, the problem would be to set a target $q^*$ that stays close to the occupancy of the optimal policy, which is non-trivial without prior knowledge.\n\nWhereas the paper makes an effort to ground the method theoretically. However, going from the ideal method to the implemented version requires a series of changes and approximations that seems to diminish considerably the link with the theory.\n\n4) Experiments.\n\nThe experiments are conducted with a quite severe discount (0.95 and 0.9 instead of the most common 0.99). However, it is unclear whether the sampling fo the trajectories is also discounted, or it merely considers chopped trajectories at a fixed step.\n\nFigure 1: As mentioned above, other papers tried to maximize the entropy of the state distribution, why not comparing to them?\n\nFigure 3: The choice of evaluation with the median, the min and max values is quite odd and a departure from common practices (Agarwalet al., \"Deep RL at the edge of the statistical precipice\", 2021). Moreover, even if the improvement over SAC turns out to be statistically significant, it warrants a comparison with other methods already trying to maximize the entropy of the states together with the entropy of the actions (e.g, RE3?) \n\n5) Minor and Typos\n\nIn Theorem 2, the $\\overline{L}_n$-norm does not seem to have been formally introduced? How is it defined? In the next line also $\\mathcal{T}^N$ appears, which is likely a typo for $(\\mathcal{T}^\\pi)^N$?"
+            },
+            "questions": {
+                "value": "Refer to the box above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, the authors propose a new framework for MaxEnt RL based on conditional state-action visitation distributions $d^{\\pi,\\gamma}(s',a'|s,a)$ (in contrast to non-conditional and/or state-based methods). Theoretically, the authors provide a suboptimality bound for using this framework and prove that a unique optimal policy exists by reframing the method using Bellman operators. Empirically, the authors show their method achieves good coverage on a number of benchmarks.\nNext, the authors show how their method can be incorporated in off-the-shelf RL algorithms to provide online of off-line policy improvements. Empirically, they show this improves the performance of SAC on the same benchmarks."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper's topic is interesting and significant: entropy maximization is a promising direction for improving exploration, which can often be a bottleneck in RL. The paper nicely combines both theory and application. Moreover, the proposed method can easily be incorporated into existing methods, which makes it easier to apply in practice."
+            },
+            "weaknesses": {
+                "value": "In my opinion, this paper suffers from three main weaknesses:\n\n**1: The comparison to prior works is lacking.** The main contribution of this paper is the introduction and analysis of a framework that uses conditional state-action visitation distributions $d^{\\pi,\\gamma}(s',a'|s,a)$. However, no intuition is given as to why this is the right choice. Moreover, the authors do not cite or compare to [1], which uses the (very similar) non-conditional state-action visitation $d^{\\pi,\\gamma}(s',a')$ instead. A more in-depth discussion of the pros and cons of the proposed method, as well as a more thorough explanation of existing work, is required.\n\n**2: The empirical evaluation is limited.** In the experiments, the proposed method is only compared to SAC. However, SAC uses entropy regularization for its actions, not the states it reaches, and thus, it is unsurprising that it performs worse on the chosen benchmarks. No comparison is made to other methods that use state visitation distributions. Without such a comparison, I find it hard to judge whether the proposed method improves prior works. Moreover, the experiments do not give any information on the additional computational cost of the method: these should be mentioned.\n\n**3: The proven suboptimality gap (Theorem 1) is confusing.** In the theoretical analysis, the authors show a bound for the sub-optimality of a policy based on the conditional state-action distribution. However, the implications of this bound are poorly explained. As far as I understand, the gap cannot practically be computed since it depends on the (unknown) visitation distribution of an optimal policy. Furthermore, the choice of $q^*$ is arbitrary: since the proof uses a triangle inequality (in equation 17, Appendix A), $q^*$ could be replaced by any function to give a valid bound, and there is no reason to assume $q^*$ would yield a tighter bound than any other function. Lastly, a policy that optimizes this bound does not necessarily perform better than one that does not, so we cannot use it for policy improvement. Thus, I don't understand why the bound is provided: it should either be removed, or the implications should be explained more clearly.\n\n[1] : Zhang et. al., Exploration by Maximizing Renyi Entropy for Reward-Free RL Framework. AAAI, 2021."
+            },
+            "questions": {
+                "value": "I've already outlined my questions in the 'weaknesses' section above. In particular:\n1)  how does the proposed method compare to prior works, both intuitively and empirically?\n2) What conclusions can we draw from the suboptimality gap in Theorem 1?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a maximum entropy RL algorithm whose optimization objective is composed of from two reward components. One is the classic reward function and the other is an intrinsic reward, added for improving exploration. This second term is inversely proportional to the divergence with respect to some high-entropy distribution, such as the uniform. Specifically, the authors propose to minimize the discounted occupancy measure of the policy towards this target distribution. Since the discounted occupancy measure is unknwon, an approximation of this distribution is also optimized durig the main loop. They develop an adaptation of Soft Actor Critic (SAC) for a surrogate of their objective function and they conducted some validation experiments in discrete domains."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper addresses a very relevant topic for the RL comminity. There are many works in maximum-entropy RL and it is true that, unlike this work, most papers focus on maximizing the entropy of the immediate actions. Maximizing the visitation frequency is a recent algoritmic addition, which deserves further study.\n\nThe proposed method is relatively easy to implement. In particular, eq (12) appears to be a practical approximation of the objective that was originally considered for the discounted occupancy measure.\nThe paper is quite easy to follow and presentation quality is good.\n\nThe authors claim that the source code of the algorithm will be made public after acceptance."
+            },
+            "weaknesses": {
+                "value": "I believe that the two theorems are not strong enough to support some important claims of from the paper.\n1. [Theorem 1] In the abstract, the authors say that maximizing the intrinsic rewards is related to minimizing an approximation of the suboptimality gap, thus, suggesting that a suboptimality theorem proves the correctness of the proposed intrinsic rewards. However, by looking at the proof Theorem 1, we can see that the statement mostly comes from an algebraic manipulation of the terms, and the same inequality would also hold for any couple of policies $\\pi$, $\\pi^*$, and for any third term $q^*$. Therefore, this does not confirm the correctness of the intrinsic rewards, as previously implied in the paper. Lastly, regarding the tightness of the result, we can see that arbitrary small differences near 0 probability become maximally wide suboptimality gaps, making the inequality trivially satisfied for common policies.\n2. [Theorem 2] Theorem 2 also lack specificity with respect to the proposed algorithm. Indeed, it only proves that the Bellman update for the discounted occupancy measure is contractive, which I would regard as a widely known fact. This is due to the tight relationship between each component of unnormalized occupancy measure and the value function with respect to a positive reward in each state component.\n\nRegarding the experimental evaluation:\n\n3. [Experiments] The experiments test the proposed algorithm against one baseline, SAC, in a few gridworld environments. From my experience, in such small environments, I would also expect SAC to converge, even if at a slower rate than the competitor. Instead this is not the case, and in some environments, SAC does not sample the goal even once. Unfortunately, I cannot exclude that other factors may have prevented SAC from a more natural convergence. For example, has $\\alpha$ been tuned in the version of the algorithm that does not use $\\lambda$? The limited set of environments and algorithms considered is also a limitation of the experimental evaluation.\n\nMinor:\n- The role of the function $g()$ is unclear. In the text, the authors say that this can be an \"arbitrary distribution over the state\". However, different functions, such as deterministic one, would dramatically alter the objectives.\n- $\\pi^*$ in Theorem 1 has not been defined. This might be misunderstood among: the optimum with respect to the original rewards, the intrinsic rewards, or the combined rewards.\n- The norm appearing in Theorem 2 has not been defined."
+            },
+            "questions": {
+                "value": "The authors may address any of the weaknesses discussed above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,165 @@
+{
+    "id": "0G6rRLYcxm",
+    "title": "Maximum Next-State Entropy for Efficient Reinforcement Learning",
+    "abstract": "Maximum entropy algorithms have demonstrated significant progress in Reinforcement Learning~(RL), which offers an additional guidance in the form of entropy, particularly beneficial in tasks with sparse rewards. Nevertheless, current approaches grounded in policy entropy encourage the agent to explore diverse actions, yet they do not directly help agent explore diverse states. In this study, we theoretically reveal the challenge for optimizing the next-state entropy of agent. To address this limitation, we introduce Maximum Next-State Entropy (MNSE), a novel method which maximizes next-state entropy through an action mapping layer following the inner policy. We provide a theoretical analysis demonstrating that MNSE can maximize next-state entropy by optimizing the action entropy of the inner policy. We conduct extensive experiments on various continuous control tasks and show that MNSE can significantly improve the exploration capability of RL algorithms.",
+    "keywords": [
+        "Deep Reinforcement Learning; Maximum Entropy Reinforcement Learning"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "We aim to maximize the next-state entropy  by constructing an action-mapping layer and maximizing the policy entropy of the inner policy.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=0G6rRLYcxm",
+    "pdf_link": "https://openreview.net/pdf?id=0G6rRLYcxm",
+    "comments": [
+        {
+            "summary": {
+                "value": "This article presents a new reinforcement learning method called Maximum Next State Entropy (MNSE) which optimizes next-state entropy through a reversible action mapping layer. MNSE shows better performance than existing methods in complex environments with nonlinear actuators and emphasizes the importance of appropriate model and parameter settings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The experiments cover multiple continuous control tasks, including complex environments like robotic arm control. The results show that MNSE outperforms traditional maximum entropy reinforcement learning methods and other reward-based exploration strategies in these tasks. This indicates the significant potential of the MNSE method in practical applications.\n\n\n2. The paper provides rigorous theoretical analysis and demonstrates its effectiveness, which is significant for advancing research and development in the field of reinforcement learning.\n\n\n3. The paper is written in a clear and concise manner. This helps readers better understand and grasp the core ideas and technical features of the method."
+            },
+            "weaknesses": {
+                "value": "Given that MNSE relies on the accurate estimation of the dynamic model, how do you ensure the accuracy of these estimations and avoid overfitting? \n\nAdditionally, could you provide guidance on how to reasonably select the hyper-parameters to optimize the algorithm's performance?"
+            },
+            "questions": {
+                "value": "See questions in Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a new maximum entropy reinforcement learning algorithm where the entropy of the next state is enforced while learning the policy. First a particular policy parameterization is used. Inner actions are first sampled according to a parameterized inner policy (i.e., a parameterized distribution from states to features, called inner actions) and the actions are transformations of these inner actions (piecewise linear in practice, such that the density of actions can be computed based on the density of inner actions using the change of variable theorem). Second, the entropy of next states is decomposed as the sum of: the entropy of the inner policy, the expected probability of the inner actions knowing the state transitions (i.e., knowing the current state and the future state), and a constant term. Then the inner policy is maximized using SAC (applying the outer actions in the MDP). The piecewise-linear transformation is computed to maximize the expectation of the probability of inner actions knowing the state transitions. The probability of (inner) actions knowing the state transition is learned by maximum likelihood estimation. This approach eventually leads to better control policies compared to algorithms that only accounts for the entropy of actions."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The problem at hand is very important to the RL community.\n2. The approach is novel, the authors introduce a new promising intrinsic reward bonus."
+            },
+            "weaknesses": {
+                "value": "1. Some points are unclear and have raised questions, some of which may be critical to the paper. See questions bellow.\n2. The authors have missed a large part of the literature that is active in maximizing the entropy of states visited by a policy along trajectories [1, 2, 3, 4, 5]. The latter can be performed with simpler algorithms compared to the one proposed in the paper. In practice those algorithms allow to have a good state coverage, which is the objective pursued by the authors. They should be added in the related works, discussions and experiments.\n3. There are errors (or shortcuts) in some equations and notations that make the paper hard to follow and prevent ensuring the correctness of all mathematical developments. Here are those I noticed:\n\na. In section 3, the reward function is sometimes a function of the action, sometimes not.\n\nb. In equation (2), the distribution $P^\\pi$ is undefined.\n\nc. In section 4.1, how are $p(x)$ and $\\pi$ related? (There is also a clash of notation between the constant $\\pi$ and the policy $\\pi$)\n\nd. The inverse dynamic of inner policy is not defined in the main body.\n\ne. In equation (9), I suppose an expectation is missing over the random variable $s$ in the gap term.\n\nf. In equation (10) and (12), the variable $s$ is again undefined in the optimization problem. Is it on expectation or for all $s$, how is it done in practice?\n\ng. Same problem in equation (13), where a function independent of $s$ equals a function of $s$.\n\nh. In section 5.3, is the $x$-variable in the equation the inner action $e$?\n\ni. In many equations $e$ appear as a variable, but should be replaced by $f^{-1}(a, \\theta)$ as the expectations are over $a$.\n\nj. There are thee notations for parametric functions that are used together. For example, we have $f(e, \\theta)$, $f^\\theta$ and $f_\\theta$.\n\n4. Section 3 focusses on defining conditions under which the action entropy equals the state entropy. The latter is done based on non-redundant actions and non-redundant policies. From my understanding, the inner policy is not non-redundant, and there are no guarantee that the (outer) policy is eventually non-redundant after optimization. While it can be argued that the discussion is in itself interesting, I think it is confusing to introduce at the very beginning of the paper something that is unused afterwards.\n5. There is a methodological error in the experiment. The entropy of the next state is never shown, there is thus no evidence that the method learns high entropy policies.\n\n[1] Lee, L., Eysenbach, B., Parisotto, E., Xing, E., Levine, S., & Salakhutdinov, R. (2019). Efficient exploration via state marginal matching. arXiv preprint arXiv:1906.05274.\n\n[2] Guo, Z. D., Azar, M. G., Saade, A., Thakoor, S., Piot, B., Pires, B. A., ... & Munos, R. (2021). Geometric entropic exploration. arXiv preprint arXiv:2101.02055.\n\n[3] Islam, R., Ahmed, Z., & Precup, D. (2019). Marginalized state distribution entropy regularization in policy optimization. arXiv preprint arXiv:1912.05128.\n\n[4] Hazan, E., Kakade, S., Singh, K., & Van Soest, A. (2019, May). Provably efficient maximum entropy exploration. In International Conference on Machine Learning (pp. 2681-2691). PMLR.\n\n[5] Liu, H., & Abbeel, P. (2021). Behavior from the void: Unsupervised active pre-training. Advances in Neural Information Processing Systems, 34, 18459-18473."
+            },
+            "questions": {
+                "value": "1. What is the advantage of using the function $f$ to increase the gap (and thus control the next state entropy), compared to simply use as intrinsic reward the log likelihood of the inverse dynamics model (and choose f as an identity function, such that : actions = inner actions) in SAC? Similarily, why not simply learning a forward model of the MDP, and using the log likelihood of that model as intrinsic reward, to enforce the entropy of next states? \n2. Could the authors clarify the different parametric functions at hand? What is the advantage of the custom transformation in section 5.3 instead of a normalizing flow?\n3. A discretized multinomial distribution is used for the inverse dynamics model. What is the justification for that instead of a normalizing flow (or auto-encoder + ELBO for learning) and how is it limiting in practice?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents a thorough theoretical analysis of the relationship between maximizing next-state entropy and policy entropy. The authors propose a novel framework that links these two types of entropy through an innovative approach that utilizes an inner policy and an action mapping function. Based on this theoretical foundation, the authors introduce the Next-State Entropy Maximization algorithm (MNSE), which is shown to be particularly effective in environments with redundant action spaces. This work contributes valuable insights into entropy maximization, bridging next-state novelty concepts with policy design in reinforcement learning."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper offers a fresh perspective on state novelty by theoretically linking next-state entropy and policy entropy. While state novelty algorithms are known to enhance agent performance in various environments, the theoretical analysis of state entropy remains underexplored. This paper addresses this gap by establishing a detailed connection between next-state entropy and policy entropy, achieved through an internal policy and an action mapping function.\n\n2. The authors provide a rigorous and structured proof process, making it easy for readers to follow the logical progression and understand the interplay between the entropies. This systematic approach gives a solid foundation for the proposed MNSE framework, and the clarity of the theoretical contributions makes the complex subject matter more approachable for readers.\n\n3. The MNSE algorithm is an impressive practical outcome of this research, showcasing strong empirical results in environments with redundant action spaces. This suggests that the algorithm could be beneficial for a wide variety of applications where action redundancy exists, offering new avenues for exploration in reinforcement learning."
+            },
+            "weaknesses": {
+                "value": "1. The paper includes performance comparisons at 20% and 40% EAP, as seen in Experiment 2. However, expanding these comparisons to include higher EAP levels, such as 80%, 60%, and 100%, would be beneficial. Analyzing performance across a broader range of EAP settings could offer a more comprehensive view of the algorithm\u2019s robustness and adaptability to different entropy thresholds.\n\n2. The current experiments effectively demonstrate MNSE\u2019s performance in Mujoco and Meta-World environments. However, adding further experiments focused on pure exploration tasks\u2014such as those found in maze environments or other exploration-heavy scenarios\u2014would be valuable. Such experiments could provide deeper insights into how MNSE's maximization of next-state entropy impacts exploration behavior, highlighting its effectiveness in environments where exploration quality is critical.\n\n3. While MNSE is compared with well-established state novelty and exploration algorithms, such as MinRed and NovelID (both published in 2021), comparisons with more recent approaches (from 2022 or 2023) could further strengthen the relevance and appeal of this work. Including newer algorithms in the comparative analysis could provide a more current context for MNSE\u2019s performance and underscore its competitiveness among recent advancements in state novelty and exploration research."
+            },
+            "questions": {
+                "value": "1. In the Related Works section, the authors reference several algorithms (such as SAC, DSPG, CBSQL, and max-min entropy frameworks). Could the authors elaborate on why these algorithms were not included in the experiment section? Understanding the selection criteria for comparison could provide further clarity on the position of MNSE within the broader landscape of state and policy entropy methods.\n\n2. SAC is used as the baseline for updating the policy entropy term in the MNSE framework. It would be interesting to learn how MNSE might perform if alternative algorithms, such as DSPG or CBSQL, were used instead. Could the authors discuss potential outcomes or the theoretical basis for choosing SAC over these other algorithms? Insights into how the baseline choice affects MNSE\u2019s performance would be helpful for researchers considering alternative implementations of the framework.\n\n3. The entropy of all visited states has long been an interesting topic, though challenges remain in addressing it within a solid theoretical framework. Could the authors discuss the correlation between next-state entropy and the total entropy of visited states? This could provide further insight into MNSE\u2019s implications for overall state entropy in agent behavior."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper theoretically highlights the distinction between policy entropy and next-state entropy in Markov Decision Processes (MDPs) and makes a compelling argument that the two entropies are equivalent if the policy is non-redundant---meaning that different actions lead to different next states given the same state in the MDP. The paper then shifts its focus to demonstrating the advantages of incorporating maximum next-state entropy into the reinforcement learning process in MDPs. This is done by deliberately introducing saturation and deadzone effects into the control system to create redundant policies. Numerous experiments demonstrate their method can outperform the baselines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is well-written and clear, with a solid theoretical analysis and a sufficient set of experiments."
+            },
+            "weaknesses": {
+                "value": "1. In the introduction, the authors present equipment aging as an example of redundancy in the action space. However, this example does not fully convince the reviewer. Specifically, reinforcement learning assumes that the Markov Decision Process (MDP) remains consistent. When changes occur in the action space, such as those caused by aging equipment, the previously learned policy may no longer perform effectively within the altered MDP. Further clarification or a more suitable example might strengthen this argument.\n\n2. There is an abuse of notation for reward function r(s,a) while the paper assumes the reward is only affected by states."
+            },
+            "questions": {
+                "value": "1. Based on the theory, when effective action proportion is 100%, the MNSE should have the same performance as SAC (the base model adopted by MNSE). But in Fig 4. there are some differences, any explanation or analysis on this observation?\n\n2. For eq (4), how can we guarantee the mu variable is positive related with the entropy? The reviewer did not see any further analysis on this part (not even in the appendix).\n\n3. All experiments are conducted in the continuous action space, will maximum next-state entropy benefit the policy learning in discrete action space environments?\n\n4. Can you explain in more details on how to derive the content of equation (8)?\n\n5. To minimize the gap term in Theorem 5.1, step 1 and 2 are provided in equation (11) and (12). Why the parameters of the inverse dynamic of inner policy are optimized first, instead of the ones of the mapping layer?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

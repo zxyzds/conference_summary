@@ -1,0 +1,172 @@
+{
+    "id": "5mJrGtXVwz",
+    "title": "VinePPO: Unlocking RL Potential For LLM Reasoning Through Refined Credit Assignment",
+    "abstract": "Large language models (LLMs) are increasingly applied to complex reasoning tasks that require executing several complex steps before receiving any reward. Properly assigning credit to these steps is essential for enhancing model performance. Proximal Policy Optimization (PPO), a state-of-the-art reinforcement learning (RL) algorithm used for LLM finetuning, employs value networks to tackle credit assignment. However, value networks face challenges in predicting the expected cumulative rewards accurately in complex reasoning tasks, often leading to high-variance updates and suboptimal performance. In this work, we systematically evaluate the efficacy of value networks and reveal their significant shortcomings in reasoning-heavy LLM tasks, showing that they barely outperform a random baseline when comparing alternative steps. To address this, we propose VinePPO, a straightforward approach that leverages the flexibility of language environments to compute unbiased Monte Carlo-based estimates, bypassing the need for large value networks. Our method consistently outperforms PPO and other RL-free baselines across MATH and GSM8K datasets with fewer gradient updates (up to 9x), less wall-clock time (up to 3.0x). These results emphasize the importance of accurate credit assignment in  RL finetuning of LLM and demonstrate VinePPO\u2019s potential as a superior alternative.",
+    "keywords": [
+        "LLM",
+        "Reasoning",
+        "Credit Assignment",
+        "RLHF",
+        "Post-Training"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=5mJrGtXVwz",
+    "pdf_link": "https://openreview.net/pdf?id=5mJrGtXVwz",
+    "comments": [
+        {
+            "summary": {
+                "value": "VinePPO uses Monte Carlo-based credit assignment, reducing reliance on large value networks and enhancing accuracy and efficiency. It outperforms PPO and other baselines on complex math tasks, particularly with challenging datasets. Performance improves with more Monte Carlo samples, demonstrating strong scalability potential."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "VinePPO uses Monte Carlo-based credit assignment, reducing reliance on large value networks and enhancing accuracy and efficiency. It outperforms PPO and other baselines on complex math tasks, particularly with challenging datasets. Performance improves with more Monte Carlo samples, demonstrating strong scalability potential."
+            },
+            "weaknesses": {
+                "value": "1. Lack of baselines. I suggest the author adding value-network-free methods as baselines, particularly GRPO [1] which also uses a PPO-like objective with the average reward of multiple rollouts as the baseline for the policy gradient.\n2. Misuse of terminology. According to the hyperparameter setting for PPO provided in the Appendix where $\\lambda = 1$ and $\\gamma = 1$, PPO should produce an unbiased estimate for the value function. So it is better not to use \"bias\" in Line 467 and 475 but to use \"inaccuracy\"."
+            },
+            "questions": {
+                "value": "Questions:\n1. The results show that VinePPO is quite promising for LLM reasoning, but can we extend it to the more general alignment task?\n2. Is there any intuitive or theoretical explanation for why value networks fail to provide accurate estimates?\n\n[1] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Mingchuan Zhang, Y. K. Li, Y. Wu, and Daya Guo. 2024. DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models. CoRR, abs/2402.03300."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes vine-PPO, which uses Monte Carlo-based estimates to replace the value function. This approach is far more accurate and therefore performs better than the parameterized value function. Although the cost could be a concern, the authors argue that inference or generation is much faster due to many inference-optimized modules. Additionally, because of the rapid increase in performance, it may even be more efficient."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The idea of Monte Carlo estimates, although it has been used in traditional RL tasks, is novel for PPO in the context of LLMs. I find it quite interesting that it can achieve superior results even with K=1.\n- The applicability stemming from the fact that it only replaces the value function, allowing it to be used in many PPO-like methods, is highly beneficial.\n- The analysis of the value function helps clarify the motivation.\n- The proposed method is simple and easy to follow, and the paper is well-written."
+            },
+            "weaknesses": {
+                "value": "- Fundamentally, I think the difference between your approach and GRPO [1] and RLOO [2] is that you have fine-grained value estimations by generating multiple responses from each intermediate group state. However, since this involves more computation, I wonder about the trade-offs compared to GRPO.\n- This question arises because you do not compare your method with GRPO and RLOO. As these methods also employ similar ideas, why only compare with the original PPO? The authors should clearly explain the selection of baselines, and efficiency comparisons should also include this line of research.\n- Furthermore, I wonder why you do not report baselines that use finer credit assignment for the DPO objective. Since you report that PPO performs better in terms of credit assignment, I am curious how it still shows superiority even when DPO is combined with finer credit assignment.\n- Additionally, in practical situations, if one needs to find an optimal\u00a0K\u00a0for training configuration, it\u2019s unclear whether we can say that Vine-PPO is more efficient in general, as it might require more hand-engineering. However, training the value network also requires engineering, so I wonder about the complexity comparison between these methods.\n\nReferences\n\n[1] Shao et al. DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models\n\n[2] Ahmadian et al. Back to Basics: Revisiting REINFORCE Style Optimization for Learning from Human Feedback in LLMs"
+            },
+            "questions": {
+                "value": "- How does the method's dependency on\u00a0K\u00a0differ by model? I am also curious about the\u00a0K\u00a0ablation.\n- Additionally, I think creating a graph to show the trade-off between larger\u00a0K\u00a0values and efficiency would be interesting.\n- Very minor, but there is a missing period on line 264 (or 265)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Large Language Models (LLMs) are increasingly being applied to complex reasoning tasks, ranging from solving math problems to developing code. The most common method for training these models is Proximal Policy Optimization (PPO), which addresses the credit assignment problem using a value network. However, this value network can be significantly biased, which may impact performance. The authors propose VinePPO, inspired by VineTRPO, to learn a value function from Monte Carlo (MC) samples. They demonstrate that the value function from PPO performs poorly, while the MC sample estimates of the value function show strong performance and leverage compute-efficient inference techniques."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The author's observation that the issue with PPO was the value function estimates is very insightful, given that there has been a lot of work to replace PPO with new techniques.\n- The paper was well written.\n- The paper's experimental results provide a lot of interesting insights regarding issues around PPO's value function.\n- The authors performed experiments across several tasks, model sizes, and model types.\n- The authors' ablations studies show interesting pitfalls of the value function from PPO. Additionally, the authors clarify the tradeoff between VinePPO and PPO."
+            },
+            "weaknesses": {
+                "value": "- I understand that the paper focuses on addressing the pitfalls of PPO; however, comparing it with RLOO [1] would provide practitioners with valuable context on which algorithm they might want to use in practice.\n- The paper lacks details on how the inference engines were utilized to accelerate data gathering.\n\n[1] Back to Basics: Revisiting REINFORCE Style Optimization for Learning from Human Feedback in LLMs by Ahmadian et al. 2024"
+            },
+            "questions": {
+                "value": "- Missing citations\n   - RL + LLM: [1, 4]\n   - RL: [2, 3, 5]\n- How does VinePPO compare to the RLOO baseline as the value of K increases in RLOO?\n-Did you do large-batch PPO updates? (Refer to [6] for the large-batch updates.) If you didn\u2019t use the large-batch setting, essentially what you do is compute all the data statistics offline. This approach allows you to avoid loading the reward model onto the GPU, enabling you to increase your batch size much higher than if the reward model were loaded onto the GPU.\n- Why is PPO more deterministic in early steps, while VinePPO is more deterministic in later steps, as mentioned in the \"Error per reasoning step\" section?\n- Could you share a plot showing the \"explained variance\" of the value function you learn with normal PPO? (see [7])\n\n[1] Learning to Generate Better Than Your LLM by Chang et. al 2023\n[2] Exploring restart distributions by Tavakoli et al. 2018\n[3] Data-efficient deep reinforcement learning for dexterous manipulation by Popov et al. 2017\n[4] Dataset Reset Policy Optimization for RLHF by Chang et al 2024\n[5] Mastering the game of Go with deep neural networks and tree search by Huang 2016\n[6] SimPO: Simple Preference Optimization with a Reference-Free Reward by Meng et al. 2024\n[7] http://joschu.net/docs/nuts-and-bolts.pdf"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The key motivation of this manuscript is to locate and solve the problem, while PPO is finetuning LLM\uff0cthe value network is inaccurate and has high variances. It finds that in heavy and complex reasoning tasks, PPO barely outperform a random baseline due to this issue. Thus, this paper proposes a simple and straightforward approach, so called VinePPO, which computes the value using unbiased Monte Carlo estimation and improve the credit assignment. Many experiments on MATH and GSM8K datasets with RhoMath 1.1B and DeepSeekMath 7B, show that the proposed VinePPO can consistently outperforms PPO and other RL-free baselines."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1.\tThe authors found the problem via systematical evaluation that, inaccurate value estimation can limit PPO\u2019s ability to finetune LLMs in complex reasoning tasks. It can\u2019t reflect the real reward and importance. This problem results in the barely fair performance compared with a random baseline.\n2.\tThis paper proposes the VinePPO via utilizing MC samples to compute value in the PPO pipeline, and the value of a state can be estimated by the average return of K sampled trajectories from the state. \n3.\tThe experiments and analytics are convincing. The results of VinePPO is better than PPO, via improved credit assignment."
+            },
+            "weaknesses": {
+                "value": "1.\tThe proposed VinePPO is a straightforward method to use MC estimation. However, MC has been studied for a long time. It has zero bias, but also has high variance and computational efficiency problem.\n2.\tThis paper adopts the math reasoning problem. The state is the concatenation of input prompt and generated tokens, so the following trajectories can be sampled from any state s, and then MC computation can work. But, if the problem is more complex, not simple math problem, MC might not work, because long trajectory or low efficiency.\n3.\tIn VinePPO, K is very important, because accurate MC estimation needs K be large enough, which also would cause low efficient issue.\n4.\tBased on the discussion above, the generalizability of VinePPO is not analysed and  solved in the paper."
+            },
+            "questions": {
+                "value": "1.\tThe influence of K needs to be discussed, from both performance and efficiency.\n2.\tAs MC is a method with high variance, does VinePPO outperform PPO when MC estimation is not inaccurate?\n3.\tIn Fig 9, the ground truth is chosen as results via 256 MC samples. Is this reasonable?\n4.\tIt might be more convincing to provide the resulting of credit assignment. For example, are critical steps detected by VinePPO?\n5.\tSome equations are not clear, for example:$S_{t+1} =  s_t;[a_t]$"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

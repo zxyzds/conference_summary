@@ -1,0 +1,247 @@
+{
+    "id": "FXhCG41FvV",
+    "title": "ARTreeFormer: A Faster Attention-based Autoregressive Model for Phylogenetic Inference",
+    "abstract": "Probabilistic modeling of the combinatorially explosive tree topology space has posed a significant challenge in phylogenetic inference. Previous approaches often necessitate pre-sampled tree topologies, limiting their modeling capability to a subset of the entire tree space. A recent advancement is ARTree, a deep autoregressive model that offers unrestricted distributions for tree topologies. However, the repetitive computations of topological node embeddings via Dirichlet energy minimization and the message passing over all the nodes can be expensive, which may hinder its application to data sets with many species. This paper proposes ARTreeFormer, a novel approach that harnesses attention mechanisms to accelerate ARTree. By introducing attention-based recurrent node embeddings, ARTreeFormer allows the reuse of node embeddings from preceding ordinal tree topologies and fast vectorized computation as well. This, together with a local message passing scheme, significantly improves the computation speed of ARTree while maintaining great approximation performance. We demonstrate the effectiveness and efficiency of our method on a benchmark of challenging real data phylogenetic inference problems.",
+    "keywords": [
+        "phylogenetic inference",
+        "autoregressive model",
+        "attention mechanism"
+    ],
+    "primary_area": "applications to physical sciences (physics, chemistry, biology, etc.)",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=FXhCG41FvV",
+    "pdf_link": "https://openreview.net/pdf?id=FXhCG41FvV",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces ARTreeFormer, which aims to improve computational efficiency in phylogenetic inference by leveraging attention mechanisms. ARTreeFormer is based on ARTree. For traditional ARTree, the total run time grows rapidly and the\nnode embedding module dominates the total time (the message passing layers are relatively short in time consumption). In comparison to ARTree, ARTreeFormer uses (1) the recurrent node embedding that is learnable through a deep graph neural network layers (2) a local updating scheme in the neighborhood of the newly added internal node, instead of a global one. In the experiment, ARTreeFormer is evaluated with tree topology density estimation (TDE) and variational Bayesian phylogenetic inference (VBPI) on DS1-8. Experiments also show that ARTreeFormer is significantly faster than ARTree in training and evaluation."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "(1) ARTreeFormer improves significantly over ARTree by recognizing the several design bottlenecks and running time complexity of ARTree. The ARTreeFormer proposes novel attention and GNN mechanism that is tailored to phylogenetic inference.\n\n(2) ARTreeFormer is evaluated on several standard phylogenetic inference benchmarks, while the authors have provided several useful metrics in analyzing the performance of the model. The author explains in details about what each metrics stand for, and make insightful comments on why ARTreeFormer is suprior to SOTA methods in certain metrics.\n\n(3) The paper is written with a logical flow and clear exposition, and the authors provide an algorithm pseudo codes that makes the algorithm easy to understand.\n\n(4) The ARTreeFormer's performance in FLOPs and time complexity seem to significantly improve over ARTree, which showcase the effectiveness of the proposed algorithm."
+            },
+            "weaknesses": {
+                "value": "(1) Table 1 reveals that ARTreeFormer consistently lags behind ARTree in terms of KL divergence. Why does ARTreeFormer not achieve competitive performance with ARTree, which it was designed to improve? What training components or procedures might contribute to ARTreeFormer\u2019s reduced performance?\n\n(2) It seems that the recurrent node embedding with simplified attention mechanism and local message passing updates module are built upon two separate components of ARTree, respectively. The authors should consider to bring an ablation study on only changing one of the modules for ARTree and observe the metrics (time,FLOP, KL divergence, etc.). Since attention mechanisms are a key part of ARTreeFormer\u2019s design, the paper could also have a deeper ablation of different attentions. \n\n(3) There is not a theoretical analysis on how ARTreeFormer improves over ARTree in terms of running time. While the authors mention that ARTree builds topological node embeddings with two-pass algorithm which needs additional traversal over tree topology, the authors could mention how big-O complexity of the ARTree is for node-embedding and message passing module. Then, it would also be beneficial to include the recurrent node embedding and local message passing updates' complexity in terms of big-O and model sizes. Overall, the authors could make a more compelling argument than showing Figure 2 (and give a roughly estimate like 65%).\n\n(4)  Small thing on the writing, but the authors spend two paragraphs explaining the VBPI score and parsimony score before introducing the ARTree model, which is a bit distracting. Line 199, Line 263 use two different notations $F$ to describe the multi-headed attention mechanism, while the attention is denoted as M in eq. 8b. The notations could be unified for readability.\n\n(5) A lot of the terms in the experiments, for example DS1-8, VIMCO estimator, MrBayes, are wordings that are not familiar to general audience in the ML literatures. The authors should consider expand the appendix section to include some introduction on the technical components, instead of simply citing the terms from the literatures."
+            },
+            "questions": {
+                "value": "(1) Is there any explanations about why for in Figure 4 ARTreeFormer converges slower than SBN and ARTree at the beginning? What seem to be difficult to learn for ARTreeFormer, and can we attribute this phenomenon to simplification of attention-based architecture? \n\n(2) Similar to the (1) in the weakness section, can the authors provide some justifications of why ARTreeFormer under-perform the ARTree?\n\n(3) The multi-sample lower bound and annealing schedule play significant roles in training. Have the authors tested different schedules or multi-sample configurations? What are the observed effects on the model\u2019s performance?\n\n(4) How sensitive is ARTreeFormer/ARTree \u2019s performance to different orders of pre-specified leaf nodes?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors present **ARTreeFormer**, an improvement on a previous method: **ARTree**.  \n These methods are autoregressive GNN-based models and allow for a flexible way to model the entire tree space. Both **ARTree** and **ARTreeFormer** can be used in Bayesian phylogenetic tasks, including variational Bayesian phylogenetic inference.    \n\nThe core methodological aspects of both methods are the same: starting with the simplest tree topology $\\tau_3$ with 3 nodes, they iteratively add leaf-nodes to the tree by selecting edges on which to attach them until all $N$ leaf nodes are contained in the tree. \nAt a step $n<N$, a probability vector $q_n\\in\\mathbb{R}^{|E_n|}$ over the set of edges of the tree is computed using a GNN, and the edge on which to attach the $(n+1)^{th}$ leaf node is sampled from $E_n$ according to $q_n$. \nThe probability vector $q_n$ is computed from edge embeddings which, in turn, are computed from tree *node embeddings* after several rounds of *message passing*.  \n \nThe latter two steps are where the two methods differ and allow **ARTreeFormer** to be faster than **ARTree**: \n 1. *Node embedding*: **ARTreeFormer** uses the very popular self-attention mechanism to learn topological embeddings for tree nodes. This eliminates a tree-traversal based algorithm used in **ARTree** to compute these embeddings allowing for **(1)** faster execution as self-attention can be efficiently implemented in a vectorized fashion and **(2)** batched parallel execution of this embedding step on several topologies at once. \n 2. *Message passing*:  **ARTreeFormer** uses *local* message-passing to update node embeddings after addign a new leaf-node, where only the nodes in the direct neighbourhood of the newly-created internal node are updated. This contrasts with the approach in **ARTree** where all the nodes in the graph would be updated at each step of the iterative algorithm. \n\nThese two modifications allow **ARTreeFormer** to consistently run faster than **ARTree** without sacrificing performance."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Overall the paper is fairly well-written and flows quite well\n2. The learnable node embeddings using attention are a simple but effective way to **(1)** make the embeddings and the model more flexible **(2)** improve the runtime\n3. There is a significant improvement in runtime shaving *hours* of CPU runtime off (e.g for the Maximum parsimony application). I believe this makes the method more applicable to modern phylogenetic datasets where there are several hundred/thousands of taxa."
+            },
+            "weaknesses": {
+                "value": "The paper, I believe, has no real \"deal-breaking\" weakness but would benefit from addressing the following points: \n\n1. In the VBPI experiment, **ARTreeFormer** is compared to other methods: $\\phi$-CSMC and GeoPhy in terms of approximation accuracy. However, in terms of runtime, **ARTreeFormer** results are only compared to methods upon which it was built *(i.e. SBNs and ARTree)*. Since the focus of this paper is the fast runtime of **ARTreeFormer** I think a computation-speed comparison to all methods is warranted. \n2. While I understand the motivation behind choosing a one dimensional query vector $q_n$ in the node embedding phase *(a lowered time complexity and runtime)* , does that not limit the expressivity of the model ? It is not evident to me that each node benefit from querying the same node features. \n3. If the main benefit of **ARTreeFormer**  is a decreased runtime, why not explore alternatives to VIMCO to estimate gradients of the tree topology parameters ? As I understand it this approach requires $K$ samplings of the topology distribution to estimate gradients. It might be faster to compute gradients using methods like CONCRETE [1] or the Gumbel-softmax trick [2] to backpropagate directly through the discrete iterative tree building algorithm. \n\n[1] https://doi.org/10.48550/arXiv.1611.00712  \n[2] https://doi.org/10.48550/arXiv.1611.01144  \n\n\n*Minor:*\n-  In (12), should it be $\\ell(f_n,\\tau_{n+1},w):=\\sum_{(u,w)\\in E_{n+1}} ||f_n(u) - f_n(w)||^2$ ? i.e. $f_n(w)$ instead of $f_n(v)$"
+            },
+            "questions": {
+                "value": "1. Could the authors try and compare the runtime of **ARTreeFormer** to independent methods as mentioned in weakness 1 ?\n2. The paper might benefit form another ablation study, (similar to what has already been done for $K$ and $d$ in appendix $E$), to quantify the impact of the choice of a 1D query vector as mentioned in weakness 2."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces ARTreeFormer, a novel probabilistic model over tree topologies. ARTreeFormer is a variant of the previously proposed ARTree model, with the advantage that ARTreeFormer is faster while showing comparable accuracy. The speed improvement is achieved by replacing the topological node embedding module and the GNN edge-decision layer with (1) attention-based recurrent node embeddings and edge-decisions, (2) a local Dirichlet energy minimization procedure, and (3) a local message passing scheme which only updates the node embeddings in the neighbourhood of the newly added node. On three standard benchmarks (the large parsimony problem, TDE, and VBPI), the paper demonstrates that ARTreeFormer is ~3x faster on learning tasks while showing comparable accuracy to ARTree."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper demonstrates that topological node embeddings derived from Dirichlet energy minimization are not needed to achieve near-SoTA results. Instead, learnt attention-based recurrent node embeddings can provide similar performance (if not slightly worse - see Table 1). The use of attention-based edge decisions and the local message passing scheme are also new ideas wrt ARTree which provide speedups to the model."
+            },
+            "weaknesses": {
+                "value": "For a work whose main contribution is a more computationally efficient model (in the author's words, line 338: \"It should be emphasized that we mainly pay attention to the computational efficiency improvement of ARTreeFormer and only expect it to attain similar accuracy with baseline methods\"), it is surprising that there is no analysis whatsoever of the computational complexity of ARTree and ARTreeFormer. My expectation coming into the paper was that (1) the paper would discuss the computational complexity of each main step of the ARTree model using Big-O/Theta/Omega notation, deriving the runtime as a function of key quantities such as the number of nodes in the tree ($n$), the node feature dimension ($d$), etc., and discussing the degree of vectorization/parallelism achievable in each step, (2) the paper would then go on to profile each step of ARTree to confirm that the theoretical runtimes of these step align with the empirical runtimes, thereby establishing the bottlenecks, and (3) the alternative ARTreeFormer model would be proposed and its runtime again analyzed theoretically and empirically. The paper does not attempt to perform any computational complexity analysis of this kind (with the exception of the comments on line 213 and line 266). This leaves me wondering which are the real computational bottlenecks and why. Or - are they the result of inefficient implementation?\n\nIn particular, the paper claims that the node embedding module is a big computational bottleneck: \"As N increases, the total run time of ARTree grows rapidly and the node embedding module dominates the total time (\u2248 65%), which makes ARTree prohibitive when the number of leaf nodes is large. The reason behind this is that compared to other modules, the node embedding module can not be easily vectorized and parallelized w.r.t. different tree topologies and different nodes, resulting in great computational inefficiency.\". I am skeptical about this claim. By looking at the code provided by the authors, as well as at the original ARTree code, the implementation of Dirichlet energy minimization used by the node embedding module seems to be a highly inefficient Python implementation. Here is what I found:\n\n```\ndef node_embedding(self, tree, level):\n    name_dict = {}\n    j = level\n    rel_pos = np.arange(max(4,2*level-4))\n    for node in tree.traverse('postorder'):\n        if node.is_leaf():\n            node.c = 0\n            node.d = self.leaf_features[node.name]\n        else:\n            child_c, child_d = 0., 0.\n            for child in node.children:\n                child_c += child.c\n                child_d += child.d\n            node.c = 1./(3. - child_c) \n            node.d = node.c * child_d\n            if node.name != '':\n                rel_pos[node.name] = j\n            node.name, j = j, j+1\n        name_dict[node.name] = node\n    \n    node_features, node_idx_list, edge_index = [], [], []            \n    for node in tree.traverse('preorder'):\n        neigh_idx_list = []\n        if not node.is_root():\n            node.d = node.c * node.up.d + node.d\n            neigh_idx_list.append(node.up.name)\n            \n            if not node.is_leaf():\n                neigh_idx_list.extend([child.name for child in node.children])\n            else:\n                neigh_idx_list.extend([-1, -1])              \n        else:\n            neigh_idx_list.extend([child.name for child in node.children])\n        \n        edge_index.append(neigh_idx_list)                \n        node_features.append(node.d)\n        node_idx_list.append(node.name)\n    \n    branch_idx_map = torch.sort(torch.tensor(node_idx_list,device=self.device).long(), dim=0, descending=False)[1]\n    edge_index = torch.tensor(edge_index,device=self.device).long() \n    \n    return torch.index_select(torch.stack(node_features), 0, branch_idx_map), edge_index[branch_idx_map], torch.from_numpy(rel_pos).to(self.device), name_dict\n```\n\nNotice not only the use of for loops which are notoriously slow in Python, but also the ete3 tree object which is traversed as part of the algorithm. An efficient implementation of Dirichlet energy minimization, say in C++, would likely be a lot faster (say >=10x). If so, ARTree might catch up to the speed of ARTreeFormer while giving slightly better results (see Table 1). Dirichlet energy minimization being a bottleneck is also suspicious given that it is a linear-time algorithm ($O(nk)$ where $n$ is the number of leaves and $k$ is the embedding size).\n\nThere are other natural options beyond an efficient C++ (or numba, or cython) implementation to potentially speed up the Dirichlet energy minimization, for example:\n- The linear system $Ax=b$ involved in Dirichlet energy minimization has very particular, sparse structure. For example, one can perform fixed point iteration via $f^{t+1}(u) = 1/N(u) \\sum_{w \\in N(u)} f^{t}(w)$ until convergence. This is a (sparse) matrix-vector multiply $f^{t+1} = A'f^t$ for a suitable matrix $A'$. One can use repeated squaring for fast convergence ($A'^{2t} = (A'^{t})^2$). This is essentially just computing the eigenvector of the matrix $A'$ with repeated squaring. This might be fast and it is naturally vectorizable (just batch all the $A'$ matrices from different trees together).\n- Using low-dimensional embeddings: to each leaf node assign a fixed random embedding on the $n'$-dimensional simplex, with $n' < n$, then set the internal node embeddings via Dirichlet energy minimization. This should be faster than using $n$-dimensional embeddings. Random embeddings usually have good statistical properties. Furthermore, since these embeddings get projected into dimension $d$ when computing the node features with the GNN in ARTree (as mentioned in line 166), it would seem reasonable to take e.g. $n'=d$. I.e why not just start in dimension $d$ to begin with?\n\nAnother comment regarding runtime analysis: runtimes for (1) generating tree topologies vs (2) learning the model parameters may differ because training requires gradients while generating does not. This means that while the node embedding module represents 65% of the time for tree generation (Figure 2) it may be less of a bottleneck for model training. Without proper profiling, it is hard to tell what the computational bottlenecks really are and whether the paper is solving any real computational bottlenecks at all, or just implicitly overcoming inefficient implementations. It is important to recall that ARTreeFormer performs slightly worse than ARTree on several tasks (see e.g. Table 1 where ARTree beats ARTreeFormer on all but 1 dataset). Thus, the architectural changes proposed by ARTreeFormer should be well justified. If speeding up ARTree's Dirichlet energy minimization step as above makes ARTree just as fast as ARTreeFormer, the value of ARTreeFormer drops significantly.\n\nArchitecturally speaking, ARTree (Algorithm 3 / Figure 5) is simpler and more elegant that ARTreeFormer (Algorithm 1 / Figure 1), since ARTree simply uses the Dirichlet node embeddings (which are interpretable and have some nice theoretical properties [Zhang 2023, \"Learnable Topological Features for Phylogenetic Inference via Graph Neural Networks\"]) into a GNN to obtain edge decisions. ARTreeFormer, in contrast, uses an ad-hoc arquitecture consisting of attention-based learnt recurrent node embeddings, local Dirichlet edge minimization, and a local message passing scheme (each of which might explain the reduced performance of ARTreeFormer in some cases, as acknowledged by the paper and seen in Table 1 - without proper ablations, which are missing, it is hard to know which module causes performance to be lost). I generally found it hard to understand the ARTreeFormer model (Section 3.2). It suffices to compare the schematics for the two models (ARTree - Figure 5, ARTreeFormer - Figure 1) to notice the increase in architecture  complexity. In particular, note the presence of cycles in ARTreeFormer in Figure 1. There seems to be unnecessary complexity in ARTreeFormer, which is hard to justify without proper runtime analysis.\n\nThe paper is plagued with vague qualitative statements such as:\n- abstract: \"significantly improves the computation speed\"\n- line 69: \"much more computationally efficient\"\n- line 177: \"require much computational cost\".\n- line 184: \"resulting in great computational inefficiency\".\n- line 307: \"greatly improved computational efficiency\".\n- line 313: \"runtime [...] are significantly reduced\".\n- line 323: \"considerably reduced computation cost\".\n- etc.\n\nPlease provide quantitative claims instead of qualitative ones. For example, say \"3x faster\".\n\nThe words \"vectorization\" and \"parallelization\" seem to be used interchangeably throughout the paper. I believe in standard use, \"parallelization\" is used to describe the process of running code on several processes in parallel, while \"vectorization\" is used to describe speeding up code via use of vector operations (such as matrix-matrix products) which can be efficiently implemented on GPUs or CPUs (e.g. via SIMD). The terms \"vectorization\" and \"parallelization\" seem to be used interchangeably in the paper, which leads to confusion. For example, in Fig. 2 right the paper shows the \"runtime of ARTreeFormer for generating 100 tree topologies with and without parallelization\". Is this parallelization as in multiprocessing, or as in vectorization? (e.g. via batching the trees). Since the figure caption says \"All tests are run on a single 2.4 GHz CPU\" I believe this is vectorization via batching, not parallelization.\n\nOverall, the lack of proper profiling and computational complexity analysis, the suspicous Dirichlet energy minimization code which seems highly inefficient, the increased complexity of the model architecture which makes it hard to understand compared to ARTree, all without an increase in accuracy (as seen in Table 1), lead me to believe this work requires a major revision before being ready for publication, so I recommend rejection with a score of 3.\n\nI believe if pursued in the right direction, the ideas in this paper could lead to not just faster but also more elegant and performant probabilistic models for tree topologies. The idea of learnt node embeddings and use of attention instead of global message passing all are appealing."
+            },
+            "questions": {
+                "value": "1. What implementation of Dirichlet energy minimization are you benchmarking? Is it the Python implementation I cited above?\n2. As given by Big-O/Theta/Omega notation, what is the computational complexity of each step of ARTree and ARTreeFormer, as a function of key parameters such as the number of nodes ($n$), the feature dimension ($d$), etc.?\n3. Does the empirical runtime of each step align with the theoretical runtimes from question 2? For example, if the Dirichlet energy minimization step has total runtime of $\\Theta(n^3)$ for sampling one tree, does it align with the empirical runtime? (A back-of-the-envelope calculation used frequently is that in a performant CPU implementation, e.g. in C++, $10^8$ to $10^9$ operations will be executed per second).\n4. How costly is it to compute the gradients of the model parameters, which are needed for learning? This is not revealed by Figure 2, which only considers generation.\n5. Line 283: \"with or without parallelization\" - how was the code \"parallelized\"? Provide details.\n6. line 946: \"two peaks of the posterior distribution\": just curious, how do you know there are \"two peaks\"? I am not familiar with this dataset.\n7. Have you considered other simple options to speed up ARTree's Dirichlet energy minimization step? I already mentioned two above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes ARTreeFormer, which aims to improve the computational efficiency in phylogenetic inference tasks by improving the time complexity of the global multi-head attention mechanism (MHA). The motivation of this paper focuses on solving the computational efficiency problems caused by the minimisation of Dirichlet energy and message passing to all nodes. The innovation of the paper lies in the use of the Transformer architecture to achieve faster ancestor sampling and probability evaluation than the baseline ARTree with the improvement of reducing complexity from O(N3) to O(N2). The experimental part verifies the time efficiency and performance of the model and demonstrates its performance in specific benchmark tests."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "* (S1) ARTreeFormer achieves a better computational complexity with the recurrent node embedding module using local operations in comparison to the traditional multi-head attention mechanism, which is innovative in terms of computational efficiency. It can be supported by comparison experiments with the improvement of the performance and efficiency on some specific tasks.\n\n* (S2) The overall presentation is well-originaized and easy to follow. It is clear that the authors provide step-by-step designs to improve the attention mechanism for better performance and efficiency."
+            },
+            "weaknesses": {
+                "value": "* (W1) This paper emphasizes the time complexity of improving the MHA module but without showing some ablation experiments that remove the MHA module, which might not be a fair verification to support the contribution of the MHA module. The novelty and motivation of this paper are somewhat unclear (refer to Q1).\n\n* (W2) The proposed graph pooling function with the MHA and the message-passing process all learn local structures and node information, which might lack the aggregation of global information. The authors should verify whether these designs are reasonable for phylogenetic inference. Are there any intrinsic drawbacks or necessities of capturing long-distance dependencies or global topologies in these tasks?\n\n* (W3) Since computational efficiency is an important contribution, the authors should clarify the discussion of the time complexity formula in line 213. But it is only briefly mentioned in the main text. I recommended the authors provide a more detailed derivation to show the complexity reduction from $O(N^3)$ to $O(N^2)$. Some detailed explanation of each module is unclear, especially the simplification process of the MHA."
+            },
+            "questions": {
+                "value": "* (Q1) It seems that the motivation of this work is to address the computational efficiency of Dirichlet energy minimization and message passing to all nodes. Although the proposed module can achieve faster ancestor sampling and probability evaluation than ARTree without using the global MHA, the overall innovation still seems to be insufficient and needs clarification.\n\n* (Q2) The practical value of the improvement results is unclear. The paper improves time efficiency but does not demonstrate the significance of this improvement in practical applications, nor does it provide a specific dataset or scenario to verify the actual necessity of such efficiency improvements in this field. The reduction of complexity from $O(N^3)$ to $O(N^2)$ is interesting, but it may be more suitable and important to improve the multi-head attention mechanism itself (e.g., using linear attentions and Mamba variants)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The ARTreeFormer model introduces an innovative attention-based approach to accelerate phylogenetic inference, addressing computational efficiency challenges in large-scale phylogenetic studies. Through recursive node embedding and local message-passing mechanisms, ARTreeFormer significantly reduces computational time while maintaining high performance across various tasks. Key improvements include the effective use of Transformer-based attention to prioritize meaningful interactions and the capability for parallel processing, enhancing its suitability for handling complex tree structures."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The field has made significant contributions and solved important challenges in phylogenetic inference: The introduction of the ARTreeFormer model has important academic and practical significance. Phylogenetic inference is extremely valuable in biological and ecological research, but existing methods face efficiency bottlenecks when processing large-scale data. Through innovative design, ARTreeFormer accelerates the inference process without significantly sacrificing accuracy, filling the gap in efficient phylogenetic inference models and promoting research and practical applications in the field.\n2. Significantly improves efficiency and is suitable for large-scale data analysis: ARTreeFormer effectively reduces the computational time of the model through a recursive node embedding and local message passing strategy using an attention mechanism. This design allows the model to quickly generate and update tree topologies, which is especially advantageous when dealing with large numbers of nodes and complex tree structures. Experimental results show that ARTreeFormer is significantly superior to traditional models in terms of running time, making it highly competitive in processing large-scale phylogenetic data and promising for use in diverse biological data that requires efficient inference."
+            },
+            "weaknesses": {
+                "value": "1. Limitations of performance improvement: Although ARTreeFormer shows significant improvement in computational efficiency, the improvement in inference accuracy is limited. In the tasks of maximum simplicity and tree topology density estimation, ARTreeFormer is only slightly better than existing models such as SBN-SGA and ARTree on some datasets (see the KL divergence results in Table 1). This result shows that the main advantage of ARTreeFormer is concentrated on computational speed, and the accuracy bottleneck has not yet been completely broken through. If the accuracy can be further improved, especially in terms of generalization ability and performance in complex scenarios, the model value and applicability will be greatly improved, making it more competitive for practical applications.\n2. Model complexity increases and implementation difficulty: ARTreeFormer introduces a multi-layer attention mechanism and a local message passing module, which not only accelerates the calculation but also makes the model structure more complex. In \u201cSection 3.2 Attention-Based Edge Decision Distribution\u201d, the use of multi-head attention mechanisms increases the implementation complexity of the model and may place higher requirements on technical implementation. This complexity may limit the promotion and application of the model, especially in scenarios where resources are limited or efficient parallelization is difficult. Therefore, a better balance between structural optimization and implementation difficulty will help to improve the potential for widespread application of the model.\n3. Lack of generalization verification on diverse datasets: The experimental evaluation mainly focused on eight specific phylogenetic datasets (\u201cDS1-8\u201d), which, although representative, have limited coverage. The applicability and robustness of the model to other types of biological data (such as viral evolutionary data or ecosystem data) have not been fully considered in the article, making it difficult to verify its generalization ability in diverse phylogenetic scenarios. Extending the experiment to a wider range of datasets would help to more comprehensively evaluate the applicability of ARTreeFormer, thereby enhancing the credibility of the model's application in the fields of bioinformatics and ecology.\n4. Potential information loss in local message passing: Although the local message passing mechanism significantly reduces the computational burden, it may lead to potential global information loss. As mentioned in \u201cSection 3.2 Local Message Passing Module\u201d, only the neighborhood of the added node is updated, and the potential information loss of this mechanism in long-distance dependencies or complex tree structures is not discussed. Although the local update strategy improves efficiency, there may be a trade-off in terms of information integrity, which may affect model performance, especially in cases where node associations are complex or global consistency requirements are high. In the future, finding a better balance between efficient local updates and global information access will help improve the overall performance of the model.\n5. Theoretical improvement: The depth of the explanation is insufficient. The article fails to provide sufficient theoretical support for several innovative points. For example, \u201cEquation 12\u201d only describes the calculation method of the local Dirichlet energy, without discussing in detail the theoretical basis of this energy minimization strategy and its relative advantages over global minimization. In addition, the specific optimization strategy of the local message passing mechanism is only briefly described. A more in-depth theoretical analysis would help to enhance the persuasiveness of the model design, so that readers can better understand its applicability and rationality in complex inference tasks.\n6. Limitations of parallel processing in practical applications: ARTreeFormer supports the parallelization of node embedding and message passing on different tree topologies, which improves processing speed. However, \u201cFigure 2 (right)\u201d shows the significant acceleration effect of parallelization compared to non-parallelization, but does not discuss the feasibility in resource-constrained or single-machine environments. Although parallelization significantly improves running efficiency, its feasibility and practicality in environments with limited hardware resources still needs to be further verified. Optimizing model efficiency in single-machine or low-resource environments will be more conducive to the popularization of this model in practical applications."
+            },
+            "questions": {
+                "value": "1. Extensiveness of experimental data sets and the problem of updating: Current experiments focus on the DS1 to DS8 data sets, which are relatively old and have a limited sequence length, making it difficult to fully reflect the diversity and complexity of modern biological data. It is recommended that tests be conducted on updated and diverse data sets (such as longer sequence data or more complex phylogenetic tree structures) to more comprehensively evaluate the robustness and generalization ability of ARTreeFormer.\n2. How to use Transformer to increase the interpretability of the model and open the black box model: The Transformer's attention mechanism is introduced in ARTreeFormer, which, despite enhancing performance and efficiency, still has limited interpretability. The attention weights of the Transformer provide a potential interpretable pathway. For example, the key nodes and paths that the model focuses on when generating tree topology can be revealed by analyzing the attention distribution. However, the current model lacks a systematic interpretative mechanism. Future research can further explore how to use the attention weights to reveal the decision-making process of ARTreeFormer, helping to open the black box and make it more transparent and understandable in the task of biological evolution inference."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This submission extends the existing ARTree model for inferring phylogenetic posterior distributions by using attention mechanisms to compute the node embeddings. The resulting algorithm, ARTreeFormer, furthermore employs a constrained message-passage scheme which in total improves the run times of the algorithm in contrast to ARTree. The algorithm is evaluated on popular datasets commonly used in the VI-based phylogenetic inference literature."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper is well-written, and the proposed method tackles a problem which is of interest to the ML community and, importantly, reduces run times by significant factors. The use of attention mechanisms to tackle important problems is also aligned with the interests of the ICLR community. I think the submission is well-suited for publication at ICLR and that others will find it interesting, however I have some (actionable) concerns, given below."
+            },
+            "weaknesses": {
+                "value": "Apart from the impressive improvements in run times, the results in terms of posterior accuracy (Table 1) and ML estimates (Table 2) are modest. For the ML estimates, this is expected as the scores are highly saturated, why most of the other works referenced in this submission instead value the size of the standard deviation (smaller is better). W.r.t. std, ARTReeFormer never outperforms the other VBPI methods. Regarding this I have one question and one comment:\n\n* Question: Why do you think the std is larger for ARTreeFormer than the other VBPI methods? It would be nice to see a short discussion about this. The run times are already very good, so there is nothing to loose from transparently discussing this limitation of ARTreeFormer. \n* Comment: There are other VBPI models available, such as [1,2,3,4], all of which (I believe) use pre-computed candidate trees. Notably [1] and [2] report better ML scores than those reported in Table 2 in this submission. See for instance DS8 in Table 2 in [1]. As such, the following statement in the current submission does not seem to hold: \"Compared to other VBPI variants, the superiority of ARTreeFormer is mainly reflected by its unconfined support[...]\". (This point weights down my soundness score).\n\nApart from my comment above, I think [1] and [2] should be referenced in the submission to demonstrate the growing interest in VI-based phylogenetic inference in the ML community. (This point weights down my presentation score).\n\nIn [5] they show that more importance samples during training can harm the inference of the variational approximation. In Eq. 3 in the submission it states that the models are trained using the importance weighted ELBO. How does the choice of $K$ affect the quality of your inferred approximations? Can you say something about the expected differences in scores for say $K=1$ or $K=100$?\n\nIf my concerns above are handled/discussed, I am willing to raise my overall rating to an acceptance level.\n\n[1] https://arxiv.org/abs/2310.00941\n\n[2] https://arxiv.org/abs/2406.07083\n\n[3] https://pmc.ncbi.nlm.nih.gov/articles/PMC9949155/pdf/nihpp-2302.08840v1.pdf\n\n[4] https://proceedings.neurips.cc/paper/2020/hash/d96409bf894217686ba124d7356686c9-Abstract.html\n\n[5] https://arxiv.org/abs/1802.04537"
+            },
+            "questions": {
+                "value": "I am aware that there are many papers now in ML conferences on VI-based phylogenetics. Something that I am missing in these papers is a strong motivation of why better phylogenetic posterior inference algorithms are needed? As I have stated above, most of the results on the considered experiments appear saturated, and so it would really increase the significance of these papers if there were motivations that capture the necessity of these models and in which sense biologists would be interested in them. Do you think it is possible to provide such a motivation, potentially with references to works were similar types of models are used to draw biological conclusions?\n\nNote that my question above is not a critique of your submission. It would however strengthen the paper, and potentially make it impactful outside of the ML community, if such a motivation was to be provided."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

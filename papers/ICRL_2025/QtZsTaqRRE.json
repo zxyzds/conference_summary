@@ -1,0 +1,133 @@
+{
+    "id": "QtZsTaqRRE",
+    "title": "Accelerated Online Reinforcement Learning using Auxiliary Start State Distributions",
+    "abstract": "Learning a robust policy that is performant across the state space, in a sample efficient manner, is a long-standing problem in online reinforcement learning (RL). This challenge arises from the inability of algorithms to explore the environment efficiently. Most attempts at efficient exploration tackle this problem in a setting where learning begins from scratch, without prior information available to bootstrap learning. However, such approaches often fail to fully leverage expert demonstrations and simulators that can reset to arbitrary states. These affordances are valuable resources that offer enormous potential to guide exploration and speed up learning. In this paper, we explore how a small number of expert demonstrations and a simulator allowing arbitrary resets can accelerate learning during online RL. We show that by leveraging expert state information to form an auxiliary start state distribution, we significantly improve sample efficiency. Specifically, we show that using a notion of safety to inform the choice of auxiliary distribution significantly accelerates learning. We highlight the effectiveness of our approach by matching or exceeding state-of-the-art performance in sparse reward and dense reward setups, even when competing with algorithms with access to expert actions and rewards. Moreover, we find that the improved exploration ability facilitates learning more robust policies in spare reward, hard exploration environments.",
+    "keywords": [
+        "reinforcement learning",
+        "sample efficiency",
+        "robustness"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "A carefully chosen auxiliary start state distribution can accelerate online RL",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=QtZsTaqRRE",
+    "pdf_link": "https://openreview.net/pdf?id=QtZsTaqRRE",
+    "comments": [
+        {
+            "summary": {
+                "value": "The authors propose an algorithm for selecting start state distributions other than the given start conditions. They introduce a mathematical definition of safety that represents the probability of a policy triggering an early episode termination. And two practical algorithms inspired by this mathematical object. The first algorithm produces a sampling distribution over given offline demonstrations using the length of the episode as a proxy for task success. The second algorithm uses this distribution to sample start states, simulating from the sampled state.\n\nThe algorithm is evaluated in the sparse Lava Bridge Environment against Inter-Quartile Learning + Jump Start Reinforcement Learning, an offline reinforcement learning algorithm combined with an exploratory policy learning algorithm and HySAC, a hybrid algorithm that learns online and utilizes offline demonstrations. They are able to beat the provided baselines.\n\nThe algorithm is further evaluated in three simple continuous control MuJoCo tasks, matching the performance of HySAC, and with fewer offline data than other algorithms in the Lava Bridge Environment. \n\nFinally, they compare against sampling uniformly and with a different heuristic in the Lava Bridge Environment."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The introduction of the safety state distribution is quite interesting and the experiments in 5.4 and 5.5 provide useful insight into the benefits of this metric. Because of this, the algorithm is motivated in principle and is quite easy to implement."
+            },
+            "weaknesses": {
+                "value": "Unfortunately the baselines in the main experiments are not designed for and do not have access to resetting to arbitrary states and are not directly comparable. JSRL seems to learn a policy that explores, so it will inevitably spend more samples getting to critical states\nThere are other state of the art baselines that also could have been included like simple behavior cloning or [1].\n\nThe MuJoCo experiments could have been augmented to be sparse, like ant maze. Showing that the algorithm matches the performance of HySAC does not provide useful information.\n\nOne big concern is the lack of citation of [2]. They study the benefits of uniform simulator resets in terms of sample efficiency and robustness. Findings in 5.1 and 5.2 are somewhat overlapping with the aforementioned work.\n\n[1] Siddhant Haldar, Vaibhav Mathur, Denis Yarats, Lerrel Pinto \"Watch and Match: Supercharging Imitation with Regularized Optimal Transport\"\n[2] Aravind Rajeswaran, Kendall Lowrey, Emanuel Todorov, Sham Kakade \"Towards Generalization and Simplicity in Continuous Control\""
+            },
+            "questions": {
+                "value": "How does this algorithm perform in a sparse continuous control task like ant maze?\n\nHow does this algorithm perform in higher-dimensional systems like humanoid?\n\nIn section 5.3, how do the baseline algorithms perform given the same number of samples (0.5k) as given to AuxSS?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Research integrity issues (e.g., plagiarism, dual submission)"
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "May not be intentional, but many ideas are similar to an un-cited work [1]\n\n[1] Aravind Rajeswaran, Kendall Lowrey, Emanuel Todorov, Sham Kakade \"Towards Generalization and Simplicity in Continuous Control\""
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes AuxSS, aiming to improve sample efficiency in online RL by sampling the initial states from an auxiliary distribution. The distribution is dynamically updated during training using a Monte Carlo-like scheme. With such auxiliary start distribution, the policy can avoid struggling at the start region of the environment, thus enjoying higher sample efficiency and safety."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The problem discussed in this paper is novel. Low sample efficiency is a long-existing challenge in online RL, and this paper provides a novel perspective to further address this problem.\n- The experiments cover various settings, including both sparse- and dense-reward tasks and different common baselines, showing the effectiveness of the auxiliary start distribution."
+            },
+            "weaknesses": {
+                "value": "See questions."
+            },
+            "questions": {
+                "value": "- What is the formulation of $J_{\\mu_{OOD}}$?\n- I do not find any reference of Figure 2. Could you please insert it to the proper place to better explain your algorithm? Besides, I wonder what the color of points in the middle of Figure 2 represents.\n- The notation in Algorithm 1 is not clear. For example\n  - What does $S_{demo} - S_{demo}[i]$ means if $S_{demo}$ is a state sequence while $S_{demo}[i]$ is a single state?\n  - Following the previous question, why $\\lambda$ is computed by this equation?\n  - Is $W[i]$ the $i$-th position of $W$, or a new variable? If it is a part of $W$, Line 3 has changed its value, so the update in Line 5 is meaningless. If it is a new variable, what does Line 5 do by adding a sequence and a single value?\n- The description of Lava Bridge appears at the beginning of Section 5, but the illustration is at Figure 8, Section 5.4, which is quite confusing. Could you please move this illustration to the same place of the description?\n- AuxSS is based on the early termination of episodes. However, HalfCheetah-v4 will not terminate until it reaches the timestep limitaion, that is, it will not early terminate. Including this environment does not consistent to the motivation of this paper. Could you please use environments with early termination, such as Hopper or Humanoid?\n- Is the Lava Bridge environment first proposed in this paper? If it is, could you please provide detailed information about it, especially the reward function? You only mentioned that \"The agent only gets a non-zero reward on reaching the goal state or entering a terminal state\", but not giving how much reward the agent will get. As a result, I am confused by the relation between the training reward and the success rate.\n- In Section 5.3, I think the performance change of AuxSS over the size of expert demonstration should be included. Will increasing the size of demonstration further promote the performance of AuxSS? And will AuxSS work if the demonstrations are expert but half-way trajectories?\n- In Section 5.4, the sampling distributions are unclear. What are the specific formulations of $\\Omega$-SS and GoalDist-SS?\n- Could you please illustrate how $W$ changes during the training process?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the issue of sample efficiency in online reinforcement learning (RL). The authors propose a method, Auxiliary Start State Sampling (AuxSS), which leverages a small set of expert demonstrations and a simulator with arbitrary resets to improve exploration and policy robustness. AuxSS uses an auxiliary start state distribution informed by safety cues\u2014essentially prioritizing task-critical states where safety violations, such as early episode terminations, commonly occur. This approach enables better exploration in environments with sparse rewards and difficult exploration tasks, as it targets states crucial for task completion."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Overall, the paper is well-written and easy to follow. The method is presented clearly with sufficient notations. The idea is interesting and straightforward. The algorithm is compatible with many RL algorithms and can be applied to many scenarios."
+            },
+            "weaknesses": {
+                "value": "The below paper seems to be highly relevant, but the authors didn't discuss and compare with it:\n- Contrastive Initial State Buffer for Reinforcement Learning (https://arxiv.org/abs/2309.09752v3), which comes with open-sourced code (https://github.com/uzh-rpg/cl_initial_buffer).\n\nBesides, the current experiments only covered a 2D discrete env (lava bridge) and 3 Mujoco task. How would the algorithm perform on high-dimensional tasks with sparse rewards? (the hard tasks in MetaWorld for example)"
+            },
+            "questions": {
+                "value": "1. Is the algorithm applicable to environments with more randomness? For example, a maze task where the start location, the goal, and the map are all randomly generated for each episode. What would be \"task-critical states\" for such scenarios?\n2. In terms of \"the time to termination\"(line 252), do you only consider failure episodes or both successful and failure episodes? From line 240, it should consider the cases of \"early episode termination\", while it doesn't distinguish between successful and failed runs in algorithm 1.\n3. How is task horizon H determined and how does it influence the algorithm performance? Does the algorithm work for dynamic-horizon tasks?\n4. In Figure 7, it would be better to include the baseline algorithms' performance with 0.5K demonstrations as well. Currently, we don't know if the performance of the baseline algorithms drops with fewer demonstrations."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

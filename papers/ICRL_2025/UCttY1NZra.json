@@ -1,0 +1,166 @@
+{
+    "id": "UCttY1NZra",
+    "title": "Conic Linear Units: Orthogonal Equivariance Improves General-Purpose Nonlinearities",
+    "abstract": "Most activation functions operate component-wise, which restricts the equivariance of neural networks to permutations. We introduce Conic Linear Units (CoLU) and generalize the symmetry of neural networks to continuous orthogonal groups. By interpreting ReLU as a projection onto its invariant set\u2014the positive orthant\u2014we propose a conic activation function that uses a Lorentz cone instead. Its performance can be further improved by considering multi-head structures, soft scaling, and axis sharing. CoLU associated with low-dimensional cones outperforms the component-wise ReLU in a wide range of models\u2014including MLP, ResNet, and UNet, etc., achieving better loss values and faster convergence. It significantly improves diffusion models' training and performance. CoLU originates from a first-principles approach to various forms of neural networks and fundamentally changes their algebraic structure.",
+    "keywords": [
+        "Neural Network Architectures",
+        "Activation Functions"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "This paper introduces a novel activation function that enhances the symmetry of neural networks and improves performance across a variety of models.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-13",
+    "forum_link": "https://openreview.net/forum?id=UCttY1NZra",
+    "pdf_link": "https://openreview.net/pdf?id=UCttY1NZra",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper proposes a new activation function, the conic linear unit (CoLU). Inspired by the conic projections in relativistic geometry, the CoLU builds in additional equivariance properties compared to the ReLU activation function by acting on groups of neurons instead of the typical per-neuron activation. In particular, CoLU supports orthogonal equivariance within a feature vector (or subvector/group of features), i.e., equivariance to a rotation around a conic axis. \n\nThe authors develop mathematical proofs of the additional equivariance properties and provide empirical results to show an improved generalization ability compared to ReLU by way of improved performance in toy settings, ResNets for classification on CIFAR-10, and UNETs for image generation."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- I found the proposed approach for baking equivariance properties directly into the activation function original. The projection onto a cone to impose rotational equivariance makes sense and may be useful in many settings.\n- The paper provided experimental evidence for improved performance in many settings, which could point to a potentially general contribution to the field of deep learning.\n- The paper was written well with clear and concise statements and was a pleasure to read."
+            },
+            "weaknesses": {
+                "value": "I have several concerns that contributed to my moderate score for the paper. I elaborate below.\n- I didn't see any strong evidence in the paper that real-world feature spaces contain rotationally symmetry, so I find it hard to appreciate why imposing this additional capability should be expected to be beneficial a priori. The theoretical proofs show that orthogonal equivariance is an additional feature of the architecture with CoLU, but not that this is necessary in practice or under some assumptions about the feature space.\n- The performance improvements are modest, about 1% on CIFAR and MNIST. Furthermore, table 4 shows a lower training loss for CoLU in addition to the higher test accuracy. One possible explanation for this would just be that the ReLU takes longer to converge with the chosen hyperparameters. I would suggest training the ReLU network longer up to the same training loss if possible to make the claim about better generalization properties stronger.\n- Minor: There is no detailed analysis or empirical proof that the training and inference speeds remain unaffected. Adding this would strengthen the claims of the paper since the proposed activation function is significantly more complex than the elementwise ReLU."
+            },
+            "questions": {
+                "value": "- Is the link to relativistic geometry meaningful or relevant in any way? The light cone and plane of simultaneity concepts are introduced but don't seem to be relevant to the development of the CoLU activation function or the rest of the paper. It seemed to me that the actual maths could be presented more directly with standard linear algebra and group theory, but perhaps I am wrong. In any case, I would suggest removing them or shortening this material for the sake of clarity since they add unnecessary complexity and distraction.\n- Soft projection and axis sharing were introduced but were only tested in toy settings. If those results hold, then wouldn't the best performance be obtained by including them in the large-scale experiments? Why was this not included?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a new activation function called conic linear units (CoLU), which applies block-wise \n non-linearity to neurons. Specifically, CoLU projects a set of neurons to a light cone.\nThe authors experimented with this activation in various tasks such as synthetic image classification, image generation with diffusion models, and different architecture types such as MLP, ResNet, and UNet."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The construction of the proposed activation is unique. It is motivated by spacetime symmetry, and basically, any activation functions can be replaced with the proposed one.\n- The authors tested CoLU on various tasks, from synthetic data reconstruction to image diffusions.\n- The authors investigated the linear mode connectivity property and observed the CoLU-based models also exhibit the property similarly to ReLU-based networks, which is intriguing."
+            },
+            "weaknesses": {
+                "value": "- It is hard to judge the significance of CoLU's performance as the paper limits its comparisons to its own experimental models without referencing results from other studies. The following are more specific concerns about performance comparison.\n  - Regarding ResNet-56 experiments, the reported test error rate of ResNet56 in Table 4 is ~9\uff05, but the same model achieves ~7% error rate in the original ResNet paper [1]. This makes me concerned about the validity of this experiment. Clarify if there are any differences in implementation or training settings compared to the original ResNet paper that could explain the performance gap.\n  - The performance of toyMLP is quite low. I quickly experimented with ReLU-based 512-dim two-layer MLP on MNIST (the same architecture used in the paper), and it got 98% test accuracy, which is much higher than the scores shown in Table 3. The authors should explain this performance gap. The code I used is shown below. \n  - In the abstract and the introduction, the paper says that the CoLU activation significantly outperforms ReLU-based diffusion, but this statement is not fully validated in the experimental section. Table 5 only presents the training loss and does not show conventional image generation metrics such as FID or test ELBO, which should be included in the table to validate the statement.\n\n- It\u2019s unclear how the equivariance property of the proposed activation relates to overall network performance, expressivity, and generalization.\nThe performance improvement in Experiment 5.1 makes sense since the data has rotation symmetry, while the other tasks and datasets do not involve rotation symmetry. It would be good for the authors to explain why the proposed activations contribute to performance improvement on such datasets and tasks without rotational symmetry. The authors might be trying to explain the relationship through the theoretical part (section 4), but the current version is so complex that it's hard to understand what is the main contribution of this section. I would appreciate it if the authors could provide a more detailed summary of this section.\n\n[1] https://arxiv.org/abs/1512.03385\n```\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nimport torch.optim as optim\nfrom torchvision import datasets, transforms\n\nclass Net(nn.Module):\n    def __init__(self):\n        super(Net, self).__init__()\n        self.fc1 = nn.Linear(784, 512)\n        self.fc2 = nn.Linear(512, 10)\n\n    def forward(self, x):\n        x = torch.flatten(x, 1)\n        x = self.fc1(x)\n        x = F.relu(x)\n        x = self.fc2(x)\n        return x\n\ndef train(model, device, train_loader, optimizer, epoch):\n    model.train()\n    for batch_idx, (data, target) in enumerate(train_loader):\n        data, target = data.to(device), target.to(device)\n        optimizer.zero_grad()\n        output = model(data)\n        loss = nn.CrossEntropyLoss()(output, target)\n        loss.backward()\n        optimizer.step()\n        if batch_idx % 100 == 0:\n            print('Train Epoch: {} [{}/{} ({:.0f}%)]\\tLoss: {:.6f}'.format(\n                epoch, batch_idx * len(data), len(train_loader.dataset),\n                100. * batch_idx / len(train_loader), loss.item()))\n\n\ndef test(model, device, test_loader):\n    model.eval()\n    test_loss = 0\n    correct = 0\n    with torch.no_grad():\n        for data, target in test_loader:\n            data, target = data.to(device), target.to(device)\n            output = model(data)\n            test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss\n            pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability\n            correct += pred.eq(target.view_as(pred)).sum().item()\n\n    test_loss /= len(test_loader.dataset)\n\n    print('\\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\\n'.format(\n        test_loss, correct, len(test_loader.dataset),\n        100. * correct / len(test_loader.dataset)))\n\n\n# Training settings\nbatch_size = 128\ntest_batch_size = 1000\nepochs = 5\nlr = 0.001\nno_cuda = False\nseed = 1\nlog_interval = 10\n\nuse_cuda = not no_cuda and torch.cuda.is_available()\ntorch.manual_seed(seed)\ndevice = torch.device(\"cuda\" if use_cuda else \"cpu\")\n\nkwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}\ntrain_loader = torch.utils.data.DataLoader(\n    datasets.MNIST('../data', train=True, download=True,\n                   transform=transforms.Compose([\n                       transforms.ToTensor(),\n                       transforms.Normalize((0.1307,), (0.3081,))\n                   ])),\n    batch_size=batch_size, shuffle=True, **kwargs)\ntest_loader = torch.utils.data.DataLoader(\n    datasets.MNIST('../data', train=False, transform=transforms.Compose([\n                       transforms.ToTensor(),\n                       transforms.Normalize((0.1307,), (0.3081,))\n                   ])),\n    batch_size=test_batch_size, shuffle=True, **kwargs)\n\nmodel = Net().to(device)\noptimizer = optim.Adam(model.parameters(), lr=lr)\n\nfor epoch in range(1, epochs + 1):\n    train(model, device, train_loader, optimizer, epoch)\n    test(model, device, test_loader)\n```"
+            },
+            "questions": {
+                "value": "- Regarding the linear mode connectivity.\nAre CoLU models better in terms of the mode connectivity? For example, I believe the authors only show the loss barrier plot of CoLU's networks in Figure 14. Can you include loss barrier plots for both CoLU and ReLU models in the figure for direct comparison?\n\nTypos\n- l280: Seems texts missing after `whose s`."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces Conic Linear Units (CoLU), which bring orthogonal group symmetry to neural networks. CoLU surpasses state-of-the-art component-wise activation functions like ReLU."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper introduces a non-component-wise activation function (CoLU) that broadens neural network symmetry to continuous orthogonal groups, marking a new direction in the field. A novel method.\n\n- The proposed activation CoLU demonstrates strong performance across multiple architectures, with notable improvements over ReLU in various deep learning models.\n\n- The derivation for theoretical aspects of CoLU is well-written and accurate."
+            },
+            "weaknesses": {
+                "value": "- The paper claims that CoLU's computational complexity is negligible compared to matrix multiplications, but I question if this holds true for large-scale models since it is *non-component-wise*. While I understand that the rebuttal phrase is only 7-day, which is short for a large experiment, I believe this is a crucial aspect for a methodology paper to gain acceptance.\n\n- Minor typos:\n\nline 19: models\u2019s -> models\n\nline 31: Convolution layers -> Convolutional layers \n\nline 40: equivarance -> equivariance\n\nline 53:\nCan forms of equivariance more general than permutation improve neural networks? -> I really don't understand what this question means."
+            },
+            "questions": {
+                "value": "- Please conduct a large-scale experiment to compare the performance and computational time between CoLU and ReLU. Ensure that you report the results, including performance and computational time, and the experimental setup in detail. I consider this question significant, and as it addresses the paper\u2019s gap, I am willing to raising the score for acceptance if answered comprehensively."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a new activation function called CoLU. In contrast to ReLU, CoLU is not component-wise but is inspired by physics to preserve symmetries. To do so it mixes information between components while retaining an O(n) runtime for no efficiency overhead. The paper shows that CoLU leads to either faster or equivalent training speed compared to ReLU on a variety of tasks while improving generalization and reducing overfitting."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "The paper proposes (as far as I know) an original approach to non-point-wise activation functions in neural networks. The mathematical basis of preserving symmetries, and the references to geometry to get there, are grounded and worthwhile. Specifically the authors point out a common assumption machine learning practitioners make---that permutation symmetry is important in an activation function---and explore an alternative choice. This is a good model for basic research. Because CoLU has the same runtime as ReLU, its significance could be high if it demonstrably improves training speed (Fig 6) or other characteristics like generalization (Fig 10) on tasks at scale."
+            },
+            "weaknesses": {
+                "value": "The main weakness for me is skepticism that the experiments are showing CoLU's value over ReLU or other point-wise activation functions. I'll dive into that, and separately I will provide a few examples of where the exposition confused me in the hopes the authors can benefit from this information.\n\n1. Experiments: I am fascinated by CoLU so would appreciate seeing more rigorous experiments and reporting demonstrating its value.\n\n    a. Thank you for reporting exact details of your dimensions and hyperparameters. That's good. For one thing, I would like to see experiments at a bigger scale. The experiments I see use hidden dimension 20 (for VAE) and 256 (for GPT). I believe your experiments would be more rigorous if they tried larger scales than these. There's no specific scale that becomes \"rigorous\" but trying a few scales across a few orders of magnitude (say parameters = 1M, 10M, 100M) would go a long way to showing that results are trends, not flukes. Keeping the same modalities would be fine, and it is helpful that you train across multiple modalities so you can demonstrate alignment or other gains in a variety of settings. I see some large-scale experiments on diffusion models (835M parameters, from line 1004), but I don't see any training curves, figures, or results at all for these except for the generated pictures.\n\n    b. Please be careful when reporting results. In Table 4, thank you for reporting standard deviations. That is very helpful. That said, the table shows CoLU outperforming ReLU with a margin that is small enough to be well within one standard deviation (diff = 0.0036, stdev = 0.0100). This difference means the results are not conclusive. Could you either run more seeds, run a bigger scale where the difference resolves, or change your table's caption from \"CoLU outperforms ReLU\" to \"CoLU performs on par with ReLU\" or a related phrasing? For another example, in Table 6, you bold the better result on eval loss for CoLU but do not bold the other column which shows a better result on train loss for ReLU. This makes the table look skewed that CoLU is better, when in fact it is a toss-up. Finally, I'm confused by Table 3. The last two rows look identical except for the width C changing from 512 to 511. Why do you make this particular comparison?\n\nIn the end, it will be important for you to establish that CoLU in fact outperforms ReLU, or that it has some other value aside from a nice theoretical basis. Simply extending the generality of a function class is interesting, but not worthwhile in and of itself if there aren't reasons to make the generalization.\n\n2. In Fig 1, it would help to define C, G, and what you mean by maximum norm threshold in the caption or elsewhere. At present you do not define C in general anywhere, for example. You use it in specific cases like \"In this illustrative example, the network width is C=6.\" I think Fig 1 has potential to communicate lots of intuition about CoLU but it is confusing in a few ways at the moment. Also, you may be able to omit the blue circles since they are repeated and could distract from the main point, which is the activation function.\n\n3. Typos. Please fix typos in your paper before submitting. Examples: \"orthogornal\" in Lemma 4.8, and the cut-off sentence on line 280 that reads \"This is unprecedented in component-wise activation networks whose s.\" Also the grammar in the statement of Lemma 4.9 (the comma, as written, should be a period). This is not as important as earlier points, but it's helpful for the reader if the paper is well proofread."
+            },
+            "questions": {
+                "value": "I've listed several questions in the \"weaknesses\" section already. For a few more:\n\n1. How does CoLU perform on a larger language modeling experiment? For a simple test, you can try NanoGPT for instance (https://github.com/karpathy/nanoGPT), replace ReLU with CoLU, and compare. Once again, I'd find it more convincing if it's a larger dataset than Shakespeare which has only a few million characters total. For instance you can use FineWeb10B.\n\n2. Your nicely titled section \"Why Conic Activation Functions\" does not answer this question for me. Something like Lemma 4.8 gets close to why conic projections are nice, but it feels not fully explained for such an important motivation for your entire choice of CoLU. The line \"we assume there are low-dimensional block sub-spaces that can hold orthogonal equivariance\" also seems important for this lemma, yet I am left wondering why we should assume this, or how assuming it helps us. I would appreciate a more clarifying explanation of why conic projections are good for deep learning. Otherwise, I feel like what I am currently getting is a section that could be titled \"What are Conic Activation Functions.\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,172 @@
+{
+    "id": "1zDOkoZAtl",
+    "title": "Towards Meta-Models for Automated Interpretability",
+    "abstract": "Previous work has demonstrated that in some settings, the mechanisms implemented by small neural networks can be reverse-engineered. \nHowever, these efforts rely on human labor that does not easily scale. \nTo investigate a potential avenue towards scalable interpretability, we show it is possible to use \\emph{meta-models}, neural networks that take another network's parameters as input, to learn a mapping from transformer weights to human-readable code.\nWe build on RASP and Tracr to synthetically generate transformer weights that implement known programs, then train a transformer to extract RASP programs from weights. \nOur trained compiler effectively extracts algorithms from model weights, reconstructing a fully correct algorithm 60% of the time.",
+    "keywords": [
+        "interpretability",
+        "safety",
+        "automated interpretability",
+        "ai safety",
+        "explainability",
+        "extraction",
+        "tracr",
+        "rasp"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=1zDOkoZAtl",
+    "pdf_link": "https://openreview.net/pdf?id=1zDOkoZAtl",
+    "comments": [
+        {
+            "summary": {
+                "value": "In this paper, the authors train a transformer to decompile Tracr programs back into RASP format. They generate a dataset of RASP programs of length 4-8, use Tracr to compile the program into a transformer, and then train a meta-model transformer that takes the compiled transformer weights as input and autoregressively predicts the decompiled RASP program. The authors achieve 60% accuracy on a held out set, can recover a hand-written sorting program not seen during training, and get 77% decompilation accuracy on a variant of the held out set where the compiled models have a linear transformation applied to make their activations nonsparse."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is well written and presented. The work is easy to understand and follow. The related work and limitations sections are good. In particular, most of the limitations I am concerned about are acknowledged in the limitations section, which is great!"
+            },
+            "weaknesses": {
+                "value": "One big weakness is the limited scope of the experiments. The authors train a transformer on a relatively small dataset of RASP programs The programs found are small, length 4\u20138, and the accuracy is only 60%. They only train on this dataset, and then report held out accuracy, as well as accuracy on a nonsparse held out set. I would like to see a more thorough evaluation, for example with more program sizes, or testing broader generalization abilities.\n\nAnother weakness is that I don't see any way this approach will feasibly scale to larger programs, or real world transformers. It only works because the data trained on is so small, and because we are compiling the RASP programs to generate the dataset for decompilation.\n\nTo say more, this is a fundamental limitation of this approach. Taking RASP as the domain and transformer weights as the codomain, Tracr is not anywhere close to surjective (if i understand correctly). So, any decompilation meta-model training procedure seems fundamentally unable to work on real world transformer models. This is okay if we just accept that a meta-model decompiler is only useful for Tracr-derived activations. But I don't really see the usefulness of decompiling in this case: Tracr programs are by nature created from a RASP program, so we should already know what the ground truth is. \n\nI think the idea of using meta-models to convert a neural network into a program representation could have potential. However, training a model to do so by means of RASP + Tracr seems fundamentally limited.\n\nEven if I accept this as a research direction, I think the present work could be more thorough in its experiments and insight. As currently presented, there is really only one dataset (the generated one) and two results (the held out set performance and the non-sparse held out set performance). I think there is a higher bar for ICLR than this amount of inquiry into a research area."
+            },
+            "questions": {
+                "value": "The most interesting finding of this paper to me is that the meta-model recovers 77% of program on the non-sparse activations test set. It seems like such a strong train/test generalization split. Is there any intuition for why the transformer can generalize in this case? Does this hold in general cases \u2014 evaluating on a linear transformation of the input data yielding the same result? It seems too good to be true."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents an approach to automated mechanistic interpretability for Transformers by training another Transformer (the meta-model) to decode a RASP program from a given model's weights. The meta-model is trained on random RASP programs compiled to Transformers using Tracr.\n\nThe paper presents two sets of experiments. The first uses random RASP programs of up to 9 operations. The trained meta-model achieves 60% accuracy in extracting the original RASP program. The second experiment focuses on whether a meta model can extract RASP programs from non-sparse weights (since Tracr-compiled Transformers tend to have sparse weights). This is accomplished by transforming the sparse Transformer weights by 1) a random orthogonal matrix and then 2) compressing the hidden dimension via PCA. A meta-model trained on non-sparse Transformers compiled from random programs of length 5 achieves 77% accuracy."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "This paper touches on a very timely problem, which is attempting to scale mechanistic interpretability by reducing the amount of manual effort required by much of the existing literature.\n\nThe work is, to the best of my knowledge, original. I am not aware of any other works that attempt to automate interpretability by training a model to decode RASP programs (or any other algorithmic representation) directly from transformer weights.\n\nI found the writing to be generally clear. I also appreciated the limitations for being upfront and fairly comprehensive."
+            },
+            "weaknesses": {
+                "value": "My main concerns is that the experiments are lacking in terms of demonstrating that a meta-model would be able to yield any actual insights for mechanistic interpretability. At best, the experiments have convinced me that a meta-model can invert Tracr compilation with enough data. Although I commend the authors for running the second set of experiments (with artificially dense weights), I think there is still to much of a gap between the dense weights and a \"real\" Transformer for the approach to have been validated.\n\nOne possibility would be to train Transformers using standard gradient descent on algorithmic outputs, then use the trained meta-model to invert them. For instance, rather than use Tracr to compile the RASP program for sorting (as done in the experiments), it would be better to *train* a Transformer to sort using data. I think validating the approach on a small number of Transformers trained (rather than compiled) to perform algorithmic tasks (on the order of 5-10) would be necessary for me to recommend acceptance.\n\nOther concerns:\n- The programs used in the experiments are all rather short, so it remains to be seen if the approach would apply to more complex / realistic domains (natural language, chess / go, or more complex algorithms)"
+            },
+            "questions": {
+                "value": "How many tokens are in the meta-model training set?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper explores the use of meta-models \u2014 neural networks that take other networks' parameters as input \u2014 for automated interpretability of machine learning models. The authors present a method to train transformers to map neural network weights to human-readable code, effectively creating an automated \u201cdecompiler\u201d for neural networks. They demonstrate this approach using Tracr, a compiler that converts RASP programs (a domain-specific language for modeling transformer computations) into transformer weights.\n\nThe main contributions are:\n\n1. Development of rasp-gen, a sampler that generates valid RASP programs, used to create a dataset of 1.6 million RASP programs and corresponding model weights\n2. Training of a transformer meta-model that can recover RASP programs directly from model weights, achieving 60% accuracy for complete program reconstruction and 98.3% token-level accuracy\n3. Demonstration that the trained meta-model can handle out-of-distribution examples, including successfully recovering a hand-written sorting algorithm\n\nThe authors also show their meta-model architecture outperforms previous approaches on related tasks, even when trained with less data. The work serves as a proof-of-concept for using meta-models to automate aspects of mechanistic interpretability, potentially offering a path toward more scalable neural network interpretation methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper's main strength lies in demonstrating a novel, systematic approach to automated interpretability that achieves significant results on a large dataset while laying groundwork for future developments in the field. The careful experimental design and clear presentation make the contributions accessible and (hopefully) reproducible.\n\nOriginality:\n\n- Novel approach of using meta-models to automatically extract human-readable programs from neural network weights\n- Integration of Tracr compiler with neural decompilation, effectively \u201creversing\u201d the compilation process\n- Method for generating large-scale training data by sampling valid RASP programs\n\nQuality:\n\n- Thorough empirical validation with a large dataset (1.6 million programs)\n- Good quantitative results (60% accuracy on full programs, 98.3% token-level accuracy)\n- Clearly presented experimental methodology\n- Efficient dataset generation process (5 seconds per model on CPU)\n- Additional experiments on non-sparse weights\n\nClarity:\n\n- Clear problem formulation and motivation\n- Well-structured presentation of methodology\n- Transparent discussion of limitations and future work\n\nSignificance:\n\n- Addresses the fundamental challenge of scalability and automated discovery in ML interpretability"
+            },
+            "weaknesses": {
+                "value": "By far the biggest weakness of this paper is the limitation to small RASP programs without much indication that the technique should be expected to generalize.  Broadly, if I can be convinced that this technique has a reasonable shot of generalizing past compiled toy examples, I would increase my score.\n\nA substantial improvement, for example, would be to train models from scratch to match the behavior of the 1.6 million Tracr-compiled networks (separately: trained to match logits; and trained to match only the predictions / argmax output), and report numbers on decompiling these trained models to RASP programs that match their behavior.  Even though there would be no guarantee that the decompiled RASP program would implement the behavior *in the same way* as the trained network, getting a positive signal here would still be a substantial update towards direct meta-models being able to infer general behavior directly from the weights.  Even an evaluation on a couple hundred such models could be quite interesting.\n\nMore minor weaknesses:\n\n- The characterization as of the validation on \u201ca hand-written sorting algorithm\u201d as \u201cout-of-distribution with respect to the 1.6 million generated programs we use for training\u201d (L45\u201447) is misleading. I would not call the sorting algorithm \u201cout-of-distribution\u201d just because it was removed from the training dataset.  Unless there is a (relatively natural) axis of variation (for example, length, number of variables, number of operations, number of times any given operation is used) in which the sorting algorithm can be shown to be at least 1\u03c3 away from the mean, I think it would be less misleading to say \u201cwhich is not in the training distribution\u201d.  (As an analogy, if I sample 1.6 million reals from $\\mathcal{N}(0, 1)$, remove all numbers within $10^{-5}$ of 0.2, and then train a model to learn $x \\mapsto x^2$, I wouldn\u2019t say that 0.2 is \u201cout-of-distribution\u201d for this training.)\n- Section 5 (Related Work) should include at least a brief comparison with SAEs [1] and linear probes [2], both of which can be seen as training a (very simple) model to directly interpret a neural network (albeit from the activations, rather than the weights).  [Lack of contextualization with respect to SAEs and linear probes was why I gave a \"3\" for presentation rather than a \"4\".]\n- The paper would benefit from a bit more analysis of the decompilation failures.  For example, L229\u2014230 \u201cOn a per-token level it achieves an accuracy of 98.3%\u201d suggests that most of the failure comes from accumulation of small errors. I want to know: What is the per-token fraction of the time that the correct answer is in the top two tokens?  Top three tokens?  Top four tokens?  Top five tokens?\n\n[1] Bricken et al., \"Towards Monosemanticity: Decomposing Language Models With Dictionary Learning\", Transformer Circuits Thread, 2023. https://transformer-circuits.pub/2023/monosemantic-features\n\n[2] Guillaume Alain and Yoshua Bengio. \u201cUnderstanding intermediate layers using linear classifier probes.\u201d *arXiv*, 2016, https://arxiv.org/abs/1610.01644"
+            },
+            "questions": {
+                "value": "Questions: \n\n- L306\u2014307: \u201cIn addition, our meta-models tend to be larger than the base models\nthey are trained on by about a factor of 10-100, which would be prohibitive for very large base models.\u201d Is there enough data to determine the scaling law here?  Is the required size linear in the base model (or the compressed base model)?  Or superlinear?\n- L310 \u201cWe use a black box to interpret a black box.\u201d  Have the authors considered applying the meta-model decompiler to itself, and seeing if the resulting RASP program is at all sensible?  This would presumably need to be combined with the program-repair scaffolding suggested below to avoid per-token errors accumulating over a length that is 10\u00d7\u2014100\u00d7 the typical program length you used, but a positive result here would again be quite interesting.\n\nComments:\n\n- L229\u2014230 \u201cOn this test dataset the decompiler is able to decompile 60% of programs without errors. On a per-token level it achieves an accuracy of 98.3%; a tokenized RASP program typically consist of between 30 and 60 tokens\u201d Have the authors considered augmenting the model with program-repair scaffolding?  For example, given an original RASP program $P$ that is Tracr-compiled in to $C$ and decompiled into $P\u2019$, compile $C\u2019$ with Tracr from $P\u2019$ and train an adversarial model to generate possible counter-examples (as suggested in L402\u2014403 \u201cAutomated Verification of Interpretations\u201d), train a \u201crepair\u201d model to take both the weights of $C$, the decompiled program $P\u2019$, and the (input, C(input),  C\u2019(input)) data, and suggest a new program $P\u2019\u2019$.\n- L351\u2014352: \u201cin one setting fully understanding the exact algorithm implemented by a network (Nanda et al. 2023)\u201d. Nanda et al. 2023 do not fully understand the exact algorithm implemented by the modular arithmetic models; the MLP is left mostly unexplained.  Zhong et al. 2023 [1] get closer on a simpler architecture, but even they do not explain how the MLP works.  The only works I\u2019m aware of that can at present claim to \u201cfully understand the exact algorithm implemented by a network\u201d are [2] and [3].\n- L400\u2014403 \u201cAutomated Verification of Interpretations. Can a meta-model be trained to output not only a programmatic description of the base model, but also evidence or proof that this description is accurate? One approach would be to train a meta-model to adversarially suggest examples which might disprove any proposed equivalence between a model and an interpretation.\u201d A simpler starting point would be to prove that the Tracr compilation of the output of decompilation is a close match to the original network.  If we conjecture that the activations of one network are linearly probe-able from the other network, we can train a linear probe at all of the relevant points in the network to translate activations back and forth.  Then any of the mech interp validation techniques (e.g., in order of increasing rigor: activation patching [4], causal scrubbing [5], or compact proofs [6]) could be applied to establish correspondence.  AlphaProof [7] style automation might also be possible.\n\nMinor Comments:\n\n- L92\u201493: \u201cpred\u201d on the LHS should be \u201cpredicate\u201d, right?\n- L243\u2014244: \u201ccan be deterministically mapped to RASP code via\na deterministic algorithm.\u201d using \u201cdeterministic[ally]\u201d twice seems redundant, unless there\u2019s something deeper going on\n\n[1] Zhong et al. \"The Clock and the Pizza: Two Stories in Mechanistic Explanation of Neural Networks.\" *arXiv*, 2023, https://arxiv.org/abs/2306.17844.\n\n[2] Yip et al. \u201cReLU MLPs Can Compute Numerical Integration: Mechanistic Interpretation of a Non-linear Activation.\u201d *ICML 2024 Mechanistic Interpretability Workshop*, 2024. https://openreview.net/forum?id=rngMb1wDOZ\n\n[3] Wu et al. \u201cUnifying and Verifying Mechanistic Interpretations: A Case Study with Group Operations.\u201d *arXiv*, 2024, https://arxiv.org/abs/2410.07476.\n\n[4] Stefan Heimersheim and Neel Nanda. \u201cHow to use and interpret activation patching.\u201d *arXiv*, 2024, https://arxiv.org/abs/2404.15255.\n\n[5] Chan et al. \"Causal Scrubbing: a method for rigorously testing interpretability hypotheses.\" AI Alignment Forum, 2022, https://www.alignmentforum.org/posts/JvZhhzycHu2Yd57RN/causal-scrubbing-a-method-for-rigorously-testing\n\n[6] Gross et al. \u201cCompact Proofs of Model Performance via Mechanistic Interpretability.\u201d *arXiv*, 2024, https://arxiv.org/abs/2406.11779.\n\n[7] AlphaProof and AlphaGeometry teams. \u201cAI achieves silver-medal standard solving International Mathematical Olympiad problems.\u201d DeepMind Blog, 2024, https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper trains transformers to de-compile RASP programs. It trains the meta-model (a transformer) to map transformer weights to RASP programs. It trains on randomly sampled RASP programs (1-9 operators) and evaluates the trained meta-model using i.i.d. samples. Accuracies range from 60% to 80% in various settings."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The interpretability of models is an important problem. The paper is easy to understand."
+            },
+            "weaknesses": {
+                "value": "The most important concern is that I am not sure if training meta-models to decompile Tracr-compiled RASP programs can help interpret transformers in practice. It first assumes the functions to be learned in practice can be represented by RASP programs (at least the program shouldn't be too long to be covered in the training dataset). It also assumes the learned weights are in-distribution respective to the compilers of the RASP program so that the meta-model can generalize. It then needs to build a giant training dataset towards covering all possible RASP problems and then trains a potentially larger meta-model to learn to decompile. None of the previous assumptions are practical or intuitive to me. \n\nOther concerns are \n* The performance is not impressive. As stated by the authors, reversing Tracr is a relatively easy task at least for categorical inputs. \n* The novelty is mainly limited to learning a transformer to decompile Tracr-compiled RASP programs. \n* Limitations as stated by the authors: (1) Tracr-compiled weights are dissimilar to actually learned ones; (2) unlikely to cover all RASP programs in the training dataset at least using the current sampler; and so on."
+            },
+            "questions": {
+                "value": "* How does the learned meta-model generalize to the actually learned model weights? \n* Or can you train a meta-model using the actually learned model weights?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

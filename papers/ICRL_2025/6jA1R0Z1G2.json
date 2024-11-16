@@ -1,0 +1,244 @@
+{
+    "id": "6jA1R0Z1G2",
+    "title": "Utility as Fair Pricing",
+    "abstract": "In 2018, researchers proposed the use of generalized entropy indices as a unified approach to quantifying algorithmic _unfairness_ at both the group and individual levels. Using this metric they empirically evidenced a trade-off between group and individual fairness. The definition of the index introduces an array of new parameters; thus, while the construction of the metric is principled, its behavior is opaque. Since its publication, the metric has been highly reproduced in the literature, researched and implemented in open source libraries by IBM, Microsoft and Amazon; thus demonstrating traction among researchers, educators and practitioners. Advice or grounded justification around appropriate parameter selection, however, remains scarce. Nevertheless, the metric has been implemented in libraries with default or hard-coded parameter settings from the original paper with little to no explanation.\n\nIn this article we take an intentionally data agnostic (rational, rather than empirical) approach to understanding the index, illuminating its behavior with respect to different error distributions and costs, and the effect of placing constraints on it. By adding the simple requirement that the the resulting fairness metric should be independent of model accuracy, we demonstrate consistency between cost sensitive learning and individual fairness in this paradigm. By viewing a classification decision as a transaction between the individual and the decision maker, and accounting for both perspectives, we prove that, with careful parameter selection, the concepts of utility and (group and individual) fairness can be firmly aligned, establishing generalized entropy indices as a natural extension of utility, in the quest to mitigate bias in machine learning.",
+    "keywords": [
+        "Fairness",
+        "generalised entropy",
+        "inequality",
+        "classification",
+        "imbalanced data",
+        "cost sensitive learning",
+        "fair pricing",
+        "utility."
+    ],
+    "primary_area": "optimization",
+    "TLDR": "Examination of the use of generalised entropy indices as utility functions.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=6jA1R0Z1G2",
+    "pdf_link": "https://openreview.net/pdf?id=6jA1R0Z1G2",
+    "comments": [
+        {
+            "title": {
+                "value": "uB5Z weaknesses"
+            },
+            "comment": {
+                "value": "Hopefully, we were able to convince you of the value of GEI in our earlier comment re. motivation. We disagree that the argument cuts both ways. Our point was that the metric is well known and available to use (for those inclined) at some of the most influential companies of our time. In some cases the hardcoded parameters indicate that the model is likely being misused. Not all libraries will have implemented it, but this does not make it less important. In fact, we would argue that the lack of clarity around parameter choice is a good reason not to make the metric available.\n\nThank you for sharing the paper. A quick look shows that the ideas shared in it are quite different to ours. We are interested in a way of mitigating between-group bias without knowing or referencing sensitive features at all. While randomness in a top-$k$ recommender system is a totally viable solution, in employment opportunity distribution, it is a much harder sell. Why? Because for recommender systems, the utility function for the decision maker and user are much closer than they are for employment tests. Introducing randomness in predictions is simply too far from current practices. A much easier sell (for both decision makers and regulators) is accepting that our target $Y$ is off-centre and our pricing method requires correcting - using a different but justified value of $\\alpha$.\n\nWe agree with your comments on the discussion and intend to rectify the issues highlighted in an updated version of the paper."
+            }
+        },
+        {
+            "title": {
+                "value": "Online evaluation"
+            },
+            "comment": {
+                "value": "Thank you for asking this interesting question. Practically the measure of fairness investigated requires a ground truth $y_i$ to compute the benefit $b_i$. A stark difference to the notion of individual fairness described by Dwork (2012) which doesn't rely on the target $y_i$ at all. However, this work shows that they are strongly related, as we believe likely all definitions of fairness are, Binns (2019). Different definitions of fairness do not conflict but rather they assume differing knowledge in their calculation. They are in some sense different approximations of fairness but all of them are valid and the goal should be to satisfy them *all* to the extent that we can. The prioritization of them is, and always will, be context dependent. It is the role of a regulator or risk manager to determine and communicate the rules, and when they matter.\n\nTo respond to a comment from reviewer uB5Z; the representations presented can be used to write the index in terms of any fairness metric imaginable, ratios and differences or whatever one chooses. The difference between this measure of individual fairness and Dwork et al. (2012) is only the dimensionality of information relied on in judging similarity between individuals; i.e., $\\boldsymbol{x}_i$ versus $y_i$. The core ideology is the same. We believe, like Mukherjee et al. (2020) and other researchers, that for certain problems, independence is too strong a constraint to impose. However ignoring it completely does not make sense either. A far better expression of independence is one which demands we move in the right direction (towards independence, diversity, equality, privacy, transparency, etc.). Progress is a better goal than equality in most cases.\n\nTo solve problems of fairness (manage people pricing risk), we need to use more diverse information than the decision maker. We need to compare our production model with different models (including more interpretable models). We need to measure risk (the distance between production and monitoring models) online, or periodically offline for expensive models. The production system should not need sensitive features, but a diligent hiring risk manager might want to use several different human valuation models in addition to the production model as a means of risk monitoring, mitigation and reporting. They might also want to understand how the (model) valuation changes in response to changes in model parameters. Such approaches are common (and in some cases regulatory required) practices in financial institutions.\n\nThere are definitely clues to be found, in trying to satisfy multiple group fairness constraints as to what the problem (between accuracy and fairness) is, that lead directly to individual fairness Dwork et al. (2012) and beyond. From fairmlbook.org, we know that introducing a third possible outcome (increasing the size of our outcome space from binary to ternary), makes satisfying *independence* and *separation* possible. This tells us that we need to increase the dimensionality of our output in order to satisfy more constraints and that is what we do in our paper. Binary benefits allow us only to maximise for accuracy. Introducting a third possible benefit $b\\in$ {$b_-,b_+,1$} allows us to account for differing error costs also. The connection with differential privacy can be seen too, in the problem with choosing a zero benefit discussed in section 2.2. Note that $f_{\\alpha}(x)\\rightarrow\\infty$ as $x\\rightarrow0$ for $\\alpha\\leq 0$. A zero benefit amounts to no information being exchanged - extracting information without a *user's* knowledge makes the value that can be extracted from an individual limitless under these risk models."
+            }
+        },
+        {
+            "title": {
+                "value": "Empirical evidence"
+            },
+            "comment": {
+                "value": "We agree with the need for results which convince the reader that the sought after behaviour is achieved for the restricted range of parameters discussed in Theorem 3.5. We do not believe it necessary to revert to empiricism however, since with our representations, we can effectively visualise entire solution surfaces for a range of viable choices of $b$ and $\\alpha$ and verify our theoretical proof. We aim to include the following in the Appendix (once again overloading our notation, this time for the index I):\n\n1. Line graphs $I(\\mu)$ for varying $\\lambda$ which provide a side-view of the index surface.\n2. Contour plots for a birds-eye-view of $I(\\mu,\\lambda)$.\n3. Given $p=\\mathbb{P}(Y=1)$, we can use contour plots to visualise at $I(FNR, FPR)$.\n\nHopefully you agree with our preference. The first two results described above allow us to understand the results for *all* possible datasets (for a given choice of $b$, $\\alpha$). We had intended to include the contour plots in the original submission's appendix, excluding them was an oversight. We can remedy this in an updated version of the paper."
+            }
+        },
+        {
+            "title": {
+                "value": "XmSq Weaknesses"
+            },
+            "comment": {
+                "value": "To respond to your question, this work was driven by the desire to understand trade-offs analytically, in the hope of finding efficient and provable results, and so we focussed on writing complete proofs and this was the bulk of the work. There are so many papers that contributed to this work that it is difficult to engage in a meaningful way with all of them in the paper. We would be happy to address any specific unintentional omissions. We will certainly add some references in the process of editing for clarity and hopefully providing a much more enlightening discussion around $\\alpha$. We would gratefully be directed to papers which are worth highlighting or expanding on."
+            }
+        },
+        {
+            "title": {
+                "value": "Motivation and examples"
+            },
+            "comment": {
+                "value": "Thank you for your feedback on our paper. With your help, we hope that we can greatly improve the clarity of it. We agree that the paper is dense (as guessed by reviewer RM3G, the paper is a condensed version of a longer work), but our hope is that it can be improved without exceeding the 10 page limit. There is clearly value in sharing a shorter exposition and we will work on this over the coming weeks. While this may not be obvious from the version of the paper which was submitted, we believe that this work could be of significant value to the community and broader society. This can be conveyed earlier in the paper to remedy feedback from reviewers uB5Z and cEeF. In particular, we have rewritten the derivatives pricing analogy, thinking instead in higher level terms of *stakeholders*. In section 2.2 we will describe these as benefit *providers*, *benefit recipients* and the *regulator*. The *decision maker* and algorithm *subject* could be the either the recipient or provider of benefits depending on the application and the level of relevance assumed in relying on test results. Hopefully the terminology is self explanatory and adds clarity to the discussion.\n\nAlthough a *foreign* example, pricing risk is an important one, because there is precedent in both regulation of material (high-risk) valuation models, and best practices established in the form of regulatory required model governance by an independent risk function, public reporting requirements, whistleblower protections and more. We believe there are strong parallels between financial modelling and human rating systems. The latter should be subject to (risk appropriate) legislation, just as life insurance policies and other derivatives at large financial institutions are. An important question then is how to understand human rating risk so we can judge the materiality of a model. We argue that when rating a human, the benefit currency and interest rate on the transaction between decision maker and subject might not be easily described, but they exist and are implicit in the loss function choice.\n\nWe argue that generalised entropy indices (GEI) present a valuable family of functions (the *complete* set of subgroup decomposable functions according to Shorrocks (1980)) which warrant much closer inspection, before moving on to other welfare functions Heidari et al. (2018). We aim to prove that they parametrically extend notions of risk, in a principled and *continuous* way that allows us to manage the multiple requirements of model accuracy, (individual) fairness (differing error costs) and regulatory specified prioritization of between-group fairness (by choice of the generalization parameter $\\alpha$) in offline learning, and likely beyond. We believe that GEI provide a parametric language ($b_{ij}$ and $\\alpha$) suited to algorithmic governance at a high level. They can be computed with very little information, $(\\boldsymbol{\\hat{y}},\\boldsymbol{y})$ or better still $(\\boldsymbol{p},\\boldsymbol{y})$. Such a model can be used to limit the feasible models of utility in a rational way, simply by choosing parameters reasonably and capping the index accordingly. The efficiency saving which results from using a well reasoned choice of parameters would be O($n$), since it would eliminate the need to iterate over the training data to determine the cap/threshold, which is derived analytically.\n\nA good word reviewer cEeF used was interpretability. This is what we are trying to do with the calculation of expected cost or risk. Making the parameters interpretable so a regulator or risk manager would feel comfortable limiting their choice and interpreting the results of the calculation. As a regulator, if we have a reasonable model of algorithmic utility we can use that to estimate how much value is being extracted with the algorithm by the decision maker at both the group and individual levels. We know that the decision maker will likely calibrate their model assuming that the cost of rejecting worthy candidates is zero. As a regulator we can make a different (fairer) assumption based on the application and use these results to identify, challenge and mitigate algorithmic risk in employment, education and potentially beyond.\n\nMore comments will follow on remaining issues and ultimately an updated paper. Thanks again."
+            }
+        },
+        {
+            "title": {
+                "value": "Re: Notation: missing explanations and typos"
+            },
+            "comment": {
+                "value": "On second thought, the terminology *unit reward rate* in place of *risk-free reward rate* would be both more accurate and shorter. Thank you."
+            }
+        },
+        {
+            "title": {
+                "value": "cEeF comments and questions"
+            },
+            "comment": {
+                "value": "- Line 364: Corollary 3.2.1 says that the index could be either decreasing of increasing in $\\lambda$ depending on the parameter choices. Corollary 3.2.2. says that the index could have a maxima or minima in $\\mu$. The turning point may or may not fall within the index domain described in equation (6) for a given value of $\\lambda$. If the turning point falls outside of the domain then the index is monotonic in $\\mu$. Thus, whatever relation we might expect/want the index to have with respect to $\\lambda$ or $\\mu$, it is possible for the index to display the opposite (increasing instead of decreasing, maxima instead of minima, for example) by choosing index parameters ($b_{ij}$ and $\\alpha$) accordingly.\n\n- Line 449: We could not find the incomplete sentence you mention. If you could paste the line, that would be helpful.\n\n- Q1A: All prior works in Table 1 assume that accurate predictions are equally beneficial, that is, $b_{ij} =\\mathrm{benefit}(\\hat{y}=i, y=j) = ((1, b_{FN}),(b_{FP}, 1))$ where $b_{FN}$ and $b_{FP}$ are the false positive and negative benefits. All authors in Table 1 effectively assume that the *risk-free reward rate* (proportion of individuals receiving the unit reward) is the model accuracy (since only accurate predictions are awarded the unit benefit). Theorem 3.2 then shows that the index is a function of the risk-free reward rate (model accuracy in prior works) and mean benefit. This does not contradict the findings in Speicher et al. The index is linear in model accuracy for *fixed* mean benefit. Proposition 3.2 in Speicher et al. says the for non-perfect classifiers, the fairness and accuracy optimal classifiers do not coincide. This is true because in constructing one, they do not hold the mean benefit constant. Moreover, the classifier they construct to prove this proposition is not viable because it has an accuracy of less than 0.5.\n\nWe will address the remaining issues in a separate response."
+            }
+        },
+        {
+            "title": {
+                "value": "Index components"
+            },
+            "comment": {
+                "value": "- The index $I(\\boldsymbol{b})$ is a measure of *individual* (overall/algorithmic) unfairness.\n- The between-group component $I^G_{\\beta}(\\boldsymbol{b})$ a measure of *group* unfairness.\n- In this paradigm unfairness  between groups is a portion of the overall (individual) unfairness which is given by the index."
+            }
+        },
+        {
+            "title": {
+                "value": "Notation: missing explanations and typos"
+            },
+            "comment": {
+                "value": "Apologies for missing notation explanations and typos. We do believe the choice to overload $b$ is the right one - the confusion is caused by unintended errors/omissions in writing, rather than the overloading itself. We answer specific questions which relate to such issues below. We will tackle broader questions about the work in separate responses which will follow.\n\n- Line 235 should have read: A benefit function can then be defined by simply assigning a non-negative benefit value, to each element of the matrix $b_{ij}=\\mathrm{benefit}(\\hat{y}=i,y=j)$.\n- Line 243: $b\\in$ {$b_-,b_+,1$} could perhaps more clearly read, $b_i,b_{ij}\\in$ {$b_-,b_+,1$}?\n- Line 297: We used $b(p,y)$ only in section 3.1 for brevity/readability, favoring traditional ML notation to demonstrate the connection between empirical risk and the generalized entropy index. Would $\\mathrm{benefit}(p,y)$ be clearer?\n- Line 313 was indeed a typo and should read: $b_i\\in$ {$b_-, b_+, 1$}\n- Lines 239 & 490: We believe the notation of $\\hat{Y}$ is consistent across these lines. The predicted target is based on some model or algorithm, we refer to it as a model even if the output is binary.\n- In general, we treat $i$, $j$, $x$, $p$ and $b$ as dummy variables, because often they are a natural choice in the local context. In the case where we have only binary predictions we use $\\hat{y}$, if we have calibrated model score, we use $p$. We use capitals for multi dimensional arrays and random variables, lower case for scalars and lowercase bold typeface for one dimensional vectors. We can add this explanation to the paper if it would help.\n- At the end of section 2.2 we add the following text to clarify the definition of the *risk-free reward rate*: We shall describe the proportion of individuals receiving the unit benefit as the *risk-free reward rate* and denote it as $\\lambda$. We use the terminology *risk-free*, in the sense that the benefit is known in this case to be unity. In the other cases, we do not know what the rewards $b_{\\pm}$ are, they may be more or less than unity. The risk-free (unit) rewards could correspond to a column, row or diagonal. In each case, $b_{\\pm}$ correspond to different (remaining) elements of the benefit matrix $b_{ij}$.\n- We agree that things get confusing when one must reorient their understanding of $\\lambda$, $b_-$ and $b_+$. To remedy this, we have updated our theorems to be clear about their interpretations and specifically replaced the benefit subscripts $\\pm$ with $TP$, $TN$, $FP$ and $FN$."
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper builds on a previous result from Speicher et al. which provides a unified approach to quantifying unfairness at both the individual and group level. In the previous paper, the idea is to use inequality indices (from economics and social welfaire) to measure unfairness. The present paper draws connections between the inequality indices to empirical risk and cost sensitive learning. Most notably, the paper is arguing that previous work chooses arbitrary parameters for experiments, therefore this paper theoretically derives the range of index parameters and connect this to fairness guarantees. They reinterpret the original results in  Speicher et al. claiming to show that the previous empirical results do not necessarily relate to the group and individual fairness tradeoff but more generally to the trade-off between fairness and accuracy."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper focuses on an interesting topic which is diving deeper into a theoretical investigation of inequality indices and why the adoption and usage of the indices appears to resolve the individual / group fairness conflict. The paper provides a compelling argument for the fact that the indices relate more to the accuracy fairness trade-off."
+            },
+            "weaknesses": {
+                "value": "The paper could be greatly improved for exposition and organizational clarity throughout. \n\nThere are also previous work showing problems with the accuracy fairness tradeoff perspective, and the paper does not seem to engage with this literature in making the argument. Why?"
+            },
+            "questions": {
+                "value": "See above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents an in-depth analysis of generalized entropy indices, which reveals the relationship between generalized entropy indices and the predictive accuracy of ML models. As the author claimed in the paper, it provides an explicit connection between fairness metrics and cost-sensitive learning. The paper begins with a clear description of the generalized entropy index and its variants based on different $\\alpha$; while the description is not part of the contribution, it provides the reader with a great foundation to continue the reading. The metric analysis is fascinating in revealing $I(\\mathbf{b}|\\alpha)$ as a function of model accuracy. This paper's analysis is solely based on mathematical derivation without empirical analysis; hence, no experiments are presented. However, I think it would be interesting to see the empirical connection."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "The paper is clearly written and has many details and insights. The content is dense, causing some reading difficulty. But the overall reading experience is good.\n\nThe paper reveals the connection between the fairness metric (in terms of generalized entropy indices) and the model's performance (accuracy) with explicit expression. The explicit connection might be used to unlock future research direction on improving fairness proactively during model training (under the umbrella of cost-sensitive learning).\n\nThe paper states the potential problem of misusing generalized entropy indices with wrong parameter choice, which interests me. \n\nOverall, the paper presents many potentially interesting insights to many people working on fairness research."
+            },
+            "weaknesses": {
+                "value": "One of the obvious weakness is that the paper lack empirical support on the analysis. While rational analysis is good, it is often hard to be linked to practical observation one may face. I think having small demonstrative experiments somewhere in appendix can help the understanding.\n\nThe content in this paper is way to dense compare to other work I reviewed. Probably a compressed paper from a journal length work? Probably moving things from appendix into main paper will help the narrative flow. I understand this is due to the paper length limitation, but it also indicate the paper is probably more suitable for a journal publication.\n\nNotations: some notations used in the paper is not very clearly stated. E.g. $b_{i,j}= ((1,b_{-}), (b_{+}, 1))$. Line 323. I presume this is the benefit associated with confusion matrix. But it is better clearly stated."
+            },
+            "questions": {
+                "value": "For practical fairness evaluation, it is possible that we don't have ground-truth label or model accuracy under consideration during inference time but solely focus on individual fairness. In such a case, how would this insight presented help? Can this analysis be used for offline evaluation only?  \n\nFor individual fairness, I am not very convinced the within-group component described in Equation 2 reflects individual fairness. The two data points (individuals) may belong to different groups but have strong similarities and are treated differently. Is this decomposition valid for measuring individual fairness correctly?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors conduct an extensive, data agnostic analysis of \"generalized entropy indices\" as a fairness metric. The metric, which has implications for both group and individual fairness, is dependent on parameters. Importantly -- as the authors point out -- there is little work on understanding how these parameters should be set, and what those settings imply for balances between group and individual fairness."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The core idea of the paper is strong: while the fairness community has been prolific in creating fairness metrics, there are still gaps in understanding the behavior of those metrics in different setting. I found myself wanting the same type paper, but for other well-known fairness metrics like EO, demographic parity, FPR/FNR ratios (these are not parameterized, but they do behave differently depending on underlying conditions like group base rates or classifier accuracy).\n\nThe authors also do a good job presenting theoretical claims and justifying them."
+            },
+            "weaknesses": {
+                "value": "- Motivation: I am not fully convinced by the motivation of the paper re: why generalized entropy indices are important. The authors support their importance by noting that the metric has been implemented in libraries created by IBM, Microsoft, and Amazon \u2014 but this argument cuts both ways: it\u2019s also true that other well known fairness packages like Aequitas and Microsoft FairLearn do not include generalized entropy indices. Instead, a much stronger way to motivate this paper would be to present a compelling example/scenario where generalized entropy indices are an ethically fair/correct fairness metric. In general, this is a core tension in individual fairness work, but it is navigable (see https://dl.acm.org/doi/abs/10.1145/3447548.3467349).\n\n- Discussion: I found the discussion confusing and at times rambling and hard to follow. For example, on Lines 496-500, the authors write about viewing algorithmic fairness through the lens of derivative pricing \u2014 why derivative pricing? There are also strong statements like, \u201cas a lawmaker we want to ensure the market is indeed free\u2026\u201d Likely many agree with statement, but it feels out of place in a paper about algorithmic fairness. I would recommend the authors choose lenses more appropriate for fairness settings.\n\n- Discussion: In the last paragraph of the discussion, I was hoping for guidance to practitioners on how to set $\\alpha$, but it fell short for me \u2014 perhaps because of the lack of context. For example, throughout the paper and discussion a \u201cdecision maker\u201d is discussed (e.g. Line 533): who is this decision maker, what is the decision being made, what are their values, and what is the setting? If the authors grounded this discussion in a real-world fairness example, it would greatly strengthen the discussion.\n\n- The paper ends abruptly. I would recommend the authors add a conclusion.\n\nOverall, I am open to increasing my score if the authors can ground the paper\u2019s motivation, findings and discussion in a compelling real-world example where generalized entropy indices are the correct choice of metric."
+            },
+            "questions": {
+                "value": "There appears to be several abuses of notation (as well as errors) that made reading confusing... can the authors please clarify on the following:\n\n- Each individual $i$ has a benefit $b_i$ (line 122), $\\mathbf{b}$ is a benefit array (line 123), but then benefits are described with two subscripts $b_{ij}$. , $b$ is in the set of $b_{-}, b_{+}, 1$ (line 238 and 243). Is $b$ is being used to describe both individual benefit (elements of the benefit array), as well as the benefit matrix?\n\n- On line 297 $b$ is then called as a function $b(p,y)$. Perhaps using a different variable for the benefit function, the individual benefit, and the benefit matrix would add clarity?\n\n- Line 313 $b$ is equal to the set of $b_{-}, b_{+}, 1$. I'm guessing this is just a typo where = was used instead of $\\in$?\n\n- The assignment $b_{ij} = ((1,b_{-}), (b_{+},1))$ (line 368) makes sense in context, but is confusing against the way $b_i$ was previously defined (line 122). Does it make sense to again use a different variable to denote the benefit matrix?\n\n- The notation used changes in the discussion. For example, $\\hat{Y}$ is defined as the predicted target (line 239), but then $\\hat{Y}$ is a re-defined as a model (line 490). Throughout the paper $\\lambda$ is the risk-free reward rate (line 342), but then $\\lambda$ is re-defined as the model accuracy (line 515). Ultimately, these changes are understandable in context, but perhaps the authors could make the paper stronger/clearer if notation was unified throughout."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The primary goal of the work is to obtain a deeper understanding of the class of generalized entropy index based unfairness metrics proposed in [1]; the primary tool the authors use to achieve this is deriving more interpretable representations of the aforementioned unfairness metrics. The motivation for this process is to allow for better parameter selection in generalized entropy indices which are used to produce fair models. To support this, the authors use their theoretical contributions to provide a characterization parameters that allow for enforcement of individual fairness. Theoretical examples are also given.\n\n[1] Speicher et al. A Unified Approach to Quantifying Algorithmic Unfairness: Measuring Individual & Group Unfairness via Inequality Indices. 2018."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The authors do a good job explaining that while generalized entropy indices for fairness is common in practice, the parameter selection methods for these metrics are ad-hoc and often not well justified.\n2. I appreciate the avoiding harm and avoiding undue credit as theoretical examples of how Theorem 3.3 and Theorem 3.4 can aid in a better parameter selection process.\n3. Similarly, I can see how the characterization given in Theorem 3.5 would be useful for fairness parameter selection."
+            },
+            "weaknesses": {
+                "value": "1. The primary weakness of the work is the lack of any empirical evidence that demonstrate the usefulness of the results. While the authors take care to derive several new representations for the generalized entropy indices and provide some theoretical examples for how these representations can help with parameter selection for fairness criteria, basically no empirical evidence is provided. In particular, I believe that the work requires at least a couple experiments that (i): show that naive or standard parameter selection leads to poor fairness performance and (ii) Show that selection of parameters suggested by the authors theory alleviates this issue. It seems the major works theirs is based off all include experiments with real data, so I believe this is a reasonable ask.\n\n2. In general, the writing needs work. I provide further suggestions on this below.\n\n*More detailed writing comments*\n1. I think the primary objective/motivation is not super clear. My interpretation is the point is to \"aid with fairness parameter selection\", but I don't think this is demonstrated well enough. One suggestion I have is to re-organize the main contributions list in the introduction; I think it is sufficient to pick the 1-2 broad points the reader should take away from the paper, rather than list every idea in the work.\n2. Please provide a formal, mathematical definition in your notation for the risk free reward $\\lambda$ (I understand that this can change based on choices for the benefit function, maybe this can be rolled in with point 4).\n3. Line 364; please provide a further discussion on how each corollary demonstrates the observation that a poor choice of parameters leads to a metric that is behaving opposite to which it should. This observation is not immediate it to me just examining the corollaries.\n4. Around line 220; I think it would be very helpful to have a plot or table demonstrating the relationship between the various choices to assign to $\\lambda$, and the benefit map $B$. Similar to this, when a choice for $b_{ij}$ is made (for example line 378) it should be more clear what position in the Matrix corresponds to what instance (e.g false positive, false negative etc...). In general I found this hard to track throughout the paper\n5. Line 449 has an incomplete sentence\n6. The conclusion/discussion section has multiple ideas that require clarification. For example, the final bit \" In some sense, the choice \u03b1 = 0 results in a mis-pricing of an individual not dissimilar to the mis-pricing of vanilla options under the assumption of constant volatility demonstrated by Black Scholes and Merton\u2019s log-normal model which empirically demonstrates the existence of volatility smile. Here the invalid assumption at the root of the mis-pricing, is that errors and group membership are uncorrelated.\" is an interesting analogy for the phenomenon being discussed, but I do not think that readers at an ML conference are familiar enough with Merton's log-normal model for this to be particularly meaningful. Moreover, references to these models are provided here. I felt this was a repeating pattern in this section."
+            },
+            "questions": {
+                "value": "1. The authors state that one primary contribution is to \"argue that in order to represent individual fairness, the index must be orthogonal to model accuracy. For the parameter choices made Speicher et al. (2018), we show that the index is a linear function of model accuracy, and thus cannot represent individual fairness according to this independence constraint...\" However, I can not find where exactly this is discussed in the main text. This appears to be a different finding/interpretation from the Speicher et al. paper, so it warrants thorough discussion. Is there somewhere I am missing where this occurs?\n2. Theorem 3.5 provides a parameter selection characterization for individual fairness. Is there somewhere in the literature that has an analogous result for group fairness? If not, is this one potential follow up direction that could be pursued?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

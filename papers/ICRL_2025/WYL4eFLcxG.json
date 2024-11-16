@@ -1,0 +1,171 @@
+{
+    "id": "WYL4eFLcxG",
+    "title": "Scaling Optimal LR Across Token Horizons",
+    "abstract": "State-of-the-art LLMs are powered by scaling -- scaling model size, dataset size, and cluster size. It is economically infeasible to extensively tune hyperparameters for the largest runs. Instead, approximately optimal hyperparameters must be inferred or transferred from smaller experiments. Hyperparameter transfer across model sizes has been studied in Yang et. al. However, hyperparameter transfer across dataset size -- or token horizon -- has not been studied yet. To remedy this we conduct a large-scale empirical study on how optimal learning rate (LR) depends on the token horizon in LLM training. We first demonstrate that the optimal LR changes significantly with token horizon -- longer training necessitates smaller LR. Secondly, we demonstrate that the optimal LR follows a scaling law and that the optimal LR for longer horizons can be accurately estimated from shorter horizons via such scaling laws. We also provide a rule-of-thumb for transferring LR across token horizons with zero overhead over current practices. Lastly, we provide evidence that LLama-1 used too high LR, and argue that hyperparameter transfer across data size is an overlooked component of LLM training.",
+    "keywords": [
+        "LLMs",
+        "scaling laws",
+        "hyperparameters",
+        "mup"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We show how the optimal LR for LLM pretraining depends on token horizon",
+    "creation_date": "2024-09-18",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=WYL4eFLcxG",
+    "pdf_link": "https://openreview.net/pdf?id=WYL4eFLcxG",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper studies how the optimal learning rate changes when varying the total number of tokens that are fed into GPT-3-like models (which, equivalently, means training for a longer time). Consistently, it is found that increasing the number of tokens corresponds to a decrease in the optimal learning rate. This inverse relationship is then studied more in detail by fitting a power law, and its extrapolation allows for a precise prescription of how the learning rate should scale with the number of tokens. Finally, this approach has discovered that LLAMA-1 has been potentially trained with a too-large learning rate."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper has significant strong points.\n\n1. Experimental Scale. The authors had the capability to run large-scale experiments (billion scale). This makes the results very reliable in the specific experimental setting adopted here (i.e. architecture, model size, optimizer setting).\n\n2.  The research question of how the learning rate should scale up is very important in practical settings and it is not covered in either theoretical or empirical research. Thus, the experimental findings are both novel and relevant.\n\n3. The case study on LLAMA training is very interesting, for instance, by retrospectively questioning how hyperparameter tuning was performed in that setting."
+            },
+            "weaknesses": {
+                "value": "The paper has some weaknesses, mainly due to the depth of the investigation that is performed. More concretely (in order of importance):\n\n1. It is unclear whether the observed inverse relationship between the number of tokens used for pretraining and optimal learning rate is due to the fact the model is trained progressively for a longer number of time steps, or because the network has processed more data. This is quite a fundamental experiment, and it\u2019s unclear what the view taken by the authors is, given that the meaning of the term \u201ctoken horizon\u201d is not entirely specified. This could be tested, for instance, by fixing the amount of data and training for multiple epochs, and by increasing the batch size while fixing the number of steps (this is already partially done in the current paper). Aggregating these experiments together with the ones already performed by the authors should elucidate the aforementioned question.\n\n2. The experiment of Section 4 ignores the fact that as the scale gets larger, the value of $\\beta$ is very different. Thus, with the provided evidence these results are hardly predictive of the optimal learning rate in the joint scaling (model size, token horizon), and more investigation is needed. In fact, the observation that $\\beta$ changes with scales (which the authors make) should already advise against the approach of independently fitting the constants for model size and token horizon. However, the authors explicitly advertise this suggestion to practitioners. On the other hand, it would have been more appropriate to see reported how $\\beta$ changes with scale, especially for $\\mu$P. In particular, for $\\mu$P we expect the learning rate to transfer across width, so the joint scaling properties should be more feasible to test.\n\n3. The authors observe a different $\\beta$ for different model size (Table 5). Fundamentally, the authors increase the model size by increasing both the width and at times the depth of the model. Thus, it is unclear whether the observed different $\\beta$ at different model sizes is due to the width or the depth scaling.\n\n\nMinor:\n\n4. Another fundamental limitation of this work is that $\\beta$ would potentially change as any architectural modification is made (e.g. QK norm, attention method, gating, etc..). Thus, the $\\beta=0.32$ proposed to practitioners, on top of the problems stated above, is valid only in the GPT-3 setting studied. I think this should be emphasized more to not be misleading. \n\n5. I am not entirely clear on the purpose of the $\\mu$P  experiment. $\\mu$P is just not designed to exhibit hp transfer across a number of samples (in this case, the number of tokens, or equivalently training time). Thus it is not entirely clear what the expectation of this experiment was in the first place. However, in the related work section, the authors state that exploring this limitation was part of the objectives of the paper, hence I do not decrease my score for this reason.\n\n6. The $\\mu$P extension to depth scaling is derived in at least two existing works [1,2]. Thus, there is a parametrization that exhibits learning rate transfer across depth as well. However, I would partially still agree with the authors that the scaling with respect to depth still has to be fitted with power laws (as it is advertised to practitioners), due to the nature of Transformers that have >1 layers within a single residual block. Despite this, I would appreciate it if a more thorough/informed explanation of these suggestions were present in the paper.\n\n[1] Tensor Programs VI: Feature Learning in Infinite-Depth Neural Networks\n\n[2] Depthwise Hyperparameter Transfer in Residual Networks: Dynamics and Scaling Limit\n\nI am willing to raise my score if my concerns are resolved."
+            },
+            "questions": {
+                "value": "What do these results seem to suggest about a possible \u201c$\\mu$P extension\u201d to a simultaneous scaling limit of the multiple dimensions (token, width)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "As LLMs are scaled up it is not possible to tune hyperparameters at the largest scale. This necessitates a way of predicting optimal hyperparameters. This paper focuses on predicting optimal LR as the training dataset size is scaled. Specifically, they fit a scaling law for optimal LR as a function of dataset size and find 1. Good fits to the scaling law and 2. The exponent is negative i.e. optimal LR decreases with increasing tokens. They also find that they can fit the loss vs log-LR curve by a quadratic (At least around the optimum value)."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "As described, the problem studied by the paper is important and the paper's findings give an important starting point for predicting optimal LR."
+            },
+            "weaknesses": {
+                "value": "There are some other hyperparameters which strongly interact with learning rate such as weight decay and warmup. The paper does not explore the interaction between these factors and learning rate."
+            },
+            "questions": {
+                "value": "The warmup used by the authors is much smaller than that used in many recent works[1].\n\n\nTo confirm that the results are robust to values of other hyperparameters, could the authors report results on one of the setups but with 10% warmup steps and 0 weight decay? Assuming the results are robust, I would be happy to increase my score.\n\n \n[1] SMALL-SCALE PROXIES FOR LARGE-SCALE TRANS-\nFORMER TRAINING INSTABILITIES."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper conducts an empirical study to characterize scaling law of optimal step-size with respect to the token used in the training of LLMs. They make some interesting observations: 1- best step-size shrinks approximately according to D^.32 where D is the training horizon and 2- this scaling law is almost consistent for different network sizes."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is clear and well written. It delivers what it promises.\n\nThis is an impactful research area. Efficient methods or scaling laws for finding best step-sizes helps to improve overall training efficiency and performance."
+            },
+            "weaknesses": {
+                "value": "The paper provides no analysis or in-depth intuition on why optimal LR scales with exponent -.32 ~= -1/3. \n\nThe scale of experiments are rather small for a fully empirical paper. Unless there is an analytical explanation or intuition provided for the observed patters, the trends might be unreliable for larger networks and longer horizons. In the same vein, would the scaling law remain the same for other transformers like Llama and Mistral? It would also be interesting to study how optimal LR scales with respect to training horizon in other architectures like ResNet and MLP.\n\nIn general, this is a solid paper, however in my view it falls marginally below the ICLR bar in terms of contributions. See below for some suggestions that I think would help in improving the contributions and the scores."
+            },
+            "questions": {
+                "value": "Can the authors provide any theoretical analysis or intuition for why the optimal learning rate scales with an exponent of approximately -1/3?\n\nCould the authors use their fitted scaling law to propose a new LR schedule. For example, an LR schedule that decays with t^{-.32}. Does this outperform cosine decay? Is -.32 the best decay exponent for LR schedule? \n\nCould you strengthen your claims by testing the scaling law on other transformer architectures like Llama and Mistral, as well as non-transformer architectures like ResNets and MLPs? This would help demonstrate the generality of the observed scaling behaviour."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper shows that the optimal learning rate is decreasing in dataset size across scaling parameterizations, in contrast to most existing work on scaling, which studies model size (depth/width) only, and not data budget. They find that the optimal learning rate decreases approximately as a power law in the data budget, and provide a heuristic to help practitioners select an optimal learning rate scaling over data budgets. Their experiments include language model pretraining runs up to 2.7B parameters and 800B tokens, on which they fit these scaling trends."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "I have not seen works touching on optimal LR with respect to data budget before, so this is neat. The message of the paper is clean and simple: optimal learning rate for language model pretraining decreases approximately as a power law in the data budget. In particular some strength are: \n\n- The message is short and simple, and the empirics are done with reasonably standard architectural decisions, and are -- most importantly -- at large scale. I imagine this was a reasonably expensive paper to write in terms of compute. \n- They check multiple parameterizations, including $\\mu P$, which is important. \n- The validate their predictions and include a nice touch of showing an actionable consequence: that the LR of Llama was not tuned optimally. \n- The batch size factoring in the optimal learning rate is neat and intuitive and a good sanity check since the BS and LR are often optimized/tuned together in practice."
+            },
+            "weaknesses": {
+                "value": "My gripes are mostly methodological. \n\n- In my mind, the main contribution is an empirical one: the dots you plot. I didn't put much weight into the actual fitted scaling laws because you fit a *separate set of constants to each curve* as you varied token horizons for a fixed model size. As I understand it, the main point of a scaling law is that you should be fitting a *fixed set of constants for all token horizons* and THAT is what you should be plotting. I suspect this is the reason for your unusually strong fit. The quote from von Neumann comes to mind: \"With four parameters I can fit an elephant, and with five I can make him wiggle his trunk.\" Ideally, you should even be using one fitted set of constants ACROSS model sizes, but since your focus is on data and not model size scaling, I can forgive this. But one set of fitted constants per model size is a bare minimum: the current setup for how fitting is done is misleading if I am correctly understanding it. \n\n- It is unclear whether the main (scaling) experiments are done on the absolutely right type of architecture, ie. a modern \"Transformer++,\" which is what they'd need to be to be most relevant to practice. Using architectural and hyperparameter choices from GPT3 is suboptimal because optimized Transformer++ architectures today use things like RMSnorm, RoPE embeddings, no linear biases, Adam $\\beta$ values of $(0.9, 0.95)$, etc. Most people who work on pretraining know this, and the GPT3 architecture is certainly far from an optimized modern (2024) version by most people's standards. I see there are some preliminary experiments with the \"Llama-1\" architecture (though I'm not sure if it includes all the elements I outlined above). I believe the results, to be clear, and am not asking for new experiments, I just think there are some strange architectural choices even if mostly they are standard. Maybe including one ablation sweep with the architecture I described above (see perhaps the OLMo architecture for an example of a vanilla Transformer++) to check the same trends hold in the same way.  \n\n- The functional forms you posit and fit are somewhat arbitrary. You choose a quadratic and power law, respectively, but do not explore other fits as I understand it, or even justify from any theoretical perspective why these should be the correct fits. Again, to be clear, I personally think these posited forms are fine, but they are indeed arbitrary and this requires justification.\n\n- You definitely need to ablate LR schedule to make sure these are not an artifact of cosine LR schedule."
+            },
+            "questions": {
+                "value": "- If my understanding is correct, $\\mu P$ describes a particular scaling scheme for how to adjust hypers as you scale width or depth (the latter being described in more recent depth-$\\mu P$ extensions, like [1]). When you say you \"scale in $\\mu P$\" but then sweep tokens at a *fixed* model size, I don't know what this means, or how it's different from standard parameterizations? Are you just referring to using a particular initialization scale, then? Can you explicitly tell me how you are scaling in the main (standard) vs $\\mu P$ experiments and how they differ if you are not varying model size in the latter, for instance in Figure 5?\n- It is known why we need to decrease LR with model size, $N$, and it has to do with reasons relating to how EoS/sharpness scale in $N$, for instance see [2]. Is there a similar theoretical reason why the optimal LR should be smaller on larger data budgets? Why should we expect a priori lower LR* when training for longer (especially since LR schedules usually decrease LR over training anyway)? \n\n[1] Bordelon, Blake, et al. \"Depthwise hyperparameter transfer in residual networks: Dynamics and scaling limit.\" arXiv preprint arXiv:2309.16620 (2023).\n\n[2] Noci, Lorenzo, et al. \"Why do Learning Rates Transfer? Reconciling Optimization and Scaling Limits for Deep Learning.\" arXiv preprint arXiv:2402.17457 (2024)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,170 @@
+{
+    "id": "3rUAS7HCKE",
+    "title": "Dark Miner: Defend against unsafe generation for text-to-image diffusion models",
+    "abstract": "Text-to-image diffusion models have been demonstrated with unsafe generation due to unfiltered large-scale training data, such as violent, sexual, and shocking images, necessitating the erasure of unsafe concepts. Most existing methods focus on modifying the generation probabilities conditioned on the texts containing unsafe descriptions. However, they fail to guarantee safe generation for unseen texts in the training phase, especially for the prompts from adversarial attacks. In this paper, we re-analyze the erasure task and point out that existing methods cannot guarantee the minimization of the total probabilities of unsafe generation. To tackle this problem, we propose Dark Miner. It entails a recurring three-stage process that comprises mining, verifying, and circumventing. It greedily mines embeddings with maximum generation probabilities of unsafe concepts and reduces unsafe generation more effectively. In the experiments, we evaluate its performance on two inappropriate concepts, two objects, and two styles. Compared with 6 previous state-of-the-art methods, our method achieves better erasure and defense results in most cases, especially under 4 state-of-the-art attacks, while preserving the model's native generation capability. Our code can be found in Supplementary Material and will be available on GitHub.",
+    "keywords": [
+        "Text-to-Image Diffusion Models",
+        "Unsafe Generation",
+        "Concept Erasure"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "A new method to erase unsafe concepts and defend against attacks for text-to-image diffusion models.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=3rUAS7HCKE",
+    "pdf_link": "https://openreview.net/pdf?id=3rUAS7HCKE",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces Dark Miner for mitigating unsafe content generation in text-to-image diffusion models.  Dark Miner involves a recurring three-stage process of mining, verifying, and circumventing. It's designed to iteratively identify and suppress unsafe content generation. Comprehensive experiments demonstrate the superior performance of Dark Miner."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper studies a critical area. The capability of these text2image models enables unauthorized usage of these models to generate harmful or disturbing content.\n2. Experiments exhibit good overall performance."
+            },
+            "weaknesses": {
+                "value": "1. The performance of Dark Miner is largely limited by the image pool related to c. That is to say, a lot of text that leads to concept c, which is not linked to the images in the pool, will not identified by the mining step.\n2. Questionable performance by CLIP in Section 3.2.2. Can you discuss how well CLIP performs this task, as this is critical to your methods, I believe this is an important part of the ablation study. \n3. Also, CLIP is used in both the model to be erased (i.e. SD) and Section 3.2.2 to identify the concept. However, texts that circumvent the defense will lead to images that cannot be identified by the CLIP.\n\n4. Methods are only evaluated on two SD models. Will this method generalize well beyond the SD families?\n5. Lack of ablation on the three steps of Dark Miner. For instance,\n    * how well does the method perform with and without the verifying step?\n    * Ablation over the size of the image pool\n    * Ablation over different parameters and configurations of optimizing for the embeddings."
+            },
+            "questions": {
+                "value": "Please see the weakness part."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Privacy, security and safety"
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "the first two step, i.e. the mining and verifying, can be directly applied to mine and search for text embedding that generates malicious contents."
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposed Dark Miner to eliminate unsafe content generation of T2I models. It searches and verifies the embeddings which contain the unsafe concept and reduces unsafe generation by adjusting LoRA adapter of T2I models.\nThe paper mainly made following contributions:\n1.\tPoint out the previous methods fail to avoid unsafe generation on out-of-distribution prompts and easily being tricked by attacking methods.\n2.\tPropose Dark Miner which includes three stage to reduce the optimal embeddings related to unsafe concept and maintain generation ability on benign prompts.\n3.\tEvaluate efficient of proposed compared with 6 SOTA methods and conduct 4 SOTA attacks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Authors point out the limitation of existing method and provide theoretical analysis.\nAuthors propose an iterative scheme to mine the text c that with maximum likelihood to generate unsafe content while previous method usually predefined such text c.   \nAuthors propose a method to avoid overly concept removal by verifying the embedding before circumventing. Authors apply CLIP model to extract delta features from reference image and generated image, then a new metric based on cosine similarity of delta features.\nAuthors make effect to test proposed method against 4 different attacks."
+            },
+            "weaknesses": {
+                "value": "In section 3.2.2, authors use prompt \u201ca photo\u201d to generate reference image and compare the distance with target image generated by mined embedding.  However, due to the randomness of reference image, the difference between reference image and target image is always high. In an extreme case, when there are benign images or non-explicit sexual related images in the image pool, the verifying and circumventing will be affected.\n \nAnd the prompt of target image has no relation with prompt of reference image. Another potential drawback is that, all the concepts from \u201cunsafe\u201d prompt are shifted away to random direction without guidance. Therefore, the image generated by \u201cunsafe\u201d prompt will not maintain any semantic information from its prompt even there are safe content expressed by \u201cunsafe\u201d prompt. The generation will be random which might degrade the utility of model.\n\nIn evaluation metrics, author use the mean classification score to evaluate inappropriateness by NudeNet, however, author didn\u2019t mention what classes and threshold used in their implementation. And it is better if authors could also show the number of images being classified as inappropriate image instead of classification score.\n\nFor the CLIP score, the proposed method has relative low performance compared with other SOTA methods."
+            },
+            "questions": {
+                "value": "What classes are used in NudeNet classifier and threshold?\nSLD and ESD original paper test their FID score on COCO-30k which is from COCO 2024 validation dataset, why authors didn\u2019t use the same one?\nAccording to another relevant paper in the task of nudity elimination as following: Li, Xinfeng, et al. \"SafeGen: Mitigating Unsafe Content Generation in Text-to-Image Models.\" arXiv preprint arXiv:2404.06666 (2024). In the Table 3, they also give the FID score on COCO 2017 validation dataset, achieving 20.36 and 20.31 on ESD and their proposed method SafeGen, which is better than the author\u2019s implementation. We suggest author should revisit their FID calculation on ESD on COCO 2017."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes, Dark Miner, an approach designed to address unsafe content generation in text-to-image diffusion models. Unlike existing methods that mainly adjust generation probabilities for known unsafe textual inputs, Dark Miner emphasizes minimizing unsafe generation probabilities for unseen or adversarial prompts. This is achieved through a recurring three-stage process: mining embeddings with high probabilities for unsafe content, verifying them, and circumventing unsafe generation pathways. Some experimental results demonstrate that Dark Miner outperforms six state-of-the-art methods in erasing and defending against unsafe content."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The research topic in this paper is relevant to the community.\n2. Organization of the paper is relatively clear, even not perfect.\n3. Experimental details are clearly stated."
+            },
+            "weaknesses": {
+                "value": "1. The author claims that the following as one of the contributions:\n\u201cBased on the total probabilities, we analyze the reason why existing methods cannot completely erase concepts for text-to-image diffusion models and are vulnerable to attacks.\u201d\nI did not find a (sub)section for this part, although some discussion can be found in some paragraphs.\nThe reason cannot be found in conclusion section either.\n\n2. Missing related work: The proposed Dark Miner aims to emphasize unsafe generation for unseen or adversarial prompts. One of the previous work [1] also handle unseen or adversarial harmful prompts via building a robust detection space, which is missing in the related work.\n\n[1] Liu, Runtao, et al. \"Latent guard: a safety framework for text-to-image generation.\" ECCV, 2024.\n\n3. Experiments: Previous work show their effectiveness on many harmful concepts. This work only conducts experiments on two. The generalisation of the proposed approach remain to be further verified. The previous approach also shows very different formance on different harmful concepts.\n\n4. The proposed approach cannot handle prompts to generate biased images, e.g. gender bias? Bias is also a harmful concept in responsible text-to-image generation [2,3].\n\n[2] Li, Hang, et al. \"Self-discovering interpretable diffusion latent directions for responsible text-to-image generation.\" Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2024.\n[3] Friedrich, Felix, et al. \"Fair diffusion: Instructing text-to-image generation models on fairness.\" arXiv preprint arXiv:2302.10893 (2023).\n\nMinor issues:\n- The citation format is incorrect across the paper.\n- Confusing annotation, e.g. 0c in Equation 8"
+            },
+            "questions": {
+                "value": "1. The paper claims that existing methods fail to guarantee safe generation for unseen texts in the training phase. Does the proposed Dark Miner can provide such guarantee? If so please provide more details or discussion regarding this.\n\n2. In the mining stage of DM2, can DM2 obtain the novel harmful prompts? E.g. this work shows that text-to-image models also suffer from Multimodal Pragmatic Jailbreak prompts [1]. Can the Jailbreak prompts also be learned by the proposed DM2? Some discussion about the limitation of the mining stage will be helpful to the readers.\n\n[1] Liu, Tong, et al. \"Multimodal Pragmatic Jailbreak on Text-to-image Models.\" arXiv preprint arXiv:2409.19149 (2024).\n\n3. How the proposed approach performs if the system is black-box? Is it still feasible?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper focuses on the model editing task of the text-to-image diffusion model. To address the challenges in erasing all unsafe prompts, this paper proposes a method called Dark MINER. This method consists of three steps: 1) mining the potential embeddings related to the unsafe images, 2) assessing whether the potential embeddings effectively induce the model to generate unsafe images, 3) if the mined embedding is effective, this paper conducts the erasing process. In step 3, to protect the generation of safe concepts, this paper also incorporates the regularization in three kinds of concepts: a predefined anchor concept, a null concept, and a concept '-c' that is defined as 'unsafe embedding * -1'."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper presents a clear logical flow and is well-written.\n- Experiments demonstrate the effectiveness of the proposed method."
+            },
+            "weaknesses": {
+                "value": "1. Please clarify the difference from below existed studies [1,2].\n  \n2. In Table.1, the attack success rate of UnlearnDiff in the Violence concept is still 79%. Please provide an explanation for this. Similar phenomenon appear in P4D with the Violence concept (ASR is 46%) and the Church concept (ASR is 49).\n  \n3. In Eq.8, this paper proposes three regularization terms to protect the generation of safe concepts, but lacks of related ablation experiments to assess the effect of these three terms.\n\n[1] RACE: Robust Adversarial Concept Erasure for Secure Text-to-Image Diffusion Model, ECCV 2024\n\n[2] Reliable and Efficient Concept Erasure of Text-to-Image Diffusion Models, ECCV2024"
+            },
+            "questions": {
+                "value": "Please help to address weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

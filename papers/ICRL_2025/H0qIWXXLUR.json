@@ -1,0 +1,217 @@
+{
+    "id": "H0qIWXXLUR",
+    "title": "Learn Your Reference Model for Real Good Alignment",
+    "abstract": "Despite the fact that offline methods for Large Language Models (LLMs) alignment do not require a direct reward model, they remain susceptible to overoptimization. This issue arises when the trained model deviates excessively from the reference policy, leading to a decrease in sample quality. We propose a new paradigm of offline alignment methods, called Trust Region (including variants TR-DPO, TR-IPO, TR-KTO), which dynamically updates the reference policy throughout the training process. Our results show that TR alignment methods effectively mitigate overoptimization, enabling models to maintain strong performance even when substantially deviating from the initial reference policy. We demonstrate the efficacy of these approaches not only through toy examples that exhibit reduced overoptimization, but also through direct, side-by-side comparisons in specific tasks such as helpful and harmless dialogue, as well as summarization, where they surpass conventional methods. Additionally, we report significant improvements in general-purpose assistant setups with the Llama3 model on the AlpacaEval 2 and Arena-Hard benchmarks, highlighting the advantages of Trust Region methods over classical approaches.",
+    "keywords": [
+        "reinforcement learning from human feedback",
+        "language models",
+        "RLHF",
+        "preferences",
+        "alignment",
+        "overoptimization"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=H0qIWXXLUR",
+    "pdf_link": "https://openreview.net/pdf?id=H0qIWXXLUR",
+    "comments": [
+        {
+            "comment": {
+                "value": "**Comments on Questions**\n\n- **Use of GPT-4 and automatic evaluation**\n    \n    It is true that we employ GPT-4 and AlpacaEval 2.0 as part of our evaluation framework. AlpacaEval 2.0, which demonstrates the highest correlation with the LLM Arena benchmark (https://huggingface.co/spaces/lmarena-ai/chatbot-arena-leaderboard), is specifically used to evaluate model performance. This is explicitly described in the Discussion section, where we also acknowledge the potential bias this might introduce. However, this approach has become the de facto standard in the field, as evidenced by its widespread use in numerous works published at A/A* conferences [e.g., 1, 7, 12, 14, 15, 16, 17, 18]. By adopting this evaluation strategy, we ensure comparability and consistency with state-of-the-art methods in the field.  \n    \n\n**Conclusion**\n\nWe deeply appreciate the reviewer\u2019s constructive feedback, which has helped us to clarify and strengthen our work. We hope that the additional details provided address the reviewer\u2019s concerns and highlight the contributions of our work more clearly. Given the novelty of our method, its demonstrated performance improvements, and its alignment with current evaluation standards, we kindly request the reviewer to reconsider their rating.  \n\n**References:**\n\n[1] Rafailov R. et al. Direct preference optimization: Your language model is secretly a reward model\n\n[2] Zhao Y. et al. Slic-hf: Sequence likelihood calibration with human feedback\n\n[3] Liu T. et al. Statistical rejection sampling improves preference optimization\n\n[4] Munos R. et al. Nash learning from human feedback\n\n[5] Azar M. G. et al. A general theoretical paradigm to understand learning from human preferences\n\n[6] Ethayarajh K. et al. Kto: Model alignment as prospect theoretic optimization\n\n[7] Meng Y., Xia M., Chen D. Simpo: Simple preference optimization with a reference-free reward\n\n[8] Melnyk I. et al. Distributional Preference Alignment of LLMs via Optimal Transport\n\n[9] D'Oosterlinck K. et al. Anchored Preference Optimization and Contrastive Revisions: Addressing Underspecification in Alignment\n\n[10] Wang R. et al. ASFT: Aligned Supervised Fine-Tuning through Absolute Likelihood\n\n[11] Chen H. et al. Noise contrastive alignment of language models with explicit rewards\n\n[12] Hong J., Lee N., Thorne J. Reference-free monolithic preference optimization with odds ratio\n\n[13] Xu H. et al. Contrastive preference optimization: Pushing the boundaries of llm performance in machine translation\n\n[14] Ding N. et al. Enhancing chat language models by scaling high-quality instructional conversations\n\n[15] Park R. et al. Disentangling length from quality in direct preference optimization\n\n[16] Rafailov R. et al. Scaling laws for reward model overoptimization in direct alignment algorithms\n\n[17] Yuan W. et al. Self-rewarding language models\n\n[18] Xiong W. et al. Iterative preference learning from human feedback: Bridging theory and practice for rlhf under kl-constraint"
+            }
+        },
+        {
+            "comment": {
+                "value": "First of all, we would like to sincerely thank you for taking the time and effort to review our paper. Your thoughtful and constructive feedback provides us with valuable opportunities to clarify and improve our work. We deeply appreciate your recognition of our contributions, such as the introduction of Trust Region methods to mitigate overoptimization, the significant performance improvements demonstrated on benchmarks like AlpacaEval 2.0, and the novelty of our approach in addressing alignment issues in summarization and dialogue tasks.\n\nWe have carefully addressed the weaknesses and questions raised, as detailed below.\n\n**Comments on Weaknesses**\n\n- **Jailbreak robustness**\n    \n    We agree that robustness against jailbreak methods is an important aspect of evaluating the reliability of LLMs. In this work, we focused on the alignment of models with human preferences, following the research direction and experimental setups of prior studies [e.g., 1, \u2026, 13] that also aim to address alignment challenges. These setups are specifically designed to analyze the effectiveness of alignment strategies rather than robustness against jailbreak attacks. While this is an important topic, it lies outside the primary scope of our study, as our goal was to contribute to advancing alignment methods. We appreciate the reviewer bringing this up and consider it a valuable direction for future research.\n    \n- **Cost-performance trade-off**\n    \n    We appreciate the reviewer bringing up the consideration of trade-offs between computational cost and performance gains. However, the comment lacks specific examples or metrics to clarify what aspects of this analysis they find insufficient. To address this, we provide a detailed summary of the computational costs and performance improvements evaluated in our work.\n    \n    The additional computational cost of our proposed method compared to traditional approaches is at most $O(n)$, where $n$ is the number of model parameters, when using soft updates in each training step. For the evaluation, we measured the training times of various configurations of our method and baseline approaches on the UltraFeedback dataset, as described in our paper (line 286). Each model was trained for a single epoch to ensure consistency. The configurations included Llama 3 8B Base with soft updates ($\\alpha = 0.8$) and hard updates ($\\tau = 32$), as well as baseline methods such as DPO, IPO, and KTO. For TR-KTO, we specifically used $\\alpha = 0.6$ for soft updates and $\\tau = 64$ for hard updates, as outlined best configuration in Table 6 of our work.\n    \n    On average, we observed a moderate increase in training time for our TR-based methods compared to their respective baselines:\n    \n    - For DPO, the training time increased by **3.99%** (soft updates) and **2.87%** (hard updates).\n    - For IPO, the increase was **6.93%** (soft updates) and **3.32%** (hard updates).\n    - For KTO, the increase was **7.44%** (soft updates with $\\alpha = 0.6$) and **3.65%** (hard updates with $\\tau = 64$).\n    \n    Despite the additional computational cost, the improvements in AlpacaEval 2.0 benchmark performance are substantial, as reported in the current version of our work (line 963). For example:\n    \n    - DPO achieved an average improvement of **71.82%** (soft updates) and **74.72%** (hard updates) on .\n    - IPO showed an increase of **85.76%** (soft updates) and **76.94%** (hard updates).\n    - KTO improved by **30.93%** (soft updates with $\\alpha = 0.6$) and **28.65%** (hard updates with $\\tau = 64$).\n    \n    These results underline the efficiency of our method, demonstrating that the performance gains significantly outweigh the modest increase in computational requirements.\n    \n    We will include this detailed analysis in the rebuttal revision version of the paper to provide further transparency and clarity on the cost-performance trade-offs associated with our approach."
+            }
+        },
+        {
+            "summary": {
+                "value": "Recent literature on Offline RL LM fine-tuning methods, such as DPO, IPO, KTO etc, involve avoiding training an explicitly reward model (RM) and directly optimizing the LM from the offline preferences. However, these methods tend to over-optimize the data, such that, the probabilities of both the chosen and rejected responses from the preferences decrease compared to the reference LM and rather assign higher probability to out-of-distribution (OOD) responses. The paper tries to address this main over-optimization issue of current Offline RL approaches but bringing in ideas from Trust Region optimization. Their key idea is to modify the existing offline RL methods by making the reference LM in their training objective a moving target. Thereby, they hypothesize that the current policy will make more reasonable updates, that fix the over-optimization issue (i.e. the likelihood of chosen responses increases while rejected response still decreases). To make the reference policy moving target, they propose two simple strategies:\n1. Soft Update: weighted interpolation between previous reference LM and current updated LM that is being trained. After the update, the gradients are no longer propagated from the new reference LM.\n2. Hard Update: After every $\\tau$ steps, the current policy is copied over the reference policy.\n\nTo support their intuition, they derive the second-order derivative of the DPO objective and show that it leads to a curvature-less loss region. Their hypothesis is that this curvature-less loss landscape leads to a decrease in the probability of the human-preferred responses, ultimately leading to OOD responses.\n\nTheir experimental setup involves comparing baseline offline RL objectives: DPO, IPO, and KTO with their Trust Region counterparts, TR-DPO, TR-IPO, and TR-KTO. They use the Anthropic HH and Reddit TL;DR dataset for preliminary evaluation with Pythia models and further experiment with Llama-3 8b models on AlpacaEval 2 and Arena-Hard benchmarks. \n\nOverall, their results suggest that TR version of offline RL works on average better than without for both soft and hard update rules with specific parameters (0.5 or 0.6 interpolation parameter for soft update and $\\tau = 512$ steps for hard update)."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- Work on a well-motivated and well-known problem of overoptimization in DPO-like Offline preference optimization methods.\n- They give a new perspective on the issue with DPO objective by analyzing the second-order derivative.\n- A simple solution to fix the issues with offline methods that have encouraging results across many datasets and model families."
+            },
+            "weaknesses": {
+                "value": "- Although the intuition about the curvature-less landscape is interesting, I am not able to understand from this why would the chosen probability decrease. From my understanding, DPO and the like only focus on the margin and not the raw values and potentially decreasing both of them (the rejected likelihood faster than chosen) is the easiest way to reduce the loss according to gradient update. \n- The TR solution to fix the overoptimization in online RL makes sense because the samples are drawn from the reference policy during optimization. It is unclear why this would help in the offline setting since subsequent reference LMs will be further out of distribution compared to the offline preference dataset."
+            },
+            "questions": {
+                "value": "- Does the intuition about the curvature less loss hold also for other DPO-like objectives (example, IPO and KTO)?\n- I really like the likelihood analysis of the toy dataset example in Figure 2. However, I didn't see a similar analysis for the experiments with practical datasets. Does TR-DPO and others actually increase chosen preference likelihood in real datasets? If yes, I'd appreciate it if the authors included comparison plots of DPO vs TR-DPO with real data.\n   - Follow-up for toy dataset analysis: Even with TR methods, I initially see a drop in chosen probs, followed by recovery and almost memorization towards the end of optimization. Do the authors have an intuition for why this initial drop in chosen likelihood happened?\n- In my experience with offline RL objectives, the overoptimization is heavily correlated with increased length. Do authors have numbers comparing the average output length of TR methods vs baseline objectives? I would trust the results much more if I see the evidence that TR methods are not susceptible to length hacking.\n- Of course, it is hard to evaluate all methods within an experiment setup, but I wonder if the authors are aware of this previous work which also attempts to solve the drop in chosen likelihood problem \"Noise Contrastive Alignment of Language Models with Explicit Rewards\" (chen et al. 2024) https://arxiv.org/pdf/2402.05369."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes an enhancement to offline alignment methods for Large Language Models (LLMs), addressing the challenge of overoptimization, where a model diverges excessively from its initial reference policy, degrading alignment and sample quality. The authors introduce the Trust Region (TR) approach, which updates the reference policy dynamically during training. They implement this via soft and hard updates within three variants: TR-DPO, TR-IPO, and TR-KTO. The results show moderate performance improvements on tasks like dialogue alignment and summarization,"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper tackles a well-known issue in offline alignment\u2014overoptimization\u2014which is relevant for applications involving LLM alignment with human preferences. The focus on dynamically updating reference policies is a step toward mitigating this issue, offering a more stable alignment during training.\n2. The experimental setup is comprehensive, involving multiple datasets (task-specific and general-purpose) and benchmarks.\n3. The structure and explanation of the TR approach, including its soft and hard update methods, are clearly presented. This makes the methodology easier to understand and potentially reproducible for future research."
+            },
+            "weaknesses": {
+                "value": "1. Despite the theoretical motivation, the empirical gains presented by the TR approach are relatively minor. In many cases, improvements over baseline methods (DPO, IPO, KTO) are modest, which may limit the practical significance of the proposed approach. \n2. The approach of updating the reference policy is somewhat incremental in nature, as it primarily modifies existing alignment methods (DPO, IPO, KTO) rather than introducing a fundamentally new framework for offline RLHF alignment. This limits the originality of the contribution, especially given the relatively minor performance improvements reported."
+            },
+            "questions": {
+                "value": "1. While the TR approach appears to mitigate overoptimization initially, a more detailed analysis of its performance in long-term deployments would be valuable. Specifically, could the authors provide empirical results on how the approach maintains alignment stability over extended training iterations?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors proposed a new offline paradigm for aligning large language models using preference optimization methods. They explored the overoptimization problem in state-of-the-art preference optimization methods and showed that the current methods suffer from this issue. To overcome this problem, they updated the reference models with the weight of the policy model on safe and hard settings. They showed that this method outperforms the vanilla across different metrics."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The main strengths of this paper are comprehensive experiments and analysis of various benchmarks and models. Also, they achieved impressive performance with a simple change on the optimization part, which means updating the weight of the reference model during the optimization part."
+            },
+            "weaknesses": {
+                "value": "This paper showed impressive improvement on different benchmarks; however, I have multiple concerns about this paper. \n\n\n1. **Lack of generalizability**. The authors called their method a new paradigm for offline alignment techniques. However,  some new methods, like SimPO, CPO, and TPO, achieve impressive performance compared with DPO, IPO, and KTO by removing the reference model. So, I am curious how we can call it a new paradigm.\n\n2. **Lack of novelty**. The ORPO method, motivated by maximizing the likelihood of a bad response during the SFT, proposed another method to overcome the issue. They showed that this method can also resolve the overoptimization, and the log probability of the chosen response increases during the optimization (refer to Figure 7 in the ORPO paper). \n\n\n3. **Lack of explanation**. In paper, the authors to satisfy their hypothesis, they did some experiments on OOD trajectory probability, as shown in Figure 2. However, this experiment is not clear and I am wondering which data is used as out-of-distribution (OOD).\n\n\n\n4. **Huge discrepancies and a lack of exploration of hyper-parameters for different methods**. The results reported for LLama3-Base on AlpacaEval 2 and ArenaHard for DPO, IPO, and KTO in the SimPO paper and this paper are very different. The discrepancy on ArenaHard for IPO is more than 11%, and for DPO, it is more than 5%. I refer the authors to Table 4 in the SimPO paper []. Also, It seems the authors didn\u2019t choose the best hyperparameter for DPO. In Appendix D.1 they selected 1.0e-6 for llama as the learning rate for DPO, while learning 5.0e-7 is the best for DPO. We refer to the SimPO paper because the DPO model they fine-tuned has better performance than this paper.\n\n\n5. **Lack of efficiency analysis**. This method needs to keep the reference model in Memory during the optimization. To improve the efficiency of the DPO, KTO, and IPO, the value of the reference model can be calculated before training. So, I think efficiency analysis shows different aspects of this method. Reporting the Peck GPU memory and run-time is helpful.\n\n\n6. Recent papers like Zephyr and SimPO showed that preference optimization methods not only need more steps for optimization but also, after one epoch, will be overfitting on data. However, the proposed method requires large steps for hard update settings.\n\n---\nSimPO: https://arxiv.org/abs/2405.14734\n\nCPO: https://arxiv.org/abs/2401.08417\n\nTPO: https://arxiv.org/abs/2405.16681\n\nORPO: https://arxiv.org/abs/2403.07691\n\nZephyr: https://arxiv.org/abs/2310.16944"
+            },
+            "questions": {
+                "value": "I have a couple of questions and suggestions. I appreciate the authors answering the following:\n\n\n1. The same dataset generated by llama3-instruct-8b was prepared by the SimPO paper before. I suggest the authors to fine-tuned the LLaMA3-8b-SFT (https://huggingface.co/princeton-nlp/Llama-3-Base-8B-SFT) with their method on this UltraFeedback (https://huggingface.co/datasets/princeton-nlp/llama3-ultrafeedback) and report the AlpacaEval and ArenaHard.\n \n2. most of the analysis on KL divergence is on Pythia 2.8. I am happy to see some analysis on LLama3 models to verify the observation.\n\n3. I suggest the authors evaluate the llama3 models on the MixEval (https://github.com/Psycoy/MixEval/?tab=readme-ov-file) benchmark, too."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces a novel paradigm for aligning Large Language Models through offline methods. The authors propose Trust Region (TR) methods, including TR-DPO, TR-IPO, and TR-KTO, which dynamically update the reference policy during the training process. The paper claims that these methods effectively mitigate overoptimization, allowing models to maintain strong performance even with significant deviations from the initial reference policy. The efficacy of these approaches is demonstrated through toy examples and specific tasks such as dialogue and summarization, where they outperform conventional methods. Additionally, the paper reports significant improvements on general-purpose assistant benchmarks using the Llama3 model."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper introduces a novel Trust Region (TR) approach that significantly mitigates the issue of reward overoptimization in offline learning of Large Language Models. By dynamically updating the reference policy during the training process, the proposed method potentially offers a more robust alignment technique.\n\n2. The paper conducts a comprehensive set of experiments across various tasks and models. The authors have meticulously detailed their experimental procedures and published their parameters, which not only supports the credibility of their findings but also allows for reproducibility by other researchers in the field. \n\n3. The paper demonstrates a strong understanding of the underlying issues in offline alignment methods and provides a clear motivation for the proposed Trust Region methods. The authors have effectively communicated the problem of overoptimization and how their approach can mitigate this through updating the reference policy, which is a conceptual strength of the paper."
+            },
+            "weaknesses": {
+                "value": "1. The methods proposed in this paper\u2014soft and hard updates for the reference policy\u2014are fundamentally extensions of existing approaches rather than novel contributions. Soft updates are commonly used in reinforcement learning and do not introduce new mechanisms or insights; similarly, hard updates reflect established practices without significant advancement. Moreover, while the introduction of Trust Region (TR) methods suggests a framework, it does not provide a substantial departure from conventional strategies, as the core mechanics remain similar. \n\n2. The claim that this update will \"increase the curvature of the loss landscape\" is not backed by theoretical support. The mechanism for alleviating overoptimization remains unclear, and the suggestion that moving away from the SFT policy is \"not inherently bad\" could be misleading, as potential negative consequences are not addressed.\n\n3. The paper relies heavily on automatic evaluation methods, such as GPT-4, to assess model performance. Using a single model (like GPT-4) as a judge in evaluations could introduce bias, as it may not fully capture the nuances of human evaluation. The paper would be strengthened by including human evaluation or a discussion on the reliability of the evaluation methods used."
+            },
+            "questions": {
+                "value": "1. What is the mechanism for alleviating overoptimization? Please investigate it more clearly."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper, titled Learn Your Reference Model for Real Good Alignment, presents a new method for aligning large language models (LLMs) by introducing the Trust Region (TR) approach. This method dynamically updates the reference policy throughout training to reduce overoptimization issues in offline alignment methods. Three key variations are proposed: TR-DPO, TR-IPO, and TR-KTO, which improve upon existing alignment methods by better managing the divergence from the reference policy."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "+ The introduction of Trust Region methods to continuously update the reference policy reduces overoptimization issues, maintaining model performance even when deviating from the initial reference model.\n+ The methods outperform existing baselines in tasks like summarization and dialogue alignment, showing significant improvements in win rates on benchmarks such as AlpacaEval 2 and Arena-Hard."
+            },
+            "weaknesses": {
+                "value": "- The paper also lacks defense performance against well-known jailbreak methods, such as GCG and GPTFuzzer.\n- The paper does not deeply analyze the potential trade-offs between this additional cost and the performance gains.\n- More on questions."
+            },
+            "questions": {
+                "value": "The paper relies heavily on automatic evaluation methods using GPT-4 as a proxy for human judgment, which could raise concerns about the robustness of the evaluation."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

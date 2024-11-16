@@ -1,0 +1,176 @@
+{
+    "id": "Tb8RiXOc3N",
+    "title": "Epistemic Monte Carlo Tree Search",
+    "abstract": "The AlphaZero/MuZero (A/MZ) family of algorithms has achieved remarkable success across various challenging domains by integrating Monte Carlo Tree Search (MCTS) with learned models. Learned models introduce epistemic uncertainty, which is caused by learning from limited data and is useful for exploration in sparse reward environments. MCTS does not account for the propagation of this uncertainty however. To address this, we introduce Epistemic MCTS (EMCTS): a theoretically motivated approach to account for the epistemic uncertainty in search and harness the search for deep exploration. In the challenging sparse-reward task of writing code in the Assembly language SUBLEQ, AZ paired with our method achieves significantly higher sample efficiency over baseline AZ. Search with EMCTS \nsolves variations of the commonly used hard-exploration benchmark Deep Sea - which baseline A/MZ are practically unable to solve - much faster than an otherwise equivalent method that does not use search for uncertainty estimation, demonstrating significant benefits from search for epistemic uncertainty estimation.",
+    "keywords": [
+        "model based",
+        "epistemic uncertainty",
+        "exploration",
+        "planning",
+        "alphazero",
+        "muzero"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "We extend A/MZ specifically and algorithms that use MCTS with learned models of value and / or dynamics in general to estimate and propagate epistemic uncertainty in search, and harness the search for deep exploration.",
+    "creation_date": "2024-09-24",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Tb8RiXOc3N",
+    "pdf_link": "https://openreview.net/pdf?id=Tb8RiXOc3N",
+    "comments": [
+        {
+            "summary": {
+                "value": "This work studies epistemic MCTS, which is to characterize the propagation of model uncertainty in tree search. This is motivated by tasks where the model dynamics are not known in advanced, but need to be learned instead. It could be also useful to host exploration methods.\n\nThe algorithm is inspired by theoretical view of linear Q, where the true optimal Q is bounded with high probability by the Q estimate plus the variance term $O\\sqrt{V}$. Though the bound doesn't apply to learned dynamics, it works in the similar way as UCB, where the \"inequality\" provides intuition of the algorithm design. In the search step, the epistemic UCT then uses a similar bonus term in $O\\sqrt{V}$ that is applied to the Q estimate.\n\nThis variance term is also propagated through the backup operator, as the authors intended to in their motivation of this work. Through an independency assumption, the variance could be backed up by variance terms of the nodes on the trajectory. With this backup, epistemic UCT could be applied to obtain epistemic MCTS.\n\nThe algorithm is tested on Subleq, which is a programming task, and Deep sea, which is a gridworld task. Combining with AlphaZero/MuZero, the algorithm performs quite well on the baseline tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The new algorithm solves MCTS with a learned model, with deep exploration and variance propagation.\n2. The model is supported by theoretical insights.\n3. The model performs quite well on the baseline tasks."
+            },
+            "weaknesses": {
+                "value": "1. The practical value of epistemic MCTS remains questionable. In what real-world tasks do we need to run search without knowing the world model?"
+            },
+            "questions": {
+                "value": "N/A"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes Epistemic Monte-Carlo Tree Search (EMTCS) by introducing a method incorporating epistemic uncertainty in traditional MCTS, due to the limited coverage of the data. This paper upper bounds the uncertainty in the MCTS process and designs a novel planning scheme with this estimated uncertainty upper bound. This method makes the agent to explore the environments with sparse reward signals more efficiently. They did experiments on code generation task like SUBLEQ, which involves deep exploration. They also conducted experiments on the Deep Sea Benchmark. Extensive experiments show that EMCTS achieve better sample efficiency and deep exploration compared to baseline methods, particularly in tasks with sparse rewards."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper provides a relatively rigorous theoretical foundation for EMCTS. The authors derive an upper confidence bound for the epistemic uncertain within the learned MCTS model, which theoretically justify the exploration strategy of EMCTS.\n\n2. The experiments demonstrate the effectiveness of EMCTS algorithm in SUBLEQ and Deep Sea task. EMCTS show a better sample efficiency than other baseline methods. Notably, EMCTS demonstrate deep exploration in the presence of the learned value, reward, and transition models as well as both deterministic an stochastic rewards.\n\n3. The motivation of EMCTS is good: to address the epistemic uncertainty in deep exploration tasks and incorporate the uncertainty not just in reward but also in transition dynamics."
+            },
+            "weaknesses": {
+                "value": "1. The authors assume consistency across the reward and value. This assumption might not hold in dynamic environments or with certain deep neural network structures in practice. To what degree do those assumptions hold in practice? Are there any experiments results showing that those assumptions hold (or nearly hold) in practice? How does EMCTS handle potential inconsistencies in epistemic uncertainty when the learned models (reward, value, transition) are not fully aligned?\n\n2. The upper bound of the epistemic uncertainty only applies to the discrete state-action space and can introduce considerable computational costs if we are in a high dimensional space. Moreover, how does EMTCS handle larger state-action spaces or continuous state-action spaces? Experiments in the paper only show the effectiveness of EMCTS in case of discrete action space, but how can EMCTS (or some of its adapted variants) handle the continuous action space? Moreover, how sensitive is EMCTS to the exploration hyperparameter \\beta?"
+            },
+            "questions": {
+                "value": "/"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "/"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This manuscript tries to solve an important issue in Monte Carlo Tree Search (MCTS), that MCTS doesn\u2019t consider the propagation of the uncertainty of learned model. The authors proposed Epistemic Monte Carlo Tree Search (EMCTS), which can account for the epistemic uncertainty in search and harness the search for deep exploration. The proposed method is achieved in three steps: search with learned reward model, planning for exploration with epistemic search, and propagating epistemic uncertainty in search. EMCTS is evaluated in the challenging sparse-reward task of writing code in the Assembly language SUBLEQ and hard-exploration benchmark Deep Sea, and the results show that the proposed framework can solve the quiz faster than AlphaZero/Muzero."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tThis manuscript propose a novel and solid framework to introduce and deal with uncertainty of learned model caused by limited data or sparse reward environments, which is not taken into account in the standard MCTS.\n2.\tEMCTS solves the two-fold objective, i.e., extend MCTS to estimate and propagate the epistemic uncertainty from the uncertain learned model and harness the epistemic uncertainty in the search to achieve deep exploration of the environment, via formulating the epistemic uncertainty, and search based on the propagated UCB.\n3.\tBy giving some assumption, the estimation and propagation of the epistemic uncertainty is defined by a random variable and computed via the variance of reward.\n4.\tExperiments demonstrate that the proposed EMCTS can solve the harder task in a much smaller number of samples than AZ."
+            },
+            "weaknesses": {
+                "value": "1.\tSome assumptions might make EMCTS inapplicable to real complex problems. They assume that the transition model P is true. Theorem 1 need $Q^{\\pi}$ to be linear. The learned models are assumed to be consistent. These is not reasonable in many cases.\n2.\tIn many cases, the transition models need to be estimated, and then the EMCTS will not work."
+            },
+            "questions": {
+                "value": "1.\tThis method assumes that the reward is independent when $i \\neq j$. Is this satisfied in programming or math task? for example, when $i = j+1$?\n2.\tHow to get the true transition model in typical tasks?\n3.\tIs accuracy and uncertainty of the learned model is dynamically improved in the learning procedure? And is this will affect the consistent assumption?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None."
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a novel method, Epistemic - Monte Carlo Tree Search (E-MCTS) which incorporates the uncertainty estimates into MCTS. The authors theoretically motivate their approach as well as provide an experimental study showing the benefit of using their method in hard exploration problems."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Overall, the paper is generally well-written (except for a few places), the proposed method is novel and the contribution is significant.\n\nMCTS is a technique which showed great results in relatively simple domains and it still remains a challenge to apply it in hard-to-explore domains. This work addresses this challenge by adding the uncertainty estimation mechanism into MCTS. The paper demonstrates good results in hard-to-explore domains."
+            },
+            "weaknesses": {
+                "value": "1. In abstract, lines 14-15, it is written \"MCTS does not account for the propagation of this uncertainty however.\". At this point of the text, it is not clear what it means to propagate the uncertainty and why it is necessary. It might be worth adding a sentence about \"propagating uncertainty\" before that.\n\n2. The authors mention in many places that the model will be uncertain about the part of the state-action space which was not observed during training, like for example, lines 125-126 \"thus their predictions are uncertain outside of the training set\". But what about the situation when the model is actually **certain** about the unobserved part of the state-action space, but **wrong** ? I believe this situation is also likely to happen. There is no discussion of it at all in the paper.\n\n3. The authors propose to estimate the square root of the variance $\\sqrt{V[Q]}$ as $1/N \\sum_{i=1}^{N} \\sqrt{V[v]}$ (see, for example eq.11), but this is not how it generally is estimated. Instead, one should estimate  $\\sqrt{V[Q]} = \\sqrt{1/(N-1) \\sum_{i=1}^{N} (v_i - \\bar{v})^2}$, where $\\bar{v}$ is the empirical average of $v$. Where does this estimate come from? What is the impact of using this estimate rather than a more correct one which I wrote?\n\n4. The authors write \"models are consistent\" (line 269), but it is not clear what is meant by consistent. They also say in line 270, \"V[V[s]] ~V[Vpi[s]]\". It is unclear why this must be true. Also, the authors say \"Imposing again the assumption that the learned models are consistent\" (in lines 276-277). It is unclear what they mean by consistency. Suggestion -- write clearly (as an equaition) the definition of the consistency. Then, argue / discuss the implications of this assumption and why this assumption is true in the first place.\n\n5. In lines 388-390, the authors say \"achieve deep exploration\", what does it mean? From the experiments, I can only conclude that the method solves these specific tasks, but it is wrong to claim that it \"achieves deep exploration\", since first, this \"achieving\" is not defined and second, it is not implied from the experiments that it will hold in general.\n\n6. The authors evaluate their method in two domains. I think in order to increase the significance of their work, the authors should also evaluate on more easy-to-explore domains (i.e., in Atari) to show that their method works consistently well overall, as well as on more hard-to-explore domains (i.e., in Atari) to show that in situations where it should work well, it does it consistently. For example, would it also work well in domains like chess? Will the findings still hold? Will E-MCTS actually be more effective here compared to AZ?"
+            },
+            "questions": {
+                "value": "See weaknesses for the questions."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,169 @@
+{
+    "id": "ob7UrZOJve",
+    "title": "Inheritune: Training Smaller Yet More Attentive Language Models",
+    "abstract": "Large Language Models (LLMs) have achieved remarkable performance across various natural language processing tasks, primarily due to the transformer architecture and its self-attention mechanism. However, we observe that in standard decoder-style LLMs attention matrices degenerate to single-column for deeper layers. Layers in this state unable to learn anything meaningful and mostly redundant; we refer to these as lazy layers. The goal of this paper is to train smaller models by eliminating this structural inefficiency without compromising performance.\n\nMotivated by this observation, we propose Inheritune, a simple yet effective training recipe for developing smaller, high-performing language models. Smaller models trained with Inheritune inherits early transformer layers from a larger pre-trained model, then retrains and progressively expands the smaller model until it matches or exceeds the performance of the larger model. We demonstrate that Inheritune enables the training of various sizes of GPT-2 models on datasets like OpenWebText-9B and FineWeb\\_Edu. Models trained with Inheritune, despite having significantly fewer layers, match or even surpass the performance of their larger counterparts. For instance, our 16-layer GPT-2 medium variant achieves comparable performance to the standard 24-layer GPT-2 medium model.",
+    "keywords": [
+        "Large Language Models",
+        "Small Language Models",
+        "Attention degeneration",
+        "Efficient training",
+        "Model Initialization"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "Attention degeneration reduces the effectiveness of later transformer blocks in deep LLMs. To address this, we create small language models by leveraging only a few blocks from larger LLMs.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ob7UrZOJve",
+    "pdf_link": "https://openreview.net/pdf?id=ob7UrZOJve",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces Inheritune, a training method designed to create smaller, high-performing language models. This method works by inheriting the initial layers from a larger pre-trained model and gradually expanding the smaller model until its performance matches or exceeds that of the larger model.\n\nThe authors investigate attention degeneration in standard large language models (LLMs) and find that rank-collapsed attention matrices often reduce to single-column structures, highlighting inefficiencies in the attention mechanism, especially in deeper layers. This insight into the limitations of deep attention inspired the development of Inheritune.\n\nExperiments on different sizes of GPT-2 models, using the OpenWebText and FineWeb_Edu datasets, show that models trained with Inheritune, despite having significantly fewer layers, can match or even surpass the performance of larger models. They also outperform several baseline methods, such as stacking and knowledge distillation."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "(+) The proposed training technique is simple and clear.\n(+) The authors empirically investigate attention degeneration in standard LLM settings, focusing on rank collapse in attention matrices within the deeper layers of models, such as GPT-2."
+            },
+            "weaknesses": {
+                "value": "(-) An analysis of whether attention degradation is resolved in the target model trained with Inheritune is missing and should be included.\n\n(-) The adequacy of training for the reference model in Table 1 is uncertain. Given the hyperparameter setting, the GPT2-large (770M) model was trained with only 1.6 billion tokens, using a batch size of 16K tokens and a total of 100K steps. This training setup appears insufficient for comprehensive model training. Thus, it is crucial to compare the performance of the target model against a reference model that has undergone adequate training. \n\n(-) Since the Inheritune target model begins with the weights of the pretrained model, it has a much lower initial loss at step 0, giving it a head start compared to models trained from scratch. As a result, it\u2019s difficult to determine whether models using Inheritune truly lead to better generalization and convergence. \n\n(-) The baselines used for comparison need to be updated to reflect advancements in training techniques. Some of the latest research on half-width models, stacking, and distillation that would serve as recommended baselines are as follows:\n\u2022\tXiaoqi Jiao et el., TinyBERT: Distilling BERT for Natural Language Understanding, 2020\n\u2022\tSheng Shen et al., Staged Training for Transformer Language Models, 2022\n\u2022\tPeihao Wang et el., LEARNING TO GROW PRETRAINED MODELS FOR EFFICIENT TRANSFORMER TRAINING, 2023\n\n(-) There seems to be a typo: line 323, \"layers 0-17\" should be \"layers 9-17.\""
+            },
+            "questions": {
+                "value": "1. Why are the blanks for downstream task performance in Table 1 not filled in?\n2. According to the training details of the GPT-2 models (Supplement C.1), it appears that GPT-2 medium was trained on more data than GPT-2 xLarge. Specifically, GPT-2 medium was trained with a batch size of 50K tokens for 100K steps (totaling 5 billion tokens), while GPT-2 xLarge used a batch size of only 16K tokens for the same number of steps (totaling 1.6 billion tokens). Is this a typo?\n3. Have you considered initializing the layers added during the growth phase using methods such as random initialization or copying previous layers of the target model? This is because the layers added during the growth phase closely resemble the \"lazy layers\" described in the paper.\n4. It would be helpful to provide a clear criterion for identifying a specific layer as a lazy layer (e.g., based on the rank, mass, or other properties of the attention matrix)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a practical method \"Inheritune\" to create more efficient language models by reducing the layers of the original model. The authors analyze the phenomenon of \"attention degeneration\" in the deep layers of transformer language models and compare the proposed method against relevant baselines."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The analysis of attention degeneration phenomenon is well written and easy to understand. The motivation of this work is clear.\n2. The paper proposes a practical and lightweight approach to perform model pruning that can be implemented with ease."
+            },
+            "weaknesses": {
+                "value": "1. The scope of the degeneration analysis and experiments is limited. Only GPT-2 model variants have been discussed and evaluated. The generalization on other model architectures is unclear.\n2. The choice of the initialization point n = k/2 assumes degeneration only takes place in the second half of the total number of layers, which is not supported by theoretical evidence."
+            },
+            "questions": {
+                "value": "Please refer to Weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies and proposes a better way to create smaller LLMs from existing pretrained models, in particular by examining whether the learned attention layers exhibit meaningful attention patterns or degenerate into single-column structures (\u201clazy layers\u201d). They find later layers are more lazy across GPT-2 LLMs, and propose Inheritune as a method to exploit this phenomenon. Inheritune works by initializing a smaller model with the first half of the layers from a pre-trained larger LLM, training this model, and then progressively growing it by adding more blocks if necessary. This process is repeated until the smaller model's performance matches or surpasses that of the reference model. Through experiments using GPT-2 models of varying sizes, on datasets like OpenWebText-9B and FineWeb_edu, and using evaluations including language modeling perplexity and downstream LM Evaluation harness tasks, the authors demonstrate that Inheritune consistently outperforms various baselines, including larger models trained from scratch, models initialized with different techniques (stacking, hybrid stacking, half-width), and models trained using knowledge distillation. They further provide interesting analysis into Inheritune's behavior via various ablations on target modules and pretraining data mix."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "**Interesting study + method contribution**\nI liked the combination of studying a natural phenomenon (lazy layers showing up in pretrained decoder LLMs), and further exploiting this to create a well-motivated method for efficiently creating smaller models. \n\n**Comprehensive Task Evaluation**\n\nI appreciated how the authors evaluated not just validation-set perplexity, but also zero-shot performance on WikiText and Lambada in main experiments, and further considered popular LM Evaluation Harness tasks.\n\n**Good Performance**\n\nThe experiments demonstrate Inheritune's strong performance compared to baselines such as randomly initializing models, stacking, hybrid stacking, and knowledge distillation.\n\n\n**Interesting Ablation Studies for In-depth Analysis**\n\nI appreciated the study into the different aspects of Inheritune, including initializing different submodules, using different pretraining data mixes."
+            },
+            "weaknesses": {
+                "value": "**Insufficient treatment of related work / first contribution novelty**\n\nHow does the notion of \"lazy layers\" relate to prior work such as Attention Sinks [1]? In particular, the claim that \u201cNotably, this phenomenon has not been studied in the context of standard LLMs.\u201d (L043) does not seem true? See Attention Sinks [1] at ICLR 2024, which studied and observed before that several standard decoder-only LLMs (Llama 2 7B, Pythia 12B, Falcon 7B, MPT-7B) display this \u201clazy layer\u201d phenomenon. \n\nThe method and way to exploit this lazy layer phenomenon seem novel, but I do think there needs to be better discussion on how the lazy layer contribution is novel.  \n\n**Limited model diversity (model family and scale)**\n\nThe study and method are limited to a single model family (GPT-2), where the largest LLM evaluated is only 1.5B parameters. Overall, the paper would be stronger if the findings were shown beyond a single class of models, and on a variety of more modern and popular models (e.g., Llama 3 8B, Mistral 7B, Phi 1.5, Gemma, etc.). While I don't fault the authors for not evaluating 7B models due to budget constraints  (although doing so would increase my score); even under the 1.5B parameter budget, we have models available such as Phi 1.5 from 2023 [2].\n\n**Motivation behind comparisons**\nI found some of the comparisons a bit too \"baseline\", but this could be clarified with discussion on their motivation. \n* For example, if the motivation of Inheritune is to save model memory, how does the method compare to quantization techniques that can drastically reduce the parameter memory? \n* If using less layers can improve inference or generation efficiency (as a benefit over quantization techniques), it would be good to see this benchmarking analysis\n\n\n[1] Efficient Streaming Language Models with Attention Sinks, https://arxiv.org/abs/2309.17453 \n\n[2] Textbooks Are All You Need II: phi-1.5 technical report https://arxiv.org/abs/2309.05463"
+            },
+            "questions": {
+                "value": "Why are the target / smaller models initialized as k/2, if k is the number of layers in the original model? This seems a bit ad-hoc. Was there any study into if lazy layers were much more frequent in the second-half of the LLMs? Plotting or visualizing this would be support this design choice more.   \n* Because you have the LLMs, some analysis into whether a layer is lazy or not, and using this to inform which layers should be preserved, might also improve the method quality. \n\nIs the step-count comparison fair? To make an Inheritune model, we need to have a full pretrained model in the first place. Are the steps it takes to acquire this pretrained model factored into the total step comparisons? \n* Conversely, when making the claim that Inheritune outperforms randomly initialized models with the original parameter counts, are these full models further trained to hit the same total training updates that it takes to create Inheritune models? \n\nIn Figure 2, if the GPT2 models are decoder-only / causal, should the attention weights only be limited to lower-triangular?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper highlights attention degeneration, where layers become rank-1 matrices, leading to ineffective learning in \"lazy layers.\" The proposed method initializes a smaller model with a few layers from a larger pre-trained model and progressively adds layers, enabling efficient training of high-performing models. Experiments across various GPT-2 sizes show that Inheritune maintains or improves performance compared to larger models trained from scratch or with other initialization methods, establishing it as an effective strategy for compact language models."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper is well-written and easy to understand, with a logical flow that supports the arguments presented. Additionally, it demonstrates the superiority of the proposed method through a variety of experiments."
+            },
+            "weaknesses": {
+                "value": "It seems a bit too intuitive to refer to this as an initialization method utilizing the lazy layer phenomenon, even though this paper has identified the occurrence of lazy layers. The logic of using early layers for initialization because of lazy layers feels somewhat weak. When I consider that there are 36 teacher layers and I need to initialize 18 layers, it appears quite obvious to select the first 18 layers, as they are likely to be more compatible with the embeddings.\n\nThe experiments presented in the paper are largely conducted with a limited number of steps, which raises questions about the actual performance. It seems that the approach does not significantly differ from simply trimming a larger model and fine-tuning it, leading me to wonder whether the results truly reflect superior performance."
+            },
+            "questions": {
+                "value": "(1) I think the phenomenon of lazy layers is similar to the attention sink phenomenon. Does approaching rank 1 mean that attention is concentrated on a specific token?\n\n(2) In Figures 1 (c) and (f), rather than suggesting that the lazy layers are unnecessary, I suspect that the early layers are more compatible with the embeddings. Could you perhaps compare using the first nine layers with using the remaining ones randomly?\n\n(3) This paper adopts a three-step approach of Inherit, Train, and Grow. What are the advantages of this method compared to reaching the final size all at once?\n\n(4) I would like to inquire about the comparison between the GPT-2 Medium 16-layer variant trained from scratch and the one trained with Inheritune in Figure 2, 9. Does Inheritune effectively prevent rank collapse?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

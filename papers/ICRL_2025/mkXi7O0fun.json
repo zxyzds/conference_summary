@@ -1,0 +1,167 @@
+{
+    "id": "mkXi7O0fun",
+    "title": "Data Value Estimation on Private Gradients",
+    "abstract": "For gradient-based machine learning (ML) methods commonly adopted in practice such as stochastic gradient descent, the de facto differential privacy (DP) technique is perturbing the gradients with random Gaussian noise. Data valuation attributes the ML performance to the training data and is widely used in privacy-aware applications that require enforcing DP such as data pricing, collaborative ML, and federated learning (FL). Can existing data valuation methods still be used when DP is enforced via gradient perturbations? We show that the answer is no with the default approach of injecting i.i.d. random noise to the gradients because the estimation uncertainty of the data value estimation paradoxically linearly scales with more estimation budget, producing estimates almost like random guesses. To address this issue, we propose to instead inject carefully correlated noise to provably remove the linear scaling of estimation uncertainty w.r.t. the budget. We also empirically demonstrate that our method gives better data value estimates on various ML tasks and is applicable to use cases including dataset valuation and FL.",
+    "keywords": [
+        "data valuation",
+        "estimation uncertainty",
+        "privacy-aware"
+    ],
+    "primary_area": "interpretability and explainable AI",
+    "TLDR": "We propose a method to improve data value estimation under differential privacy by controling the estimation uncertainty of semivalue-based data values on differentially private gradients.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=mkXi7O0fun",
+    "pdf_link": "https://openreview.net/pdf?id=mkXi7O0fun",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper considers the question of data valuation under differential privacy. For each data point, we aim to produce a number describing the \"value\" of that example. This could be used later, for example in an auction. The paper focuses on adapting existing nonprivate techniques for data value estimation based on stochastic gradient descent to the private gradient descent setting.\n\nI will note that this is a rather unusual goal within the study of differentially private algorithms, as we aim to infer details about each example, rather than statistics about the underlying dataset or distribution. At least one of the prior works cited, Wang et al. 2023, operates in a different privacy model: the $i$-th value estimates is released only to the $i$-th individual."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This is an interesting topic, clearly connected to prior work. There is a lot of interest in estimating data values.\n\nThe techniques here are non-trivial. It seems plausible to me that the experiments demonstrate a privacy-utility tradeoff that is acceptable for some uses."
+            },
+            "weaknesses": {
+                "value": "I see three main issues with the submission. I look forward to discussion with the authors and other reviewers.\n\n**First,** I did not understand why this notion of estimation uncertainty (Eq 3) is meaningful. An algorithm that always returns $\\psi_j=0$ is perfectly private and has no variance. So I don't know how to interpret Proposition 5.3, which says that we can bound the variance by a constant. Is that good? Perhaps the correlated noise technique is simply bringing us closer to the $\\psi_j=0$ example?\n\n**Second,** I feel the paper is missing a basic discussion of what is possible here. Consider a setting where each example is blatantly either \"valuable\" or \"not valuable.\" This is reasonable: maybe some examples are random noise. Here, the best private estimate of the value us randomized response, where each individual returns their true value with probability $e^\\epsilon/(e^\\epsilon+1)$. If, analogous to the experiment in Figure 3, 30% of examples are not valuable, then by Bayes theorem with $\\epsilon=1$ we expect roughly 14% of examples that returned \"valuable\" to not be so. \n\nSome passages may give the reader the wrong idea. Both the Remark on p4 and Appendix B.4 suggest one can accurately preserve the ranks under differential privacy (so that valuable data receives higher estimates). But, as the above example shows, privacy also constrains our ability to do this.\n\n**Third,** Propositions 5.2 and 5.3 assume the following: for a given point $j$, its $k$ gradient estimates are iid and sub-Gaussian about a fixed mean. I'm confused about the assumption on a technical level (the distribution is isotropic, so isn't $\\Sigma$ the identity?), but more importantly I don't understand how we could expect something like this to hold, even approximately. \n\nI look forward to discussing this assumption with the authors and other reviewers, but even if it is reasonable I disagree with the informal discussion around it. For example, the abstract says you \"provably remove the linear scaling of estimation uncertainty,\" but what is actually proven seems much weaker."
+            },
+            "questions": {
+                "value": "Are there any settings where the iid sub-Gaussian gradient assumption is satisfied?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the differential privacy (DP) data valuation problem with perturbed gradients. The authors demonstrate that when i.i.d. noise is added to gradients, the estimation uncertainty does not decrease as the number of draws $k$ increases, because the variance of both the information and noise parts grows linearly with $k$. Assuming the data distribution is i.i.d., they propose an adaptive noise-adding mechanism with $O(\\log k)$ variance, which bypasses the linear scaling of variance due to the added DP noise."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. Both the motivation and problem setting are stated clearly, and the proposed adaptive mechanism provably beats the i.i.d. mechanism\n\n2. comprehensive experiments are conducted to illstruate the proposed theory."
+            },
+            "weaknesses": {
+                "value": "1. The statement of assumptions is unclear. In Proposition 5.2, the authors state that the isotropic sub-gaussian assumption is made for the distribution but then introduce the covariance matrix $\\Sigma$. Does isotropic mean that the covariance is the identity matrix?(e.g. Definition 3.2.1 in https://www.math.uci.edu/~rvershyn/papers/HDP-book/HDP-book.pdf )\n\n2. While I don't think the isotropic assumption is restrictive, I wonder whether the previously proposed binary counting mechanism( https://dl.acm.org/doi/10.1145/2043621.2043626 ) can also achieve the same performance bound as the proposed adaptive mechanism under this assumption, since it seems that the main task in this setting is to continually release a sequence of averaged gradient to reduce the variance."
+            },
+            "questions": {
+                "value": "My main concern is whether the previously proposed method can achieve similar performance to those proposed in this paper, as mentioned in point 2 of the weaknesses. I am willing to raise my score if the authors can provide more explanation on this point."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses the data value estimation problem using privately released gradients. To\ncompare the performance of various data value estimators, the authors introduce the concept of\nestimation uncertainty and demonstrate that it grows linearly with the number of evaluations in\nthe naive method that injects independent Gaussian noise. To reduce the uncertainty, the authors\ndevise an algorithm that injects correlated noise into the gradients and demonstrates that it eliminates\nthe estimation uncertainty\u2019s linear dependence on the number of evaluations."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- It considers an interesting problem of data value attribution that has wide-ranging applications\nin many real-world scenarios.\n- The authors introduce the concept of estimation uncertainty and, using this metric, devise two\nalgorithms for data value estimation.\n- The theoretical analysis of the estimation uncertainty of proposed algorithms shows that their\nmethod provably reduces the dependence on the number of evaluations from linear to log-squared\nk, where k is the number of evaluations.\n- The authors further reduce the dependence of the algorithm\u2019s estimation uncertainty on the number of evaluations to a constant."
+            },
+            "weaknesses": {
+                "value": "- The proposed method is somewhat simple, as it essentially computes a simple weighted average\nof previously released private gradients. While the simplicity of the proposed method does not\nimply a lack of novelty, the existence of prior work that also carefully generates the correlated\nnoise to reduce the variance of released statistics suggests that there might be room for further\nimprovement in the proposed approach.\n- In essence, the introduced estimation uncertainty is the variance of released gradients. The\nvariance of released statistics has long been used as a utility metric in differential privacy\nliterature. However, an important distinction is that most works employing the variance as\na utility metric consider unbiased statistics. In the paper, the private gradients are biased, and\nI am curious to know how the proposed approach affects the bias of these gradients. Especially,\nas the proposed algorithm takes the average of gradients evaluated in the preceding locations\nin the optimization trajectory, the proposed approach may increase the bias. It\nwill be interesting if the authors can show that this is not the case.\n- The graphs presented in the paper are not properly labeled. While the captions provide some\nexplanation, it\u2019s still not easy to read and interpret the graphs. The figures should be self-contained and interpretable on its own."
+            },
+            "questions": {
+                "value": "- How is the proposed solution $X^\u2217$ derived? Is it a solution (or an approximation solution) of\nconstrained optimization problem that minimizes the estimation uncertainty?\n- In Figure 3, the performance of proposed method with burn-in seems to drastically decrease\nwhen q is set too high. Is there a rule of thumb for setting this hyperparameter?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a novel method for estimation of data value under differentially private training based on the notion of estimation uncertainty which is introduced by the addition of DP noise and propose a new way to mitigate this by injecting correlated noise instead."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The work is well-motivated and addresses an important problem (the privacy-utility trade-off, where utility is a value function over the dataset the model could have access to). The structure is clear, the statements are supported by both the empirical and the theoretical results. I also appreciate the openness about some of the limitations i.e. that the fundamental scientific problem of privacy-utility with respect to the theoretical information loss is still unsolved, but this work proposes a method which can alleviate it to some extent by maintaining the ranking of the values.\n\nWhile a lot of what is discussed in this paper is well-known, this is a very nice attempt to formalise these notions through uncertainty."
+            },
+            "weaknesses": {
+                "value": "While the results are certainly interesting, they seem to rely on a number of assumptions and limitations. The empirical results only feature a handful of datapoints on 2 relatively simple benchmark datasets (ML evaluation), V being deterministic and model parameters fixed etc. I would like to see more a) utility functions covered, b) larger dataset sizes and c) range of epsilon values. The last one being particularly important because (as discussed in the works linked below), DP diminishes value not just because of noise, but clipping. And it is important to consider the trade-off between noise and clipping (and not just correlated vs independent noise) in more detail when it comes to methods for valuation. Some of the models used in evaluation (the resnet family) is additionally well-protected against the effects of gradient clipping, meaning that this effect is not observed in full detail in the evaluations. You may consider adding another baseline model to discuss the comparative utility loss of clipping vs noise.\n\nThe presentation of the figures and algorithms is rather confusing. I found most of the figures (e.g. 1 and 2) to be unreadable even on larger screens and algorithm 1 is difficult for me to digest: are all 3 colors integrated into it already or are they mutually exclusive drop-ins which we need to evaluate separately? Figure 2 in particular needs a rework, there is too much happening at the same time with too little explanation.\n\nI personally think its a bit of an odd choice to move some of the most important results (i.e. how the method 'actually' protects privacy under MIAs) to the appendix. Moreover, there seems to be no comparison to traditional DP and the only one you are comparing against is the uncalibrated non-private method which already has pretty poor performance to begin with. I am not convinced how 'private' this really is given that your budget is 1.0 and with a budget of infinity the attack is better by 5% on average and 10% at most (which could have been a convincing results, but I am yet to see how different budgets or a standard DP mechanism e.g. DP-SGD would perform in comparison).\n\nThere are some recent works which show that there are valuation methods which are usable even under DP (and in particular for FL use cases), which are not mentioned in this work [1,2]. Additionally there are also works which discuss the use of privatised statistics under DP training in order to obtain better privacy-utility trade-offs [3,4]. While these rely on different values (and different issues of DP when it comes to utility loss), these should also be part of the prior works (and ideally a set of baselines). [4] actually does something really similar to this work, but under DP-FTRL rather than DP-SGD.\n\nCurrently there are a lot of limitations which I would like the authors to address before I can recommend acceptance, but should the responses be satisfactory, I am open to raising my score.\n\n[1] - Sim, Rachael, et al. \"Incentives in private collaborative machine learning.\" Advances in Neural Information Processing Systems 36 (2024).\n\n[2] - Usynin, Dmitrii, Daniel Rueckert, and Georgios Kaissis. \"Incentivising the federation: gradient-based metrics for data selection and valuation in private decentralised training.\" European Interdisciplinary Cybersecurity Conference. 2024.\n\n[3] - Bani-Harouni, David, et al. \"Gradient Self-alignment in Private Deep Learning.\" International Conference on Medical Image Computing and Computer-Assisted Intervention. Cham: Springer Nature Switzerland, 2023.\n\n[4] - Koloskova, Anastasiia, et al. \"Gradient descent with linearly correlated noise: Theory and applications to differential privacy.\" Advances in Neural Information Processing Systems 36 (2023)."
+            },
+            "questions": {
+                "value": "Minor:\n\nWhich neighbouring definition is used for DP here? Add/remove or replace one?\n\nPlease elaborate on algorithm 1, it is not clear how to interpret the different options."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

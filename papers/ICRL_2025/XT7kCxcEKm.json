@@ -1,0 +1,168 @@
+{
+    "id": "XT7kCxcEKm",
+    "title": "Revisiting Differentiable Structure Learning: Inconsistency of $\\ell_1$ Penalty and Beyond",
+    "abstract": "Recent advances in differentiable structure learning have framed the combinatorial problem of learning directed acyclic graphs as a continuous optimization problem. Various aspects, including data standardization, have been studied to identify factors that influence the empirical performance of these methods. In this work, we investigate critical limitations in differentiable structure learning methods, focusing on settings where the true structure can be identified up to Markov equivalence classes, particularly in the linear Gaussian case.  While Ng et al. (2024) highlighted potential non-convexity issues in this setting, we demonstrate and explain why the use of $\\ell_1$-penalized likelihood in such cases is fundamentally inconsistent, even if the global optimum of the optimization problem can be found. To resolve this limitation, we develop a hybrid differentiable structure learning method based on $\\ell_0$-penalized likelihood with hard acyclicity constraint, where the $\\ell_0$ penalty can be approximated by different techniques including Gumbel-Softmax. Specifically, we first estimate the underlying moral graph, and use it to restrict the search space of the optimization problem, which helps alleviate the non-convexity issue. Experimental results show that the proposed method enhances empirical performance both before and after data standardization, providing a more reliable path for future advancements in differentiable structure learning, especially for learning Markov equivalence classes.",
+    "keywords": [
+        "differentiable structure learning",
+        "$\\ell_0$-penalized likelihood",
+        "acyclicity constraint",
+        "moral graph"
+    ],
+    "primary_area": "causal reasoning",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=XT7kCxcEKm",
+    "pdf_link": "https://openreview.net/pdf?id=XT7kCxcEKm",
+    "comments": [
+        {
+            "summary": {
+                "value": "This is an experimental paper that proposes a new algorithm CALM (Continuous and Acyclicity-constrained L0-penalized likelihood with estimated Moral graph) for causal structure learning of DAGs for the linear Gaussian case. The case where the covariance matrix of the noise is diagonal with equal variance of noise variables is well understood and can be solved by NoTears algorithm. The case of not equal variances is the main focus of this paper. Recent methods such as Golem propose minimizing L1-penalized likelihood function to recover unknown DAG structure. \n\nThis paper provides experimental evidence that L1 penalty may lead to a solution that is far from the true unknown DAG that minimizes L0 norm. It proposes a new algorithm that replaces L0 loss with Gumbel-Softmax to allow for smooth optimization techniques and provides an experimental evidence that the newly proposed method might outperform existing methods on sparse random DAGs (superior performance for ER4 graphs, though worse performance than PC for ER1 graphs). The paper also studies the effect of using Moral graph, data standardization and compares several L0 approximation methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper proposes a new algorithmic approach to an important problem of causal SEM learning for the case of linear Gaussian model. This problem is important for various practical applications and has received a lot of attention in the coming years. This paper tackles the challenging setup when noise covariances are unknown and might not be equal. This paper proposes to using  Gumbel-Softmax approximation to L0 loss with Moral graph and Data standardization instead of L1 penalty for solving SEM in case of linear Gaussian model. The authors provide an extensive study of the effects of each of the components of the algorithm: they compare several methods of L0 approximation and demonstrate the benefits of using Moral graph and Data Standardization.\nThe proposed algorithm is compared to several state of the art approaches (GOLEM, No Tears, PC, FGES) and authors demonstrate superiority of the proposed approach for a certain class of random graphs."
+            },
+            "weaknesses": {
+                "value": "One of the weaknesses of the paper is that it does not discuss theoretical guarantees for the proposed methods and does not provide any set of conditions under which the method is guaranteed to find optimal or near-optimal solutions. I believe that some of such theoretical results should be possible to deduce from the existing results in the literature. Even though such guarantees might not be novel or go beyond existing results, I think that providing any such guarantees might be helpful to the reader.\n\nConsidering that this is an experimental paper I think it is beneficial to include experimental results on some real-world data to compare to existing methods."
+            },
+            "questions": {
+                "value": "1. In Section 3, do I understand correctly that some of the d! permutations of B* could actually have a smaller L0 norm than B* itself? In which case B* is not actually an optimal solution? Can you please report what % of the initial graphs B* allow for smaller L0 norm among permuted matrices compared to B*.\n2. I find it somewhat counterintuitive that 78% of permutations of the initial graph B* have a smaller L1 norm than graph B*. If B* is chosen truly at random I will expect that number to be around 50%. This seems to suggest that the observation authors make may be somewhat specific to the way the authors generate initial graph B*. Can you please provide a bit more intuition on how a number >50% makes sense in this setup?  \n3. Graphs ER1 and ER4 on 50 and 100 nodes are very sparse. Do you have an idea how well the proposed method performs in the regime when the unknown graph is less sparse, say ER4 on 15-20 nodes, or any other class of slightly more dense graphs?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper focuses on differentiable DAG learning in the linear Gaussian case. The author showed by examples that many adjacency matrices $B$ can generate the same covariance matrix as the ground truth adjacency matrix $B^*$ and satisfy $||B||_1<||B^*||_1$. Therefore, this raises doubts about the consistency of the $\\ell_1$ regularization. To resolve the issue, they proposed CALM with an objective function that incorporates a Gumbel-Softmax mask and a moral graph mask to approximate the $\\ell_0$ regularization. Empirical studies show the effectiveness of the method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The moral graph mask is typically effective in the training.\n2. The proposed method is robust to data normalization and outperforms the baseline differentiable learning methods using $\\ell_1$ penalty."
+            },
+            "weaknesses": {
+                "value": "1. I have some doubts about the motivating examples. In particular, if we want to show that Equation (1) can lead to inconsistent training results, then we need to identify the exact $B_{\\min}$ that generates the same covariance matrix as $B^*$ with the minimal $\\ell_1$ norm and prove that it is not equivalent to $B^*$. However, in Section 3.3, the author barely provides one example of the adjacency matrix that has a smaller $\\ell_1$ norm and is not equivalent to $B^*$. It remains unclear whether the minima is equivalent to $B^*$. Therefore, it can not be regarded as a real counterexample. In Section 3.2, the author generates more examples using the Cholesky decomposition. I wonder whether it can generate all possible DAGs satisfying the covariance constraint. If so, then the justification is more convincing.\n2. The novelty of the proposed method is limited. The Gumbel-Softmax mask, together with the $\\ell_1$ penalty on $g_r(U)$ are also used similarly in Ng et al. (2022b) and in Equation (9) of Brouillard et al. (2020). The main difference in the object function seems to be the application of the moral graph mask.\n3. The experiments are not sufficient, and the outperformance of CALM is not clearly established or understood. For example, on ER1, CALM and other differentiable DAG learning methods are generally worse than PC and FGES. Although CALM shows competitive results on standardized data with $n=1000$, this is not the case for $n=10e6$. Therefore, I would not be motivated to use differentiable methods in this setting. On ER4 with $d=50$ however, CALM shows clear outperformance, but the results for other $d$ are not known. Therefore, I encourage the author to conduct further experiments on dense graphs (ER2, ER4, SF2, SF4 with d = 20, 50, 70, 100) to illustrate the performance more clearly.\n4. Other baselines can also be added, for example, DAGMA, which uses a different DAG constraint."
+            },
+            "questions": {
+                "value": "1. What is the runtime of the proposed method compared to others?\n2. Is $\\tau$ a learned parameter or a tuning parameter?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The article studies differentiable structure learning methods for learning directed acyclic graphs (DAG) related to probabilistic graphical models. Particularly, the continuous optimization approach  with  $\\ell_1$ norm penalty (to learn sparse DAG) is studied and experimentally it is shown that this approach is inconsistent compared to the solutions obtained using   $\\ell_0$ norm penalty. Next, a new hybrid differentiable structure learning method is proposed based on $\\ell_0$ norm likelihood and hard acyclicity constraints. Experimental results illustrate the performance of the proposed method."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Strengths:\n1. Certain inconsistencies related to the $\\ell_1$ penalty based structure learning is investigated.\n2. New method is proposed for  structure learning based on   $\\ell_0$ norm penalty.\n3. Numerical results on few graphs show improved results."
+            },
+            "weaknesses": {
+                "value": "Weakness:\n1. Many aspects of the study are unclear.\n2. Significance of the study and results are unclear, and novelty seems limited.\n3. Comprehensive numerical study is lacking."
+            },
+            "questions": {
+                "value": "I have the following comments about the paper:\n\n1. Many aspects of the presented study can be improved, in order to make the contributions of the paper clear.\n\ni. Firstly,  the term \"inconsistency\" seems to be used without formal definition. It would be helpful if the authors can provide a formal definition of \"inconsistency\" as used in this context. \n\nii. It is not clear whether the $\\ell_1$ norm penalty based approach is a popular approach for structure learning.  The authors could provide context on the prevalence and importance of $\\ell_1$  norm penalty approaches in structure learning, particularly since in the experiment results presented, it appears the $\\ell_1$ penalty approaches seem to perform poorly compared to other baselines such as FGES or PC. \n\niii.  It is claimed that the $\\ell_1$ penalty approach is particularly bad for Linear Gaussian case, and Markov equivalence classes. However, it is not clear why are Markov equivalence classes important, and where do these appear in structure learning applications?  Authors can include a brief explanation of why Markov equivalence classes are significant in structure learning, and provide examples of real-world applications where linear Gaussian assumptions are commonly used. \n\niv. In order to establish the inconsistencies, the $\\ell_1$ approach is compared to an  $\\ell_0$ norm penalty approach, by solving the eqn in line 154. However, details on how this problem is solved is missing. Authors to provide more details on the method used to solve the \u2113 $\\ell_0$ norm penalty problem, including any computational challenges or trade-offs compared to the $\\ell_1$ approach.\n\nv. Motivation for using structural Hamming distance (SHD) and how it is computed are not discussed.\n\n2. Given the above points, the significance of the presented results are not obvious to readers. Moreover, the proposed new approach CALM (Continuous and Acyclicity-constrained L0-penalized likelihood with estimatedMoral graph), contains two components, the Gumbel Softmax based $\\ell_0$  penalty  approximation, and incorporating the moral graph and hard DAG constraints. But, both these methods seem have been proposed in previous papers, and it is not clear what is the novelty in the proposed method, compared to the previous works such as Ng et al. (2022b); Kalainathan et al. (2022), Nazaret et al. (2024), and Ng et al. (2024).\n\nAuthors could clearly articulate the novel aspects of CALM compared to previous work, highlighting any unique combinations or modifications of existing techniques. Also, they can provide a more detailed description of how the optimization problem is solved, including computational complexity and any approximations used.\n\n3. Numerical study is presented on three relatively small synthetic graphs. It is not clear if the CALM method is compared to all structure learning baselines.  Authors can expand their experiments to include a wider range of graph sizes and structures, and provide a more comprehensive comparison with other state-of-the-art structure learning methods.\nAlso, the performance of CALM approaches seems similar to the FGES, and in some cases they are worse than FGES. So, it is not clear what are the advantages of the proposed method. Authors could include runtime comparisons to better illustrate the practical advantages of their method.\n\n4. Minor Comment:\ni.  Why are uppercase letters used for both matrices and vectors?\nii. In line 97, X is nxd, but B is dxd, how do we compute B^TX?\niii. How is SHD computed?\niv. What is PC method? What does PC stand for?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper studies the inconsistency of DAG learning under $\\ell_1$ regularization. A new method, called CALM, is developed that approximates the (nonconvex) $\\ell_0$ norm as a regularizer. Experiments on synthetic data suggest that CALM can outperform existing methods and is robust to data standardization."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The problem addressed is relevant and timely as most recent DAG learning methods use an $\\ell_1$ regularizer, which is well-known to have limitations in other settings. The paper provides compelling evidence that $\\ell_0$ regularization can improve on $\\ell_1$."
+            },
+            "weaknesses": {
+                "value": "1. A large body of work exists studying consistency and other properties of $\\ell_1$ and $\\ell_0$ regularization in linear regression. See, e.g., Zou (2006), Zhao and Yu (2006), and Hastie et al. (2020) and references therein. The present paper should acknowledge this work.\n2. The paper highlights the shortcomings of $\\ell_1$ regularization but then uses an $\\ell_1$ regularizer in CALM's objective function, albeit on the unweighted adjacency matrix. This approximation needs justification as it is not equivalent to using $\\ell_0$ regularization. Also, did the authors explore iterative hard thresholding (as commonly used for $\\ell_0$ regularized linear regression)?\n3. It is not explicitly stated anywhere in the paper, but the problem with $\\ell_1$ is that it (continuously) shrinks the weighted adjacency matrix to zero, setting some elements exactly to zero. In constrast, $\\ell_0$ does not impart any shrinkage, it just selects. It is worth making this distinction clear to the reader early on.\n4. I am confused regarding the robustness of CALM to data standardization. Is the robustness due to using $\\ell_0$ regularization instead of $\\ell_1$ regularization? My undertanding was that data standarization issues arise due to the continuous acyclicity characterization, not the form of sparsity penalty.\n5. Related to the above, the fact that the error variances are on different scales may determine the impact of the data standardization. Specifically, if the error variances are equal across nodes, then the node variances give insight into the true topological ordering. If they are unequal, the node variances offer much less information, and maybe the algorithm just benefits from having all the gradients on the same scale.\n6. How does CALM perform when the true noise variances are equal? I agree unequal variances are more realistic, but the equal variances case (which is the de facto standard in the literature) is also worth studying.\n7. DAGMA is mentioned in the paper but not included in the experiments. It should be added as a baseline.\n\nReferences:\n1. Zou, H. (2006). \"The adaptive lasso and its oracle properties\". Journal of the American Statistical Association 101 (476), pp. 1418\u20131429.\n2. Zhao, P. and Yu, B (2006). \"On model selection consistency of lasso\". Journal of Machine Learning Research 7, pp. 2541\u20132563.\n3. Hastie T., Tibshirani, R., and Tibshirani, R. (2020). \"Best subset, forward stepwise or lasso? Analysis and recommendations based on extensive comparisons\". Statistical Science 35 (4), pp. 579\u2013592."
+            },
+            "questions": {
+                "value": "1. Page 1 Line 34: \"PEARL\" should not be uppercase.\n2. Page 1 Line 37: \"economy\" should be \"economics\".\n3. Page 4 Line 166: I do not understand the claim that the $\\ell_1$ penalty \"doesn't guarantee true sparsity\". Do you mean it does not guarantee a sparsity level that matches that of the true graph?\n4. Table 1: Please add standard errors to the table. Also, the quotation marks in the caption are facing the wrong way (also in other parts of the paper).\n5. Page 6 Line 274: \"utilizes\" should be \"utilizing\".\n6. Page 6 Line 323: There is an error with the Erdos-Renyi citation.\n7. Page 7 Line 368: I do not think it is true that hard DAG constraints (implemented by QPM) ensure the final matrix is always a DAG. Only when $\\rho\\to\\infty$ is the graph guaranteed to be a DAG.\n8. Numbers are not formatted consistently, e.g., \"1000\" on Page 4 Line 215 vs. \"1,000\" on Page 5 Line 217"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

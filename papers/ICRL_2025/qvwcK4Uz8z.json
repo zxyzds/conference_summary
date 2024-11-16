@@ -1,0 +1,185 @@
+{
+    "id": "qvwcK4Uz8z",
+    "title": "CASE: Challenger Arm Sampling for Efficient In-Context Reasoning",
+    "abstract": "The in-context learning paradigm with LLMs has been instrumental in advancing applications that require complex reasoning over natural language. An optimal selection of few-shot examples (exemplars) is essential for constructing effective prompts under a limited budget.\nIn this paper, we frame the problem of exemplar selection for In-Context Reasoning (ICR) as a top-m best arms identification problem. A key challenge in this context is the exponentially large number of arms that need to be evaluated to identify the m-best arms. We propose CASE (Challenger Arm Sampling for Exemplar selection), a novel selective exploration strategy that maintains a shortlist of ``challenger'' arms, which are current candidates for the top-m arms. In each iteration, only the arms from this shortlist and the current top-m set are pulled, thereby reducing sample complexity and, consequently, the number of LLM evaluations. Furthermore, we model the scores of exemplar subsets (arms) using a parameterized linear scoring function, leading to a stochastic linear bandits setting. In this setting, CASE identifies the top-m arms with significantly fewer evaluations than existing state-of-the-art methods. CASE effectively works with black box LLMs and selects a static set of few-shot examples, resulting in an extremely efficient scheme for in-context reasoning. The exemplars selected with CASE show surprising performance gains of up to 15.19% compared to state-of-the-art exemplar selection methods. We release our code and data (https://anonymous.4open.science/r/CASE_exemplar_bandits-7403).",
+    "keywords": [
+        "In-Context Learning",
+        "Large Language Models",
+        "Exemplar Selection",
+        "Stochastic Linear Bandits",
+        "Challenger Arms"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "An efficient gap index based formulation for identifying m best arms (exemplar subsets) for In-Context Learning.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=qvwcK4Uz8z",
+    "pdf_link": "https://openreview.net/pdf?id=qvwcK4Uz8z",
+    "comments": [
+        {
+            "title": {
+                "value": "Response to Reviewer vb9k regarding data setup and source of improvement"
+            },
+            "comment": {
+                "value": "Below we answer the second question\n\n                        DATA SETUP AND WHERE DO THE IMPROVEMENTS COME FROM? \n\n> - We have provided comprehensive details regarding the **data setup** in **Appendix C** and **Table 3**. Our evaluation is based on widely recognized benchmarks for complex reasoning tasks, each of which has undergone a rigorous curation process as detailed in the respective papers. The dataset is divided into training, validation, and test sets, with **no overlap** between these subsets to the best of our knowledge. The authors of these benchmarks have taken careful measures to deduplicate examples, ensuring data integrity. For instance, strategyQA uses disjoint annotators for curating train and test sets and also performs deduplication after formation of the dataset.\n> - For our experiments, we adopt the exemplar selection setup used in prior works like Auto-CoT and Complex-CoT, along with other baselines. At your request, we reverified that the **exemplars** selected using CASE are **not** part of the test set. The performance gains we observe stem entirely from the algorithm itself, as evidenced by our thorough **ablation studies** in **Table 2**. These studies demonstrate a significant drop in performance when key components, particularly the exploration step integral to CASE, are removed.\n> - Furthermore, we have provided the **selected exemplars** in our **open-source repository** and have detailed them in **Tables 6-10**, with additional qualitative analyses in the **Results section** and **Appendix G**. We observe that exemplars selected by CASE are thematically diverse and better represent the task compared to other baselines like LENS, which tend to select conceptually similar exemplars, leading to redundancy (**Section 4.3, lines 467-470**).\n> - For instance, in **Table 6**, for AquaRat we observe that **exemplars 4** and **5** in the set of selected exemplars by LENS are redundant; they are highly similar problems that require the same reasoning steps and share a common theme of \"work and time.\" Similarly, in **Table 9**, for TabMWP, **exemplars 1** and **3** selected by LENS redundantly focus on computing the median of a list of numbers, failing to introduce new reasoning concepts that would aid the model in solving diverse problems during inference. \n> - In contrast, CASE consistently selects exemplars that are both thematically and conceptually distinct, ensuring a broader coverage of problem types. Thus, it is evident that the CASE algorithm leads to overall performance improvements, as further demonstrated by its comparisons with existing baselines.\n\nThank you again for your valuable review. We hope we have addressed your concerns. If we have misunderstood any aspect of your review, or if you have additional questions, please let us know."
+            }
+        },
+        {
+            "title": {
+                "value": "Response to Reviewer vb9k regarding full fine-tuning"
+            },
+            "comment": {
+                "value": "Thank you for your insightful comments and highlighting the strengths of our paper. Please find below our responses:\n\n                     EVALUATIONS ARE FOR ICL, WILL BE NICE TO HAVE FULL FINETUNING\n\n> - Thank you for the question. We would like to point out that our problem setup is **efficient exemplar selection for in-context learning**, not supervised fine-tuning, which falls outside the scope of our work. ICL allows LLMs to perform tasks by conditioning on a context that includes examples or instructions, without the need for additional fine-tuning, making it efficient and adaptable to new tasks. (**lines 34-36**). Notably, recent research has shown that **many-shot ICL** for complex reasoning can perform **on par with, or even outperform**, fine-tuning approaches [1,2,3]. \n> - We would also like to highlight that training a 70 billion parameter model is computationally intensive, requiring **four clusters of eight A100 GPUs** [4]. Even with optimizations like low-rank adaptation, fine-tuning still demands significant resources, making such approaches **beyond the scope** of our work, which is firmly centered on the ICL setting.\n> - Our baselines are prior state-of-the-art exemplar selection methods that focus on the ICL setting. Nonetheless, we have included available LLM fine-tuning results from prior works as well as other supervised state-of-the-art results [4,5,6,7,8,9,10,11,12,13] for comparison on relevant benchmarks. We observe that CASE with gpt-3.5-turbo and gpt-4o-mini surpasses fine-tuning-based methods for both smaller and larger open models. Additionally, CASE with Llama2-7b, which does not require LLM fine-tuning, demonstrates competitive performance against versions of Llama2-7b that have been fine-tuned on specific tasks.\n\t\t\n|          **Methods**               |       GSM8K        |    Aquarat      |    TabMWP    |   StrategyQA       |\n|:------------------------------------:|:----------------------:|:-----------------:|:-----------------:|:----------------------:|\n| supervised baseline           | 33.0 (FT GPT-3)[8] |   23.90 [9]      | 43.52 (UnifiedQA)[10]| 73.5 [11] |   \n| Fine-tuned Llama2-70b       |          56.8 [5]      |          -            |      57.5 [7]    |        75.15 [4]      |\n| Fine-tuned Llama2-7b         |               -            |    18.00 [12]   |       31.1 [7]   |         68.3 [13]     |   \n|  **CASE (Llama2-7b)**       |            21.91        |     24.02         |      44.69      |          77.55         |               \n|  **CASE (gpt-3.5-turbo)**   |         **79.91**     |    **54.72**     |   **83.42**    |       **84.49**      |\n|  **CASE (gpt-4o-mini)**      |         **91.13**     |    **73.23**     |   **89.73**    |       **95.92**      |  \n \n\t\t\t\t\n**References**\n\n[1] Many-Shot In-Context Learning, Rishabh Agarwal et al. (https://arxiv.org/abs/2404.11018)\n\n[2] Deeper Insights Without Updates: The Power of In-Context Learning Over Fine-Tuning, Qingyu Yin et al. EMNLP 2024.\n\n[3] Is In-Context Learning Sufficient for Instruction Following in LLMs?, Hao Zhao et al. (https://arxiv.org/pdf/2405.19874)\n\n[4] The ART of LLM Refinement: Ask, Refine, and Trust, Kumar Shridhar et al. NAACL 2024.\n\n[5] MuggleMath: Assessing the Impact of Query and Response Augmentation on Math Reasoning, Chengpeng Li et al. ACL 2024.\n\n[6] neuralmagic/Llama-2-7b-gsm8k-pruned_70\n\n[7] Tora: A Tool-Integrated Reasoning Agent For Mathematical Problem Solving, Zhibhin et al. https://arxiv.org/pdf/2309.17452\n\n[8] Large Language Models are Zero-Shot Reasoners, Kojima et al. NeurIPS 2022.\n\n[9] Measuring and Improving BERT\u2019s Mathematical Abilities by Predicting the Order of Reasoning, Piotr Pi\u0119kos et al. ACL 2021.\n\n[10] Dynamic Prompt Learning Via Policy Gradient For Semi-Structured Mathematical Reasoning, Pan Lu et al. ICLR 2023.\n\n[11] Palm: Scaling language modeling with pathways, Aakanksha Chowdhery et al. JMLR 2023.\n\n[12] SeCoKD: Aligning Large Language Models for In-Context Learning with Fewer Shots, Weixing Wang et al. (https://arxiv.org/pdf/2406.14208)\n\n[13] The Unreasonable Effectiveness of Easy Training Data for Hard Tasks, Peter Hase et al. ACL 2024."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a best k-arm identification algorithm to identify the k-examples that needs to be added into the context of a LLM such that it maximizes the downstream performance. They use GSM8K and Aqua datasets to show decent improvements over other state of the art example selection algorithms. They use relatively smaller/older models such as llama2-7b and mistral 7b as well as newer models such as gpt-4o mini."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "+ The paper provides a reasonable algorithm and the improvements over other SOTA methods are substantially higher that its unlikely to be noise.\n+ The results are well supported by real-world experiments on real-world models.\n+ There is extensive discussion about reusing the examples from one LLM to another LLM and thus verifying the transfearability of these methods."
+            },
+            "weaknesses": {
+                "value": "- The paper only compares against other ICL methods. It would be nice to know what happens when compared against full mode finetuning. Especially for models like llama2-70B this is important, since its open model and can potentially be fully FT-ed on the training data. \n- There is no sufficient information about contamination of the training data with evals. In particular, where exactly does the improvements come from: is it the algorithm, is it that in the experiments the learning algorithm learns to identify examples in training data that is present in the test set, or something else? There is very little details and discussion about the exact data setup in the paper."
+            },
+            "questions": {
+                "value": "- Could you please help address both my questions above?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper considers the problem of exemplar selection for In-Context Learning and In-Context Reasoning using LLM\u2019s. The authors consider a setup where they have access to n (labeled) examples and a collection of subsets of k of of these. They want to find the m subsets that lead to the highest m accuracies on a fixed validation set. They postulate a model for the accuracy of ICL as a function of similarities between a validation set and the input. They then apply best-m pure exploration linear bandits algorithms and demonstrate empirical gains across several methods."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "I thought the paper touched upon an interesting topic in a novel way combining ICL in LLM literature with bandits. The experimental section seemed well done and they demonstrated signficant gains."
+            },
+            "weaknesses": {
+                "value": "My main concern (and see below) was the couching of the work in the existing bandit literature and theoretical results given. I also had some concerns about the mapping of the ICL problem to bandits."
+            },
+            "questions": {
+                "value": "A. I thought the mapping of the problem of finding good exemplars to linear bandits to be an interesting one. However, I had some confusions/questions\n\na) Can you say more about why pi needs m sets of exemplars, rather than  just a set of k examples? Maybe having an example pi in the text would help this could even be in the experiments section.\nb) Are S1\u2026Sm allowed to overlap? Why? It feels like this could really alter the approach (see below).\nc) How does the objective in (2) turn into the top-m problem? I.e., there seems to be an assumption that finding the top-m individual sets of size k with high accuracy also identifies the collection of best m sets to go into pi?\nd) I liked the use of similarity between the training prompts and the validation. In practice, why not just use this directly instead of trying to find a set of m exemplar sets for all prompts? I.e., why go after the average over the validation set? (Overfitting issues aside of course)\ne) I think a diagram on page 4 would help\n\nB. I had a few comments about the linear bandit comparisons. \na) The authors are missing some important papers in the pure exploration linear bandit literature, eg, Fiez '19, Jedra'20, Li'23. One key discussion that is missing is that unlike Xu, and Reda, in the m=1 case, all these works provide algorithms that have matching upper and lower bounds. I believe that Degene et al. 2020 (and maybe Li'23?) could be extended to an algorithm that could solve the top-m problem and achieve an optimal lower bound. However both of these algorithms would still be computationally infeasible. It would be good if the authors could comment on this.\nb) I didn\u2019t really understand what Theorem 1 says.  What does epsilon-delta PAC means here? How does this sample complexity scale with a function of m, k, n? What is K? This theory section is woefully lacking.\nc) As a comment, is the reduction to linear bandits necessary? You are trying to find the top m sets of size k. It feels like you could do this in a more direct manner. In particular, if a1, a2, \u2026., an were an ordering of the individual arms by rewards as given in 3), you just need to return a1, .. a_{mk} appropriately segmented (if there are no overlaps - otherwise it would be a_{k+m}). Could you employ existing works on coarse ranking, eg Katariya '18?\n\nC. Comments on selective exploration\na) I don\u2019t really see the connection to SETC. I went and read this section of the bandit book again, and the comparison is very unclear. Please clarify. \nb) As a result, I struggled with the discussion at the start of 3.4. How does the regret of selective exploration factor in?\n\nD. Experiments:\na) The choice of S seemed to be restricted to 100 rather than all subsets of size k. I found this to be a bit confusion (line 3 and 4)\n\nFiez '19, Sequential experimental design for transductive linear bandits\nJedra '20, Optimal best-arm identification in linear bandits\nWang '21, Fast pure exploration via Frank-Wolfe\nLi' 23, Optimal exploration is no harder than Thompson Sampling\nKatariya '18 Adaptive Sampling for Coarse Ranking"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies how to select a few shot examples (termed exemplars) to be passed with the prompt for the chain-of-thought prompting. They use bandit selection strategies to select the most informative prompts as exemplars. The key issue in this setting is the exponential size of the arm/action set (which is the total set of all available exemplar prompts).  The known bandit strategies for finding the top-m best arm in an exponential action set require the computation of gap indices between all currently estimated top-m arms and the remaining arms. This is impractical in an exponentially large arm set and therefore they propose a new approach to prune the candidate arm set. They basically run a UCB-LCB algorithm over a k-sized subset $S$ which is similar in spirit to algorithms in Chen et al. (2017), and Kaufmann & Kalyanakrishnan (2013). They provide a theoretical guarantee for their algorithm which uses a standard PAC bayesian analysis of fixed confidence top-m bandit theory. They empircally validate their approach on multiple datasets."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The problem of choosing the best set of informative prompts in-context for reasoning and mathematical analysis for an LLM is an open and interesting problem.\n2. Their approach of selecting the top-m best exemplars to be padded with prompt is a theoretically sound approach. However, their practicality for natural language generation needed more validation.\n3. They theoretically analyze their algorithms and also empircally validate their approach on multiple datasets."
+            },
+            "weaknesses": {
+                "value": "1. The writing needs to improve significantly. For example, consider the definition of the UCB, $W_t(i,j)$ definition below eq (3). It is not clear what are $\\left(\\left\\|E\\_i\\right\\|\\_{\\hat{\\Sigma}_t^\\lambda}+\\left\\|E\\_j\\right\\|\\_{\\hat{\\Sigma}_t^\\lambda}\\right)$. Several such areas require more explanation and definitions need to be defined more clearly.\n2. My main concern is that their approach looks mainly like a bandit selection approach without taking into consideration how this affects the natural language generation. For example, their synthetic experiments consider only the bandit case and they show that their approach performs well. However, they then progress to complex reasoning tasks, and it is not clear to me how this bandit approach actually helps the LLM to solve the complex reasoning task. See questions for more.\n3. It is not clear to me how the featurization of the actions $\\mathcal{X}$ and the $k$-subsets of $\\mathcal{X}$ are obtained.\n4. How do you learn the $\\alpha_i$ in eq(3)? Is it pre-specified?\n5. While the $\\phi_u(a)$ is estimated using a pre-trained transformer, how do you estimate the featurization $x_i \\in \\mathcal{X}$?"
+            },
+            "questions": {
+                "value": "1. One of my main concern is that the algorithm does not take into account the reasoning aspect of an LLM while selecting the exemplar. Consider the synthetic experiment vs the reasoning experiment. How do we actually understand the chosen exemplar leads to better reasoning? Consider the example on pg 23 where they show the rationale selected by CASE in the exemplar. Their closest competitor LENS actually chooses rationales that are more concise (and to me look better) than CASE. Also strangely they show different questions and rationales while comparing against their competitor. I suggest showing a table where the same questions show what CASE vs LENS choose as exemplars/rationales.\n2. The bigger point I wanted to highlight is that in no part of their algorithm, I found a way that the natural language generation being taken into account to choose the exemplar. It is also not clear how they factor in the original prompt in the arm features (in context) and how this influences the design matrix in line 22 of the algorithm. Do you initialize with the feature of the original prompt? \n3. Some more questions are mentioned in the weakness section.\n4. Some small things: Chen et al. (2017); Kaufmann & Kalyanakrishnan (2013) are not uniform sampling algorithms for top-m arms. Quite similar to yours, they rely on UCB-LCB mismatch to figure out the top-m arms in stochastic bandits. \n5. How do you choose $\\epsilon$ in the algorithm? Should it be given as an input to the algorithm?\n6. In figure 2d, I observe that LinGapE is almost similar in simple regret to CASE. This goes back to my earlier doubts. How do you actually differentiate how well one bandit algorithm selection is leading to a better reasoning exemplar selection than another bandit algorithm selection."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "Due to the financial and computational costs associated with prcessing large contexts, providing all training examples for in-context learning is often impractical in many settings. This work aims to address this issue by designing an efficient and optimal selection of exemplars to include in the prompt. The authors frame the task of constructing an optimal prompt as a multiple examplar subset selection problem, where, given a training set, the goal is to pick a subset of size m such that the corresponding prompt which is generated maximizes the total validation accuracy. As this is a discrete optimization problem over an exponentially-large search space, naive approaches are intractable. \n\nThe authors therefore model this problem as a top-m arm selection problem from the literature on stochastic linear bandits, where they use a linear function to approximate the loss of each arm (i.e. prompt). While the problem of identifying the top-m arms can be solved using gap-index based algorithms, the total number of arms is exponentially large, and so applying these approaches off-the-shelf is computationally infeasible. Instead, the authors propose a new algorithm (CASE) to solve this problem. At a high level, CASE iteratively creates a low-regret set of selected \u201cchallenger\u201d arms from uniformly sampled arms. An off-the-shelf algorithm is then used to pick an arm from the union of this set and the current estimate of the top-m arms. The authors prove a high-probabiliyt upper bound for the sample complexity of their algorithm. \n\nThe authors apply their algorithm on the GSM8K and AquaRAT datasets for commonsense reasoning, StrategyQA for tabular reasoning, and FinQA & TabMWP for numerical reasoning. They compare their method to zero-shot and manual few-shot baselines, and other instance-level selection measures which use diversity & similarity-based measures to select exemplars for each test example. Across all datasets, the authors find that CASE consistently outperforms random, zero-shot, and few-shot exemplar selection methods. Moreover, CASE (sometimes paired with an existing selection measure) outperforms the other instance-level selection measures on their own. The authors also find that CASE is more computationally-efficient than other stochastic linear bandit-based approaches, and observe that the number of LLM calls made by CASE is significantly less than the number made by LENS (another exemplar selection method). Finally, the authors show that using their exemplar selection methods, smaller methods can be made to perform well compared to larger LLMs."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "In-context learning is now a ubiquitous task for large language models. Methods for exemplar selection have the potential to produce better results for in-context learning without dealing with the large computational overhead which often comes with feeding the entire training set into the LLM in-context. While the authors are not the first to study the exemplar selection problem, their solution (or some variant of it) outperforms all baselines and other methods across a wide variety of tasks."
+            },
+            "weaknesses": {
+                "value": "It was unclear to me how the theoretical assumptions in Theorem 1 and Lemma 1 translated to the setting of in-context learning. \n\nWhile the experimental results are comprehensive, it appears to me that several important baselines are missing. (See Questions for more details.)"
+            },
+            "questions": {
+                "value": "Could you clarify how the assumptions in Theorem 1 and Lemma 1 translate to the setting of in-context learning?\n\nWhy didn't you compare to LENS+MMR+SC and LENS+KNN+SC? This is especially relevant given that CASE+MMR+SC and CASE+KNN+SC often performed best across different instances."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

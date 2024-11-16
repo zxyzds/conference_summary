@@ -1,0 +1,169 @@
+{
+    "id": "2veex1oOtc",
+    "title": "MQuant: Unleashing the Inference Potential of Multimodal Large Language Models via Full Static Quantization",
+    "abstract": "Recently, multimodal large language models (MLLMs) have garnered widespread attention due to their ability to perceive and understand multimodal signals. However, their large parameter sizes and substantial computational demands severely hinder their practical deployment and application. While quantization is an effective way to reduce model size and inference latency, its application to MLLMs remains underexplored. In this paper, we conduct an in-depth analysis of MLLMs quantization and identify several challenges: slow inference speed of the visual tokens, distributional differences across modalities, and visual outlier clipping degrades performance.\nTo address these challenges, we propose **MQuant**, a quantization framework tailored for MLLMs. Specifically, 1) we design Modality-specific Quantization (MSQ) and Attention-Invariant Flexible Switching (AIFS) to support per-tensor static quantization and facilitate efficient inference. 2) we introduce a unified LayerNorm-to-RMSNorm transformation, achieving seamless integration of the MLLM vision encoder with Hadamard rotation. 3) we propose Rotation Magnitude Suppression (RMS) to mitigate outliers introduced by Hadamard rotation. Experiments conducted on five mainstream MLLMs demonstrate the superior performance and broad applicability of MQuant. For example, it maintains around 98\\% of the floating-point accuracy under the W4A8 setting. To the best of our knowledge, **MQuant** is the first quantization solution for MLLMs, paving the way for future advancements in their application.",
+    "keywords": [
+        "Multimodal Large Language Models",
+        "Quantization"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "",
+    "creation_date": "2024-09-25",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=2veex1oOtc",
+    "pdf_link": "https://openreview.net/pdf?id=2veex1oOtc",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper studies the quantization problem in Multi-modal LLMs. Specifically, the authors investigate three aspects that lead to performance degradation when applying the straightforward per-tensor static quantization for prefilling multimodal tokens. To address these challenges, this paper presents MQuant with Modality-specific Quantization (MSQ), Attention-Invariant Flexible Switching (AIFS), LayerNorm-to-RMSNorm transformation and Rotation Magnitude Suppression (RMS)."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper focuses on a valuable question, i.e. quantization in MLLMs.\n2. Well presented with figures and tables.\n3. Overall performance is superior to some LLM quantization baselines."
+            },
+            "weaknesses": {
+                "value": "1. MSQ and AIFS are simply trivial adaptions of per-token dynamic quantization to MLLMs. It's better that this serves as a baseline model.\n2. MSQ and MSQ + AIFS exhibit marginal improvement over the per-tensor static baseline in Table 4.\n3. Please discuss the overhead of MSQ, otherwise why don't we use token-specific quantization?\n4. Although MSQ + AIFS is proposed to address the token increase brought by larger resolution of images, the speedup fails to exhibit great advantages over per-token dynamic baseline with resolution scaling.\n5. SliceGPT [1] has already proposed converting LayerNorm to RMSNorm and provides a solution, which you do not mention in the related work. Please discuss the difference between your method in Section 4.2 and the one in SliceGPT.\n6. Lack of sufficient technical contribution. Most of the techniques used are from previous work and adapt to MLLM with trivial modifications.\n7. Typos. e.g. whthin in line 304 and grammatic errors, e.g. 305 (should be \"to show how to transform xxx\")\n\n[1] Ashkboos, Saleh, et al. \"Slicegpt: Compress large language models by deleting rows and columns.\" arXiv preprint arXiv:2401.15024 (2024)."
+            },
+            "questions": {
+                "value": "Please see the weakness."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces several techniques to enhance the accuracy and reduce the inference latency of Multimodal Large Language Models (MLLMs), which are affected by the additional vision encoder/adaptor. Empirical results demonstrate that the quantized model obtained using the proposed method outperforms other quantization methods in terms of accuracy and inference speed under certain settings."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper is well-written and easy to follow.\n2. The modality-specific quantization and Layernorm-to-RMSNorm transformation are well-motivated by the distributional differences of various modality modules and architectural designs.\n3. Comprehensive experimental results are provided on various MLLMs, with comparisons to several popular recent LLM quantization methods."
+            },
+            "weaknesses": {
+                "value": "1. Attention-Invariant Flexible Switching (AIFS) Scheme: The authors claim that the proposed AIFS scheme is computationally equivalent to the original attention computation. However, it is unclear whether the corresponding positional embeddings are adjusted accordingly. If not, the equivalence may not be ensured.\n\n2. Experiment Settings: There are concerns regarding the experimental settings. In Section 5.1, the authors conducted experiments under the \"text-image-text\" setting with 15 textual tokens. However, inference settings can be more complex:\n- In a batch, the number of textual tokens varies, resulting in different attention masks after AIFS.\n- There can be interleaved image-text inference with more image-text turns.\n- There can also be multi-image inference with single or multiple turns.\nMore clarifications under these cases are required to further show the efficacy of the proposed method."
+            },
+            "questions": {
+                "value": "1. For the proposed AIFS scheme, are the positional embeddings adjusted accordingly as the attention mask changes?\n2. What batch sizes were used when evaluating the inference latency?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes a quantization method which is specifically tailored towards MLLM. Because of the distributional differences between visual tokens and text tokens, the authors intuitively calculate separate quantization scales for two modalities and calibrate the attention mask accordingly. Further, they adapt some techniques from the LLM quantization literature to visual encoders in MLLM. By combining these two, MQuant maintains lower performance degradation under challenging quantization settings on multiple state-of-the-art retrained MLLM models."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The paper follows an intuitive approach to study MLLM quantization. The authors identify the issues based on some observations in the experiments and resolve the problem in a step-by-step manner.\n2. The efficacy of the method is supported by extensive experiments.  The paper shows the quantization performance of 5 mainstream MLLM models on various multi-modal tasks. The ablation studies demonstrate the usefulness of different components in maintaining the performance near the float-point baseline."
+            },
+            "weaknesses": {
+                "value": "1. The delivery of the paper needs significant improvement. The text is highly redundant. \n- Introduction: The content of the second last paragraph mostly overlap the main contribution part. It could be beneficial if these two parts are reorganized or condensed.\n- Methodology: In 4.1, there are abundant words to explain the reason why we need MSQ and AIFS and the benefits brought by these two. To me, these are intuitive and simple operations which only need concise words for explanation. For 4.2 and 4.3, which are the techniques adapted from LLM quantization, it would be better if the authors could emphasize their novel improvements or adaptations rather than putting too many words to explain other people's contributions. \n- Although using separate figures for different components are informative, it could be easier for the readers to follow without reading the algorithm 1 in Appendix first if the authors could add a figure to show the overall quantization pipeline with the novel parts highlighted. \n- For some abbreviations used in the paper, like GEDD and W4A8, it would be friendly to readers not in the area if adding the explanations in the first place.\n\n2. The paper does not demonstrate enough novelty.  First, both LayerNorm-to-RMSNorm transformation and Hadamard rotation are borrowed from LLM quantization literature (Ashkboos et al., 2024a, b). Second, although adopting a simple Divide-and-Conquer strategy like paper does to cope with the distribution outliers or differences may be sufficient, it is worth thinking about other systematic alternatives after getting more insights from the observations in the experiments. For now, the paper is more like a technical report. The paper should be concise and highlight the actual novel contributions.\n\n3. Experiments: It would be better to see the latency comparisons among the proposed quantization methods could be added in Table 5. \n\n4. Minor Errors:\n\n- The font size of the legend in Figure 1 (left side) is too small to read.\n- Line 85-87: the meaning of the sentence Is not clear. Two \"slightly\" exist.\n- For Table 3/4. the arrow directions showing the relative difference are counter-intuitive. Showing the decrease of latency with down arrows and adding \"lower is better\" could be an alternative.\n- In Table 5, should that be \"MSQ\" rather than \"MDQ\"?"
+            },
+            "questions": {
+                "value": "1. In Eq (6), should the denominator of equation $s$ be $2^b-1$? since for b-bit, the value range would be (0,  $2^b-1$).\n2. In line 321, \"easier to quantize\". What does easy mean in this context?\n3. In line 287, what do the \"outliers\" mean? Extremely low or high values?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper proposes MQuant, an accurate and efficient post-training quantization solution for multimodal large language models (MLLMs). MQuant reduces the time to first token (TTFT) with per-tensor static quantization and introduces modalityspecific quantization (MSQ) to handle distribution discrepancies between visual and textual tokens. Experiments on five mainstream MLLMs demonstrate that MQuant attains state-of-the-art PTQ performance."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Strength\uff1a\n\n1. Extensive experiments demonstrate the approach's effectiveness in the PTQ of MLLMs.\n2. The motivation is clear and quantization for MLLM is an important topic.\n3. This paper is well-organized and clearly-written."
+            },
+            "weaknesses": {
+                "value": "Weakness:\n\n1. My only concern is that i'm not familiar with quantization. So i will adjust my rating depending on the other reviewers' opinions."
+            },
+            "questions": {
+                "value": "Please see the comments above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

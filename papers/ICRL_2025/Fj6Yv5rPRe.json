@@ -1,0 +1,184 @@
+{
+    "id": "Fj6Yv5rPRe",
+    "title": "Online learning meets Adam: The Road of Interpretable Adaptive Optimizer Design",
+    "abstract": "This paper explores the theoretical foundations of Adam, a widely used adaptive optimizer. Building on recent developments in non-convex optimization and online learning, particularly the discounted-to-nonconvex conversion framework, we present two aspects of results: First, we introduce clip-free FTRL, a novel variant of the classical Follow-the-Regularized-Leader (FTRL) algorithm. Unlike scale-free FTRL and the recently proposed $\\beta$-FTRL, our clip-free variant eliminates the need for clipping operations, aligning more closely with Adam's practical implementation. This modification provides deeper theoretical insights into Adam's empirical success and aligns the theoretical framework with practical implementations. By incorporating a refined analysis, our second result establishes a theoretical guarantee for the Last Iterate Convergence (LIC) under the proposed discounts-to-nonconvex conversion algorithm in LIC, which differs from the previous guarantee that has convergence evenly distributed in all iterations. Additionally, we extend this result to provide the last iterate convergence guarantee for the popular $\\beta$-FTRL algorithm under the same framework. However, the derived last iterate convergence of $\\beta$-FTRL reveals a persistent fixed error, potentially suggesting either limitations in popular online learning methods or the need for additional assumptions about the objective function.",
+    "keywords": [
+        "online learning",
+        "non-smooth non-convex optimization",
+        "online-to-nonconvex conversion framework",
+        "optimizer",
+        "Adam"
+    ],
+    "primary_area": "optimization",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-11-15",
+    "forum_link": "https://openreview.net/forum?id=Fj6Yv5rPRe",
+    "pdf_link": "https://openreview.net/pdf?id=Fj6Yv5rPRe",
+    "comments": [
+        {
+            "comment": {
+                "value": "We thank reviewer ecRp for the valuable feedback. Below, we try to address each of the reviewer\u2019s concerns in detail.\n\n1. $\\textit{Theorem B.2 of (Ahn et al 2024)}$ We thank the reviewer for pointing out this clarity issue. Theorem B.2 in [1] includes the term $\\max_{t \\in [1, T]}|\\Delta_{t}|$, which is the source of the clipping operation in the following work [2]. This result indicates that the upper bound on regret depends on the maximum value of the incremental $|\\Delta_{t}|$. However, rather than providing a generalized formula, a problem-dependent characteristic (value) is expected in a bound. Thus, in the following work, [2] proposes an explicit clipping strategy to achieve a clear upper bound. \\\nThis background motivates our own approach, where we address this issue and remove the need for such unrealistic clipping. We hope this addresses the main concern.\n\n2. $\\textit{last-iterate guarantee}$ Considering the result of last-iterate convergence of SGD for convex problem in [1], it shows that $\\mathbb{E}[f(x_{T}) - f(x^{\\star})] \\leq \\text{Constant}$ (also the high probability version: $f(x_{T}) - f(x^{\\star}) \\leq \\text{Constant}$ with some probability). Our statement on the last-iterate guarantee offers the insight that the last iterate has a higher likelihood of being selected compared to other iterations, distinguishing it from the last-iterate guarantee statements in [3,4].\nWe have clarified this distinction in the revised paper on line 452. We believe this approach aligns with practical practice, where the final few iterations are typically prioritized and guaranteed. And, it improves from the previous result in [3] that spreads convergence evenly across all iterations, and offers useful insights for future research in this area.\n\n3. $\\textit{insights on Adam}$ We thank the reviewer for pointing out this clarity issue. This work emphasizes a more interpretable design principle for Adam, refining prior results by eliminating the unrealistic clipping operation through initially analyzing the involvement of $\\beta_{2}$ and offering the insight that the last iterate has a higher likelihood of being selected compared to other iterations, which also improves from previous work.\\\nWe acknowledge that a critical question remains: \u201cWhy is Adam effective?\u201d. Prior research, as noted, suggests that \u201cSGD achieves the minimax optimal convergence rate under smooth nonconvex conditions,\u201d yet Adam often outperforms SGD in practice. The effectiveness of Adam over other methods is another emerging topic in analyzing Adam, however, this work initially focuses on interpretable Adam design and does not provide such insights. \nWe do hold great interest in expanding on this topic in future work.\n\n4. $\\textit{hyperparameter}$  As noted in the discussion, the practical values typically used ($\\beta, \\beta_{2}$) in applications do not conform to the theoretical conditions, a limitation also observed in prior work [1]. This presents an interesting avenue for future investigation.\n\n[1] Ahn, Kwangjun, et al. \"Understanding Adam optimizer via online learning of updates: Adam is FTRL in disguise.\" arXiv preprint arXiv:2402.01567 (2024).\n\n[2] Kwangjun Ahn and Ashok Cutkosky. Adam with model exponential moving average is effective for nonconvex optimization. arXiv preprint arXiv:2405.18199, 2024.\n\n[3] Liu, Zijian, and Zhengyuan Zhou. \"Revisiting the last-iterate convergence of stochastic gradient methods.\" arXiv preprint arXiv:2312.08531 (2023).\n\n[4] Xiaoyu Li, Mingrui Liu, and Francesco Orabona. On the last iterate convergence of momentum methods. In International Conference on Algorithmic Learning Theory, pp. 699\u2013717. PMLR, 2022."
+            }
+        },
+        {
+            "comment": {
+                "value": "We sincerely thank reviewer ezs8 for the feedback. Below, we try to address each of the reviewer\u2019s concerns in detail.\n\n1. $\\textit{The selection of $a$}$ We thank the reviewer for pointing out the boundary condition issue where $||v_{t}||^{2} = 0$, i.e., the squared norm of stochastic gradient after conversion, which results in an undefined value for $a$.Generally, a zero stochastic gradient aligns with the stopping criterion in standard optimization methods. However, for the online learning method discussed here, $v_{t} = 0$ is also `problematic\u2019, as it yields a zero linear loss, i.e., $\\ell_{t}(\\cdot) = \\langle v_{t}, \\rangle = 0$. This does not provide feedback to inform the next update. Fortunately, zero loss, which does not impact the regret bound, offers some flexibility in handling boundary values.\\\nTo maintain consistency with the proofs of Lemma 4.1 and Theorem 4.2, we propose skipping updates when zero loss is encountered: if $v_{t} =\\mathbf{0}$, we freeze the updating of index $t$, which results in omitting the zero term from subsequent summations and keeping the intermediate state at step $t+1$ identical to that at step $t$. This ensures that $\\alpha_{t+1} \\leq \\alpha_{t}$, consistent with Lemma 4.1. Meanwhile, by removing zero-error loss terms, subsequent steps inherit the immediate state and continue updating according to the iterative rule, as required by Theorem 4.2. These modifications are now reflected in the revised paper on lines 268 and 678.\n\n2. $\\textit{$\\sqrt{1 - \\beta_{2}}$ instead of $1 - \\beta_{2}$}$ We thank the reviewer for this correction, which has been addressed in the revised text at lines 879 and 304.\n\n3. $\\textit{last-iterate guarantee}$ Considering the result of last-iterate convergence of SGD for convex problem in [1], it shows that $\\mathbb{E}[f(x_{T}) - f(x^{\\star})] \\leq \\text{Constant}$ (also the high probability version: $f(x_{T}) - f(x^{\\star}) \\leq \\text{Constant}$ with some probability). Our statement on the last-iterate guarantee offers the insight that the last iterate has a higher likelihood of being selected compared to other iterations, distinguishing it from the last-iterate guarantee statements in [1,2]. \\\nWe have clarified this distinction in the revised paper on line 452. We believe this approach aligns with practical practice, where the final few iterations are typically prioritized and guaranteed. And, it improves from previous result in [3] that spreads convergence evenly across all iterations, and offers useful insights for future research in this area.\n\n4. $\\textit{stylistic comment}$ All suggested stylistic changes have been incorporated in the revised manuscript.\n\nOnce again, we thank reviewer ezs8 for the valuable feedback and welcome any further suggestions.\n\n[1] Liu, Zijian, and Zhengyuan Zhou. \"Revisiting the last-iterate convergence of stochastic gradient methods.\" arXiv preprint arXiv:2312.08531 (2023).\n\n[2] Xiaoyu Li, Mingrui Liu, and Francesco Orabona. On the last iterate convergence of momentum methods. In International Conference on Algorithmic Learning Theory, pp. 699\u2013717. PMLR, 2022.\n\n[3] Kwangjun Ahn and Ashok Cutkosky. Adam with model exponential moving average is effective for nonconvex optimization. arXiv preprint arXiv:2405.18199, 2024."
+            }
+        },
+        {
+            "comment": {
+                "value": "We sincerely thank reviewer GbeF for the feedback. Below, we try to address each of the reviewer\u2019s concerns in detail.\n\n1. $\\textit{$\\beta_{2}$ as a constant}$ We thank the reviewer for pointing out this issue. In the revised manuscript, we specify that $\\beta_{2}$ belongs to a specific range rather than being time-variant. This change, reflected in line 696 of the revised manuscript, adjusts our findings, particularly in the setting of $\\beta_{2}$, where its magnitude is now $\\mathcal{O}(1 - \\frac{1}{T})$, compared to the previous time-variant $\\mathcal{O}(1 - \\frac{1}{t})$. We hope this addresses the main concern raised.\n\n2. $\\textit{correction at line 698}$ We thank the reviewer for this correction, which has been addressed in the revised text at line 696.\n\n3. $\\textit{denpendance on $\\eta$}$ The parameter $\\eta$ is tunable and typically selected manually. Consistent with prior work, the optimal value of $\\eta$ depends on specific problem characteristics. For our study, we set $\\eta = 0.38D$ to achieve the regret bound presented in Theorem 4.2, as outlined in line 876.\n\n4. $\\textit{upper bound of $v_{t}$}$ In the conversion of the online learning method to an optimization algorithm, the environment feedback $v_{t}$ represents the stochastic gradient. In our work, particularly in the fourth point of Assumption 2.1, the bounded variance assumption for the stochastic gradient combined with the G-Lipschitz assumption does imply an upper bound. It is worth mentioning that Assumption 2.1 contains the standard conditions for non-convex and non-smooth optimization, as referenced in line 106.\n\nOnce again, we thank reviewer GbeF for the valuable comments and welcome any additional suggestions."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies how to interoperate the Adam algorithm with discounted online learning algorithms. The authors propose an online learning algorithm that does not need the projection operation, which aligning more closely with Adam\u2019s practical implementation. They also provide last iterate convergence guarantees for the $\\beta$-FTRL algorithm, but with a non-diminishing error."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. This paper studies the online learning interpretation of the Adam algorithm, which is a interesting topic. Previous interpretation (Ahn & Cutkosky, 2024) requires the clipping (projection) operation, where this paper propose to avoid this operation via a careful configurations of $\\beta$, which looks like a novel contribution.  \n\n2. The authors also provide a last iterate convergence guarantee the $\\beta$-FTRL alorithm, which is a interesting result."
+            },
+            "weaknesses": {
+                "value": "I have the following **major** doubts/questions:\n\nIn terms of $\\beta_2$ and $\\beta$: In the proof, it seems that $\\beta_2$ and $\\beta$ are considered as a fixed constant. However, in the Key Lemma (4.1), both $\\beta_2$ and $\\beta$ are time variant parameters. It leads to the following questions about the parameter $a$:  1) it seems that $a$ depend on the algorithm it self (line 292). Therefore, it is unclear to me how to find a universal $a$ to make sure such an inequality holds. It we use different $a$ at different rounds, can the proof still hold? will $\\beta$ be monotone? what is the scale of a and beta? \n\nLine 698: $1-\\beta_2^{t-1}=1/(a(t-1))$: **why is it true?** we know $\\beta_2=(1-1/(a(t-1)))^{t-1}$, so $1/(a(t-1))$ should equal to $1-\\beta^{1/(t-1)}_2$.  $1-\\beta^{1/(t-1)}_2$ and $1-\\beta_2^{t-1}$ are totally different. \n\nSince the setting of $\\beta$ is critical for achieving clip-free, I believe understanding the points mentioned above are very important to make sure the proof is rigorous. \n\nQuestion on the theoretical guarantees: In Theorem 4.2, what is the dependance on $\\eta$? Does $v_t$ has an upper bound? \n\nOther comments/questions: \n\nPresentation: As mentioned above, I think the parameter setting is very unclear to me, and I hope the authors could provide more explanations."
+            },
+            "questions": {
+                "value": "Please see the Weakness section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper provides an analysis of non-smooth non-convex optimization that fixes some undesirable properties of previous work in an effort to be closer to the empirically successful adam algorithm. Specifically, some recent prior work developed a similarity between certain online learning algorithms and adam using an \u201conline to non-convex conversion\u201d. These algorithms made use of a strange \u201cclipping\u201d operation - essentially clipping the adam update to some fixed diameter $D$. Moreover, the convergence to critical points is provided only for a random iterate rather than perhaps the more desirable last iterate. This paper attempts to fix both issues."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The approach is intuitive, and the problem is interesting. I think if the weaknesses below could be addressed I would raise my score."
+            },
+            "weaknesses": {
+                "value": "I have some concerns about the correctness of the results.\n\nLemma 4.1: the selection of $a$ seems to be impossible in general. Why should I expect to be able to do this? If any stochastic gradient happens to be zero (i.e. imagine your final loss is a hinge-loss and you happened to have a large margin on some example), then clearly $a$ must now be $\\infty$. However, $a=\\infty$ derails the analysis as it forces us to move to a non-discounted regime.\n\nIn Theorem 4.2 there is also a significant issue I think: it looks to me that the actual result should be $\\sqrt{1-\\beta_2}$ rather than $1-\\beta_2$ in the numerator. Notice in line 867 to 870 in the proof it appears that the definition $\\tilde{\\tilde{v}}$ was applied incorrectly to get a $1-\\beta_2$ outside the square root rather than inside.\n\nIn general, we should be expect this change even without looking at the proof for a mistake: notice that in the \u201cnatural\u201d setting where $\\beta_2=\\beta^2$, the \u201ccorrect\u201d value for the FTRL regularizer would be $D/\\sqrt{(1-\\beta)^2\\sum_{t=1}^T \\beta_2^{T-t} v_t^2}$ for losses $(1-\\beta)\\beta^{T-t} v_t$. Since the provided regularizer is off by a factor $\\sqrt{1-\\beta}$, we should expect that to show up in the regret bound.\n\nRegarding the last-iterate guarantee: I do not understand how it is a last-iterate guarantee. The theoretical results seem to be about still a randomly selected iterate (although admittedly with more weight on the last iterate). This still requires randomization over all iterates though, not what I usually think of when people say a last-iterate guarantee.\n\n\nMild stylistic comment on the proofs: there is a lot of use of $\\rightarrow$ here, but I don\u2019t know what this means. If you mean the standard \"implies\" $\\implies$ arrow, then it is not correct since in many of these cases all the should then be pointing the other way since these arguments are often being used to prove the initial statement, not the final statement. As it is, I just completely ignored these arrows, and I recommend they be removed and/or possibly replaced with better explanation of the logic in appropriate cases.\n\nAlso, \u201cit is equal to verify\u201d is not proper grammar - try instead \u201cit suffices to verify\u201d."
+            },
+            "questions": {
+                "value": "Can the issues in the proof or the last iterate guarantee be fixed?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper studies the important problem of understanding ADAM's convergence for non-convex optimization problems via online learning algorithms. Specifically, the paper considers the $\\beta$-FTRL which has been shown to correspond to a version of ADAM. The main technical contributions are:\n\n1. Removing the gradient clipping present in prior works to obtain an algorithm closer to the practically implemented version of ADAM.\n2. Obtaining last iterate convergence guarantees.\n\nI want to note that I have very limited knowledge in the field of online learning."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The paper removes the clipping used in priors works on $\\beta$-FTRL, which makes the algorithm more realistic and closer to the real ADAM algorithm.\n\nThe paper obtains last iterate convergence guarantees of the order $O(\\frac{1}{\\sqrt{T}})$ for a general class of non-convex optimization problems."
+            },
+            "weaknesses": {
+                "value": "[1] This work does not survey prior works' results thoroughly -- i.e, it does not state the assumptions and convergence rates obtained in prior works on ADAM.\n\n[2] In Assumption 2.1, the bounded gradient assumption along with Assumption 2.2 of bounded domain seem very stringent. Can these be relaxed?\n\n[3] The paper introduces the FTRL framework but does not introduce the full ADAM algorithm in detail. It would be helpful to show how it differs from the Clip-free FTRL version introduced in this paper. \n\nMinor Comments:\n\nIn page 5, the parameter $\\beta_2$ can be introduced in a better way. I had to read it off of the algorithm given below the paragraph referencing $\\beta_2$, which made it very confusing. \n\nLine 272 states \"$\\mathbf{z}_t$ becomes independent of $T$ and $\\beta$ when $\\beta$ and $\\beta_2$ are appropriately chosen\". This is imprecise since Lemma 4.1 shows that $\\|\\mathbf{z}_t\\|$ is independent of these quantities."
+            },
+            "questions": {
+                "value": "See weaknesses"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper builds on a series of existing works to provide some theoretical analysis of Adam. Existing works have shown that Adam could be framed as an instance of the online-to-nonconvex conversion from (Cutkosky et al 2023), therefore the performance of Adam could be analyzed through the dynamic regret of the online learning algorithm it corresponds to. This paper seeks to extend this argument in two ways. First, the online learning algorithm underlying Adam is analyzed without the projection to a bounded domain. Second, the paper extends the online-to-nonconvex conversion itself towards last iteration properties."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Analyzing Adam is one of the central topics in deep learning optimization, therefore the context of this paper is relevant to the machine learning community. As far as I can see, credits are given properly to the existing works this paper builds on."
+            },
+            "weaknesses": {
+                "value": "Although this paper raises some good points, the overall quality is in my opinion below the acceptance threshold. \n\nFirst, it seems that the existing works this paper builds on already analyzed discounted FTRL without projection, such as Theorem B.2 of (Ahn et al 2024). In this regard the first contribution claimed by this paper is not new. It also seems that existing works by Ahn et al used the projected version of FTRL mainly for analytical convenience, and most of their results can be derived analogously for the version without projection, if someone is willing to do the tedious extension. So it remains unclear to me what is the new insight from the first part of the paper. \n\nAhn, Kwangjun, et al. \"Understanding Adam optimizer via online learning of updates: Adam is FTRL in disguise.\" arXiv preprint arXiv:2402.01567 (2024).\n\nThe second part of the paper claims to extend the framework of Cutkosky et al to last iterate convergence, but actually the final results are not based on the last iterate, as the output still needs to be sampled from the trajectory of the iterates. Again the message here is unclear. \n\nWhat's more important is that the paper claims to provide better insights on Adam, but it's unclear why the two extensions from the paper are significant in this context. I could see the paper being motivated from an analytical perspective, but for people who only want to understand why Adam is effective, what is the takeaway? \n\nWriting needs to be thoroughly improved, as I find it hard to follow some of the arguments, such as the part of Section 4 before 4.1. There are also technicalities swept under the rug, such as the hyperparameter a in Lemma 4.1 and the associated requirements. Is there any reason we should expect those requirements to hold?"
+            },
+            "questions": {
+                "value": "Related to the above, the significance of the paper needs to be further justified, specifically for the purpose of understanding Adam."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

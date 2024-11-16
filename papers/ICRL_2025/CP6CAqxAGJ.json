@@ -1,0 +1,130 @@
+{
+    "id": "CP6CAqxAGJ",
+    "title": "Unifying Vocabulary of Large Language Model with Statistical Token-level Alignment",
+    "abstract": "Large Language Models (LLMs) achieve great success across many general tasks, but the mismatch among different vocabularies hinders further applications like token-level distillation and inference with various models. To align the vocabularies of LLMs, we propose a simple yet effective method named **UnifyVocab** to replace the vocabulary of an LLM at a limited cost. A new vocabulary alignment method is devised first to align the source vocabulary to the target one. We then rearrange the corresponding parameters like embeddings, and progressively fine-tune the model. Experimental results on models across multiple parameter scales demonstrate the effectiveness and generalization of UnifyVocab, which costs as few as 10B tokens to recover 98.02\\% performance of the vanilla models on average. We further find that unifying the vocabularies significantly facilitates the token-level distillation which remarkably boosts (+4.4\\%) the model with only 235M tokens. Moreover, our method provides a better initialization of multilingual vocabulary for LLMs to adapt to new languages.",
+    "keywords": [
+        "Vocabulary Adaptation",
+        "Large Language Model",
+        "Efficient NLP"
+    ],
+    "primary_area": "generative models",
+    "TLDR": "We propose a method to align and replace the vocabulary of large language models using only 10B tokens, and find it facilities deep knowledge transfer between models like token-level distillation.",
+    "creation_date": "2024-09-19",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=CP6CAqxAGJ",
+    "pdf_link": "https://openreview.net/pdf?id=CP6CAqxAGJ",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes UnifyVocab, a method to replace the vocabulary of an LLM. \nThis involves using a tokenizer from another model and training new GloVe embeddings, which are aligned with cosine similarity to an existing embedding set, and then are used to replace the original embedding matrix and finetuned with the model. \n\nExperiments use the Pythia base model and training corpus, and experiment with replacing the vocabulary with those from Gemma, Qwen2, and LLaMa 2 & 3.  \nUnifyVocab is compared to a random initialization, random permutation, and FOCUS from Dobler & de Melo (2023). \nEnglish results are compared across 6 standard tasks, and cross-lingual transfer is compared for 12 languages (+English) on 4 standard tasks.  \nResults show that the method preserves on average 98% of the original performance, and leads to improved cross-lingual transfer compared to FOCUS. \nTwo-stage tuning (first finetuning the vocabulary-related parameters in the model with the rest frozen, and then fine-tuning the full model) improves performance compared to fine-tuning the full model directly. \nToken-level distillation requires less training data and generally leads to improved performance over sequence-level distillation. \n\nThe method, though, requires ~10B tokens for training, which is a significant cost compared to past approaches applied to e.g. machine translation where separately trained embeddings may be adapted to work with a model with <20k tokens. \nAligning embeddings with cosine similarity assumes that a) similar representation spaces are learned and so an explicit alignment step is not needed and b) the vocabularies are near-isomorphic, which are not guaranteed with the procedure used, and these assumptions are not mentioned. It would be easier to trust that the results would generalize if these were explored here and for example an explicit alignment step compared and more specific analysis about the conditions where the method is and is not successful (for example, if 6% vocabulary overlap with Gemma and Pythia makes the model much slower to converge, how similar is this to random initialization? are the cosine similarities considerably lower in this case, and/or less one-to-one mappings chosen? if something other than cosine similarity were used, how would this change?)"
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Straightforward method to replace the tokenizer / vocabulary of an LLM, given sufficient data."
+            },
+            "weaknesses": {
+                "value": "Method is costly and does not consistently recover original model's performance. Insufficient analysis to understand the conditions where the method will succeed."
+            },
+            "questions": {
+                "value": "Presentation note: only the best vocabulary replacement results in the tables. In Tables 4 and 5 there are times when the original Pythia model outperforms any of the replacement methods, and so should likely be bolded instead so that this is clear."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper tackles a vocabulary extension issue in LLMs and introduce a method called UnifyVocab to replace the vocabulary of LLM, aligning token IDs between two vocabularies. The proposed approach allows vocabularies of LLMs to get replaced based on thhe token-token co-occurences, enabling new vocabulary adaptation with lower costs. Experimental results show some effectiveness in (cross-lingual) knowledge transfer between models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- proposes vocabulary adaptation technique which will be useful in multilingual/crosslingual LLM  application\n- Experimental results show some effectiveness of the proposed approach in multiple multilingual NLP tasks"
+            },
+            "weaknesses": {
+                "value": "- There is some missing citation on vocabulary adaptation like [1]. Comparison and/or discussion would be required.  \n[1] OFA: A Framework of Initializing Unseen Subword Embeddings for Efficient Large-scale Multilingual Continued Pretraining. In Proc of NAACL2024 findings"
+            },
+            "questions": {
+                "value": "- Have you ever tried other (semantic) metrics like COMET scores instead of BLEU while evaluating the performance of alignment Matrix?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper wants to address the mismatch among different vocabularies used by various LLMs. UnifyVocab is proposed. The high-level idea is to use the embeddings of the tokens from the source tokenizer to initialize the embeddings of tokens from the target tokenizer. To achieve this, the authors train GloVe embeddings for the tokens in the source and target vocabularies respectively, and then align the tokens using the similarity between the source and target tokens."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper is generally easy to follow.\n\n- The experiments are extensive.\n\n- UnifyVocab seems to be simple and effective in aligning tokens among the vocabularies of two tokenizers."
+            },
+            "weaknesses": {
+                "value": "- The method is sensitive to the selection of the corpus used to learn the token-token alignment.\n\n- The pipeline is very similar to WECHSEL [1]. If I understand correctly, the method proposed in this work is a simple extension to the scenario where the source and the target languages are the same (in WICHSEL they are different). \n\n- WECHSEL additionally needs to align the learned fastText embeddings because the source and target embeddings are in different spaces. I guess this step is omitted in UnifyVocab because the authors assume the learned token GloVe embeddings (for tokenizer A and tokenizer B) are in the same space. However, this assumption might not hold true. Two embedding matrices learned from the same corpus can be quite different, even if they have the same vocabulary (and in your case, this does not hold true) [2]. \n\n- I am not sure if I agree the motivation of the paper is well-established. If a model performs well with its own tokenizer (e.g., LLama and the LLama tokenizer), why would one be interested in exchanging its tokenizer with another model's tokenizer that is intended to work on the same domain or language? I think replacing the tokenizer is mostly only meaningful when we want to have a new domain or a new language to adapt to.\n\n[1] https://arxiv.org/abs/2112.06598  \n[2] https://arxiv.org/pdf/2209.15430"
+            },
+            "questions": {
+                "value": "$\\textbf{Questions/Suggestions}$:\n\n- I don't think Figure 3 (b) is meaningful. The authors claim that there is a negative relationship between the first-step training loss nad the BLEU. But the BLEU is very very bad, only around 2.4. For such a small BLEU, the differences between different initializations are basically negligible.\n\n- In Table 4, does \"0\" in the column \"#Tune (B)\" without any training? In other words, does that line indicate the performance of right after replacing the tokenizer? If it is, maybe the authors can make it more clear in the caption.\n\n- It is better to use the same color and same order in the legend of Figure 3 for better consistency. \n\n- There is one related paper [3] for zero-shot tokenizer transfer. They proposed ZETT where a hypernetwork is used to predict embeddings of the new tokens in the target tokenizer. The authors may consider this as a stronger baseline method.\n\n\n$\\textbf{Typos}$:\n\nLine 174: \"which belongs both vocabularies.\" -> \"which belongs to overlapping vocabularies.\"\nLine 177: \"randomly chosen token from the source vocabulary.\" -> \"a randomly chosen token from the source vocabulary.\"\n\n\n[3] https://arxiv.org/abs/2405.07883"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

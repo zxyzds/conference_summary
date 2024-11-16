@@ -1,0 +1,129 @@
+{
+    "id": "YilY5fGQny",
+    "title": "Policy Filtration in RLHF to Fine-Tune LLM for Code Generation",
+    "abstract": "While direct policy optimization methods exist, pioneering LLMs are fine-tuned with reinforcement learning from human feedback (RLHF) to generate better responses under the supervision of a reward model learned from preference data. One major challenge of RLHF is the inaccuracy of the intermediate reward model, especially in code generation tasks that requires complex reasoning for the reward model to score a response. We find that the reliability of the reward model varies across responses assigned with different rewards. This motivates us to filter the samples whose rewards may be unreliable to improve the signal-to-noise ratio during policy learning, resulting in Policy Filtration for Proximal Policy Optimization (PF-PPO). To choose a proper policy filtering strategy, we use the coefficient of determination ($R^2$) between the rewards and actual scores on filtered samples as the metrics to help us find promising strategies since it measures how well the rewards filtered by PF-PPO indicate real performance. We provide extensive experiments to validate the effectiveness of PF-PPO in code generation tasks. We find that some variants of PF-PPO are highly effective and achieve the state-of-the-art performance of 7-billion-parameter models on HumanEval (+7.9\\%) and MBPP (+0.7\\%). Moreover, we create the LeetCode Contest benchmark and demonstrate the advantage of PF-PPO (+10.0\\%) on this more challenging benchmark.",
+    "keywords": [
+        "LLM",
+        "RLHF"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "We design a method to filter samples during RLHF to mitigate the inaccuracy of reward model.",
+    "creation_date": "2024-09-23",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=YilY5fGQny",
+    "pdf_link": "https://openreview.net/pdf?id=YilY5fGQny",
+    "comments": [
+        {
+            "summary": {
+                "value": "The paper introduces a new way of filtering model generated samples during the PPO training stage that the authors call Policy Filtration PPO (PF-PPO). The method changes the sampling distribution of the target LLM by post-hoc selecting the generated samples using the reward model, via a heuristic that filters for generated samples that are likely to have reward values that correlate highly (measured by R^2) with ground truth accuracy. In particular, the authors found that selecting the generated samples with high/low valued rewards improve the final target LLM\u2019s code generation performance. The authors show that PF-PPO is able to achieve SOTA result on code generation in 7B class of open source LLM models."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. While data selection during reward modeling has previously been discussed, the paper addresses a novel issue of post-hoc data selection during PPO training after RM has been trained. The authors found simple yet effective heuristic of choosing samples that are unlikely to have incorrect reward signal.\n2. The empirical results shown in the paper, given the simplicity of the data selection method, is impressive. I could see this kind of method be widely adopted in RL."
+            },
+            "weaknesses": {
+                "value": "1. The paper broadly suffers from writing clarity, and has the tendency to overcomplicate concepts that appear to have simpler alternative explanations.  For example, the formulation of policy filtration could be drastically simplified. If I understand the method correctly, the algorithm is in essence sampling model generated responses by some heuristics which maximizes the R^2 between reward value and ground truth accuracy. The discussion around parameterized sampling, straight through estimator, seem redundant and was confusing. It is not clear how the \u201cactual score\u201d for code generation task was obtained and the appendix section seems straight from the template.\n2. Some key discussion seem to be missing that limit the general applicability of the paper. The paper discusses application in code generation domain, where there exist oracle reward modeling (via code execution). As such, using R^2 to find the samples with the least RM noise seem redundant (why not just use the oracle RM)? Where this question seems much more pertinent is in tasks that don't have objective ground truths? What if the \"actual score\" is noisy?"
+            },
+            "questions": {
+                "value": "I strongly recommend the reviewer to significantly reduce the unnecessary discussions and elaborations in section 3/4 and focus their attention on \n1. analysis of the impact of the algorithm. In particular, insights into what data are selected and discarded as a result of the proposed algorithm, and their consequent impacts on the RLHF procedure, will be highly useful for RLHF practitioners.\n2. generalization of the proposed algorithm to other problem domains (e.g. other tasks with objective ground truth such as mathematical reasoning, and tasks where such objective ground truth do not exist)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper \"Policy Filtration in RLHF to Fine-Tune LLM for Code Generation\" proposes a filtering strategy for Reinforcement Learning from Human Feedback (RLHF) to improve code generation in large language models (LLMs). The authors introduce Policy Filtration for Proximal Policy Optimization (PF-PPO), a method that aims to mitigate noise from inaccurate reward models by filtering unreliable samples during training. The method is benchmarked on the HumanEval, MBPP, and a newly created LeetCode Contest dataset, demonstrating some performance gains. The paper claims that filtering improves reward model reliability, leading to better overall policy outcomes."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "The paper addresses the challenge of reward model noise in RLHF, a known issue in the field. By focusing on reward reliability and noise reduction, it touches on a potentially impactful area for RL-based code generation."
+            },
+            "weaknesses": {
+                "value": "Lack of Novelty in Approach: The proposed method, PF-PPO, builds upon existing Proximal Policy Optimization (PPO) by simply filtering samples. This approach does not introduce substantial innovation, as similar filtering and sampling techniques are well-explored in RL literature. The study could benefit from a deeper analysis of why existing filtering methods are inadequate for RLHF in code generation.\n\nLimited Practical Impact: Although the paper demonstrates slight improvements on specific benchmarks, it does not provide a strong case for the broader utility of PF-PPO. The marginal performance gains (e.g., 0.7% to 10% across different benchmarks) may not justify the added complexity. Furthermore, focusing primarily on accuracy metrics without detailed qualitative analysis limits the assessment of how this approach improves code generation's real-world usability.\n\nOver-reliance on Benchmark Metrics: The paper heavily emphasizes quantitative metrics without exploring the implications of these improvements on code quality or robustness. A qualitative analysis of code examples generated by PF-PPO would help clarify its value, especially given that code generation tasks require more nuanced evaluation beyond pass/fail metrics.\n\nOmission of Real-World Considerations: The filtering strategy relies on preset thresholds and assumptions about reward distribution, which may not generalize to more diverse or complex RLHF tasks. Additionally, the computational overhead and feasibility of implementing this method in large-scale production are not discussed, raising concerns about practical applicability."
+            },
+            "questions": {
+                "value": "Given that PF-PPO\u2019s improvements are incremental, can the authors provide more justification for why this method is advantageous over simpler techniques like weighted sampling?\n\nCould the authors share examples of generated code to illustrate how the proposed filtering affects code quality, readability, or maintainability beyond accuracy metrics?\n\nHow does PF-PPO\u2019s computational complexity compare to existing methods when deployed in real-world environments, particularly for larger models and datasets?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposed to filter reliable RLHF samples to mitigate inaccurate reward model predictions"
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The idea of dropping samples with unreliable reward predictions during RLHF is novel."
+            },
+            "weaknesses": {
+                "value": "1. [Soundness] The proposed method was largely based on an observed property: \"the reward model is more reliable for the responses assigned with high/low rewards\". However, this argument is not well-defined, and the property works in what scope is not discussed. Specifically,\n  - What do high/low rewards exactly refer to, esp. across different benchmarks and tasks? \n  - Is this property universal for different reward models across different tasks? The paper do not clearly state when this property is applicable, and there is no sufficient quantifiable analysis on this property. Therefore the universality of this property remains unclear, and I question about it. In particular, does this property persists across benchmarks and tasks? The proposed method appears general, but is only evaluated on code generation, what about other tasks?\n  - I don't understand how Figure 1 supports the suggested property. I notice Figure 1 show the comparisons between reward estimations and labels, but involve very small number of prompts (164) in only one benchmark (HumanEval). The plots are noisy, and the paper do not clearly explain how such plot support the suggested property. \n  \n2. [Contribution] The paper proposed three heuristic-based designs of policy filtration. \n- The design is ad-hoc, and the paper lacks clear explanations on why specific design work better or worse. \n- Ad-hoc designs limit the contribution of the proposed method. Specifically, if I focus on performance on other aspects, e.g., math reasoning, helpfulness, how to design the policy filtration weight vectors? In the current state, the contribution is limited. I think at least make more in-depth analysis on why specific designs work, and/or discover essential principles that make policy filtration work well, so that it informs how the specific policy filtration can be designed, across tasks.\n\n3. [Presentation] The foundation of the proposed method is the reliability measure (or accuracy) for reward model prediction. The paper propose to use the the coefficient of determination (R-squared), but the paper do not include details for computing this measure, and do not clearly state the motivation and/or why this measure is valid to measure the reliability of reward estimate. For instance, why choose this measure? why not other measures, e.g., errors of the statistical estimation? Lack of clarity hinders understanding for the audience who are not familiar with R-squared. There are many other presentation issues, which makes the paper hard to understand."
+            },
+            "questions": {
+                "value": "Please see the questions above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

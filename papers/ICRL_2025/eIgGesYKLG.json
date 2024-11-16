@@ -1,0 +1,177 @@
+{
+    "id": "eIgGesYKLG",
+    "title": "Arithmetic Transformers Can Length-Generalize in Both Operand Length and Count",
+    "abstract": "Transformer-based language models often struggle with length generalization, meaning they fail to generalize to sequences longer than those encountered during training. While arithmetic tasks are commonly used to study length generalization, certain tasks are considered notoriously difficult, e.g., multi-operand addition (which requires generalization over both the number of operands and their lengths) and multiplication (which requires generalization over both operand lengths). In this paper, we achieve approximately 2--3$\\times$ length generalization on both tasks, which is the first such achievement in arithmetic Transformers. To this end, we design task-specific scratchpads enabling the model to focus on a fixed number of tokens per each next-token prediction step, and then apply multi-level versions of Position Coupling (Cho et al., 2024; McLeish et al., 2024) to offer Transformers information about the right position to attend to. On the theory side, we prove that a 1-layer Transformer using our method can solve multi-operand addition, up to operand length and operand count that are exponential in embedding dimension.",
+    "keywords": [
+        "Length Generalization",
+        "Transformers",
+        "Scratchpad",
+        "Position Coupling",
+        "Positional Encoding",
+        "Out-of-distribution Generalization",
+        "Arithmetic Tasks"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We propose combining scratchpad with position coupling, and demonstrate that Transformers can achieve length generalization in both operand length and count for addition problems.",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=eIgGesYKLG",
+    "pdf_link": "https://openreview.net/pdf?id=eIgGesYKLG",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper studies the problem of length generalization in transformer models over arithmetic operations, particularly over both number of operands and length of operands. They achieve 2-3$\\times$ length generalization on both addition and multiplication using task-specific scratchpads and multi-level versions of Position Coupling (Cho et al., McLeish et al.). They also provide a theoretical result for a 1-layer transformer showing that it can solve multi-operand addition up to lengths and counts exponential in the embedding dimension."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper is well written with well described experiments and intuition.\n2. Length generalization is known to be challenging on arithmetic problems with Transformers. The results in this paper are extremely impressive in that they not only achieve length generalization in operand lenght, but also operand count.\n3. The authors perform extensive ablations on th effect of zero-padding, trained-lengths and also connect some of their experimental results with their theoretical construction."
+            },
+            "weaknesses": {
+                "value": "1. While the problem of length generalization is important, it is mainly relevant in how it applies to more general tasks. However, position  coupling seems to be highly task specific and it is not clear to me how to generalize this idea to non-arithmetic tasks other than very artificial problems.\n2. The size of the test set seems to be too small for 30 operands of length up to 30. I would like to see if the test accuracy remains roughly the same even when scaling up the test set sizes.\n3. The model assumes a singly digit tokenizer. It would be interesting to see if the results extend to more general tokenizers at all.\n4. The zero-padding to match lengths seems to make the input size explode. If you have n inputs with max length n, then the input length will be $O(n^2)$ even if only one operand is of max length.\n5. Do you have any intuition on why 1L8H has particularly bad performance? Shouldn't it be strictly more expressive than the 1L4H construction?\n6. In Theorem 4.1, does \"solve\" mean solve perfectly? Are there any constants in max digits or operands? $2^d$ is a very large number, so this is an extremely impressive result!"
+            },
+            "questions": {
+                "value": "1. Is the main contribution of the paper over Cho et al., proving length generalization over number of operands and the introduction of multi-level position coupling? I would appreciate this being made more clear.\n2. For the comparison in Figure 3, why use NoPE? What about FIRE or Rotary position embeddings? With NoPE, is the model trained for longer durations?\n3. Is there a comparison with He et al., and Zhang et al. on multi-level relative PEs?\n4. In the data sampling, what is the purpose of the second chunk? Is it so that you ensure that you see every position?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper extends the idea of position coupling to get better generalization for the tasks of addition and multiplication. Position coupling is one of the several methods for leveraging the symmetries of a task, and in this paper, it is used in tandem with scratch-padding, padding the integers, and reversing. The paper instantiates generalization for up to 30 digits for addition with the mentioned techniques, and around 20 digits for multiplication, which is impressive."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "1- The paper is well written, with their ideas well articulated in all the sections. By comparing their methods to some of the previous work they have made the reader convinced that their methods are necessary in the given framework (leveraging the structure grounded on APE) to achieve length generalization in arithmetic. \n\n2- The idea of position coupling is applied to parity to achieve perfect length generalization. \n\n3- Tri-level position coupling facilitates length generalization on both the first and second operands in multiplication."
+            },
+            "weaknesses": {
+                "value": "1- In line 18, the paper claims to offer the first length generalization results for arithmetic tasks. To my knowledge, there are several other works that have argued the same. For instance, [1] has leveraged the same symmetries of addition (In a different framework, and using RPE)  to offer generalization up to 50 digits (for both operands) when trained on samples up to 5 digits. Can you explain the advantages of your work? Authors should have done a better comparison with previous work and stayed truthful about the results. \n\n2- Scratch-padding has been explored before for the problem of parity as also mentioned in line 179. I'm not convinced that position coupling is the core solution for this problem, since it's been only compared with a NoPE  + scratchpad approach. To me it is clear why such an approach cannot work in a next-word-prediction setting as the generated string in the output relies on the order of the the bits in the input, and  scratch-padding makes the final answer reliant on the previous bits in the output. Therefore, even though the final answer of parity is intrinsically independent of the string order, with this solution it is in fact regarding the order. Position coupling had to be compared with other methods that utilizes positional encoding as well. \n\n3- The contribution of the paper is pretty limited considering that position coupling is introduced in previous work, and bi-level and tri-level versions are two extensions of that method. Besides, the effectiveness of padding and reversing is already well-known and widely studied. \n\n4- The scope of the experiments are limited to solely having numbers and in the absence of any text. How does this apply to a broader range when numbers are amongst text? For instance, [1] has tried to address this with training some additional attention heads tailored for arithmetic along with rest of the architecture. Besides, is it true that with your method multiplication and addition require different sets of positional encoding? Please correct me if I'm wrong. \n\n\n[1] Sabbaghi et al., Explicitly Encoding Structural Symmetry is Key to Length Generalization in Arithmetic Tasks."
+            },
+            "questions": {
+                "value": "Please address the concerns expressed in the weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper describes methods allowing decoder-only transformers to generalize to longer operands when performing integer addition or multiplication, and to generalize to a larger number of operands when performing addition.\n\nThe authors mix two existing techniques, scratchpad, which forces the model to output a sequence of intermediary steps before producing the result, and position coupling, problem-specific hierarchical positional encodings. They experiment with three tasks. \n\nFor parity calculation over bit strings, they use a scratchpad which computes parity integration, ie force the transformer to compute the parities of successive prefixes, and use the same (absolute) positional encoding in the input and output sequences. \n\nFor addition of $n$ positive integers, they use a scratch pad of partial sums (0, first operand, sum of the first two...) and two positional encodings: one for the position of digits in each operand and output, and one for the position of each operand and output in the operation and scratchpad.\n\nFor multiplication of 2 position integers, they use a scratchpad of single digit products and partial sums, and three positional encodings, which reflect the different subtasks in multi-digit multiplication.\n\nExperimental results indicate that such techniques allow for generalization to longer lengths on all three tasks, and a larger number of operands for addition."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The paper studies an important limitation of arithmetic transformers, their inability to scale to longer sequences that those seen at training. The authors propose a solution to this problem.\n\nThe paper is clearly written, the methods is clearly described and the experimental results are compelling. Some ablation results are provided."
+            },
+            "weaknesses": {
+                "value": "The authors seem to only focus on positive integers. This greatly reduces the practical interest of the findings, since integer arithmetic usually involve positive and negative numbers. Could the results be extended to relative numbers, either by adding a sign in the number representation, or changing the tokenization scheme to a number system that encode negative numbers as well (e.g. encoding them in base -10 instead of base 10, or using balanced base 10, with digits -4, -3, -2, -1, 0, 1, 2, 3, 4, 5)? Since the only change is the tokenizer, this could work out of the box. (besides, arithmetic might be easier to learn in balanced base, because the addition and multiplication tables feature less carries).\n\nThe paper makes heavy use of techniques introduced in prior work, this is not a problem, but it would be fitting to have a proper \"related work\" section in the main, describing these methods and acknowledging anteriority. At present, these descriptions are scattered in sections 1 and 2. This could be done at the expense of the preliminaries section (sec. 2, which serves little purpose), and perhaps some of the parity results, which are underwhelming, compared to the rest of the experiments.\n\nBoth the scratchpad structure and the position encodings proposed in this paper are strongly dependent on the task. This suggests that the model can be trained to perform one operation (addition OR multiplication), but not calculations featuring both. This is a strong limitation. Have you experimented with such tasks (add and multiply)? Can they be learned zero or few shots? A discussion of these questions would be useful."
+            },
+            "questions": {
+                "value": "* At test time, for a model prediction to be correct, you insist on both the output and the scratchpad to be correctly predicted. Prior work suggests that models sometimes learn despite incorrect scratchpads. Have you tested models by judging them on the final result only? (this could have an impact ablation results, and comparisons with other approaches)\n* Is reversing the order of digits in the scratchpad and output sequence really necessary? Can you provide ablations for this? \n* What would be the impact of reversing the digits in the input sequence? \n* Your architecture ablations suggest that shallow models can learn and length generalize. Unfortunately, they all use a large embedding dimension (512), which translates into a large number of parameters. Have you tried models with smaller dimensions (128, 64 even)?\n* In figure 10, you report better performance of 2 layer models than 4 or 6 layer models with 2 and 4 heads, and better performance of 4 layer models than 6 layer models with 8 heads. Could this be due to the size of your training sample (500k may be on the low side for the larger architectures), or the number of steps you allow? \n* An ablation on the training set size would be useful.\n* For addition, what is the point of adding 0 and a copy of the first operand in the scratchpad? \n* The main text claims the model has 63M parameters, the appendix claims 25M, which is right?\n* Would this approach benefit from an encoder-decoder model? (intuitively, bidirectional attention over the input sequence should help, all the more as the digits in input sequences are not reversed)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "na"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "In this paper, arithmetic transformers refer to transformers trained on arithmetic tasks.  The core idea of the paper is to combine position coupling and scratchpad, and the authors demonstrate that this allows for length extrapolation in arithmetic tasks."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "They show that by using a specific position embedding encoding (tri-level position coupling), they are able to also perform well on multiplication. This is an interesting observation for multiplication that when baked into the \u2018structure\u2019 of the transformer can give generalisation on arithmetic."
+            },
+            "weaknesses": {
+                "value": "My first slightly minor nitpick is that the scratchpad requires scratchpad data generated in that particular format, for the multiplication specific task. In a general pretraining or fine-tuning setting, this could probably be added in as additional data to shape the model\u2019s behaviour.\nHowever, the specificity of position coupling (for all variants of position coupling) means that it can\u2019t be a general modification to standard Transformers in a pretraining setting, and have it improve arithmetic capabilities. To their credit, the authors have already addressed this in the Limitations section of the paper."
+            },
+            "questions": {
+                "value": "- Is there a way for the position coupling to be done \u201cautomatically\u201d that you know of? I am unfamiliar with this specific line of work. \n- For PARITY, at least, I have seen a prompt construction that asks the model to number the bit that the model has generated as it generates the internal state (odd or even) given the prefix. \n  For example, given the sequence 1101. \n  ```\n    1. 1 odd\n    2. 1 even\n    3. 0 even\n    4. 1 odd\n\n    Final answer: odd.\n  ````\n  The intuition here being that the numbering allows the attention mechanism to more accurately pin-point the required informaton, which has a similar flavour to your approach.\n  I was wondering if you have attempted to prompt a model so that it generates the same positioning scheme (just in human readable form), and I wonder if that will improve multiplication generalisation."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "No concerns"
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

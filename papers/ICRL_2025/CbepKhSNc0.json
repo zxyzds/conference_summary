@@ -1,0 +1,209 @@
+{
+    "id": "CbepKhSNc0",
+    "title": "LIAR: Leveraging Inverse Alignment to Jailbreak LLMs in Seconds",
+    "abstract": "Many existing jailbreak techniques rely on solving discrete combinatorial optimization, while more recent approaches involve training LLMs to generate multiple adversarial prompts. However, both approaches require significant computational resources to produce even a single adversarial prompt. We hypothesize that the inefficiency of current approaches stems from an inadequate characterization of the jailbreak problem. To address this gap, we formulate the jailbreak problem as an *inverse alignment problem*. By starting from an available safety-aligned model, we leverage an unsafe reward to guide the safe model towards generating unsafe outputs using alignment techniques (e.g., reinforcement learning from human feedback), effectively performing inverse AI alignment. We propose a novel jailbreak method called LIAR (**L**everaging **I**nverse **A**lignment to jailb**R**eak). To demonstrate the simplicity and effectiveness of our approach, we employ a best-of-$N$ method. LIAR offers significant advantages: lower computational requirements without additional training, fully black-box operation, competitive attack success rates, and more human-readable prompts. We provide theoretical insights into the possibility of jailbreaking a safety-aligned model, revealing inherent vulnerabilities in current alignment strategies for LLMs. We also provide sub-optimality guarantees for the proposed LIAR. Experimentally, we achieve ASR comparable to the SoTA with a 10x improvement to perplexity and a Time-to-Attack measured in seconds rather than tens of hours.",
+    "keywords": [
+        "LLM",
+        "jailbreak"
+    ],
+    "primary_area": "alignment, fairness, safety, privacy, and societal considerations",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=CbepKhSNc0",
+    "pdf_link": "https://openreview.net/pdf?id=CbepKhSNc0",
+    "comments": [
+        {
+            "summary": {
+                "value": "1) Authors introduce a novel and efficient way to generate adversarial prompts which can elicit malicious responses from a target LLM that has been tuned to be safety aligned.\n\n2) The proposed method (LIAR) does so by leveraging an existing smaller LLM model (GPT2) to generate prompt continuations such that the original prompt combined with the continuations can bypass safety filters in the target LLM to generate malicious responses. The smaller model is finetuned using a reward function that makes it produce unsafe continuations. \n\n3) Experiments using AdvBench (Zou et al 2023) show that the proposed method is as capable as GCG (greedy coordinate gradient in Zou et al 2023) and other SoTA methods at generating attacks with no additional training time and with an added benefit of greater readability in generated attacks. \n\n4) The proposed method is much faster than other methods as GCG per query but as seen in table 1, it needs 100x more queries to reach the same or lower level of attack success rate as GCG which makes the wall-time similar to GCG overall."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1) Interesting and novel contribution to the LLM jailbreaking literature + practically useful since the proposed method is fast enough to be deployed in practice. This would help advance safety researchers to come up with better defenses. \n\n2) Strong theoretical justifications showing suboptimality of the proposed approach as it offers speed with no additional expensive training."
+            },
+            "weaknesses": {
+                "value": "1) AdvBench only has 312 (finetuning train) + 104 (test) samples making the comparisons a bit fragile. It'd be nice if authors could demonstrate it on a larger dataset of adversarial prompts. One could use mechanical turk to generate a larger library of such prompts."
+            },
+            "questions": {
+                "value": "1) In this sentence isn't 10000x an exaggeration ? should it be 100x : \". Given the significantly reduced overall TTA, this\nasymmetric ASR@k comparison becomes highly practical: our method can generate over 10,000\nqueries before GCG completes its first\" \n\n2) Can you include more details about the finetuning process so practitioners can replicate your work ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "None"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose a jailbreak algorithm named LIAR. The authors derived a simple theory explaining the effectiveness of the method and experimented the algorithm under several settings."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "(1) Jailbreaking and its defense is an important research question.\n\n(2) The authors conducted experiments with several models."
+            },
+            "weaknesses": {
+                "value": "**Major**\n\n(1) The current algorithm is way too trivial for me and the formulation is not very interesting. Given a harmful query $x$ and an aligned model $M$, the model has a probability $p$ of generating the desired response when prompted with $x$ (temperature > 0). Then we sample 1000 times from $M$ using the same $x$ (this might be a slightly weaker attack than PAIR), the probability of the overall model being safe is $(1-p)^{1000}$, which is a small number if $p$ is not extremely close to 0. Based on the above example, I am trying to convey that using BoN to solve the inverse-alignment problem is technically trivial and doesn't have a close relationship with your formulation. Simply reformulating jailbreak as an alignment problem is not enough for an ICLR paper and I am looking forward to seeing a more novel method of solving the problem. \n\n(2) The performance is weak on well-aligned models like the LlaMA series. Also, it would be better to compare the algorithm with black-box attacks like GGC-transfer/PAIR/MSJ etc. \n\n(3) The theory looks like the \"Infinite monkey theorem\" to me and is relatively straightforward given the abundant existing works in the field of RL/RLHF theory.\n\n**Minor**\n\n(1) There are two \"(x)\" in equation (7). I have listed some possible typo errors in the question section.\n\n(2) Why do you limit the attack model to models as weak as GPT-2? Sampling 100 responses from Vicuna-v.1.5 using vLLM won't be longer than 10 minutes."
+            },
+            "questions": {
+                "value": "(1) As far as I know, there is no 7B variant of LLaMA-3.1. Are you referring to LLaMA-3.1-8B?\n\n(2) For all the models, are you using the base models (LlaMA-2-7B) or the chat models (LlaMA-2-7B-chat)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work redefines the jailbreak problem of LLMs as an inverse alignment problem and achieves a training-free method, LIAR, by combining an unsafe reward with the best-of-N approach, resulting in a competitive ASR. This method significantly improves time efficiency compared to previous methods and greatly reduces computational consumption."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "* LIAR is a training-free approach which significantly reduces the computational cost required for jailbreaking.\n* LIAR boasts higher computational efficiency compared to previous methods."
+            },
+            "weaknesses": {
+                "value": "* ASR@1 of LIAR is significantly lower than that of other methods(Taking vicuna-13b as the target LLM, for example, LIAR's ASR@1 is only 0.94, while GCG can achieve 95.4).\n* Unsafe reward requires a known harmful response $y$ as a premise. However, the quality of $y$ is not explicitly addressed in the ablation study, leaving the impact of y's quality on LIAR's ASR unexplored.\n* $J(x, q, y)$ requires access to the model($\\pi_\\theta$)'s logits. For closed-source model APIs that do not provide this service, LIAR may not be effective."
+            },
+            "questions": {
+                "value": "* LIAR shows a significant improvement in ASR@1-ASR@100 from 0.94 to 79.81 when vicuna-13b is the target model, but only a slight improvement when LLaMA2-7b is the target model(from 0.65 to 3.85). Does this suggests that LIAR may be an unstable jailbreak method, as its effectiveness varies significantly depending on the target model?\n* Although the suboptimality of the LIAR method has been theoretically proven, is there an experimental comparison between the LIAR method and the optimal method to assess the gap? Since the experimental results show that, despite similar time efficiency (both around 15 minutes), the ASR@100 of the LIAR method is almost always lower than that of GCG and AutoDAN."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel finetuning objective for an LLM to generate adversarial suffixes to harmful requests, instead finetuning the prompter model with an RL approach to minimize reward."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "There are two ablations reported to the method: temperature of the prompt generator and changing the query length. The introduction of the KL regularisation instead of perplexity regularisation is clever."
+            },
+            "weaknesses": {
+                "value": "The paper is poorly explained and written, and I think the biggest improvement will come from extensive rewriting and reframing of the story. The presentation could be improved by introductions of i) schematic figures, ii) plots rather than just tables, and iii) examples of the adversarial suffixes generated by the prompter and how this compares to prompts generated by AdvPrompter. I would like to see many more experiments that compare how swapping the underlying prompt generator model for others affects its performance on other target models and how to choose a good reward model for this task."
+            },
+            "questions": {
+                "value": "I don't have any questions, I have highlighted my concerns and opportunities for improvement in the weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors propose Leveraging Inverse Alignment for jailbReaking LLMs (LIAR), which is an efficient and training free method for jailbreaking. Both theoretical analysis and experimental practices are provided to render the method effective."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The writing is clear and easy to follow.\n2. A novel notion of \"safety net\" is proposed, which helps illustrate the possibilities of jailbreaking safety-aligned LLMs.\n3. The proposed method of LIAR is well motivated and supported by theoretical analyses.\n4. The effectiveness and light computation of the method is validated by experiments."
+            },
+            "weaknesses": {
+                "value": "1. Although the model does not need the gradients w.r.t. the target LLM, which greatly reduces the computation for query generation, it still needs to calculate the reward $R_u$ with the model. This makes it not fully black-box, as it's not applicable to proprietary models like GPT-4. However, it would be interesting to see how effective the method is under the setting of transfer attack. [1]\n\n2. Strictly speaking, Llama2-7b is the only model that has been safety aligned with RLHF and the ASR on it is significantly lower than that on other models, with bigger gaps with GCG and AutoDAN. This indicates the challenges of the proposed method on safer LLMs.  The authors claim that they have conducted experiments on Llama3 and Llama3.1, but only the results on them are provided in ablation studies. What is the jailbreaking performance on these latest LLMs compared to the baselines?\n\n3. Besides jailbreak methods based on optimization, there are also other methods with strategies like query attack[2] and persuasive templates[3], which can also be quite efficient and effective. Comparison with them should be included.\n\n\n[1] Paulus, Anselm, et al. \"Advprompter: Fast adaptive adversarial prompting for llms.\" arXiv preprint arXiv:2404.16873 (2024).\n\n[2] Chao, Patrick, et al. \"Jailbreaking black box large language models in twenty queries.\" arXiv preprint arXiv:2310.08419 (2023).\n\n[3] Zeng, Yi, et al. \"How johnny can persuade llms to jailbreak them: Rethinking persuasion to challenge ai safety by humanizing llms.\" arXiv preprint arXiv:2401.06373 (2024)."
+            },
+            "questions": {
+                "value": "It's interesting to see the theoretical analyses about jailbreaking. However, I have some questions about the details.\n1. From my understanding, the answer to Q1 and Theorem 1 are about making a model unsafe with optimization, rather than the generation of jailbreaking queries. Are they independent of the discussions in the previous 2 sections ? As some of the notations, such as $\\rho^\\ast_\\text{safe}$, $R_u(x,y)$, are not explained, there might be some confusion.\n\n2. In the answer to Q2, the authors are trying to guarantee the sub-optimality of the proposed method of LIAR in solving Eq. (4). Why the KL divergence is neglected in the definition of $\\Delta_\\text{sub-gap}$ ?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "The paper proposes a method to jailbreak the safety mechanisms of LLMs to generate harmful contents, which is a popular topic in the LLM community. Alert has been marked in the submission."
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

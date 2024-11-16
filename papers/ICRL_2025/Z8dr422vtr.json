@@ -1,0 +1,168 @@
+{
+    "id": "Z8dr422vtr",
+    "title": "Cross-Domain Off-Policy Evaluation and Learning for Contextual Bandits",
+    "abstract": "Off-Policy Evaluation and Learning (OPE/L) in contextual bandits is rapidly gaining popularity in real systems because new policies can be evaluated and learned securely using only historical logged data. However, existing methods in OPE/L cannot handle many challenging but prevalent scenarios such as few-shot data, deterministic logging policies, and new actions. In many applications, such as personalized medicine, content recommendations, education, and advertising, we need to evaluate and learn new policies in the presence of these challenges. Existing methods cannot evaluate and optimize effectively in these situations due to the notorious variance issue or limited exploration in the logged data. To enable OPE/L even under these unsolved challenges, we propose a new problem setup of Cross-Domain OPE/L, where we have access not only to the logged data from the target domain in which the new policy will be implemented but also to logged datasets collected from other domains. This novel formulation is widely applicable because we can often use historical data not only from the target hospital, country, device, or user segment but also from other hospitals, countries, devices, or segments. We develop a new estimator and policy gradient method to solve OPE/L by leveraging both target and source datasets, resulting in substantially enhanced OPE/L in the previously unsolved situations in our empirical evaluations.",
+    "keywords": [
+        "Off-Policy Evaluation",
+        "Off-Policy Learning",
+        "Importance Weighting",
+        "Cross Domain"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "We propose a new estimator and off-policy gradient method to deal with unsolved challenges in Off-Policy Evaluation and Learning by effectively leveraging both the target and source domain data",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Z8dr422vtr",
+    "pdf_link": "https://openreview.net/pdf?id=Z8dr422vtr",
+    "comments": [
+        {
+            "summary": {
+                "value": "Cross-Domain Off-Policy Evaluation and Learning (OPE/L) addresses challenges in contextual bandits, such as few-shot data, deterministic logging, and new actions, by leveraging logged data from multiple domains to evaluate and learn new policies more effectively. This paper introduces a new estimator and policy gradient method that improves OPE/L performance, both theoretical analysis and experimental results are presented."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. This paper studies an interesting and practical problem, with both theoretical analysis and experimental results.\n2. This paper is mostly clearly written, and most parts are easy to understand.\n3. A suite of experimental results are provided after the theoretical analysis."
+            },
+            "weaknesses": {
+                "value": "1. I feel the theoretical results are a little bit weak:\n\n1a I am curious about the condition 3.2, is this a common and reasonable assumption? It is better to provide more insightful comments on when this assumption will hold in practice.\n\n1b It is hard for me to understand the paragraph in line 314-320. Why is the estimator unbiased when its cluster size is equal to 1? Intuitively, more clusters in the target cluster $\\phi(T)$ mean more logged data come from the same cluster as the new data in the target domain, which will help reduce the bias? Please expand the discussion on this paragraph.\n\n1c I also feel curious about using the off-the-shelf clustering algorithm based on empirical average. How does it work in your theoretical analysis? If the rewards are not very symmetrically distributed, i.e. heavy-tailed distributed, then the empirical mean will lead to terrible estimation, so how to deal with this issue in practice?\n\n1d is there a final regret bound in this paper in terms of the magnitude of $T$ like other bandit works. e.g. $O(\\sqrt{T})$\n\n2. Since this paper studies a very niche area of contextual bandits, it is better to give more real-world applications to help readers understand its significance.\n\n3. It is better to report the running time of the proposed algorithm along with baselines to validate the efficiency of the proposed method.\n\nRemark: I checked the codes in the supplementary material and most notes are written in non-English (I guess it is Japanese). Please use English for everything in your source codes, since other languages may lead to violation of double-blind reviewing policy."
+            },
+            "questions": {
+                "value": "Please refer to the above Weaknesses section."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work studies off-policy estimation and learning (OPE/OPL) for the cross-domain scenario, where logged bandit feedback for different domains is leveraged to improve the offline estimation and learning for policies on a target domain. The proposed estimator COPE relies on a reward decomposition inspired by previous work. Its bias and variance were studied for OPE and a straightforward policy gradient approach was derived for OPL. Experiments show that the estimator performs well on cross-domain scenarios with support deficiency in both OPE and OPL"
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- The paper is well written and pleasant to read.\n- The experimental section shows favorable results for the proposed solution."
+            },
+            "weaknesses": {
+                "value": "- If the cross-domain application in OPE/OPL is novel, the motivation and contribution of the work is oversold:\n   + Hospitals for example rarely share data of patients with centralised entities, and learning on this type of sensitive data is primarily done within the framework of _federated learning_ [3]. The described framework where the learner has access to the data of all hospitals in a centralised manner is far from reality. \n   + The MIPS [1] and OffCEM [2] estimator for example are based on the same reward decomposition, and treat the large action space scenario, where support deficiency happens all the time, as the logging policy cannot cover all the action space. For example, this sentence in the work: \"However, our work differs from these studies in motivation, as we formulate the cross-domain OPE/OPL problem to solve non-trivial challenges such as new actions and deterministic logging\" lacks support, as MIPS and OffCEM already solve these non-trivial challenges. See for example Section 3 of [1] where one of the main motivations is going beyond the common support assumption.\n\n- The derivation technique of the estimator is not novel. The COPE estimator is based on the same technique of [1, 2], with little adjustment  to the new application. Its bias/variance tradeoff is also studied in the same way as [2], which makes the theoretical contribution unoriginal.\n\n\n- The work claims to study OPL, which was not done in [1, 2]. Their proposed OPL method is based on the derivation of a policy gradient, which is basically computing the gradient of the proposed estimator and using it in first order optimisation methods. This contribution is also straightforward and lacks studying in the paper.\n\n- The paper omits a large spectrum of OPE/OPL contributions based on the pessimism principle. This principle was heavily studied for OPL specifically and was proven to be optimal, contrary to optimising the estimator directly. The following lines of work should be incorporated to the related work and discussed, the following papers can be a good start:\n\n   + Bayesian Counterfactual Risk Minimization. Ben London, Ted Sandler Proceedings of the 36th International Conference on Machine Learning, PMLR 97:4125-4133, 2019.\n   + Confident Off-Policy Evaluation and Selection through Self-Normalized Importance Weighting. Ilja Kuzborskij, Claire Vernade, Andras Gyorgy, Csaba Szepesvari Proceedings of The 24th International Conference on Artificial Intelligence and Statistics, PMLR 130:640-648, 2021.\n   + PAC-Bayesian Offline Contextual Bandits With Guarantees. Otmane Sakhi, Pierre Alquier, Nicolas Chopin Proceedings of the 40th International Conference on Machine Learning, PMLR 202:29777-29799, 2023.\n   + Importance-Weighted Offline Learning Done Right. Germano Gabbianelli, Gergely Neu, Matteo Papini Proceedings of The 35th International Conference on Algorithmic Learning Theory, PMLR 237:614-634, 2024.\n   + Logarithmic Smoothing for Pessimistic Off-Policy Evaluation, Selection and Learning. Otmane Sakhi, Imad Aouali, Pierre Alquier, Nicolas Chopin.\n\n\n\n\n\n\n\n\n\n[1] Off-Policy Evaluation for Large Action Spaces via Embeddings. Yuta Saito, Thorsten Joachims.\n\n[2] Off-Policy Evaluation for Large Action Spaces via Conjunct Effect Modeling. Yuta Saito, Qingyang Ren, Thorsten Joachims\n\n[3] Rieke, N., Hancox, J., Li, W. et al. The future of digital health with federated learning. npj Digit. Med. 3, 119 (2020). https://doi.org/10.1038/s41746-020-00323-1"
+            },
+            "questions": {
+                "value": "- What are the challenges that make the cross-domain application more difficult/particular compared to the large action space scenario? If it is just deterministic policies/deficient support, then it is not different than the case of large action spaces.\n- What is the originality of the bias/variance study of the COPE estimator?\n- How can you be sure that your OPL method will converge to the right policy?\n- Is there a reason why you omit the whole OPL literature based on pessimism?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper focuses on addressing the problem of OPE/L when the common support assumption is not met. It introduces a new estimator based on the Common Cluster Support assumption and multi-source data to tackle this issue. The proposed approach is validated through semi-simulated experiments."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The challenges of OPE/L with multi-source data and violations of the common support assumption are significant and relevant in practical contexts.\n\n- The proposed estimator aligns well with the motivations of this paper and provides theoretical support for its unbiasedness."
+            },
+            "weaknesses": {
+                "value": "- This paper does not compare with significant literature focused on the limited overlap problem. For instance, the assumptions in Condition 3.1 and the subsequent proof of unbiasedness are fundamentally similar to those in [1, 2], which also assume that while the original x may not satisfy the overlap assumption, there exists a score or representation that does. The unique contribution of this paper lies in its application to the cross-domain OPE/L setting.\n\n- However, the absence of a real cross-domain experimental validation, relying instead on semi-simulated experiments, limits the contribution of this work.\n\nIf the authors clearly outline the unique challenges of limited overlap in the context of multi-source data compared to conventional scenarios, and explain the specific efforts made to address these challenges, I would consider increasing my score.\nAdditionally, if the authors provide evaluation results of their method in real-world settings, I would also reconsider my score.\n\n---\n[1] Hansen B B. The prognostic analogue of the propensity score[J]. Biometrika, 2008, 95(2): 481-488.\n\n[2] Wu P, Fukumizu K. $\\beta $-Intact-VAE: Identifying and Estimating Causal Effects under Limited Overlap[J]. arXiv preprint arXiv:2110.05225, 2021."
+            },
+            "questions": {
+                "value": "see above"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper tackles the challenging problem of Cross-Domain Off-Policy Evaluation and Learning (OPE/L) for contextual bandits. It focuses on addressing practical issues frequently encountered in real-world applications, such as deterministic logging policies, few-shot data in the target domain, and the presence of new actions. The authors propose COPE, a novel estimator that leverages data from multiple source domains to improve evaluation and learning in a target domain. COPE decomposes expected rewards into domain-cluster and domain-specific effects, aiming to reduce bias and variance. The paper includes an empirical evaluation on a real-world dataset and provides the code for reproducibility."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "- The paper addresses the important problem in OPE/L for contextual bandits. In particular, the setting where there are deterministic logging policies is often overlooked, despite being a scenario highly relevant to practical deployments. This focus significantly enhances the paper's relevance to real-world applications\n\n- The proposed COPE estimator introduces an interesting approach to leveraging cross-domain data, building upon and extending existing ideas in the field. The connections and distinctions with related estimators, such as OffCEM by Saito et al., are noteworthy\n\n- The empirical evaluation is comprehensive, including ablation studies that provide insights into the contributions of different components of the proposed method. The provided code further strengthens the paper's contribution by ensuring reproducibility"
+            },
+            "weaknesses": {
+                "value": "- While the experimental evaluation on the chosen dataset is comprehensive, I believe the paper would benefit from evaluation on an additional dataset. This would improve the paper, evaluating COPE across different data distributions and characteristics.\n\n- The clarity of the paper could be improved, particularly in explaining the technical details of the COPE estimator, the clustering approach, and the underlying assumptions. More precise definitions and a step-by-step explanation of the methodology would enhance understanding and reproducibility.\n\n- The novelty of the approach is present, however COPE is very similar to OffCEM, as also mentioned in the paper \n\n- The theoretical analysis, which I believe is already interesting, could be strengthened. Specifically, an analysis of the variance of COPE would be valuable. Furthermore, exploring the estimator's bias when the various analyzed conditions are not satisfied would provide a more complete picture of its performance characteristics.\n\n- The theoretical assumptions, such as Conditional Pairwise Correctness (CPC), while providing a foundation for the analysis, might be difficult to verify or guarantee in practice. \n\nMinor:\ntypo at line 081: Cross-domain Off-Policy EvaluatOIn (COPE)"
+            },
+            "questions": {
+                "value": "- Can the authors provide a theoretical comparison of COPE with the existing methods in the setting of deterministic logging policies?\n\n- Can the authors provide a more detailed explanation of the clustering function, its practical implementation, and its impact on the performance of COPE? What guidelines can be offered for choosing appropriate clustering strategies in different domains?\n\n- What are the practical implications and limitations of the theoretical assumptions in real-world scenarios? How can these assumptions be verified in practice?\n\n- Can the authors provide an analysis of the variance of the COPE estimator? How does the variance compare to existing methods?\n\n- What is the bias of COPE when the conditions for unbiasedness are not met? Is it possible to characterize or bound this bias?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

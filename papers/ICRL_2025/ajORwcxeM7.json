@@ -1,0 +1,167 @@
+{
+    "id": "ajORwcxeM7",
+    "title": "Active Causal Learning for Conditional Average Treatment Effect Estimation",
+    "abstract": "Estimating conditional average treatment effects (CATE) from observational data is an important problem and is of high practical relevance for many domains. Despite the great efforts of recent studies to accurately estimate CATE, most methods require complete observation of\nall covariates of an individual. However, in real-world scenarios, the acquisition of covariate information is usually done in a active manner, which motivates us to develop methods to minimize the total measurement cost by actively selecting the most appropriate covariates to measure while guaranteeing the CATE estimation accuracy. To this end, in this paper, we first extend the existing methods for estimating CATE to allow accurate estimation in the presence of unmeasured covariates. Next, we theoretically show the advantage of dynamically adjusting the sampling strategy based on an evolving understanding of the information measured in the covariates. Then, we formulate the dynamic sampling strategy learning as a partially observed Markov decision process (POMDP) and further develop a policy gradient method to solve the optimal dynamic policy. Extensive experiments conducted on three real-world datasets demonstrate the effectiveness of our proposed methods.",
+    "keywords": [
+        "conditional average treatment effect",
+        "dynamic sampling",
+        "partially observed Markov decision process"
+    ],
+    "primary_area": "other topics in machine learning (i.e., none of the above)",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=ajORwcxeM7",
+    "pdf_link": "https://openreview.net/pdf?id=ajORwcxeM7",
+    "comments": [
+        {
+            "summary": {
+                "value": "Note: I have previously reviewed this paper for NeurIPS. The authors do not appear to have revised the paper, in particular regarding my earlier comments, so I have submitted the same review as before.\n\nThis paper considers a setting where the learner can sequentially decide which features to acquire for a given instance. A dataset with complete features is available, which is used to train a data acquisition policy with RL. The focus is on estimating conditional average treatment effects, which are assumed to be identified in the historical data and then estimated with an existing approach."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "The idea of sequentially acquiring features is well motivated, as in sequential decisions about tests or diagnostics in medicine. The experimental results show improvements from using RL over reasonable baselines like greedy acquisition."
+            },
+            "weaknesses": {
+                "value": "The idea of using RL to define a policy for sequential feature acquisition is not new. There is a great deal of work on this problem in the supervised setting. A few examples that come up from a quick search:\n\nLi and Oliva. Active feature acquisition with generative surrogate models. ICML 2021.\n\nGhosh and Lan. DiFA: Differentiable Feature Acquisition. AAAI 2023. \n\nZheng Yu, Yikuan Li, Joseph Chahn Kim, Kaixuan Huang, Yuan Luo, Mengdi Wang Deep Reinforcement Learning for Cost-Effective Medical Diagnosis. ICLR 2023. \n\nThe paper doesn't discuss any of this related work or how the proposed methods/problem formulation is related. While this paper focuses on causal estimation, the way that it addresses the problem effectively reduces it to supervised learning: the predictions of an existing causal inference method using the historical (complete) data are used to provide surrogate outcomes, after which the proposed reward function treats it exactly as in the supervised case. I believe that the paper needs to either illustrate a fundamental difference between supervised learning and CATE estimation in this setting, or compare to existing methods in this literature and demonstrate improved performance."
+            },
+            "questions": {
+                "value": "Can you comment on the relationship to this previous work?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The manuscript proposes a cost-efficient conditional average treatment effects (CATE) estimation method by sequentially querying covariates for a new subject. With partially observed covariates, the CATE estimator takes masked full covariates as the input to predict potential outcomes. Authors propose to learn a dynamic covariate-sampling strategy which can balance the cost of querying covariates and CATE loss. By formulating the optimization problem into a partially observable Markov decision process, authors leverage the PPO method to learn such sampling strategy."
+            },
+            "soundness": {
+                "value": 1
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "Active querying in estimating causal effects is a interesting problem in the field. The article is well organized with extensive numerical studies."
+            },
+            "weaknesses": {
+                "value": "- There is no identification for CATE with masked covariates. The SUVTA condition is only assumed for full covariates $X_i$. Please discuss how the SUTVA and other identification assumptions may need to be modified or extended when dealing with partially observed covariates. It is suggested to provide theoretical justification or empirical evidence for the validity of CATE estimation with masked covariates.\n\n- The estimation model $f_w$ is trained only with fully observed $X$, i.e., the input is $f_w(\\mathcal{X}(X,\\mathbf{1}))$. For observation $\\mathcal{X}(X,M)$ with other mask $M$, the performance of $f_w(\\mathcal{X}(X,M))$ can be very poor. Have you considered training $f_w$ with various masked inputs to improve its performance on partially observed data? How might this affect the overall performance of the proposed method?\n\n- It seems that the policy in (3) is a stochastic policy as authors propose to use PPO to learn this policy, there is a missing expectation over action $a_t$ according to $\\pi$ in the objective function. Please clarify whether the policy is stochastic and, if so, explain how the expectation over actions is incorporated into the objective function. Also, why is there an indicator function in the constraints as $M$ is a binary mask vector?\n\n- In the POMDP setting, the transition should be $\\mathbb{P}: \\mathcal{S} \\times \\mathcal{A}\\rightarrow \\mathcal{S}$, and reward does not depend on $\\mathcal{O}$. The policy typically leverages the past history, not only the current observation. I suggest to discuss how incorporating past history into the policy might affect the performance of the proposed method.\n\n- Only when the discount factor $\\gamma=1$, the RL value function matches the objective in (3). Why choosing $\\gamma < 1$ in the experiments? How this choice affects the relationship between the RL value function and the original objective?"
+            },
+            "questions": {
+                "value": "See weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 5
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This article describes how the covariates themselves are costly to collect, so the meaningful question is how to sift through the most informative covariates to guide causal learning at minimal cost."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "Pros: the motivation for this article is relatively sound."
+            },
+            "weaknesses": {
+                "value": "Cons: This article comes under the umbrella of active learning, and I am cautious that more causal active learning (at the theoretical level as well as at the applied level) needs to be extensively and deeply contrasted in the work related to this article; secondly, I think that the methodology of this article is a bit oversimplified and that the theoretical level of the analyses is a bit thin"
+            },
+            "questions": {
+                "value": "Could you give me more theoretical guarantee about the performance of your new method?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper proposes a new problem of covariate selection, aiming to balance effect estimation accuracy and covariate measurement cost. This paper proposes a Partially Observed Markov decision process (POMDP)-based method to learn the dynamic sampling strategy. The experimental results show the effectiveness of the proposed method."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper defines a novel covariate selection problem, which aims to balance effect estimation accuracy and covariate measurement cost.\n1. The paper provides a POMDP-based solution, and the experiments verify its effectiveness."
+            },
+            "weaknesses": {
+                "value": "1. For the problem formulation in Eq. (3), directly minimizing $\\hat L_f$ might not be practical enough. For many applications, a hard constraint, i.e., $\\hat L_f < \\epsilon$ could be better.\n\n\n\nEven though the proposed method might be simple, I still appreciate the proposed new setting and problem formulation."
+            },
+            "questions": {
+                "value": "/"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

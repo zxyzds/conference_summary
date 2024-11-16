@@ -1,0 +1,167 @@
+{
+    "id": "8g9fs6mdEG",
+    "title": "Streaming Video Question-Answering with In-context Video KV-Cache Retrieval",
+    "abstract": "We propose ReKV, a novel, training-free approach that integrates seamlessly with existing Video Large Language Models (Video-LLMs) to enable efficient streaming video question-answering (StreamingVQA). Traditional VideoQA systems struggle with long videos, as they must process the entire video before responding to queries, and repeat this process for each new question. In contrast, our approach analyzes long videos in a streaming fashion, allowing for prompt responses as soon as user queries are received. Building on a common Video-LLM, we first incorporate a sliding-window attention mechanism, ensuring that input frames attend to a limited number of preceding frames, thereby reducing computational overhead. To prevent information loss, we store processed video key-value caches (KV-Caches) in RAM and disk, reloading them into GPU memory as needed. Additionally, we introduce a retrieval method that leverages an external retriever or the parameters within Video-LLMs to retrieve only query-relevant KV-Caches, ensuring both efficiency and accuracy in question answering. ReKV enables the separation of video analyzing and question-answering across different processes and GPUs, significantly enhancing the efficiency of StreamingVQA. Through comprehensive experimentation, we validate the efficacy and practicality of our approach, which significantly boosts efficiency and enhances applicability over existing VideoQA models.",
+    "keywords": [
+        "Video Understanding",
+        "Multimodal Large Language Models",
+        "Streaming Video Question-answering"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "We propose a training-free approach that integrates with existing Video-LLMs for streaming video question-answering.",
+    "creation_date": "2024-09-15",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=8g9fs6mdEG",
+    "pdf_link": "https://openreview.net/pdf?id=8g9fs6mdEG",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper presents video KV caches to make a streaming video question and answering video-LLMs in a training-free approach.\nWhile it uses a sliding-attention mechanism to aggregate short-term temporal context, video KV caches and the proposed retrieval method are introduced to long-term temporal context.\nThis method shows efficiency with LLaVA-OV in several benchmarks."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 1
+            },
+            "strengths": {
+                "value": "- This paper outperforms existing video-LLMs on long-form benchmarks.\n- This paper is easy to follow.\n- Ablation study shows the validity and impact of the retrieval methods."
+            },
+            "weaknesses": {
+                "value": "- My major concern is the novelty. Already, many LLM systems reduce the context-processing delay by using the KV cache of the context. This paper is also built on LLMs, while it is coupled with a video encoder. It's hard to find the specialty for the video streaming system. The causal attention and retrieval system with cosine similarity are also not new.\n\n- Implementation with only one design (LLaVA-OV) with different sizes is limited to prove the generality of the proposed method.\n\n- There are many recent methods to reduce the memory of KV caches such as adaptive KV cache (ICLR'24) and Keyformer (Muhammad Adnan et al., arxiv'24), compared to these methods, is the proposed attention and search method more effective?"
+            },
+            "questions": {
+                "value": "- How about GFLOPs on streaming VQA?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces ReKV, a novel, training-free approach designed to enhance existing Video-LLMs for StreamingVQA. Traditional VideoQA systems struggle with long videos due to the need to process entire videos before responding and repeating this process for each new question. ReKV addresses these challenges by storing processed video key-value caches (KV-Caches) in RAM or disk to prevent information loss. ReKV introduces retrieval methods\u2014both external (using models like CLIP) and internal (leveraging the Video-LLM's parameters)\u2014to fetch only query-relevant KV-Caches, enhancing efficiency and accuracy in question-answering.\nExperiments conducted on various benchmarks, including MLVU, QAEGO4DMC, EgoSchema, ActivityNet-QA, and StreamingVQA (RSV-Ego and RSV-Movie) datasets, demonstrate that ReKV improves VideoQA accuracy while maintaining stable inference latency and memory usage as the number of frames increases. The method enables real-time interaction and long-term context for StreamingVQA tasks."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "- The paper presents a novel and simple, training-free method that extends the capabilities of existing Video-LLMs for StreamingVQA. By integrating a sliding-window attention mechanism and efficient KV-Cache retrieval, ReKV addresses the challenges of processing long video streams in real-time.\n\n- The methodology is well-motivated and thoroughly explained. The paper clearly defines the StreamingVQA task, differentiates it from traditional OfflineVQA, and outlines the specific challenges involved. The proposed solutions are detailed and logically sound.\n\n-  The paper is well-organized and clearly written with figures to support the method explanation.\n\n- ReKV significantly improves efficiency and accuracy over existing VideoQA models on multiple benchmarks. The ability to handle long video streams in a streaming fashion has practical importance for real-world applications. The training-free nature of ReKV can potentially enhance its applicability across different Video-LLMs."
+            },
+            "weaknesses": {
+                "value": "Currently, a major limitation of the method is that the method is that it is only evaluated on LLaVA-OV models (0.5B and 7B). Although these models are strong baselines, the applicability of ReKV to other Video-LLMs is not demonstrated. Evaluating ReKV on a broader set of models would strengthen the claim of its versatility and general applicability.\nI\u2019ll be happy to increase my score if that limitation is addressed."
+            },
+            "questions": {
+                "value": "- Have the authors tested ReKV with other Video-LLMs besides LLaVA-OV? Demonstrating the integration and performance of ReKV with different architectures (e.g., VideoChatGPT\u2026) would confirm its general applicability and ease of integration.\n- Table 5 shows that the internal KV-Cache retrieval reduces computational overhead compared to external retrieval. However the \u201cinternal retrieval\u201d retrieves KV-Caches for each attention layer independently while it is only done once for the \u201cexternal retrieval\u201d. How do you explain that the internal is faster?\n\n\nMinor: \nIn practice, how does ReKV manage KV-Cache storage for extremely long video streams, such as surveillance footage that can run continuously for many hours or days? Are there mechanisms in place to prevent unsustainable increases in cache size, and how does this impact performance and resource requirements?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The authors present ReKV (Retrieve In-context Video KV-Cache) for streaming video question-answering. The authors incorporate a sliding-window attention mechanism on existing VideoLLMs, introduce a retrieval method that leverages an external retriever or the parameters within Video-LLMs to retrieve only queryrelevant KV-Caches. The authors evaluates the model on both long video QA and streaming videoqa."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The number of evaluation benchmark for the proposed method is adequate. \n\n2. The improvements against standard VideoLLMs are substantial."
+            },
+            "weaknesses": {
+                "value": "1. Lack of fair comparison against existing memory-based models (including VideoStreaming and Flash-VStream). It would be better if the author could provide results for ReKV and previous memory-based models under the same VideoLLM backbone to show the effectiveness of the proposed method, for both long video benchmarks and streaming video benchmarks. \n\n2. Missing related works. The authors should discuss the novel contribution compared to the paper VideoLLM-online[1], MC-ViT[2]. \n\n3. The \u201cExternal Video KV-Cache Retrieval\u201d is confusing, do the authors mean selecting the keyframes using the query information via the CLIP-based models (like a cross-modal matching)? This is already investigated by a number of works, including ATP [3], SeViLA[4] and so on.  It would be if for the authors to clarify how \"External Video KV-Cache Retrieval\" differs from or improves upon the keyframe selection methods. \n\n[1] VideoLLM-online: Online Video Large Language Model for Streaming Video\n\n[2] Memory Consolidation Enables Long-Context Video Understanding\n\n[3] Revisiting the \"Video\" in Video-Language Understanding\n\n[4] Self-Chained Image-Language Model for Video Localization and Question Answering"
+            },
+            "questions": {
+                "value": "All weakness, and:\n\n1. The citation format is inconsistent over the paper, the authors should unify this format. \n\n2. Since the model is claimed to integrate seamlessly with existing Video-LLMs, is it possible to apply to a bigger VideoLLM backbone, like around 70B scale? \n\n3. In Table 4,  for offline video question-answering, could the authors elaborate more on the baseline setting of the LLaVA-ov model, like frame numbers? Also, could the authors compare the efficiency of the proposed ReKV compared to the original LLaVA-ov model in the table?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper introduces ReKV, a novel, training-free approach designed to enhance the efficiency of Video Large Language Models (Video-LLMs) for streaming video question-answering (StreamingVQA). Unlike traditional VideoQA systems that process entire videos before answering queries, ReKV processes video streams in real-time, allowing for prompt responses. The method employs a sliding-window attention mechanism to reduce computational overhead and uses a KV-Cache system to store and retrieve relevant video information efficiently. The approach separates video encoding and question-answering into distinct processes, enhancing efficiency. The paper demonstrates the efficacy of ReKV through comprehensive experiments, showing improvements in accuracy, latency, and memory usage over existing models."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tEfficiency: The sliding-window attention mechanism and KV-Cache retrieval significantly reduce computational overhead and memory usage.\n2.\tReal-Time Processing: The method allows for real-time responses to queries, making it highly practical for applications like surveillance and live broadcasts.\n3.\tComprehensive Evaluation: The paper provides extensive experimental results, demonstrating the effectiveness of ReKV across multiple benchmarks.\n4.\tSeamless Integration: ReKV integrates seamlessly with existing Video-LLMs without requiring additional training, making it easy to adopt."
+            },
+            "weaknesses": {
+                "value": "1.\tWriting Quality: The organization of this paper could be improved. It is not appropriate to place ablation study before main experiments. Sec 2.1 Task definition and discussion should not be a part of Method. This part is too repetitive of the discussion in the introduction.\n2.\tCitation format: In Table 4 Line 391 there may be a misleading citation of Video-LLaVA-7B, pointing to the same reference of Video-ChatGPT-7B.\n3.\tLack explanation: The term \"oracle retrieval\" from Table 2 and Line 305 is difficult for readers to understand. How is the \u201crecall\u201d metric calculated? How can it be 100?"
+            },
+            "questions": {
+                "value": "1.\tGeneralizability of method: Since ReKV is a training-free method, can it be integrated with models other than LLaVA-OV? Are there any experimental results?\n2.\tScalability: How does ReKV scale with increasing video length and complexity? Are there any observed limitations when dealing with very high-resolution videos or videos with a high frame rate?\n3.\tImplementation details: What is the hyperparameters of external retrieval?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

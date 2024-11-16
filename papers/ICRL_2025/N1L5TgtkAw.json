@@ -1,0 +1,169 @@
+{
+    "id": "N1L5TgtkAw",
+    "title": "Multi-Draft Speculative Sampling: Canonical Architectures and Theoretical Limits",
+    "abstract": "We consider multi-draft speculative sampling, where the proposal sequences are sampled independently from different draft models.  At each step, a  token-level draft selection scheme takes a list of valid tokens as input and produces an output token whose distribution matches that of the target model. Previous works have demonstrated that the optimal scheme (which maximizes the probability of accepting one of the input tokens) can be cast as a solution to a linear program. In this work we show that the optimal scheme can be decomposed into a two-step solution: in the first step an importance sampling (IS) type scheme is used to select one intermediate token; in the second step (single-draft) speculative sampling is applied to generate the output token.  For the case of two identical draft models we further 1) establish a necessary and sufficient condition on the distributions of the target and draft models for the acceptance probability to equal one and 2) provide an explicit expression for the optimal acceptance probability.  Our theoretical analysis also motives a new class of token-level selection scheme based on weighted importance sampling. Our experimental results demonstrate consistent improvements in the achievable block efficiency and token rates over baseline schemes in a number of scenarios.",
+    "keywords": [
+        "speculative decoding",
+        "multi draft speculative sampling",
+        "large language models",
+        "weighted importance sampling",
+        "optimal transport"
+    ],
+    "primary_area": "foundation or frontier models, including LLMs",
+    "TLDR": "We show the optimal multi-draft speculative sampling can be decomposed into a two-step solution: importance sampling followed by (single-draft) speculative sampling, and provide an explicit expression for the optimal acceptance probability.",
+    "creation_date": "2024-09-27",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=N1L5TgtkAw",
+    "pdf_link": "https://openreview.net/pdf?id=N1L5TgtkAw",
+    "comments": [
+        {
+            "summary": {
+                "value": "Previous papers showed the optimality for a token selection rule when one token was chosen from the draft model. The authors do the same for the case when two tokens are selected. The authors decompose the problem of token selection into two steps --- first select one of K tokens using an importance weighted sampling technique, and then using the optimal single token selection proposed in previous papers. Finding the optimal token selection rule then reduces to finding the best importance weighted sampling technique.\n\nThe authors then show a necessary and sufficient condition for the existence of an optimal token selection rule where two tokens are selected from the draft. They then present an algorithm to solve the resulting linear program faster than the O(n^2) standard solution.\n\nThe authors compare the Importance sampling algorithm with SpecInfer on various tasks, and show that IS comes closer to optimal than SpecInfer."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "The results in the paper are quite original and significant, to my knowledge, which is a bit limited. The experiments show that the proposed algorithm works well in practice."
+            },
+            "weaknesses": {
+                "value": "I would have liked the presentation in Section 4 to be a little clearer - request you to write out the full linear program, and then explain the truncation a bit more - what is the truncated program computing? \n\nIn the experiment section, please include results for Temperature < 1, which is much more common in practice."
+            },
+            "questions": {
+                "value": "I would like to see a comparison to the results in https://openreview.net/forum?id=9KxnxWOBA5"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper studies the problem of multi-draft speculative sampling and makes new observations and provides a new algorithm. Of the new observations, Theorems 2 and 3 standout which characterize the optimal acceptance rate for two drafts and further show when the acceptance rate is one. The new algorithm exploits certain structure in the optimal transport problem and provides a clever approximate solution."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 4
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "The paper is well written and easy to follow. Theorems 2 and 3 are novel and the experimental results are convincing."
+            },
+            "weaknesses": {
+                "value": "See questions section below."
+            },
+            "questions": {
+                "value": "- In Figure 3, experiments are conducted for draft temperatures > 1.0. However typically, target model temperature is often set to 1.0 or less than 1.0. Given this, I was expecting draft temperatures also to be <= 1.0. I was wondering how these draft temperatures were chosen?\n\n- Would it be possible to say how the gap between the proposed approach and previous approaches vary as the target model temperature varies from 0.0 to 1.0?\n\n- Theorems 2  and 3 provide a nice characterization of acceptance probability. However, given two distributions p, q, evaluating the condition seems to require 2^{vocabulary size} number of computations. Is there a faster way to evaluate these quantities?\n\n- There are some approximate ways to solve the optimal transport by Sinkhorn methods e.g., https://amsword.medium.com/a-simple-introduction-on-sinkhorn-distances-d01a4ef4f085. I was wondering if these ideas are applicable here?\n\n- Architectures in ML, typically refer to neural architectures. Given several works which propose different drafting methods for speculative decoding, I was thinking \"canonical architectures\" refers to some new drafters. It might be good to clarify this distinction early on in the paper.\n\n- Can you please expand on what token rate means? Is it the number of tokens / second?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the optimal token-level draft selection for a speculative sampling. In particular, speculative sampling is a method for accelerating autoregressive sampling by using smaller \"draft\" models to generate candidate tokens and a larger model to determine which tokens to accept. The key problem studied in this paper is how to propose tokens to optimize the probability they will be accepted. Importantly, increasing the acceptance probability leads to less calls to the larger model which in theory could increase the tokens per seconds. The key theorem of this paper is to characterize the necessary and sufficient conditions when two tokens are generated by the draft model. Interestingly, unlike the one token case, this paper shows that one can reach probability 1 acceptance even if the draft and large models have different token distributions. Finally, the paper ends with (i) heuristics to practically leverage the proposed sampling scheme, e.g., truncating the token distributions (ii) a heuristic scheme for leveraging the proposed importance sampling to larger sequences and (iii) empirical evidence of the effectiveness of the approach for K=2 and larger."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 4
+            },
+            "strengths": {
+                "value": "This paper provides a strong theoretical contribution to a very important topic. Speculative decoding serves as a refreshing and novel direction for accelerating LLM inference. This work puts the multi-draft model selection problem on better theoretical footing.\n\nThe results seem to be sound from my reading and no obvious errors were found."
+            },
+            "weaknesses": {
+                "value": "By and large the biggest complaint I have with this draft is the background exposition. Prior to reading this I was not familiar with speculative decoding. While I understand space is tight, many key concepts such as the role and form of accepting probability in the speculative decoder were not clearly explained. This is a *key* aspect of the work, and the draft would strongly benefit for giving it more treatment.\n\nTo be honest, I couldn't understand anything the first time I read the paper and had to go back to the original speculative sampling paper [1] before I could piece things together.\n\nNevertheless, after reading, I now understand that this paper is targeting the acceptance criteria as it determines the number of candidate tokens used via a Bernoulli like-process. \n\nThis plus the strong theoretical analysis are enough for me to lean towards acceptance.\n\n[1]Accelerating Large Language Model Decoding with Speculative Sampling,  https://arxiv.org/abs/2302.01318"
+            },
+            "questions": {
+                "value": "- Could you give some intuition about the conjecture in remark 2. It says that the exponent over the sum of the p-weights should match K (the number of tokens to generate per round). It's not at all clear to me why these should be so tightly coupled and why other lower order terms wouldn't appear."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 8
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the problem of multi-draft speculative sampling, where the optimal scheme can be cast as a solution to a linear program. The key idea behind this work is that this optimal scheme can be decomposed into a two-stage solution. Based on this idea, the authors provide some theoretical findings towards the two-stage solution. Motivated by the analysis, the authors propose a new class of token-level selection scheme based on weighted importance sampling, which shows consistent improvement in various scenarios."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1. The introduction of the two-step scheme are simple and intuitive, making it easy to understand.\n2. The authors provide a solid theoretical analysis for token-level optimal draft selection.\n3. The truncated LP algorithm is novel to the field of speculative decoding and theoretically better than SpecTr.\n4. Extensive experiments, including different datasets, different decoding temperature and different draft models demonstrate the effective of proposed method."
+            },
+            "weaknesses": {
+                "value": "1. I think the contributions of this work is a little weak. Given that speculative decoding shows poor performance with batch size larger than 1, the multi-draft sampling is usually not an appropriate option for speculative decoding. I think the authors should emphasize the contributions to real-world speculative decoding applications. \n2. While I appreciate that the authors add some examples for better explanation, I think the authors should add a clear notation section with distinct description.\n3. For the truncated LP draft selection algorithm, there exists an operation of sorting, which takes a complexity of $O(n\\log n)$ and may influence the final speedup. The authors should report its real-world time consuming and compare to vanilla multi-draft selection, especially the empirical results on models with large vocab size, e.g., Llama 3.1 with vocab size 128k. Besides, for multi-draft scenarios with $K > 2$, the authors propose a multi-stage manner, which may affect the final speedup as well.\n4.  I think the authors should conduct experiments on more benchmarks (e.g. HumanEval [1], GSM8K [2] and MT-bench [3]) for a fair comparison. Besides, the authors should report the real-world speedup to demonstrate the effectiveness of proposed method.\n\nI know that conducting a wide range of evaluation experiments is costly and time consuming, and I will increase my score if the authors clearly address my concerns.\n\n[1] Chen, Mark, et al. \"Evaluating large language models trained on code.\" *arXiv preprint arXiv:2107.03374* (2021).\n\n[2] Cobbe, Karl, et al. \"Training verifiers to solve math word problems, 2021.\" *URL https://arxiv. org/abs/2110.14168* (2021).\n\n[3] Zheng, Lianmin, et al. \"Judging llm-as-a-judge with mt-bench and chatbot arena.\" *Advances in Neural Information Processing Systems* 36 (2023): 46595-46623."
+            },
+            "questions": {
+                "value": "1. Can proposed truncated LP combined with SOTA speculative decoding (e.g. Medusa [4] and Eagle [5]) methods for better performance?\n2. Why the authors do not discuss and compare a multi-draft selection method RRS [6]?\n3. Could you please discuss the limitations of this paper?\n\n[4] Cai, Tianle, et al. \"Medusa: Simple llm inference acceleration framework with multiple decoding heads.\" *arXiv preprint arXiv:2401.10774* (2024).\n\n[5] Li, Yuhui, et al. \"Eagle: Speculative sampling requires rethinking feature uncertainty.\" *arXiv preprint arXiv:2401.15077* (2024).\n\n[6] Jeon, Wonseok, et al. \"Recursive speculative decoding: Accelerating llm inference via sampling without replacement.\" arXiv preprint arXiv:2402.14160 (2024)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

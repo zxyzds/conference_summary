@@ -1,0 +1,199 @@
+{
+    "id": "DhH3LbA6F6",
+    "title": "Reinforcement learning with combinatorial actions for coupled restless bandits",
+    "abstract": "Reinforcement learning (RL) has increasingly been applied to solve real-world planning problems, with progress in handling large state spaces and time horizons. However, a key bottleneck in many domains is that RL methods cannot accommodate large, combinatorially structured action spaces. In such settings, even representing the set of feasible actions at a single step may require a complex discrete optimization formulation. We leverage recent advances in embedding trained neural networks into optimization problems to propose SEQUOIA, an RL algorithm that directly optimizes for long-term reward over the feasible action space. Our approach embeds a Q-network into a mixed-integer program to select a combinatorial action in each timestep. Here, we focus on planning over restless bandits, a class of planning problems which capture many real-world examples of sequential decision making. We introduce coRMAB, a broader class of restless bandits with combinatorial actions that cannot be decoupled across the arms of the restless bandit, requiring direct solving over the joint, exponentially large action space. We empirically validate SEQUOIA on four novel restless bandit problems with combinatorial constraints: multiple interventions, path constraints, bipartite matching, and capacity constraints. Our approach significantly outperforms existing methods\u2014which cannot address sequential planning and combinatorial selection simultaneously\u2014by an average of 28.3% on these difficult instances.",
+    "keywords": [
+        "reinforcement learning",
+        "combinatorial optimization",
+        "restless bandits",
+        "mixed-integer programming"
+    ],
+    "primary_area": "reinforcement learning",
+    "TLDR": "We enable reinforcement learning with per-timestep combinatorial (NP-hard) constraints on actions by combining mixed-integer programming with DQN.",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=DhH3LbA6F6",
+    "pdf_link": "https://openreview.net/pdf?id=DhH3LbA6F6",
+    "comments": [
+        {
+            "comment": {
+                "value": "Thank you for your positive review! We are glad that you see our paper is well-motivated, and that our approach of solving the exact optimization problem is better than an approximate approach.\n\n## Response to Weaknesses/Questions\n\n1. **Real data experiments:** We agree that it would be preferable to use real data. However, we do not know of publicly available data sources for a restless bandit setting. We hope this changes in the near future!\n\n2. **Eq. (2):** There is no $s\u2019$ in the RHS because the equation represents the probability of transitioning to a higher-reward state \u2014 we have clarified this in the paper.\n\n3. **Transition probability formulation:** Yes, the transition dynamics for these settings are specified in Appendix B.2.\n\n4. **Why 4 settings:** We introduced 4 new formulations of coRMAB that we think are practical representations of many real-world settings (with multiple types actions and with path, capacity, schedule constraints). \n\nOf course, our approach is generalizable to any deep RL setting where the actions (either continuous or binary) have constraints that can be formulated as a mixed-integer program. This of course generalizes to a very wide range of problems.\n\n5. **Iterative approach:** Thank you for catching this typo! This was supposed to read \u201cIterative DQN\u201d and \u201cSEQUOIA\u201d, not referring to Myopic. We have corrected this."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your positive review and suggestions! We are glad you find our problem formulation interesting and realistic to the real-world, and our solution practical for addressing the computational intensity of deep RL.\n\nWe will update the paper to reflect the following response.\n\n## Response to Questions\n\n1. **Handling standard restless bandits:** Indeed, our formulation of coRMAB generalizes the standard RMAB. We mention this in lines 175-178, 944, and 971-973 for our formulation of different settings. \n\n2. **Comparison to Restless UCB:** Restless UCB focuses on a learning problem with unknown transition dynamics, which is a different setting. We agree they make a valuable contribution for learning in RMABs. However, their experiments only scale to $N=5$ arms and requires over $T=50,000$ timesteps to learn \u2014 clearly, that is not practical for real-world problem settings. \n\n3. **Comparison to other algorithms:** Regret would be a useful metric to compare if we are considering a learning setting with unknown transition dynamics. However, here instead we focus on planning with known transition dynamics, where the challenge is overcoming computational complexity, not unknown dynamics. \n\n4. **Comparison to the optimal policy:** Please see response to Question #3 for why we cannot consider regret.\n\n5. **Scalability for larger neural networks:** Yes, the complexity does grow as the neural network for DQN grows; we say in lines 291-292 that the MILP requires a linear $O(DP)$ binary variables and constraints where $D$ is the number of hidden layers and $P$ is the number of neurons per layer.\n\n6. **Effect of hyperparameter tuning:** Our results are shown without hyperparameter tuning. We expect that the empirical performance could improve further with more tuning.\n\n7. **Comparison to domain-specific solutions:** There are not existing domain-specific solutions for the sequential, combinatorial-action problem we consider, so we cannot compare to them. We introduce the coRMAB problem in this paper.\n\n## Response to Weaknesses\n\n1. **Theoretical guarantees:** Please see response to Question #3 for why we cannot evaluate regret. \n\nFor other converge bounds, note that the vast majority of deep RL approaches focus on empirical performance, not on theoretical guarantees. For example, DQN (the deep RL algorithm we use) was introduced in 2015, but the first attempt for a theoretical analysis of DQN was not done until 2020 [5] \u2014 and this paper makes extremely simplifying assumptions, such as assuming the data-gathering policy has good coverage (thus requiring minimal exploration) and that the trained neural network is sparse (i.e., mostly 0s). \n\nOur focus is on practical restless combinatorial bandit problems. We have therefore proposed realistic problems and realistic generation schemes.\n\n2. **Experimental design:** Please see response to Question #7\n\n3. **Assumption of an offline planning setting:** Restless multi-armed bandits are designed as planning problems; see Whittle [1988] and Weber and Weiss [1990], and restless bandits that assume known dynamics have been applied to several real-world settings; see Raman et al. [2024] for food rescue and Mate et al. [2022] for public health in India.\n\n### References\n> Mate, et al. Field study in deploying restless multi-armed bandits: Assisting non-profits in improving maternal and child health. AAAI 2022\n>\n> Raman, Shi, and Fang. Global rewards in restless multi-armed bandits. NeurIPS 2024\n> \n> Whittle. Restless bandits: Activity allocation in a changing world. Journal of Applied Probability 1988\n>\n> Weber and Weiss. On an index policy for restless bandits. Journal of Applied Probability 1990"
+            }
+        },
+        {
+            "title": {
+                "value": "Response pt 2"
+            },
+            "comment": {
+                "value": "## Response to Weaknesses\n\n1. **Clarifications on problem formulation:** (a) Indeed, this is an infinite-horizon setting; the horizon $H$ is used as the number of timesteps in evaluation. We clarified in the updated submission. (b) By \u201cper-timestep\u201d in l.99, we simply meant that the action space is combinatorial. We agree that SEQUOIA can handle time-varying action spaces by appropriately restricting the available actions per timestep in the MIP model. \n\n2. **Transition and rewards assumed to be known:** Please see response to Question #1\n\n3. **Comparison to standard DQN and combinatorial action space:** Precisely as you say, with standard DQN the output size of the NN scales with the size of the action space, which is exponentially large. That is the key contribution of our paper \u2014 to directly solve using an NN whose output size is only the dimensionality of the action space. \n\n4. **Cost of solving MILP in every timestep / scalability:** Selecting an action from a constrained combinatorial set necessitates some form of combinatorial optimization. MILP solving is one generic way of doing so as it can simultaneously represent the trained ReLU Q-network as well as the combinatorial constraints. Optimizing (1) a deep network objective function with (2) binary variables and (3) combinatorial constraints is an extremely challenging problem that does not admit gradient-based methods (e.g., \u00e0 la projected gradient descent for adversarial attacks) or polynomial-time algorithms. In practice, we impose a time limit to the MILP solver and modify the solver\u2019s parameter settings to prioritize finding feasible solutions quickly over proving global optimality.\n\n5. **Q-learning for continuous action spaces:** Q-learning has indeed been used for continuous action spaces, but standard Q-learning (or any existing modifications) cannot solve a policy that says: \u201cFind me the best policy that solves an assignment problem (an NP-hard discrete optimization problem) at every timestep.\u201d This is what our work achieves here, to integrate MIP solving into deep RL.\n\n6. **Elaboration on challenges embedding a NN into a MIP:** Others have shown that neural networks can be embedded into a MIP, but our paper is the first to integrate **deep RL** (not just deep learning) with MIP solving to enable combinatorial action constraints. Please see our response to Weakness #4 for more detail on the technical challenges.\n\n\n### References\n> Mate, et al. Field study in deploying restless multi-armed bandits: Assisting non-profits in improving maternal and child health. AAAI 2022\n>\n> Raman, Shi, and Fang. Global rewards in restless multi-armed bandits. NeurIPS 2024\n>\n> Whittle. Restless bandits: Activity allocation in a changing world. Journal of Applied Probability 1988\n> Weber and Weiss. On an index policy for restless bandits. Journal of Applied Probability 1990"
+            }
+        },
+        {
+            "title": {
+                "value": "Response pt 1"
+            },
+            "comment": {
+                "value": "Thank you for your review and suggestions! We are happy that you find our work to be compelling and well-presented. We will update the paper to reflect the following response.\n\n## Response to Main Questions\n1. **Assumption of known dynamics:** We focus on RL for planning, so we do assume known dynamics and rewards. Restless multi-armed bandits are designed as planning problems; see Whittle [1988] and Weber and Weiss [1990], and restless bandits that assume known dynamics have been applied to several real-world settings; see Raman et al. [2024] for food rescue and Mate et al. [2022] for public health in India. \n\n2. **Running time Table 3:** In this table we fix the number of workers to $N=10$ (the middle setting in Figure 3).\n\n3. **Tractability in combinatorial action space (step 9):** Because our action spaces are combinatorial, a DQN-type network with as many outputs as the number of actions is not feasible. In other words, one cannot simply input the state vector into a network and read out Q(s,a) for all possible actions $a$ (top-left in Figure 2). To get around this, we use a network which takes as input a pair $(s,a)$ and estimates $Q(s,a)$ only for that pair. It remains to find the action $a$ which maximizes the output of this network for a fixed state s; this is what MILP solving does.\n\n4. **Size of the combinatorial action sets, and why is it prohibitive for RL:** For the experiments, with the largest setting ($J=100$ arms and $N=20$ workers) the number of possible actions is $\\approx 5.3 \\times 10^{20}$; this is clearly prohibitive for existing RL methods.\n\n5. **Need for diverse actions:** We do need to explore a number of diverse actions, but as we discuss in lines 346\u2013350, we are able to efficiently do so in this setting.\n\n6. **Why DQN not DDPG:** Given that we have to solve a MIP to evaluate our policy, we chose to use DQN as it is an effective and simple RL approach that requires only a Q-network, whereas DDPG requires both an actor and a critic. \n\n7. **Comparison to approach in l.494-498:** Tkachuk et al. (2023) assume linear Q-realizability (Assumption 1 in their paper), which requires that the true $Q(s,a)$ can be approximated by a linear function in a feature vector representing the state-action pair $(s,a)$. This is a restrictive assumption which we do not make. Additionally, they assume that the actions are continuous rather than discrete, which they clarify: \u201c\u200b\u200b\u200b\u200bCombined with the linear $Q \\pi$-realizability (Assumption 1), the greedy oracle amounts to solving a linear optimization over the action set $A$.\u2019\u2019 This is a much simpler setting than ours that is amenable to theoretical analysis.\n\n## Response to Minor Questions\n\n1. **Need for PWL approximation of sigmoid:** A mixed-integer linear program cannot directly model a continuous non-linear sigmoid function. A piecewise-linear approximation is MILP-representable.\n\n2. **Self-loops in path-constrained coRMAB (l. 196):** The self-loops ensure that all paths of total length $\\leq B$ are valid. If the budget is $B=10$, the reward-maximizing path might be of length $9$ \u2014 but without self-loops, a path of length $10$ might not be feasible (because we would have to go to another node and come back, requiring 2 extra edges)."
+            }
+        },
+        {
+            "comment": {
+                "value": "Thank you for your review and suggestions! We're happy that you find the applications meaningful and that our method is practical and has potential for impact.\n\nWe will update the paper to reflect the following response.\n\n## Response to your question (performance during initial training):\nThank you for raising this concern about deployment in high-stakes environments. As discussed in Section 2, the coRMAB setting assumes that the environment is known, i.e., the transition probabilities and reward functions have already been derived. Offline planning is the standard assumption for restless bandits, and has been deployed for important real-world settings including public health in India [1] and clinical trial design [2]. In [1], they build the offline simulator (of the probability of a patient becoming engaged in a health program following a messaging intervention) using domain experts and historical data. As such, training the Q-network using Algorithm 1 is done in simulation, offline. Once satisfactory performance is achieved, the policy can be deployed in the real world. \n\nThis offline planning approach is discussed in Section 4.1 \u201cLearning in the Real World\u201d of [3], as a way of addressing online RL\u2019s extensive data needs. Should SEQUOIA be applied to an environment with unknown dynamics, we recommend building a model of the environment dynamics first as discussed in [4], and then applying our Algorithm 1 before finally deploying the Q-network.\n\n## Response to the Weaknesses\n\n1. **The four coRMAB instantiations:** We provide precise formulations of the goals and constraints of all 4 coRMAB problem settings we introduce in full mathematical detail in Appendix C. However, we disagree that these instantiations are all interdependent. For example, for the capacity-constrained setting, each worker $j$ can act on multiple arms (up to their budget $b_j$), but in the schedule-constrained setting, each worker can only act on a single arm \u2014 and based on incompatible availability, some workers may not be assigned at all. Whereas for the path-constrained setting, the \u201cnumber of workers\u201d is not a fixed number $N$, but rather corresponds to the total length of a feasible path. Separately, in the multiple interventions setting, the impact of multiple workers acting on the same arm is cumulative; that is not the case in any of the other settings (i.e., multiple workers acting on arm $j$ is no better than one worker acting on arm $j$).\n\n2. **Theoretical guarantees:** The vast majority of deep RL approaches focus on empirical performance, rather than on theoretical guarantees. For example, DQN (the deep RL algorithm we use) was introduced in 2015, but the first attempt for a theoretical analysis of DQN was not done until 2020 [5] \u2014 and this paper has to make extremely simplifying assumptions to get convergence guarantees, such as assuming the data-gathering policy has good coverage (thus requiring minimal exploration) and that the trained neural network is sparse (i.e., mostly 0s). Other key deep RL algorithms, such as DDPG, PPO, or RAINBOW, do not come with theoretical guarantees.\n\nAs you highlight, our focus is on practical restless combinatorial bandit problems. We have therefore proposed realistic problems and realistic generation schemes.\n\n3. **Computational runtime:** As we mentioned above, SEQUOIA is an offline planning approach. As such, a few hours of training can be seen as a reasonable upfront cost before deployment.\n\n> [1] Mate, Madaan, Taneja, et al. \u201cField study in deploying restless multi- armed bandits: Assisting non-profits in improving maternal and child health.\u201d In AAAI 2022.\n>\n> [2] Villar, Bowden, Wason. \u201cMulti-armed bandit models for the optimal design of clinical trials: benefits and challenges.\u201d Statistical Science: A Review Journal of the Institute of Mathematical Statistics 2015.\n>\n> [3] Whittlestone, Arulkumaran, and Crosby. \"The societal implications of deep reinforcement learning.\" JAIR 2021.\n>\n> [4] Moerland, et al. \"Model-based reinforcement learning: A survey.\" Foundations and Trends in Machine Learning 2023.\n>\n> [5] Fan, et al. \"A theoretical analysis of deep Q-learning.\" Learning for dynamics and control. PMLR, 2020."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces a novel reinforcement learning framework for a challenging setting known as combinatorial restless multi-armed bandits (CoRMAB). In these problems, the vast combinatorial action space presents a key bottleneck, especially for real-world applications like public health. The authors address this by proposing SEQUOIA, a method that combines a Q-network with mixed-integer linear programming (MILP) solvers. Four distinct constraint types (such as capacity and matching constraints) are applied to CoRMAB instances to explore the method's performance. Experimental results show that SEQUOIA significantly outperforms existing baselines across these settings."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The paper highlights meaningful applications, particularly in public health, where combinatorial decision-making is crucial. By focusing on real-world-inspired constraints, the paper emphasizes the practical utility of SEQUOIA.\n- The experimental results suggest that SEQUOIA has a strong advantage over other methods, particularly in scenarios that require both sequential planning and combinatorial action selection. This shows potential for the method to be impactful in complex decision-making tasks."
+            },
+            "weaknesses": {
+                "value": "- The four specific CoRMAB instantiations appear somewhat interdependent. For instance, the first instance involving multiple interventions seems to implicitly contain elements of the second (path constraints) and third (capacity constraints). This overlap could obscure the unique contributions of each instance, and the presentation of these distinctions would benefit from clarification. Additionally, a more precise formulation of the optimization goals and constraints in each problem setting could strengthen the paper.\n- Although the SEQUOIA framework is innovative in combining Q-networks with MILP, the method lacks theoretical guarantees, which may reduce its general appeal in theoretical RL circles. The paper leans toward practical applications without rigorously addressing theoretical underpinnings. Given that the CoRMAB problems are motivated by real-world scenarios, it would be beneficial for the authors to demonstrate how SEQUOIA could operate on actual datasets or real-world instances.\n- The method's training demands significant computational resources, as evidenced by Table 3, where training times extend to hours. For online applications, this can be a prohibitive factor. The paper would benefit from a discussion on optimizing computational efficiency or alternative approaches to reduce overhead."
+            },
+            "questions": {
+                "value": "- Since SEQUOIA\u2019s primary application appears to be in public health, there are concerns about performance during the initial training phase. If the network\u2019s early-stage predictions are suboptimal, this could lead to unacceptable decisions in real-world use. How do the authors envision mitigating this issue in practice, particularly in high-stakes domains like public health where early errors could have critical impacts?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper addresses a RL problem setting where the action space is combinatorial and discrete, I.e. in which actions are coupled with combinatorial constraints. This work uses the formalism of restless multi-armed bandits to tackle the problem and consider the setting where arms are coupled which leads to a large action space using 4 different examples: multiple interventions, path constraints, bipartite matching and capacity constraints. The proposed approach relies on embedding a Q-network into a mixed integer program fro combinatorial action selection at each time step. The proposed RL algorithm SEQUOIA optimizes for long-term reward over the action space allows to perform sequential planning for a combinatorial action space setting. The performance of the algorithm shows empirical improvement over existing approaches."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The 4 example settings provided are compelling for motivating the work. I find the public healthcare example interesting and it is nicely used as a running example. I believe these sequential planning problems are important problems to solve in practice. \n- Writing is clear overall and the presentation with the figures is nice."
+            },
+            "weaknesses": {
+                "value": "- The mathematical formulation of the problem is a bit confusing and could be more rigorous: \n(a) Is it an infinite horizon problem (since you seem to be using discounting)? \n(b) l. 99: you mention that your approach enables per-timestep combinatorial action spaces. Where does this flexibility show up in the problem formulation in sec. 2.2. The set C is a fixed combinatorial action vector set. I do not see any time dependence taken into account in the formulation, C also seems to be fixed in Algorithm 1. Usually in RL, action sets are fixed. In your setting, it might be useful to consider time varying ones as the actions that might be available might change because of the coupling of the actions, for instance reducing over times due to the previous actions chosen that limit the remaining possible choices. \n\n- Transition dynamics and rewards are assumed to be known a priori (l. 104). This might be quite limiting regarding the health care motivating example. \n\n- About the comparison to standard DQN (Fig. 2 + l. 243-247): in standard DQN the output size of NN scales with the size of the action space. In your approach, now the input size has to be of the size of the action space (which is exponentially large) to be able to encode any action input from the large combinatorial space you consider. Any comment about this? Why is it more tractable as for the main scaling challenge you want to overcome? \n\n- As discussed in l. 319-323: having to solve an MILP for each sample and for each time step seems extremely expensive. \n\n- Q learning has even been used for continuous actions spaces via appropriate discretization of the action space.  I believe stronger and more convincing arguments have to be made here to support the claims of the paper since this is a crucial point given the motivation of the paper. Could you please elaborate and clarify better what makes your approach scalable compared to prior existing algorithms applied to your combinatorial action space setting? See follow-up question below. \n\n- As discussed in the paper, the idea of embedding a neural network into a mixed-integer problem is not new. Could you elaborate more on the technical challenges faced when following this approach and why does it address the scalability challenge in your problem?\n\nMinor: l. 1028: seems empty for \u2018Multiple interventions\u2019, any missing description here?"
+            },
+            "questions": {
+                "value": "**Main questions:**\n- How crucial is the assumption of known dynamics and rewards for your approach?  \n- Running time: Table 3 in the appendix shows the total running time depending on the number of arms. What about the number of workers? Is it fixed in this table? \n- Why is step 9 involving an argmax over actions more tractable than given the combinatorial nature of the action space? This is an important point for scalability that is not very clear to me from the presentation. \n- What\u2019s the size of the combinatorial action set in the experiments for each of the 4 examples? Why is it prohibitive for existing RL methods? \n- l. 345 \u2018We introduce diversity into the sampled actions with additional random perturbations\u2019. It seems that there is no way to bypass the need to see a sufficient number of diverse actions. I guess this is also an exploration requirement to solve the RL task. If you cannot explore a large number of actions, I guess there is little that can be said about the quality of the obtained policy. \n- Can you further justify the use of DQN? I understand that this is probably the most famous one but since you consider a known transition model, would DDPG make also sense to be tested? \n- Why don\u2019t you compare to the approach you mention in l. 494-498? \n\n\n**Minor questions:**\n- Why do you need a piecewise linear approximation of the sigmoid link function (l. 181) which is known and can be computed?  \n- Any interpretation for including self-loops (l. 196)?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The work introduces a new class of multi armed bandits problem, coRMAB which generalizes Restless bandits problem where the arm action cannot be decoupled because of the constraint of the problem that is common in real world scenarios. The authors also briefly go through the four scenarios with valid examples and propose an algorithm SEQUOIA based on deep RL algorithm \u2013 Q learning & mathematical optimization to optimize long-term reward. The authors also highlight the issue with very large action space and showcase the ability of SEQUOIA to perform on those scenarios with experiments comparing them with some of the other algorithms that can handle this problem."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "1.\tThe problem setting and formulation are interesting. The formulations discussed in this paper is a natural and general extension of restless bandits. Most of the real-world scenarios often fall under one of the four scenarios highlighted by the authors in this work. \n\n2.\tDeep Q learning type algorithms are generally computationally heavy, and it only grows with the action and state space. This work addresses this issue and takes this into account in their problem formulation and algorithm.  \n\n3.\tA key challenge in using deep learning within a RL problem or any problem in general is the need for optimizing the network architecture and resource for hyper-parameter tunning and the algorithm seems to work with minimal alterations across domains."
+            },
+            "weaknesses": {
+                "value": "1.\tThe work highlights the empirical results of the proposed algorithm SEQUOIA but it did not have any theoretical guarantees on measures like Regret or convergence bounds. Having them would have greatly benefitted the solidarity of the developed algorithm.\n\n2.\tThe major results shown in this work is about the experiments and how SEQUOIA, the developed algorithm performs on four scenarios of the problem formulation and competes with some of the other algorithms that can be modified to work on coRMAB, however a detailed experimental design could be carried out to further showcase the benefits and limitations of the proposed algorithm and how they perform in different regimes on different transition dynamics. \n\n3.\tThe work also assumes that it is an offline planning setting, i.e., the transition dynamics are known in advanced which can be a limiting factor on many practical settings where the transition dynamics are harder to compute. Most of the real-world setting involves an agent interacting with an environment to understand them."
+            },
+            "questions": {
+                "value": "1.\tThe problem of coRMAB extends the problem of restless MAB to handle actions that cannot be decoupled. If we were to set the no of actions (N) equal to the no. of arms (J)  and using a simple budget constraint where \\sum j \\in [J] a_j <= B and also making each action only connect to its corres. arm, we end up in restless MAB setting. In that case, How does SEQUOIA handle the Restless bandit problem ?\n\n2.\tFor the case of standard restless bandit problem, how does SEQUOIA competes with some of the existing algorithm in the space of restless bandit problem like restless-UCB [Reference B], which tends to have a sublinear Regret bound with good empirical performance on real-world data too. ? \n\n3.\tAlso, a detailed comparison of the algorithm with other algorithms or approach could help better understand the performance of the developed algorithm. For instance, a comparison of SEQUOIA with other algorithm/ approach on the basis of either Regret/ Normalized Average reward would better help understand the performance gain of the proposed algorithm. ?\n\n4.\tThe metrics used in this paper is normalized average reward. Given that we know the transition dynamics, does comparison against the optimal best policy performance be a better metrics like Regret ? Or Other convergence guarantees like one shown in this paper [Reference A] be better fitted to potentially quantify the significance of this work ?\n\n\n5.\tAlso, solving the large action space problem is computationally hard, however how does the complexity grows if we were to increase the neural network size for a more complex system ?\n\n6.\tAlso, the SEQUOIA uses the same network architecture across all the four constraint type proposed in the paper, Is it optimal or does tunning the hyper-parameter for each constraint provide better performance ?\n\n7.\tHow does SEQUOIA\u2019s result compare to existing domain specific solution for the four-constraint type setting discussed. This would better help SEQUOIA solidify its performance gain with better clarity ? \n\nReference:\nA.\tGuojun Xiong, Jian Li, Finite-Time Analysis of Whittle Index based Q-Learning for Restless Multi-Armed Bandits with Neural Network Function Approximation, Advances in Neural Information Processing Systems 36 (NeurIPS 2023) \nB.\tSiwei Wang, Longbo Huang, John C. S. Lui, Restless-UCB, an efficient and low-complexity algorithm for online restless bandits, Advances in Neural Information Processing Systems (NeurIPS 2020)"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper propose a more general restless bandit model---coRMAB, in which the action space for different arms could also be correlated (e.g., one action can influence multiple arms). In this model, the authors adapt the idea of DQN, and utilize the fact that solving integer programming with a feed-forward neural network programming representation is efficient. They propose the SEQUOIA algorithm, and show that it achieves good performances in experiments."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The problem setting is well-motivated.\n\n- I quite like the idea that instead of solving the exact combinatorial optimization, we choose to solve the optimization based on our estimation as an approximate approach. \n\n- From experiments, this idea seems work well."
+            },
+            "weaknesses": {
+                "value": "- There are no real data experiments. For a paper that does not contain too much theories, I believe real data experiments are necessary. \n\n- There are some parts that are not very clear to me, e.g., \n\nIn Eq. (2), why there is no $s'$ in RHS?\n\nFor \"Schedule-constrained\", \"Capacity-constrained\", and \"Path-constrained\", are there any formulation about the transitions?\n\nWhy we only consider these four kinds of cdRMAB? I think your algorithm (or solving the MILP) is not restricted to these four settings, right? \n\nIn line 431-432, it is said that \"For example the ITERATIVE myopic approach performs on average 14.6% lower than optimal MYOPIC\". But I do not see that? In Figure 3(b) and 3(c), they are very close, and in Figure 3(a), it seems that ITER.MYOPIC is higher than MYOPIC?"
+            },
+            "questions": {
+                "value": "See \"Weaknesses\" for details."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

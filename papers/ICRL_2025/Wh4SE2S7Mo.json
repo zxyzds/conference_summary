@@ -1,0 +1,170 @@
+{
+    "id": "Wh4SE2S7Mo",
+    "title": "Three Mechanisms of Feature Learning in a Linear Network",
+    "abstract": "Understanding the dynamics of neural networks in different width regimes is crucial for improving their training and performance. We present an exact solution for the learning dynamics of a one-hidden-layer linear network, with one-dimensional data, across any finite width, uniquely exhibiting both kernel and feature learning phases. This study marks a technical advancement by enabling the analysis of the training trajectory from any initialization and a detailed phase diagram under varying common hyperparameters such as width, layer-wise learning rates, and scales of output and initialization. We identify three novel prototype mechanisms specific to the feature learning regime: (1) learning by alignment, (2) learning by disalignment, and (3) learning by rescaling, which contrast starkly with the dynamics observed in the kernel regime. Our theoretical findings are substantiated with empirical evidence showing that these mechanisms also manifest in deep nonlinear networks handling real-world tasks, enhancing our understanding of neural network training dynamics and guiding the design of more effective learning strategies.",
+    "keywords": [
+        "solvable model",
+        "feature learning",
+        "neural tangent kernel"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "",
+    "creation_date": "2024-09-26",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=Wh4SE2S7Mo",
+    "pdf_link": "https://openreview.net/pdf?id=Wh4SE2S7Mo",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper studies the role of weight initialization on feature learning dynamics in linear networks. The authors provide exact solutions for  two layer linear networks where the input data is one dimensional. In this case, the relevant initial condition is the alignment $\\zeta$ which measures the cosine similarity between the readin and readout vectors. Depending on the scale of the initial weights, the scale of the output multiplier, and the initial alignment between these vectors, the model may or may not exit the kernel regime when fitting the data. The authors show that large weights can lead to worse alignment compared to starting with small weights. They provide a list of possible weight, learning rate and output multiplier scalings that can lead to kernel or feature learning."
+            },
+            "soundness": {
+                "value": 4
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "This paper studies an important problem of how model initialization impacts learning dynamics in neural networks. They provide exact solutions for the training in a specific setting (linear networks on one dimensional inputs). The solutions indicate a crucial dependence on output scale, learning rates, initialization variance, etc. The authors connect their findings to kernel limits, mean field limits, and $\\mu$P scalings."
+            },
+            "weaknesses": {
+                "value": "The assumptions of the model make the scope of the theoretical results fairly limited since it relies on one-dimensional inputs and two layer linear networks (though the authors also have some results for other activations). That said, the authors do make an effort to test their ideas in more realistic settings, which is appreciated. There are also some questions which should be addressed (see below)."
+            },
+            "questions": {
+                "value": "1. The authors claim larger initialization leads to worse performance. They then provide an experiment with residual skip connections (Figure 3) to try verifying this claim. I agree that with residual skip connections, networks can be initialized with zero weight variance with little consequence to training speed or performance. However, a non-residual feedforward network (such as the linear networks the authors actually analyze) the network is stuck at a saddle point as the weight variance shrinks to zero, leading to slower optimization. This is the reason for the long escape times in Saxe et al 2013. \n2. Are the results/scalings of Table 1 covered by the $a,b,c$ symmetries in the Yang et al [paper](https://arxiv.org/abs/2011.14522) or in this [note](https://mlschool.princeton.edu/sites/g/files/toruqf5946/files/documents/Princeton___Lecture_Notes_0.pdf)? If so, it would be good to comment on. \n3. The authors claim that they characterize the role of width. How does width enter their formulas, is it primarily through the initial alignment $\\zeta$? Or is width to be interpreted as a possible $\\kappa$ scaling quantity?\n4. Could Figure 4 be plotted on a log-log scale? I suspect that $|W-W_0| / |W_0 |$ should scale as a power law in $d$ with exponent that is different for different parameterizations. \n5. In Figure 5, it appears that the best performance is not at *very small* weights, but rather there is some optimal intermediate weight scale. How do the authors reconcile this \n6. Generally throughout the paper some measured metrics are implicitly related to performance/generalization, without this connection being made clear. For example \"In the kernel phase, the model norm diverges and the model alignment is always zero, which could be a hint of strong overfitting.\""
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "details_of_ethics_concerns": {
+                "value": "N/A"
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper studies a linear network setup with single-index inputs and derives exact learning dynamics under gradient flow, and interprets the resulting solutions. In doing so, the paper finds that the time to learn the target function depends on a kernel and feature learning component and that the feature learning component in particular can come from several mechanisms, which are each interpreted and discussed. This results in insights about the role of unbalanced initializations, and output rescaling, the latter being a quantity central to understanding feature learning from past work."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "Overall, I liked this paper. The final rating would be even higher if I was confident in my expertise in this topic (linear networks/optimization trajectories). In the end, I am not such an expert, so my rating reflects the fact that I cannot be sure other related works do not present very similar results. But in my opinion, the strong point of this paper was providing 1) an exact set of solutions, in contrast to the usual perturbative approach from infinite-width dynamics (which is usually extremely complicated and does not yield much insight) and 2) spending several pages interpreting the equations that result -- this is very important: the notion that the feature learning component can come from three distinct \"types of feature learning\" was new and interesting to me."
+            },
+            "weaknesses": {
+                "value": "- You never write down the dynamics for the NTK in Equation (13), even though as I understand it you claim the theory implies NTK evolution. Maybe this is immediate from your solution on the weight dynamics, but some interpretation for what the evolving kernel means would be useful. \n- The word \"disalignment\" was confusing to me. As I understand it, it just refers to learning due to asymmetry between either the initialization or learning rate for the two layers, where feature learning doesn't take place under symmetry/orthogonal initialization. I'm not sure what \"disalignment\" means in this context, whereas for instance the meaning of \"alignment\" is intuitively clear. \n- The idea that at some intermediate initialization scale we are not quite in the kernel regime but also not quite aligning layers to the task in some intuitive sense was interesting, and I wish there was more discussion on this topic (ie. Section 3.4). \n- The point made in passing at the end about \"inadequacy of conservation laws\" and the impossibility of stronger analytical results is provocative and insufficiently explained. If you are making such a comment, you must explain it in more detail. \n- Minor spelling/grammar, eg. Theorem 1.1 statement \"Dynamics\" typo\n- I think a set of bullet points of contributions in simple (nontechnical) prose would be useful in the Intro or Section 3. There are many claims made throughout and results derived, and it's sometimes not clear what the overall aim of the paper is. Having one bullet point for each section to illustrate 1) what exactly is the new result and 2) how it all relates to each other would be very useful."
+            },
+            "questions": {
+                "value": "- Am I correct in understanding that $p_i, q_i$ are something like \"order parameters\" in the parlance of some statistical physics analyses of network dynamics (DMFT, etc)? ie. you are studying the dynamics of some \"sufficient statistics\" which are informally some rotated/transformed version of our true weights? \n- Why don't either $p_i, q_i$ or initialization variables show up in the feature learning component -- what is the intuition for this? Why is there dependence on the input norm $\\rho$ here?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper studies three mechanisms of feature learning (alignment, disalignment, rescaling) in a one hidden layer (linear) neural network. Under a data assumption, the authors characterize the solution of the network fully in terms of width, initialization scale and learning rate across different regimes. The authors also confirm their findings with empirical evidence."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The main strength of the paper lies in Theorem 1, which completely characterizes the dynamics of the layer weights across time, under the assumption that the data lies on a 1D subspace. The authors obtain solutions for general power activations, but focus on giving closed form solutions for the case of a linear network $\\beta=1$ due to the problem of computing $F_i^{-1}$. By studying the alignment between the layer weights (in the case of $x$ being 1D), the authors characterize the 3 mechanisms of feature learning - which are governed by the angle $\\zeta$. Finally, the authors use the theoretical framework developed to study scaling limits in Section 4.\n\nIn general I think the paper is quite thorough and does a great job covering the mechanisms of feature learning in this toy setting. To my knowledge, the theoretical analysis of these dynamics in the finite width case is novel and interesting, bringing a great addition to the community."
+            },
+            "weaknesses": {
+                "value": "In my opinion the main weakness of this paper is the exposition. There are quite a bit of variables involved in the main body which makes it hard to track which quantity is which. Given that the whole dynamics description in the paper revolves around Theorem 1, it might be worthwhile to restate it in simpler terms. \n\nAnother (minor in my opinion, given the analytical intractability of network that is more complicated) weakness is the very simplified setting studied, in particular the restriction over the data lying in a 1D subspace."
+            },
+            "questions": {
+                "value": "If I\u2019m not mistaken, at line 891, if we take $\\beta=1$, and plug it into equation (30), then $F_i(x) = ln(x) + c$, not $e^x$. I believe this should be the inverse of $F_i$? In which case I do not understand how (33) reduces to (35).\n\nShouldn\u2019t there be $x_{ij}$ with a tilde in Proposition 1? And similarly the loss rewriting in eqn. 3 shouldn\u2019t there be an expectation?\nI don\u2019t understand what the authors mean in line 218 i.e. \u201cthe dynamics of GD training only has a rank-1 effect\u201d. \n\nIf I am not misunderstanding, in Line 209, I believe now there is a vector $w$ instead of the previous matrix $W$ because $x$ is taken to be 1d, but this is only mentioned later on in line 217-218, which is confusing. \n\nCould the authors elaborate what they mean in line 239, more specifically why would a larger norm (assuming of the weights?) imply strong overfitting?\n\nWould it be possible as future work to analyze, in the same framework, the solutions for arbitrary nonlinearities? Maybe by using Hermite polynomials?\n\nIs there any intuition for why the alignment increases much faster for Sigmoid/Swish/LeakyReLU in Figure 1?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work proposes a solvable shallow (linear) network to gain insight into feature/kernel-regime classification and its parameterization. For a one-dimensional data space, the continuous-time learning dynamics can be reduced to certain variables $(p_i, i=1, ..., \\text{width})$, allowing for explicit solutions in a specific case $(\\beta=1)$. From this solution, particularly from the learning speed $(t_c^{-2})$, the authors identify the parameterization in as general a form as possible, in which the learning dynamics achieve either the feature-learning or kernel regime."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The analysis is technically solid and concrete.\n- This work addresses the challenging yet crucial problem of identifying the feature-learning and kernel regimes and characterizing the dynamics in feature learning. It provides concrete insights from a solvable model perspective.\n- The obtained parameterizations are quite general which cover various width, learning rate, and initialization scales."
+            },
+            "weaknesses": {
+                "value": "- The analyzed model seems essentially equivalent to the catapult model (Lewkowycz et al. 2020) or uv model (Kalra et al. 2023). In this sense, the solvability of this model itself seems not so surprising. In addition, It is unclear how the continuous-time analysis of the current work contributes to the original literature of the catapult (uv) model, which claims that a non-trivial dyanamics toword feature learning appears for *discrete* update with a large learning rate.\n\n- Certainly, discrete updates have not been explicitly solved and achieving analytical solvability even in the continuous limit would be novel. However, for alignment, the dynamics is essentially equal to the uv product dynamics, which can already be tracked with any width (Lewkowycz et al. 2020). Therefore, the analytical solvability for the finite width might be a bit straightforward.\n\n- Although this would be a presentation matter, it is not easy to follow how the parameterization derived from the current analysis in Section 4.1 compares to the muP parameterization by Yang & Hu (2020). \n\nPlease see the **Questions** section for more detailed points."
+            },
+            "questions": {
+                "value": "### **Difference from uv model**\nHow does the proposed model differ from the well-known catapult (uv) model? Suppose that we rotate the 1-dim data space $n$ to the direction of a unit vector $(1,0,\\dots,0)$ with a rotation matrix $V$. Then, defining the new variable $W(t)= W^*(t) V$, we have:\n$\\frac{dW}{dt} = -\\frac{\\partial L}{\\partial W}$\nequivalent to\n$\\frac{dW^*}{dt} = -\\frac{\\partial L}{\\partial W^*}$\nsince the rotational transformation is orthogonal (that is, the Jacobian $J=\\partial W^*/\\partial W$ satisfies $J^T J=I$). In other words, the proposed model in this work reduces to\n\n$L(u, W^*) = \\left[\\gamma \\left(\\sum_{i} u_i w^{*\\beta}_i  x  - y \\right)\\right]^2$\n\nwith $x:=\\sqrt{E[\\tilde{x}^2]}^\\beta$.\n\nThis suggests that the proposed model is merely a nonlinear parameterization of the uv model, with $v_i = w_i^\\beta$. For $\\beta=1$, which is the focus of the current work, the model is identical to the uv model. Since the authors references Lewkowycz et al. (2020), they  likely know about the solvability of the uv model, yet there is no explanation of this relationship or reference to further developments such as \n\n*Kalra et al., \"Universal Sharpness Dynamics in Neural Network Training: Fixed Point Analysis, Edge of Stability, and Route to Chaos\", arXiv:2311.02076.\n\n*Kalra & Barkeshli, \"Phase diagram of early training dynamics in deep networks: effect of the learning rate, depth, and width\", NeurIPS 2023.\n\nSince  the model is indeed equivalent to the uv model for $\\beta=1$, it is crucial to mention such prior studies and to carefully explain in what aspects the problem setting differs.\n\n### **Difference from muP**\n- It will be better to provide a clearer explanation in Corollaries 1-3 about how these findings differ from the muP parameterization [Yang & Hu (2020)]. The authors state\n>one can choose an optimal pair of learning rate and output scale $\\gamma$ such that the model is in the feature learning phase. Point (1) agrees with the analysis in Yang & Hu (2020), whereas point (2) is a new insight we offer\n\n in lines 471-473. My understanding is that point (2) would be a main difference (in the inifinite width). However, $\\gamma$ also appears in muP as $1/(width)^a$ in the final layer. I recommend that the authors more explicitly state how their \"optimal pair of learning rate and output scale \u03b3\" differs from or extends the muP parameterization.\n\nIf the claim of this work is that the authors have identified a previously unknown feature-learning (or kernel) regime in the infinite-width case, this would imply that certain conditions in prior studies were restrictive, leading to oversight. It seems better to clearly explain which specific conditions from prior work the current work has relaxed or generalized.\n\n- The authors also state\n>A key difference mentioned is that the results apply to finite-width networks with arbitrary initialization. \n\nThis sentence mentioning the finite width appears in Section 4.1, which consider the case of $c_d=1$, that is, the *infinite* width limit. This is confusing. If there's a distinction between their finite-width and infinite-width results, clearly delineate which parts of the paper apply to each case.\n\n### **Typo**\n- Equation 1: $x \\to \\tilde{x}$"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

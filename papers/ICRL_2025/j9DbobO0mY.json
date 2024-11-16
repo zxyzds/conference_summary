@@ -1,0 +1,169 @@
+{
+    "id": "j9DbobO0mY",
+    "title": "Sparse MoE as a New Retriever: Addressing Missing Modality Problem in Incomplete Multimodal Data",
+    "abstract": "In multimodal machine learning, effectively addressing the missing modality scenario is crucial for improving performance in downstream tasks such as in medical contexts where data may be incomplete. Although some attempts have been made to effectively retrieve embeddings for missing modalities, two main bottlenecks remain: the consideration of both intra- and inter-modal context, and the cost of embedding selection with the lack of specialized knowledge in embedding candidates. In response, we propose MoE-Retriever, a novel framework inspired by the design principles of Sparse Mixture of Experts (SMoE). First, MoE-Retriever samples the relevant data from modality combinations, using a so-called supporting group to construct intra-modal inputs while incorporating inter-modal inputs. These inputs are then processed by Multi-Head Attention, after which the SMoE Router automatically selects the most relevant expert, i.e., the embedding candidate to be retrieved. Comprehensive experiments on both medical and general multimodal datasets demonstrate the robustness and generalizability of MoE-Retriever, marking a significant step forward in embedding retrieval methods for incomplete multimodal data.",
+    "keywords": [
+        "Missing Multimodal Data",
+        "Sparse MoE"
+    ],
+    "primary_area": "unsupervised, self-supervised, semi-supervised, and supervised representation learning",
+    "TLDR": "",
+    "creation_date": "2024-09-28",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=j9DbobO0mY",
+    "pdf_link": "https://openreview.net/pdf?id=j9DbobO0mY",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper proposes a model called MoE-Retriever to retrieve embeddings for missing modalities in multimodal machine learning. Both intra-modal and inter-modal contexts are considered in the embedding retrieval process. The former considers other data samples with the target modality to be retrieved by proposing a supporting group and the later considers the available modalities from the same data sample. Empirical evaluation shows improvement over existing methods on several public datasets."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 1
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The problem of missing modality in the context of multimodal machine learning is significant and worth investigating.\n- The idea of considering intra-modal and inter-modal contexts for embedding retrieval is interesting and important.\n- The empirical evaluation shows improvement over existing methods."
+            },
+            "weaknesses": {
+                "value": "The major weaknesses are the limited novelty and unclear presentation. Detailed comments are as follows.\n\n1. The novelty seems limited. The proposed MoE is largely developed based on FuseMoE with the same router design. The added value on top of FuseMoE is mainly the intra- and inter-modal contexts.\n2. The intra-modal context section, especially Eq. (2), looks very confusing to me. $\\mathcal{M}$ is a set of all modalities, $\\mathcal{X}(\\mathcal{T}|mc)$ is a set of subsets of $\\mathcal{M}$, why the integer $j$ is an element of it? What does $S\\wedge \\mathcal{T}$ mean? Or is it supposed to be $S\\cap \\mathcal{T}$? Is $S$ a set? why $S$ is a subset of $\\mathcal{M}$ and at the same time $S\\wedge\\mathcal{T}$ is an element of $S$? After carefully reading Eq. (2) and the descriptions below it, I still find it difficult to understand how the intra-modal context is extracted and used.\n3. The inter-modal context is not described in detail. Particularly, it is argued that the missing modality of imaging may indicate an early stage of AD, but it is not clear how the proposed inter-modal context can help address this issue.\n4. In Eq. (3), are $\\mathbf{P}^\\prime$, predicted retrieved embedding, matrices? What does it mean to take the union between two matrices?\n5. It is not clear how each expert is parameterized. What is the model used for each expert?\n6. What does \"input token\" mean? Is it one data sample or one particular feature from a data sample?\n7. For implementation, using optimal hyperparameter settings in the original paper does not necessarily guarantee a fair comparison since the baselines may not be tuned in the datasets used in this work. Careful tuning of hyperparameters of each baseline model is needed to ensure a fair comparison.\n8. The \"Details on ADNI dataset preprocessing\" paragraph in Appendix A.1.1 duplicates the reprocessing steps for the MIMIC dataset. In addition, it should be explicitly clarified in A.1.2 that the MIMIC dataset has a linkage with the Massachusetts State Registry of Vital Records and Statistics to allow analysis regarding out-of-hospital mortality up to one year after hospital discharge."
+            },
+            "questions": {
+                "value": "Please see my comments above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "The paper aims to address the missing modality problem by retrieving the most relevant embedding for the target(missing) modality. To obtain the relevant embedding, both intra- and inter-modal contexts are employed along with a router. The experimental results on medical datasets and general multimodal datasets demonstrate the effectiveness of the approach."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "- The motivation of the paper is clear and convincing. \n- The method used is reasonable and interesting."
+            },
+            "weaknesses": {
+                "value": "- As the target of the paper is to address missing modality, it would be more convincing if results regarding different missing ratios could be given for robustness illustration. \n- Are there any data statistics regarding the missing modalities for MIMIC?"
+            },
+            "questions": {
+                "value": "- As stated in the paper, baseline models with MIMIC dataset suffer from label imbalance problems. Is there any results using PRAUC?\n- For results CMU-MOSI, the results using three modalities (V+A+T) across all models are worse than those with two modalities (A+T). What caused the performance drop?\n- For results on CMU-MOSI and ENRICO, the dropping rate is 0.3. Is there an ablation study regarding the robustness against different dropping ratios? \n- In Figure 4, MoE-Retriever demonstrated better computational efficiency. However, when the number of modalities scales up, other methods remain similar while MoE-Retriever scales up a bit. Can authors provide more insights or further explanations?\n- One additional concerning issue is the resembling of figures and experiment results with the paper [1], which is not cited, mentioned, or discussed at all in the submission. Particularly, experiment results of the FuseMoE baseline reported in Table 1 are exactly the same as that reported in Table 1 and 2 of [1]. Please clarify if the results reported are obtained by the own experiments of the authors, or taken from any other papers. Fig. 3(a) is a modified version of Fig. 2(c) of [1] without any acknowledgment of the sources. Please clarify the source of the figure.\n\n[1] Yun, Sukwon, et al. \"Flex-MoE: Modeling Arbitrary Modality Combination via the Flexible Mixture-of-Experts.\"\u00a0arXiv preprint arXiv:2410.08245\u00a0(2024)."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "Yes, Research integrity issues (e.g., plagiarism, dual submission)"
+                ]
+            },
+            "rating": {
+                "value": 3
+            },
+            "confidence": {
+                "value": 3
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            },
+            "details_of_ethics_concerns": {
+                "value": "After my initial review, I came across the NeurIPS 2024 spotlight paper \u201cFlex-MoE: Modeling Arbitrary Modality Combination via the Flexible Mixture-of-Experts\". I found that the reviewed article is highly suspicious of overlapping contents with the NeurIPS2024 Spotlight paper \" The details are as follows: \n1. Figure 3(a) in MoE-Retriever vs Figure 2(b) in Flex-MoE. \n2. The results of baseline FuseMoE are the same in these two papers without any reference."
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper introduces MoE-Retriever to address the missing modality problem in medical data. MoE-Retriever leverages intra-modal context by using other samples with the same missing patterns and inter-modal context from available modalities. These contexts are processed through a multi-head attention layer and then aggregated using a sparse mixture-of-experts architecture. Experimental results show that MoE-Retriever improves performance across multiple datasets."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The approach of leveraging other samples to \u201cimpute\u201d missing modalities is intuitive and well-motivated.\n2. The use of a sparse mixture-of-experts architecture is reasonable.\n3. The experiments are extensive, and the proposed method demonstrates improved performance over existing methods on multiple datasets."
+            },
+            "weaknesses": {
+                "value": "1. Novelty: The model primarily applies existing techniques, which may limit its novelty.\n2. Architecture: MoE-Retriever appears to select support samples randomly. This could lead to inconsistencies if selected samples differ significantly from the input sample. Incorporating a similarity measure might enhance retrieval accuracy.\n3. Presentation: The paper\u2019s clarity could be improved, especially in notation, as the numerous superscripts and subscripts can be difficult to follow. Additionally, there is an unusually large margin on page 6."
+            },
+            "questions": {
+                "value": "See weakness 2."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This work attempts to tackle the missing modality problem in multimodal learning. Observing that existing methods do not balance the intra- and inter-modal information when retrieving the representations for missing modalities and the costly computations, the authors tackle these issues by using Sparse MoE. Experiments on general and medical multimodal datasets demonstrate satisfactory performance and thorough ablation studies were performed."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "\u2022\tThis work tackles the challenging problem of missing modality, which is one of the most important concerns of multimodal learning. \n\n\u2022\tExtensive experiments have been performed on various datasets and recent baseline methods and satisfactory performance is obtained. Ablation study is well-performed.\n\n\u2022\tThe paper is overall clearly written.\n\n\u2022\tCodes and algorithms are available for reproducibility"
+            },
+            "weaknesses": {
+                "value": "\u00b7 The notion of using MoE to tackle the missing modality problem seems to be well studied by FuseMoE, and the SMoE is also proposed by existing works and extensively applied. More contributions are expected in addition to addressing the balance between intra- and inter-modal information. For instance, there could be more designs on adapting the some into the framework (e.g., how to select the experts based on intra- and inter-modality groupings), given that currently the frameworks just use some with little elaborations on the motivations and modifications. In this sense, I am less convinced that the contribution is enough to meet the bar. \n\n**Minor:**\n\n\u2022\tThe authors only report the accuracy and F1 scores for primary results, which are highly sensitive to thresholds. Authors are suggested to present the results in AUROC (which is also adapted by MUSE, one of the baselines) in addition to current metrics, to more comprehensively evaluate the performance.\n\n\u2022\tThe use of English has space of improvement. Some sentences are difficult to follow / less clear. For instance, \"lack of specialized knowledge in embedding candidates\u201d\"in the abstract is vague and hard for me to follow (i.e., more precise words need to be used for \u201cspecialized knowledge\u201d, which is a quite subjective word)."
+            },
+            "questions": {
+                "value": "* Is there any particular advantage on applying the proposed method to medical datasets than general multimodal datasets?\n* Is there any specific case from MIMIC (e.g., for a specific diagnosis) to interpret the feature retrieval process of the MoE?\n* The CMU-MOSI experiments look interesting. Could the authors also open-source the codes for more information on the implementation?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}

@@ -1,0 +1,167 @@
+{
+    "id": "b2fhCbhe62",
+    "title": "EmoGrowth: Incremental Multi-label Emotion Decoding with Augmented Emotional Relation Graph",
+    "abstract": "Emotion decoding plays an important role in affective human-computer interaction. However, previous studies ignored the dynamic real-world scenario, where humans experience a blend of multiple emotions which are incrementally integrated into the model, leading to the multi-label class incremental learning (MLCIL) problem. Existing methods have difficulty in solving the MLCIL issue due to notorious catastrophic forgetting caused by the partial label problem and inadequate label semantics mining. In this paper, we propose an augmented emotional semantics learning framework for multi-label class incremental emotion decoding. Specifically, we design an augmented emotional relation graph module with label disambiguation to handle the past-missing partial label problem. Then, we leverage domain knowledge from the affective dimension space to alleviate the future-missing partial label problem through knowledge distillation. Besides, an emotional semantics learning module is constructed with a graph autoencoder to obtain emotion embeddings in order to guide the semantic-specific feature decoupling for better multi-label learning. Extensive experiments on three datasets show the superiority of our method for improving emotion decoding performance and mitigating forgetting on the MLCIL problem.",
+    "keywords": [
+        "Emotion recognition",
+        "Affective computing",
+        "Neural decoding\uff0cClass incremental learning\uff0cMulti-label learning"
+    ],
+    "primary_area": "applications to computer vision, audio, language, and other modalities",
+    "TLDR": "",
+    "creation_date": "2024-09-23",
+    "original_date": "2024-10-04",
+    "modification_date": "2024-10-13",
+    "forum_link": "https://openreview.net/forum?id=b2fhCbhe62",
+    "pdf_link": "https://openreview.net/pdf?id=b2fhCbhe62",
+    "comments": [
+        {
+            "summary": {
+                "value": "This paper introduces a novel framework, EMOGROWTH, designed for incremental multi-label emotion decoding. The authors address the challenge of real-world emotional dynamics by tackling multi-label class incremental learning (MLCIL), where emotions are represented as evolving, multi-label categories. The proposed approach leverages an augmented emotional relation graph (ERG) and integrates knowledge from affective dimensions, addressing both past-missing and future-missing partial label problems. Through comprehensive experiments on three datasets, the study demonstrates EMOGROWTH's effectiveness in improving emotion decoding accuracy and mitigating catastrophic forgetting in MLCIL scenarios."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1.\tThe introduction of the Augmented Emotional Relation Graph and the integration of affective dimensional knowledge are novel and valuable contributions to addressing the MLCIL problem in affective computing.\n2.\tThe framework effectively mitigates catastrophic forgetting\u2014a common issue in incremental learning\u2014by employing knowledge distillation and label disambiguation.\n3.\tThe framework is rigorously tested across three distinct datasets with multiple incremental learning protocols, providing strong evidence of its effectiveness."
+            },
+            "weaknesses": {
+                "value": "1.\tSince the authors claim to have introduced \"the problem of multi-label class incremental emotion decoding\" as part of their contributions, they should provide a more detailed explanation of this problem. Currently, the example in Figure 1 and the associated description make the concept challenging to grasp."
+            },
+            "questions": {
+                "value": "Please see the Weaknesses."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 6
+            },
+            "confidence": {
+                "value": 2
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "## Summary:\nThis paper introduces the problem setting of multi-label class incremental learning (MLCIL) for emotion detection and classification. While, MLCIL has been studied for other tasks, this is the first proposal for emotion decoding. The key components of the approach are:\n1. An **emotional relational graph (ERG)** is maintained across all training tasks. This ERG maintains emotion label co-occurence relations and uses it alongside a Graph Isomorphism Network (GIN) based graph autoencoder (GAE) to build and update node (emotion) embeddings. GIN essentially uses sum aggregation over neighboring nodes to build representations of each node. The autoencoder loss used here is a pairwise decoder loss. Adjacency matrix is used with self-loops (by adding the identity matrix) when calculating this loss. \n2. Cross attention between the input and the emotion embeddings (both with their own MLP weights) is used for the final multiclass embeddings per input example in Training task b. This is what is called **semantic-guided feature decoupling** in the paper. \n3. **Past-missing partial label problem** is discussed where the new data in task b is missing old labels. Here the paper aims to go beyond the soft-labeling that can be done by the existing model from task (b-1). The approach proposed is to start with these soft-labels from (b-1) but then use standard iterative label propagation (LP) on this which uses the pairwise similarity between two samples in D_b to determine the degree to which labels in C_(b-1) should co-occur with labels in C_(b). This co-occurence information between past labels and new labels forms the sub-matrices R and Q (derived from R using Bayes' rule). The  final adjacency matrix A of task b is formed by using the four submatrices: adjacency matrix of task (b-1), R, Q and co-occurence within labels of task b obtained trivially.\n4. The paper claims that the **Future-missing partial label problem** is best solved by grounding all emotion embeddings to external knowledge about the emotion categories and how they are anchored in an affective space formed by the two dimensions: arousal and valence. This is done by distilling a student from two teachers: (i) the past model from Task (b-1) and (ii) the relationships between the labels as denoted on the external knowledge i.e. the affective space. \n\nFinally, the loss used to train the model is a weighted combination of the GAE loss from (1), cross entropy loss from (2) for task b and the two KL divergence losses from the two teachers during distillation in step (4). \n\nThe results show significant improvements compared to various baselines and substantial progress towards a fully supervised oracle upper-bound baseline in many cases. Ablation studies are done to evaluate the value of the emotion embeddings based attention modeling, label disambiguation method for soft-labeling and the distillation. Various qualitative analyses is presented such as T-SNE visualizations and ERG visualization to show how the intended relationships amongst emotions are being successfully captured. While ablation studies are done, the paper is missing some simple yet strong baselines for each of the components and the overall system (as outlined below). \n\n## Overall Recommendation:\nIn its current state, despite some comprehensively presented experiments and analyses, the overall recommendation is leaning towards a reject. The main reason for this is that while there are several complex steps and ablations to fully remove each step, simpler component wise baselines such as encodings of emotions from their descriptions (or standard dimensions such as commonsense definitions, arousal and valence models, etc.) are not compared. This could heavily simplify this complex pipeline presented and make for a strong end to end system not even requiring some of the other components. Without this, readers will not truly understand the returns of this complex approach that needs high investment. If this can be addressed, the decision can be reconsidered."
+            },
+            "soundness": {
+                "value": 2
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "1. The paper introduces a complex new problem (MLCIL) for emotion detection in multimodal settings. Their main test settings are video, audio and brain images. For such settings, note that emotion detection is hard enough for today's cutting edge LLMs also. And MLCIL adds further complexity to the setting. Given the importance of this in HCI and robotics this is a \n2. The emotion embeddings graph pipeline is a novel end-to-end contribution: building embeddings with ERGs and GAE, using it for cross attention with the input, using the same graph to solve for past-missing partial labels and finally grounding them with a distillation teacher on a prior-knowledge affective space. A similar pipeline can be used for MLCIL on any other label dimension outside (not just emotions) in theory. In fact, this may be even more useful for labels that are domain specific and not well understood by text models today unlike emotion words. The only emotion specific component in this pipeline is the affective space \"domain/task knowledge\". This can be swapped for other label specific domain knowledge if needed. \n3. The paper presents the description comprehensively with detailed formalisms to understand the setup. \nThe experimental results are also presented with comprehensive data statistics, in both protocols/settings for class incremental learning (CIL) and with a very useful oracle upper bound (supervised training on all data). Also, an ablation study shows the incremental benefit of each component. This is especially useful since each component is fairly complex and the return on investment is critical for the readers to understand the tradeoff.  \n4. T-SNE, visualizations of the ERG and parameter sensitivity are additionally presented to build intuition on what the model has achieved."
+            },
+            "weaknesses": {
+                "value": "1. L159-160 make an unsubstantiated claim where it is unclear why emotion embeddings pipeline needs the complexity of the graphs. A critically missing baseline here is to build emotion embeddings directly from encoding a description of each emotion (name, definition, examples or some combination of these). These could then be used for cross attention directly in the \"semantic-guided feature decoupling\" stage since your emotion weights already align these embeddings to your specific data distribution. It would be interesting to see the need for label propagation then compared to soft labels from task (b-1). \n2. The paper mentions the use of relation based knowledge distillation to use domain knowledge about emotions in the affective space in section 2.5. Here, when you ablate, you simply remove this component fully. A simpler baseline would be to use SoTA embedding models that potentially have an implicit understanding of the emotions on such 2D spaces like the affective space. \n3. While the description and formalism is clear in itself, the ordering of the components is somewhat confusing. Specifically, the ERG is introduced first and it includes the adjacency matrix. However, then the section on \"semantic-guided feature decoupling\" breaks the flow. While I understand that you need the emotion embeddings for that section and then _s_ for subsequent section, consider providing a big picture view of the pieces first and then the individual details. The figure is useful for this and maybe this big picture view should be aligned to that figure."
+            },
+            "questions": {
+                "value": "1. As mentioned above, what is driving the conclusion in L159-160?\n2. Would it be possible to encode emotions from the start as a combination of arousal and valence vectors? And if so, would it avoid the relational knowledge distillation component?"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper studies the partial label problem and inadequate label semantics mining. The authors propose a graph-based framework for improving incremental multi-label emotion decoding."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 2
+            },
+            "contribution": {
+                "value": 2
+            },
+            "strengths": {
+                "value": "+ The task is meaningful and practical.\n+ Experiments  on three datasets show the effectiveness of AESL."
+            },
+            "weaknesses": {
+                "value": "- Some imprecise claims in the contribution.\n- The description of the proposed methods, figure, and tables is not clear, which makes it difficult to follow.\n- Inadequate experiments to explore why the well-designed framework work. Lack of comparison with recent methods in this task."
+            },
+            "questions": {
+                "value": "1. Miss some related references.\n\n- [1] Multi-View Multi-Label Fine-Grained Emotion Decoding From Human Brain Activity.\n\n2. More explanation of Figure 3 is necessary. For example, \n- what is the V-A (teacher 2)?\n-  Is the teacher 2 tuned or frozen? \n- What is relation between the left distillation framework and the right discrete emotion category?\n\n\n3. What is the complexity analysis of this method?\n\n4. Lack of comparison with recent methods in this task.\n\n5. Lack of experiments or necessary discussions to explore why the well-designed framework work. \n\n6. Can you give some case studies or badcases to illustrate the strength and limitations of AESL"
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        },
+        {
+            "summary": {
+                "value": "This paper presents the Augmented Emotional Semantics Learning (AESL) framework, to tackle the challenges of multi-label class incremental learning in emotion decoding for dynamic human-computer interaction. AESL addresses the complex nature of human emotions by integrating an augmented emotional relation graph and domain knowledge from affective dimensions, which aids in mitigating catastrophic forgetting and improving the adaptability of emotion recognition systems. The framework's effectiveness is demonstrated through evaluations on three datasets."
+            },
+            "soundness": {
+                "value": 3
+            },
+            "presentation": {
+                "value": 3
+            },
+            "contribution": {
+                "value": 3
+            },
+            "strengths": {
+                "value": "The authors introduce an augmented Emotional Relation Graph (ERG) module with graph-based label disambiguation, which generates soft labels for existing emotion classes and constructs a new ERG by integrating previous data.\nThe ERG module is interesting and intuitive.\n\n\nAlthough knowledge distillation isn't a new technique, the authors have developed a relation-based knowledge distillation framework that integrates the KD, which looks reasonable.\n\n\nThe experimental section of the study appears thorough and solid in terms of content and effort."
+            },
+            "weaknesses": {
+                "value": "Overall, while the methods in the paper are interesting, there might be quite many potential issues with the presentation.\n\n1. The introduction might be somewhat verbose. The reviewer suggests that the first and second paragraphs should be combined. The authors extensively set the stage for HCI, yet the focus of the paper is on emotion classification. It's unclear why this emphasis was placed. Therefore, the reviewer hopes that the authors can further explain and clarify this matter.\n\n2. A major issue with the paper is the deliberate removal of the related work section from the main texts, which is certainly inadvisable. Furthermore, the authors have not conducted a thorough survey of the most relevant works on incremental learning. The reviewer strongly suggests that the authors include the complete related work section in the main text.\n\n3. There are way too many citation format problems: e.g., line 080, \u201cWang et al. (2023a)\u201d -> \u201c(Wang et al. 2023a)\u201d. The reviewer hopes that the authors thoroughly check all related issues and fully polish the paper presentation.\n\n4. On line 484, the title \u201cParameter Sensitivity.\u201d is disconnected from its paragraph. Please address these issues as well as similar ones.\n\n\nThe reviewer might consider raising the evaluation if the authors can address these concerns with more discussions."
+            },
+            "questions": {
+                "value": "The entire process is unsupervised. How can the authors prove that the constructed Augmented Emotional Relation Graph is accurate? Although extensive quantitative comparisons have been conducted, it appears that there has been no in-depth analysis or explanation regarding this aspect.\n\nFor other questions, refer to the weaknesses mentioned above."
+            },
+            "flag_for_ethics_review": {
+                "value": [
+                    "No ethics review needed."
+                ]
+            },
+            "rating": {
+                "value": 5
+            },
+            "confidence": {
+                "value": 4
+            },
+            "code_of_conduct": {
+                "value": "Yes"
+            }
+        }
+    ]
+}
